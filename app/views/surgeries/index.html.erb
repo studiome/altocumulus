@@ -1,0 +1,70 @@
+<% content_for :title, "Surgeries" %>
+
+<div class="w-full">
+  <% if notice.present? %>
+    <div class="toast toast-top toast-end z-50">
+      <div class="alert alert-success">
+        <span><%= notice %></span>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="font-bold text-4xl mb-2">Surgeries</h1>
+    </div>
+    <%= link_to new_surgery_path, class: "btn btn-primary" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+      New Surgery
+    <% end %>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200">Surgery Date</th>
+            <th class="bg-base-200">Procedure</th>
+            <th class="bg-base-200">Duration</th>
+            <th class="bg-base-200">Anesthesia</th>
+            <th class="bg-base-200">Patient</th>
+            <th class="bg-base-200 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @surgeries.any? %>
+            <% @surgeries.each do |surgery| %>
+              <tr class="hover">
+                <td class="font-mono font-medium"><%= surgery.surgery_date&.strftime("%Y-%m-%d") %></td>
+                <td class="font-semibold"><%= surgery.procedure %></td>
+                <td><%= surgery.duration_minutes.present? ? "#{surgery.duration_minutes} min" : "-" %></td>
+                <td><%= surgery.anesthesia_method %></td>
+                <td>
+                  <% if surgery.patient %>
+                    <%= link_to surgery.patient.name.presence || "Patient ##{surgery.patient_id}", surgery.patient, class: "link link-primary" %>
+                    <span class="text-base-content/50 text-sm font-mono ml-2"><%= surgery.patient.hospital_id %></span>
+                  <% else %>
+                    <span class="text-base-content/50 italic">Unknown</span>
+                  <% end %>
+                </td>
+                <td class="text-right flex justify-end gap-2">
+                  <%= link_to "View", surgery, class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to "Edit", edit_surgery_path(surgery), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to "Delete", surgery, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="6" class="text-center py-10 text-base-content/50 italic">
+                No surgeries found. Click "New Surgery" to get started.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

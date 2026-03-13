@@ -1,0 +1,66 @@
+<% content_for :title, "Surgery Details" %>
+
+<div class="max-w-2xl mx-auto w-full">
+  <% if notice.present? %>
+    <div class="toast toast-top toast-end z-50">
+      <div class="alert alert-success">
+        <span><%= notice %></span>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mb-8 flex items-center gap-4">
+    <%= link_to surgeries_path, class: "btn btn-circle btn-ghost" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+    <% end %>
+    <h1 class="font-bold text-4xl">Surgery Details</h1>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <h2 class="card-title text-3xl mb-1 text-primary"><%= @surgery.procedure %></h2>
+          <p class="text-base-content/60 font-mono">
+            Date: <%= @surgery.surgery_date&.strftime("%Y-%m-%d") %>
+          </p>
+        </div>
+        <div class="badge badge-outline badge-lg p-4">Surgery Record</div>
+      </div>
+
+      <div class="divider">Information</div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Surgery Date</span>
+          <span class="text-lg font-medium"><%= @surgery.surgery_date&.strftime("%B %d, %Y") %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Duration</span>
+          <span class="text-lg font-medium"><%= @surgery.duration_minutes.present? ? "#{@surgery.duration_minutes} min" : "-" %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Anesthesia</span>
+          <span class="text-lg font-medium"><%= @surgery.anesthesia_method %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Patient</span>
+          <% if @surgery.patient %>
+            <span class="text-lg font-medium">
+              <%= link_to @surgery.patient.name.presence || "Patient ##{@surgery.patient_id}", @surgery.patient, class: "link link-primary" %>
+            </span>
+            <span class="text-base-content/60 font-mono block"><%= @surgery.patient.hospital_id %></span>
+          <% else %>
+            <span class="text-lg font-medium text-base-content/50 italic">Unknown</span>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">
+        <%= link_to "Edit Surgery", edit_surgery_path(@surgery), class: "btn btn-secondary" %>
+        <%= button_to "Delete Surgery", @surgery, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: "Are you sure?" } %>
+      </div>
+    </div>
+  </div>
+</div>
+
