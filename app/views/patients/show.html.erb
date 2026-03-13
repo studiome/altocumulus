@@ -1,0 +1,52 @@
+<% content_for :title, "Patient Details" %>
+
+<div class="max-w-2xl mx-auto w-full">
+  <% if notice.present? %>
+    <div class="toast toast-top toast-end z-50">
+      <div class="alert alert-success">
+        <span><%= notice %></span>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mb-8 flex items-center gap-4">
+    <%= link_to patients_path, class: "btn btn-circle btn-ghost" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+    <% end %>
+    <h1 class="font-bold text-4xl">Patient Details</h1>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <h2 class="card-title text-3xl mb-1 text-primary"><%= @patient.name %></h2>
+          <p class="text-base-content/60 font-mono">Hospital ID: <%= @patient.hospital_id %></p>
+        </div>
+        <div class="badge badge-outline badge-lg p-4">Patient Record</div>
+      </div>
+
+      <div class="divider">Information</div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Full Name</span>
+          <span class="text-lg font-medium"><%= @patient.name %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Date of Birth</span>
+          <span class="text-lg font-medium"><%= @patient.date_of_birth.strftime("%B %d, %Y") if @patient.date_of_birth %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Hospital Identifier</span>
+          <span class="text-lg font-mono font-medium"><%= @patient.hospital_id %></span>
+        </div>
+      </div>
+
+      <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">
+        <%= link_to "Edit Patient", edit_patient_path(@patient), class: "btn btn-secondary" %>
+        <%= button_to "Delete Patient", @patient, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: "Are you sure?" } %>
+      </div>
+    </div>
+  </div>
+</div>
