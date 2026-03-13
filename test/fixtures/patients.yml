@@ -1,0 +1,9 @@
+one:
+  hospital_id: "H001"
+  name: "John Doe"
+  date_of_birth: 1980-01-01
+
+two:
+  hospital_id: "H002"
+  name: "Jane Smith"
+  date_of_birth: 1990-05-15
