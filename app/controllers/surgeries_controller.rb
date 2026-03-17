@@ -68,7 +68,7 @@ class SurgeriesController < ApplicationController
     end
 
     def surgery_params
-      params.expect(surgery: [ :surgery_date, :procedure, :duration_minutes, :anesthesia_method, :patient_id ])
+      params.expect(surgery: [ :surgery_date, :procedure, :duration_hours, :anesthesia_method, :patient_id ])
     end
 end
 

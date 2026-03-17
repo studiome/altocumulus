@@ -22,7 +22,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
         surgery_date: "2026-03-03",
         procedure: "Cholecystectomy",
         anesthesia_method: "General",
-        duration_minutes: 120
+        duration_hours: 2.0
       } }
     end
 
@@ -45,7 +45,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
       surgery_date: @surgery.surgery_date,
       procedure: "Updated Procedure",
       anesthesia_method: @surgery.anesthesia_method,
-      duration_minutes: @surgery.duration_minutes
+      duration_hours: @surgery.duration_hours
     } }
 
     assert_redirected_to surgery_url(@surgery)

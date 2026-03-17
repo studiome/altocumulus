@@ -37,7 +37,7 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Duration</span>
-          <span class="text-lg font-medium"><%= @surgery.duration_minutes.present? ? "#{@surgery.duration_minutes} min" : "-" %></span>
+          <span class="text-lg font-medium"><%= @surgery.duration_hours.present? ? "#{@surgery.duration_hours} h" : "-" %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Anesthesia</span>

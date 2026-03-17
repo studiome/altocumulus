@@ -13,7 +13,7 @@ class PatientTest < ActiveSupport::TestCase
       surgery_date: Date.new(2026, 3, 1),
       procedure: "Appendectomy",
       anesthesia_method: "General",
-      duration_minutes: 90
+      duration_hours: 1.5
     )
 
     surgeries_count = patient.surgeries.count

@@ -3,12 +3,12 @@ one:
   surgery_date: 2026-03-01
   procedure: "Appendectomy"
   anesthesia_method: "General"
-  duration_minutes: 90
+  duration_hours: 1.5
 
 two:
   patient: two
   surgery_date: 2026-03-02
   procedure: "Knee arthroscopy"
   anesthesia_method: "Spinal"
-  duration_minutes: 60
+  duration_hours: 1.0
 

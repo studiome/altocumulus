@@ -46,10 +46,10 @@
   </div>
 
   <div class="form-control w-full">
-    <%= form.label :duration_minutes, class: "label" do %>
-      <span class="label-text font-semibold text-base">Duration (minutes)</span>
+    <%= form.label :duration_hours, class: "label" do %>
+      <span class="label-text font-semibold text-base">Duration (hours)</span>
     <% end %>
-    <%= form.number_field :duration_minutes, class: "input input-bordered w-full focus:input-primary", min: 0, step: 1, placeholder: "e.g. 90" %>
+    <%= form.number_field :duration_hours, class: "input input-bordered w-full focus:input-primary", min: 0, step: :any, placeholder: "e.g. 1.5" %>
   </div>
 
   <div class="form-control w-full">

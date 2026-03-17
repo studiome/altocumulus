@@ -7,7 +7,7 @@ class SurgeryTest < ActiveSupport::TestCase
       surgery_date: Date.new(2026, 3, 1),
       procedure: "Appendectomy",
       anesthesia_method: "General",
-      duration_minutes: 90
+      duration_hours: 1.5
     )
 
     assert surgery.valid?
@@ -31,9 +31,9 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_not surgery.valid?
   end
 
-  test "duration_minutes should be non-negative integer" do
+  test "duration_hours should be non-negative" do
     surgery = surgeries(:one)
-    surgery.duration_minutes = -1
+    surgery.duration_hours = -1.0
     assert_not surgery.valid?
   end
 end
