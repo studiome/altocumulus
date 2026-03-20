@@ -10,13 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_17_130540) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_20_102000) do
   create_table "patients", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "date_of_birth"
     t.string "hospital_id"
     t.string "name"
     t.datetime "updated_at", null: false
+    t.index ["hospital_id"], name: "index_patients_on_hospital_id", unique: true
   end
 
   create_table "surgeries", force: :cascade do |t|
