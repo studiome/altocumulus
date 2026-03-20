@@ -1,0 +1,54 @@
+<% content_for :title, "Surgery Procedures" %>
+
+<div class="w-full">
+  <% if notice.present? %>
+    <div class="toast toast-top toast-end z-50">
+      <div class="alert alert-success">
+        <span><%= notice %></span>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="font-bold text-4xl mb-2">Surgery Procedures</h1>
+    </div>
+    <%= link_to new_surgery_procedure_path, class: "btn btn-primary" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+      New Procedure
+    <% end %>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200">Name</th>
+            <th class="bg-base-200 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @surgery_procedures.any? %>
+            <% @surgery_procedures.each do |surgery_procedure| %>
+              <tr class="hover">
+                <td class="font-semibold"><%= surgery_procedure.name %></td>
+                <td class="text-right flex justify-end gap-2">
+                  <%= link_to "View", surgery_procedure, class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to "Edit", edit_surgery_procedure_path(surgery_procedure), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to "Delete", surgery_procedure, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="2" class="text-center py-10 text-base-content/50 italic">
+                No procedures found. Click "New Procedure" to get started.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,11 @@
+appendectomy:
+  name: "Appendectomy"
+
+knee_arthroscopy:
+  name: "Knee arthroscopy"
+
+cholecystectomy:
+  name: "Cholecystectomy"
+
+updated_procedure:
+  name: "Updated Procedure"

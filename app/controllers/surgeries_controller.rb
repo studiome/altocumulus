@@ -1,6 +1,6 @@
 class SurgeriesController < ApplicationController
   before_action :set_surgery, only: %i[ show edit update destroy ]
-  before_action :set_patients, only: %i[ new edit create update ]
+  before_action :set_form_collections, only: %i[ new edit create update ]
 
   # GET /surgeries or /surgeries.json
   def index
@@ -63,8 +63,9 @@ class SurgeriesController < ApplicationController
       @surgery = Surgery.find(params.expect(:id))
     end
 
-    def set_patients
+    def set_form_collections
       @patients = Patient.order(:id)
+      @surgery_procedures = SurgeryProcedure.order(:name)
     end
 
     def surgery_params

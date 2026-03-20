@@ -31,12 +31,13 @@
       <div class="flex-none">
         <ul class="menu menu-horizontal px-1">
           <li><%= link_to "Patients", patients_path %></li>
+          <li><%= link_to "Procedures", surgery_procedures_path %></li>
           <li><%= link_to "Surgeries", surgeries_path %></li>
         </ul>
       </div>
     </header>
 
-    <main class="container mx-auto py-12 px-4 flex-grow">
+    <main class="container mx-auto py-12 px-4 grow">
       <%= yield %>
     </main>
 

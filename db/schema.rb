@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_20_102000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_20_110000) do
   create_table "patients", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "date_of_birth"
@@ -29,6 +29,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_20_102000) do
     t.date "surgery_date"
     t.datetime "updated_at", null: false
     t.index ["patient_id"], name: "index_surgeries_on_patient_id"
+  end
+
+  create_table "surgery_procedures", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_surgery_procedures_on_name", unique: true
   end
 
   add_foreign_key "surgeries", "patients"

@@ -5,7 +5,7 @@ class SurgeryTest < ActiveSupport::TestCase
     surgery = Surgery.new(
       patient: patients(:one),
       surgery_date: Date.new(2026, 3, 1),
-      procedure: "Appendectomy",
+      procedure: surgery_procedures(:appendectomy).name,
       anesthesia_method: "General",
       duration_hours: 1.5
     )
@@ -25,6 +25,13 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_not surgery.valid?
   end
 
+  test "should require procedure to exist in the master list" do
+    surgery = surgeries(:one)
+    surgery.procedure = "Not in list"
+
+    assert_not surgery.valid?
+  end
+
   test "should require anesthesia_method" do
     surgery = surgeries(:one)
     surgery.anesthesia_method = nil
@@ -37,4 +44,3 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_not surgery.valid?
   end
 end
-

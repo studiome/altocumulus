@@ -1,0 +1,26 @@
+<%= form_with(model: surgery_procedure, class: "space-y-6") do |form| %>
+  <% if surgery_procedure.errors.any? %>
+    <div role="alert" class="alert alert-error mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <h3 class="font-bold"><%= pluralize(surgery_procedure.errors.count, "error") %> prohibited this surgery procedure from being saved:</h3>
+        <ul class="list-disc ml-6">
+          <% surgery_procedure.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="form-control w-full">
+    <%= form.label :name, class: "label" do %>
+      <span class="label-text font-semibold text-base">Procedure Name</span>
+    <% end %>
+    <%= form.text_field :name, class: "input input-bordered w-full focus:input-primary", placeholder: "e.g. Laparoscopic cholecystectomy" %>
+  </div>
+
+  <div class="pt-4">
+    <%= form.submit class: "btn btn-primary w-full" %>
+  </div>
+<% end %>
