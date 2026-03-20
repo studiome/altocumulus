@@ -20,7 +20,7 @@
     <div class="card-body">
       <div class="flex justify-between items-start mb-6">
         <div>
-          <h2 class="card-title text-3xl mb-1 text-primary"><%= @surgery.procedure %></h2>
+          <h2 class="card-title text-3xl mb-1 text-primary"><%= @surgery.display_procedure_name %></h2>
           <p class="text-base-content/60 font-mono">
             Date: <%= @surgery.surgery_date&.strftime("%Y-%m-%d") %>
           </p>
@@ -42,6 +42,12 @@
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Anesthesia</span>
           <span class="text-lg font-medium"><%= @surgery.anesthesia_method %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Laterality</span>
+          <span class="text-lg font-medium">
+            <%= { "right" => "Right", "left" => "Left", "bilateral" => "Bilateral", "none" => "None" }[@surgery.laterality] %>
+          </span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Patient</span>

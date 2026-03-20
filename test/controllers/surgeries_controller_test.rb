@@ -20,6 +20,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
       post surgeries_url, params: { surgery: {
         patient_id: patients(:one).id,
         surgery_date: "2026-03-03",
+        laterality: "bilateral",
         procedure: surgery_procedures(:cholecystectomy).name,
         anesthesia_method: "General",
         duration_hours: 2.0
@@ -43,6 +44,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     patch surgery_url(@surgery), params: { surgery: {
       patient_id: @surgery.patient_id,
       surgery_date: @surgery.surgery_date,
+      laterality: "none",
       procedure: surgery_procedures(:updated_procedure).name,
       anesthesia_method: @surgery.anesthesia_method,
       duration_hours: @surgery.duration_hours

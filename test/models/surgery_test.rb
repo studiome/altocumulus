@@ -5,6 +5,7 @@ class SurgeryTest < ActiveSupport::TestCase
     surgery = Surgery.new(
       patient: patients(:one),
       surgery_date: Date.new(2026, 3, 1),
+      laterality: "right",
       procedure: surgery_procedures(:appendectomy).name,
       anesthesia_method: "General",
       duration_hours: 1.5
@@ -42,5 +43,19 @@ class SurgeryTest < ActiveSupport::TestCase
     surgery = surgeries(:one)
     surgery.duration_hours = -1.0
     assert_not surgery.valid?
+  end
+
+  test "display_procedure_name should omit laterality when none" do
+    surgery = surgeries(:one)
+    surgery.laterality = "none"
+
+    assert_equal surgery.procedure, surgery.display_procedure_name
+  end
+
+  test "display_procedure_name should prefix laterality when present" do
+    surgery = surgeries(:one)
+    surgery.laterality = "left"
+
+    assert_equal "Left #{surgery.procedure}", surgery.display_procedure_name
   end
 end
