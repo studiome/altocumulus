@@ -71,4 +71,3 @@ class SurgeriesController < ApplicationController
       params.expect(surgery: [ :surgery_date, :procedure, :duration_hours, :anesthesia_method, :patient_id ])
     end
 end
-
