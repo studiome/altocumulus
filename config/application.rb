@@ -23,5 +23,6 @@ module Altocumulus
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+    config.action_controller.forgery_protection_origin_check = false
   end
 end
