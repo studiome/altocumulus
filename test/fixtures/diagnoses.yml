@@ -1,0 +1,11 @@
+appendicitis:
+  name: "Appendicitis"
+
+pneumonia:
+  name: "Pneumonia"
+
+fracture:
+  name: "Fracture"
+
+updated_diagnosis:
+  name: "Updated Diagnosis"
