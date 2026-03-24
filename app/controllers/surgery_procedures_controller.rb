@@ -18,10 +18,14 @@ class SurgeryProceduresController < ApplicationController
   def create
     @surgery_procedure = SurgeryProcedure.new(surgery_procedure_params)
 
-    if @surgery_procedure.save
-      redirect_to @surgery_procedure, notice: "Surgery procedure was successfully created."
-    else
-      render :new, status: :unprocessable_entity
+    respond_to do |format|
+      if @surgery_procedure.save
+        format.html { redirect_to @surgery_procedure, notice: "Surgery procedure was successfully created." }
+        format.turbo_stream
+      else
+        format.html { render :new, status: :unprocessable_entity }
+        format.turbo_stream { render :new, status: :unprocessable_entity }
+      end
     end
   end
 

@@ -1,0 +1,15 @@
+<%= turbo_stream.replace "surgery_procedure_modal_frame" do %>
+  <%= turbo_frame_tag "surgery_procedure_modal_frame" do %>
+    <div class="p-6">
+      <div class="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <h2 class="text-2xl font-bold">New Surgery Procedure</h2>
+          <p class="text-sm text-base-content/60">Create a procedure master without leaving this surgery form.</p>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" data-action="surgery-procedure-modal#close">Close</button>
+      </div>
+
+      <%= render "form", surgery_procedure: @surgery_procedure %>
+    </div>
+  <% end %>
+<% end %>

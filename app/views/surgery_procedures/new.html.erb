@@ -1,16 +1,32 @@
 <% content_for :title, "New Surgery Procedure" %>
 
-<div class="max-w-xl mx-auto w-full">
-  <div class="mb-8 flex items-center gap-4">
-    <%= link_to surgery_procedures_path, class: "btn btn-circle btn-ghost" do %>
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-    <% end %>
-    <h1 class="font-bold text-4xl">New Surgery Procedure</h1>
-  </div>
+<% if turbo_frame_request? %>
+  <%= turbo_frame_tag "surgery_procedure_modal_frame" do %>
+    <div class="p-6">
+      <div class="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <h2 class="text-2xl font-bold">New Surgery Procedure</h2>
+          <p class="text-sm text-base-content/60">Create a procedure master without leaving this surgery form.</p>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" data-action="surgery-procedure-modal#close">Close</button>
+      </div>
 
-  <div class="card bg-base-100 shadow-xl border border-base-200">
-    <div class="card-body">
       <%= render "form", surgery_procedure: @surgery_procedure %>
     </div>
+  <% end %>
+<% else %>
+  <div class="max-w-xl mx-auto w-full">
+    <div class="mb-8 flex items-center gap-4">
+      <%= link_to surgery_procedures_path, class: "btn btn-circle btn-ghost" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+      <% end %>
+      <h1 class="font-bold text-4xl">New Surgery Procedure</h1>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl border border-base-200">
+      <div class="card-body">
+        <%= render "form", surgery_procedure: @surgery_procedure %>
+      </div>
+    </div>
   </div>
-</div>
+<% end %>
