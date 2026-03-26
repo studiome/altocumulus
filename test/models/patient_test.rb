@@ -13,7 +13,10 @@ class PatientTest < ActiveSupport::TestCase
       surgery_date: Date.new(2026, 3, 1),
       procedure: "Appendectomy",
       anesthesia_method: "General",
-      duration_hours: 1.5
+      duration_hours: 1.5,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
     )
 
     surgeries_count = patient.surgeries.count

@@ -1,0 +1,27 @@
+<div class="rounded-box border border-base-200 bg-base-100 p-4 space-y-3" data-surgery-procedure-fields-target="item">
+  <%= selection_fields.hidden_field :_destroy, value: "0", data: { surgery_procedure_fields_target: "destroyField" } %>
+  <% if selection_fields.object.persisted? %>
+    <%= selection_fields.hidden_field :id %>
+  <% end %>
+
+  <div class="space-y-4">
+    <div class="form-control w-full">
+      <%= selection_fields.label :laterality, class: "label" do %>
+        <span class="label-text font-semibold text-sm">Laterality</span>
+      <% end %>
+      <%= selection_fields.select :laterality, laterality_options, {}, class: "select select-bordered w-full focus:select-primary" %>
+    </div>
+
+    <div class="form-control w-full">
+      <%= selection_fields.label :surgery_procedure_id, class: "label" do %>
+        <span class="label-text font-semibold text-sm">Procedure</span>
+      <% end %>
+      <% procedure_choices = procedure_options.map { |procedure| [procedure.name, procedure.id] } %>
+      <%= selection_fields.select :surgery_procedure_id, procedure_choices, { prompt: "Select a procedure" }, class: "select select-bordered w-full focus:select-primary" %>
+    </div>
+  </div>
+
+  <div class="flex justify-end">
+    <button type="button" class="btn btn-ghost btn-sm" data-action="surgery-procedure-fields#remove">Remove</button>
+  </div>
+</div>

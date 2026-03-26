@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_21_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_26_140000) do
   create_table "diagnoses", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -39,6 +39,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_120000) do
     t.index ["patient_id"], name: "index_surgeries_on_patient_id"
   end
 
+  create_table "surgery_procedure_selections", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "laterality", default: "none", null: false
+    t.integer "surgery_id", null: false
+    t.integer "surgery_procedure_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["surgery_id", "surgery_procedure_id"], name: "index_surgery_procedure_selections_on_surgery_and_procedure", unique: true
+    t.index ["surgery_id"], name: "index_surgery_procedure_selections_on_surgery_id"
+    t.index ["surgery_procedure_id"], name: "index_surgery_procedure_selections_on_surgery_procedure_id"
+  end
+
   create_table "surgery_procedures", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -47,4 +58,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_120000) do
   end
 
   add_foreign_key "surgeries", "patients"
+  add_foreign_key "surgery_procedure_selections", "surgeries"
+  add_foreign_key "surgery_procedure_selections", "surgery_procedures"
 end

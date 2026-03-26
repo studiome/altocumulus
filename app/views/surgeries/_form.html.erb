@@ -48,23 +48,32 @@
     <%= form.date_field :surgery_date, class: "input input-bordered w-full focus:input-primary" %>
   </div>
 
-  <div class="form-control w-full">
-    <%= form.label :laterality, class: "label" do %>
-      <span class="label-text font-semibold text-base">Laterality</span>
-    <% end %>
-    <% laterality_options = [["Right", "right"], ["Left", "left"], ["Bilateral", "bilateral"], ["None", "none"]] %>
-    <%= form.select :laterality, laterality_options, {}, class: "select select-bordered w-full focus:select-primary" %>
-  </div>
+  <% laterality_options = [["Right", "right"], ["Left", "left"], ["Bilateral", "bilateral"], ["None", "none"]] %>
 
-  <div class="form-control w-full">
-    <%= form.label :procedure, class: "label" do %>
-      <span class="label-text font-semibold text-base">Procedure</span>
-    <% end %>
-    <% procedure_options = defined?(@surgery_procedures) ? @surgery_procedures.map { |procedure| [procedure.name, procedure.name] } : [] %>
-    <%= form.select :procedure, procedure_options, { prompt: "Select a procedure" }, class: "select select-bordered w-full focus:select-primary", id: "surgery_procedure_procedure" %>
-    <div class="mt-2 flex items-center justify-between gap-3 text-sm">
-      <span class="text-base-content/60">If the right procedure is not listed, create a new one first.</span>
+  <div class="space-y-4" data-controller="surgery-procedure-fields" data-surgery-procedure-fields-max-items-value="5">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <span class="label-text font-semibold text-base">Procedures</span>
+        <p class="text-sm text-base-content/60">Add up to 5 procedures for one surgery.</p>
+      </div>
       <%= link_to "New Procedure", new_surgery_procedure_path, class: "btn btn-link no-underline px-0", data: { turbo_frame: "surgery_procedure_modal_frame" } %>
+    </div>
+
+    <div class="space-y-3" data-surgery-procedure-fields-target="list">
+      <%= form.fields_for :surgery_procedure_selections do |selection_fields| %>
+        <%= render "surgery_procedure_selection_fields", form: form, selection_fields: selection_fields, procedure_options: defined?(@surgery_procedures) ? @surgery_procedures : [], laterality_options: laterality_options %>
+      <% end %>
+    </div>
+
+    <template data-surgery-procedure-fields-target="template">
+      <%= form.fields_for :surgery_procedure_selections, SurgeryProcedureSelection.new, child_index: "NEW_RECORD" do |selection_fields| %>
+        <%= render "surgery_procedure_selection_fields", form: form, selection_fields: selection_fields, procedure_options: defined?(@surgery_procedures) ? @surgery_procedures : [], laterality_options: laterality_options %>
+      <% end %>
+    </template>
+
+    <div class="flex items-center justify-between gap-3">
+      <span class="text-sm text-base-content/60">If the right procedure is not listed, create a new one first.</span>
+      <button type="button" class="btn btn-outline btn-sm" data-surgery-procedure-fields-target="addButton" data-action="surgery-procedure-fields#add">Add Procedure</button>
     </div>
   </div>
 

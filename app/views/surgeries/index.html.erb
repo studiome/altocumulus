@@ -25,7 +25,7 @@
         <thead>
           <tr>
             <th class="bg-base-200">Surgery Date</th>
-            <th class="bg-base-200">Procedure</th>
+            <th class="bg-base-200">Procedures</th>
             <th class="bg-base-200">Duration</th>
             <th class="bg-base-200">Anesthesia</th>
             <th class="bg-base-200">Patient</th>
@@ -37,7 +37,10 @@
             <% @surgeries.each do |surgery| %>
               <tr class="hover">
                 <td class="font-mono font-medium"><%= surgery.surgery_date&.strftime("%Y-%m-%d") %></td>
-                <td class="font-semibold"><%= surgery.display_procedure_name %></td>
+                <td>
+                  <div class="font-semibold leading-snug"><%= surgery.procedure_names_display %></div>
+                  <div class="text-xs text-base-content/60 mt-1 leading-snug"><%= surgery.laterality_names_display %></div>
+                </td>
                 <td><%= surgery.duration_hours.present? ? "#{surgery.duration_hours} h" : "-" %></td>
                 <td><%= surgery.anesthesia_method %></td>
                 <td>

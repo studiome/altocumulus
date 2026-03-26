@@ -1,0 +1,14 @@
+one_appendectomy:
+  surgery: one
+  surgery_procedure: appendectomy
+  laterality: right
+
+one_knee_arthroscopy:
+  surgery: one
+  surgery_procedure: knee_arthroscopy
+  laterality: left
+
+two_knee_arthroscopy:
+  surgery: two
+  surgery_procedure: knee_arthroscopy
+  laterality: bilateral

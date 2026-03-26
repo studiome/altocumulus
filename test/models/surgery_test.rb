@@ -6,9 +6,12 @@ class SurgeryTest < ActiveSupport::TestCase
       patient: patients(:one),
       surgery_date: Date.new(2026, 3, 1),
       laterality: "right",
-      procedure: surgery_procedures(:appendectomy).name,
       anesthesia_method: "General",
-      duration_hours: 1.5
+      duration_hours: 1.5,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" },
+        { surgery_procedure_id: surgery_procedures(:knee_arthroscopy).id, laterality: "left" }
+      ]
     )
 
     assert surgery.valid?
@@ -20,17 +23,72 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_not surgery.valid?
   end
 
-  test "should require procedure" do
-    surgery = surgeries(:one)
-    surgery.procedure = nil
-    assert_not surgery.valid?
+  test "should sync primary procedure from selections" do
+    surgery = Surgery.new(
+      patient: patients(:one),
+      surgery_date: Date.new(2026, 3, 1),
+      laterality: "right",
+      anesthesia_method: "General",
+      duration_hours: 1.5,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:cholecystectomy).id, laterality: "bilateral" },
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "left" }
+      ]
+    )
+
+    assert surgery.valid?
+    assert_equal "Cholecystectomy", surgery.procedure
   end
 
-  test "should require procedure to exist in the master list" do
-    surgery = surgeries(:one)
-    surgery.procedure = "Not in list"
+  test "should require at least one procedure selection" do
+    surgery = Surgery.new(
+      patient: patients(:one),
+      surgery_date: Date.new(2026, 3, 1),
+      laterality: "right",
+      anesthesia_method: "General",
+      duration_hours: 1.5
+    )
 
     assert_not surgery.valid?
+    assert_includes surgery.errors[:surgery_procedure_selections], "must include at least one procedure"
+  end
+
+  test "should limit procedure selections to five" do
+    surgery = Surgery.new(
+      patient: patients(:one),
+      surgery_date: Date.new(2026, 3, 1),
+      laterality: "right",
+      anesthesia_method: "General",
+      duration_hours: 1.5,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" },
+        { surgery_procedure_id: surgery_procedures(:knee_arthroscopy).id, laterality: "left" },
+        { surgery_procedure_id: surgery_procedures(:cholecystectomy).id, laterality: "bilateral" },
+        { surgery_procedure_id: surgery_procedures(:updated_procedure).id, laterality: "none" },
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" },
+        { surgery_procedure_id: surgery_procedures(:knee_arthroscopy).id, laterality: "left" }
+      ]
+    )
+
+    assert_not surgery.valid?
+    assert_includes surgery.errors[:surgery_procedure_selections], "must be five or fewer"
+  end
+
+  test "should reject duplicate procedure selections" do
+    surgery = Surgery.new(
+      patient: patients(:one),
+      surgery_date: Date.new(2026, 3, 1),
+      laterality: "right",
+      anesthesia_method: "General",
+      duration_hours: 1.5,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" },
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "left" }
+      ]
+    )
+
+    assert_not surgery.valid?
+    assert_includes surgery.errors[:surgery_procedure_selections], "must not include duplicate procedures"
   end
 
   test "should require anesthesia_method" do
@@ -46,16 +104,34 @@ class SurgeryTest < ActiveSupport::TestCase
   end
 
   test "display_procedure_name should omit laterality when none" do
-    surgery = surgeries(:one)
-    surgery.laterality = "none"
+    surgery = Surgery.new(
+      patient: patients(:one),
+      surgery_date: Date.new(2026, 3, 1),
+      laterality: "right",
+      anesthesia_method: "General",
+      duration_hours: 1.5,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "none" },
+        { surgery_procedure_id: surgery_procedures(:knee_arthroscopy).id, laterality: "left" }
+      ]
+    )
 
-    assert_equal surgery.procedure, surgery.display_procedure_name
+    assert_equal "Appendectomy、Left Knee arthroscopy", surgery.display_procedure_name
   end
 
   test "display_procedure_name should prefix laterality when present" do
-    surgery = surgeries(:one)
-    surgery.laterality = "left"
+    surgery = Surgery.new(
+      patient: patients(:one),
+      surgery_date: Date.new(2026, 3, 1),
+      laterality: "right",
+      anesthesia_method: "General",
+      duration_hours: 1.5,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" },
+        { surgery_procedure_id: surgery_procedures(:knee_arthroscopy).id, laterality: "bilateral" }
+      ]
+    )
 
-    assert_equal "Left #{surgery.procedure}", surgery.display_procedure_name
+    assert_equal "Right Appendectomy、Bilateral Knee arthroscopy", surgery.display_procedure_name
   end
 end

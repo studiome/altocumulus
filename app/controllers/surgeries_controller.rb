@@ -14,10 +14,12 @@ class SurgeriesController < ApplicationController
   # GET /surgeries/new
   def new
     @surgery = Surgery.new(patient_id: params[:patient_id])
+    build_surgery_procedure_selections
   end
 
   # GET /surgeries/1/edit
   def edit
+    build_surgery_procedure_selections
   end
 
   # POST /surgeries or /surgeries.json
@@ -29,6 +31,7 @@ class SurgeriesController < ApplicationController
         format.html { redirect_to @surgery, notice: "Surgery was successfully created." }
         format.json { render :show, status: :created, location: @surgery }
       else
+        build_surgery_procedure_selections if @surgery.surgery_procedure_selections.empty?
         format.html { render :new, status: :unprocessable_entity }
         format.json { render json: @surgery.errors, status: :unprocessable_entity }
       end
@@ -42,6 +45,7 @@ class SurgeriesController < ApplicationController
         format.html { redirect_to @surgery, notice: "Surgery was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @surgery }
       else
+        build_surgery_procedure_selections if @surgery.surgery_procedure_selections.empty?
         format.html { render :edit, status: :unprocessable_entity }
         format.json { render json: @surgery.errors, status: :unprocessable_entity }
       end
@@ -68,7 +72,18 @@ class SurgeriesController < ApplicationController
       @surgery_procedures = SurgeryProcedure.order(:name)
     end
 
+    def build_surgery_procedure_selections
+      @surgery.surgery_procedure_selections.build if @surgery.surgery_procedure_selections.empty?
+    end
+
     def surgery_params
-      params.expect(surgery: [ :surgery_date, :laterality, :procedure, :duration_hours, :anesthesia_method, :patient_id ])
+      params.require(:surgery).permit(
+        :surgery_date,
+        :laterality,
+        :duration_hours,
+        :anesthesia_method,
+        :patient_id,
+        surgery_procedure_selections_attributes: [ :id, :surgery_procedure_id, :laterality, :_destroy ]
+      )
     end
 end
