@@ -52,8 +52,16 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
       anesthesia_method: @surgery.anesthesia_method,
       duration_hours: @surgery.duration_hours,
       surgery_procedure_selections_attributes: {
-        "0" => { id: surgery_procedure_selections(:one_appendectomy).id, surgery_procedure_id: surgery_procedures(:updated_procedure).id, laterality: "left" },
-        "1" => { id: surgery_procedure_selections(:one_knee_arthroscopy).id, surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        "0" => {
+          id: surgery_procedure_selections(:one_appendectomy).id,
+          surgery_procedure_id: surgery_procedures(:updated_procedure).id,
+          laterality: "left"
+        },
+        "1" => {
+          id: surgery_procedure_selections(:one_knee_arthroscopy).id,
+          surgery_procedure_id: surgery_procedures(:appendectomy).id,
+          laterality: "right"
+        }
       }
     } }
 
