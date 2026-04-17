@@ -8,6 +8,7 @@ class PatientsControllerTest < ActionDispatch::IntegrationTest
   test "should get index" do
     get patients_url
     assert_response :success
+    assert_select "a[href='#{new_patient_patient_diagnosis_path(@patient)}']", text: "Add Diagnosis"
   end
 
   test "should get new" do

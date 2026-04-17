@@ -38,6 +38,7 @@
                 <td class="font-semibold"><%= patient.name %></td>
                 <td><%= patient.date_of_birth.strftime("%Y-%m-%d") if patient.date_of_birth %></td>
                 <td class="text-right flex justify-end gap-2">
+                  <%= link_to "Add Diagnosis", new_patient_patient_diagnosis_path(patient), class: "btn btn-ghost btn-xs text-accent" %>
                   <%= link_to "View", patient, class: "btn btn-ghost btn-xs text-primary" %>
                   <%= link_to "Edit", edit_patient_path(patient), class: "btn btn-ghost btn-xs text-secondary" %>
                   <%= button_to "Delete", patient, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
