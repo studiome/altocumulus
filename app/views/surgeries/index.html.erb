@@ -40,8 +40,7 @@
                 <td class="font-mono font-medium"><%= surgery.surgery_date&.strftime("%Y-%m-%d") %></td>
                 <td><%= surgery.diagnosis_names_display %></td>
                 <td>
-                  <div class="font-semibold leading-snug"><%= surgery.procedure_names_display %></div>
-                  <div class="text-xs text-base-content/60 mt-1 leading-snug"><%= surgery.laterality_names_display %></div>
+                  <div class="font-semibold leading-snug"><%= surgery.display_procedure_name %></div>
                 </td>
                 <td><%= surgery.duration_hours.present? ? "#{surgery.duration_hours} h" : "-" %></td>
                 <td><%= surgery.anesthesia_method %></td>
