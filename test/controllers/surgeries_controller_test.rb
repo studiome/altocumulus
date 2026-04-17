@@ -19,6 +19,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_difference("Surgery.count") do
       post surgeries_url, params: { surgery: {
         patient_id: patients(:one).id,
+        patient_diagnosis_ids: [ patient_diagnoses(:appendicitis).id, patient_diagnoses(:hypertension).id ],
         surgery_date: "2026-03-03",
         anesthesia_method: "General",
         duration_hours: 2.0,
@@ -30,6 +31,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to surgery_url(Surgery.last)
+  assert_equal [ patient_diagnoses(:appendicitis).id, patient_diagnoses(:hypertension).id ].sort, Surgery.last.patient_diagnoses.ids.sort
     assert_equal [ "Cholecystectomy", "Appendectomy" ], Surgery.last.procedure_names
     assert_equal [ "bilateral", "left" ], Surgery.last.surgery_procedure_selections.order(:id).pluck(:laterality)
     assert_equal "Bilateral Cholecystectomy、Left Appendectomy", Surgery.last.display_procedure_name
@@ -48,6 +50,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
   test "should update surgery" do
     patch surgery_url(@surgery), params: { surgery: {
       patient_id: @surgery.patient_id,
+      patient_diagnosis_ids: [ patient_diagnoses(:appendicitis).id, patient_diagnoses(:hypertension).id ],
       surgery_date: @surgery.surgery_date,
       anesthesia_method: @surgery.anesthesia_method,
       duration_hours: @surgery.duration_hours,
@@ -67,9 +70,27 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to surgery_url(@surgery)
     @surgery.reload
+    assert_equal [ patient_diagnoses(:appendicitis).id, patient_diagnoses(:hypertension).id ].sort, @surgery.patient_diagnoses.ids.sort
     assert_equal [ "Updated Procedure", "Appendectomy" ], @surgery.procedure_names
     assert_equal [ "left", "right" ], @surgery.surgery_procedure_selections.order(:id).pluck(:laterality)
     assert_equal "Left Updated Procedure、Right Appendectomy", @surgery.display_procedure_name
+  end
+
+  test "should reject diagnosis belonging to another patient" do
+    assert_no_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        patient_diagnosis_ids: [ patient_diagnoses(:appendicitis).id, patient_diagnoses(:pneumonia).id ],
+        surgery_date: "2026-03-03",
+        anesthesia_method: "General",
+        duration_hours: 2.0,
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    assert_response :unprocessable_entity
   end
 
   test "should destroy surgery" do

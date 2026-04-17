@@ -1,0 +1,7 @@
+one_appendicitis:
+  surgery: one
+  patient_diagnosis: appendicitis
+
+two_pneumonia:
+  surgery: two
+  patient_diagnosis: pneumonia

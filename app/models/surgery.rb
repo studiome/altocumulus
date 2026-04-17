@@ -2,6 +2,8 @@ class Surgery < ApplicationRecord
   attribute :laterality, :string, default: "none"
 
   belongs_to :patient
+  has_many :surgery_diagnoses, dependent: :destroy
+  has_many :patient_diagnoses, through: :surgery_diagnoses
   has_many :surgery_procedure_selections, -> { order(:id) }, dependent: :destroy, inverse_of: :surgery
   has_many :selected_surgery_procedures, through: :surgery_procedure_selections, source: :surgery_procedure
   belongs_to :surgery_procedure,
@@ -25,6 +27,7 @@ class Surgery < ApplicationRecord
   validates :anesthesia_method, presence: true
   validates :duration_hours, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :laterality, inclusion: { in: LATERALITY_PREFIXES.keys }
+  validate :patient_diagnoses_must_belong_to_patient
   validate :procedure_must_exist
   validate :must_have_at_least_one_procedure_selection
   validate :no_more_than_five_procedure_selections
@@ -42,6 +45,10 @@ class Surgery < ApplicationRecord
 
   def laterality_names_display
     active_surgery_procedure_selections.map(&:laterality_label).join("、").presence || "-"
+  end
+
+  def diagnosis_names_display
+    patient_diagnoses.includes(:diagnosis).map(&:diagnosis_name).join("、").presence || "-"
   end
 
   def procedure_display_names
@@ -64,6 +71,13 @@ class Surgery < ApplicationRecord
     return if active_surgery_procedure_selections.empty?
 
     self.procedure = procedure_names.first
+  end
+
+  def patient_diagnoses_must_belong_to_patient
+    return if patient_diagnoses.empty? || patient_id.blank?
+    return if patient_diagnoses.all? { |patient_diagnosis| patient_diagnosis.patient_id == patient_id }
+
+    errors.add(:patient_diagnoses, "must all belong to the selected patient")
   end
 
   def procedure_must_exist

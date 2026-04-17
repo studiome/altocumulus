@@ -4,7 +4,7 @@ class SurgeriesController < ApplicationController
 
   # GET /surgeries or /surgeries.json
   def index
-    @surgeries = Surgery.includes(:patient).order(surgery_date: :desc, created_at: :desc)
+    @surgeries = Surgery.includes(:patient, patient_diagnoses: :diagnosis).order(surgery_date: :desc, created_at: :desc)
   end
 
   # GET /surgeries/1 or /surgeries/1.json
@@ -69,6 +69,7 @@ class SurgeriesController < ApplicationController
 
     def set_form_collections
       @patients = Patient.order(:id)
+      @patient_diagnoses = PatientDiagnosis.includes(:patient, :diagnosis).recent_first
       @surgery_procedures = SurgeryProcedure.order(:name)
     end
 
@@ -83,6 +84,7 @@ class SurgeriesController < ApplicationController
         :duration_hours,
         :anesthesia_method,
         :patient_id,
+        patient_diagnosis_ids: [],
         surgery_procedure_selections_attributes: [ :id, :surgery_procedure_id, :laterality, :_destroy ]
       )
     end

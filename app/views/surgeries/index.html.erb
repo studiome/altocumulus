@@ -25,6 +25,7 @@
         <thead>
           <tr>
             <th class="bg-base-200">Surgery Date</th>
+            <th class="bg-base-200">Diagnosis</th>
             <th class="bg-base-200">Procedures</th>
             <th class="bg-base-200">Duration</th>
             <th class="bg-base-200">Anesthesia</th>
@@ -37,6 +38,7 @@
             <% @surgeries.each do |surgery| %>
               <tr class="hover">
                 <td class="font-mono font-medium"><%= surgery.surgery_date&.strftime("%Y-%m-%d") %></td>
+                <td><%= surgery.diagnosis_names_display %></td>
                 <td>
                   <div class="font-semibold leading-snug"><%= surgery.procedure_names_display %></div>
                   <div class="text-xs text-base-content/60 mt-1 leading-snug"><%= surgery.laterality_names_display %></div>
@@ -60,7 +62,7 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="6" class="text-center py-10 text-base-content/50 italic">
+              <td colspan="7" class="text-center py-10 text-base-content/50 italic">
                 No surgeries found. Click "New Surgery" to get started.
               </td>
             </tr>
