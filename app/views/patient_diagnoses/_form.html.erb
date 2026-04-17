@@ -39,10 +39,19 @@
     </div>
   <% end %>
 
+  <% laterality_options = [["Right", "right"], ["Left", "left"], ["Bilateral", "bilateral"], ["None", "none"]] %>
+
+  <div class="form-control w-full">
+    <%= form.label :laterality, class: "label" do %>
+      <span class="label-text font-semibold text-base">Laterality</span>
+    <% end %>
+    <%= form.select :laterality, laterality_options, {}, class: "select select-bordered w-full focus:select-primary" %>
+  </div>
+
   <div class="form-control w-full">
     <div class="flex items-center justify-between gap-3">
       <%= form.label :diagnosis_id, class: "label" do %>
-        <span class="label-text font-semibold text-base">Diagnosis Name</span>
+        <span class="label-text font-semibold text-base">Diagnosis</span>
       <% end %>
       <%= link_to "New Diagnosis", new_diagnosis_path, class: "btn btn-link no-underline px-0", data: { turbo_frame: "diagnosis_modal_frame" } %>
     </div>

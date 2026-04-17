@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_17_123000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_17_133000) do
   create_table "diagnoses", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -22,6 +22,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_123000) do
     t.datetime "created_at", null: false
     t.date "diagnosed_on", null: false
     t.integer "diagnosis_id", null: false
+    t.string "laterality", default: "none", null: false
     t.integer "patient_id", null: false
     t.datetime "updated_at", null: false
     t.index ["diagnosis_id"], name: "index_patient_diagnoses_on_diagnosis_id"

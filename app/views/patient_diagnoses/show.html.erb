@@ -20,7 +20,7 @@
     <div class="card-body">
       <div class="flex justify-between items-start mb-6">
         <div>
-          <h2 class="card-title text-3xl mb-1 text-primary"><%= @patient_diagnosis.diagnosis_name %></h2>
+          <h2 class="card-title text-3xl mb-1 text-primary"><%= @patient_diagnosis.display_name %></h2>
           <p class="text-base-content/60"><%= @patient.name %> / <span class="font-mono"><%= @patient.hospital_id %></span></p>
         </div>
         <div class="badge badge-outline badge-lg p-4">Diagnosis Record</div>
@@ -39,7 +39,11 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Diagnosis Name</span>
-          <span class="text-lg font-medium"><%= @patient_diagnosis.diagnosis_name %></span>
+          <span class="text-lg font-medium"><%= @patient_diagnosis.display_name %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Laterality</span>
+          <span class="text-lg font-medium"><%= @patient_diagnosis.laterality_label %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Diagnosed On</span>

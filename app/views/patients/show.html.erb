@@ -59,7 +59,7 @@
             <table class="table table-zebra w-full">
               <thead>
                 <tr>
-                  <th>Diagnosis Name</th>
+                  <th>Diagnosis</th>
                   <th>Diagnosed On</th>
                   <th class="text-right">Actions</th>
                 </tr>
@@ -67,7 +67,7 @@
               <tbody>
                 <% @patient_diagnoses.each do |patient_diagnosis| %>
                   <tr>
-                    <td class="font-semibold"><%= patient_diagnosis.diagnosis_name %></td>
+                    <td class="font-semibold"><%= patient_diagnosis.display_name %></td>
                     <td><%= patient_diagnosis.diagnosed_on.strftime("%Y-%m-%d") %></td>
                     <td class="text-right flex justify-end gap-2">
                       <%= link_to "View", patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-primary" %>

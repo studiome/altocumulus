@@ -1,14 +1,17 @@
 appendicitis:
   patient: one
   diagnosis: appendicitis
+  laterality: right
   diagnosed_on: 2026-03-20
 
 hypertension:
   patient: one
   diagnosis: hypertension
+  laterality: none
   diagnosed_on: 2026-04-01
 
 pneumonia:
   patient: two
   diagnosis: pneumonia
+  laterality: bilateral
   diagnosed_on: 2026-04-05
