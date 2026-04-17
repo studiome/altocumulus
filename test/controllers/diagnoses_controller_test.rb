@@ -23,6 +23,15 @@ class DiagnosesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to diagnosis_url(Diagnosis.last)
   end
 
+  test "should create diagnosis via turbo stream" do
+    assert_difference("Diagnosis.count") do
+      post diagnoses_url(format: :turbo_stream), params: { diagnosis: { name: "Migraine with aura" } }
+    end
+
+    assert_response :success
+    assert_equal Mime[:turbo_stream].to_s, response.media_type
+  end
+
   test "should show diagnosis" do
     get diagnosis_url(@diagnosis)
     assert_response :success
@@ -43,9 +52,17 @@ class DiagnosesControllerTest < ActionDispatch::IntegrationTest
 
   test "should destroy diagnosis" do
     assert_difference("Diagnosis.count", -1) do
-      delete diagnosis_url(@diagnosis)
+      delete diagnosis_url(diagnoses(:fracture))
     end
 
     assert_redirected_to diagnoses_url
+  end
+
+  test "should not destroy diagnosis in use" do
+    assert_no_difference("Diagnosis.count") do
+      delete diagnosis_url(@diagnosis)
+    end
+
+    assert_redirected_to diagnosis_url(@diagnosis)
   end
 end

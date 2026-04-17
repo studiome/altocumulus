@@ -9,3 +9,6 @@ fracture:
 
 updated_diagnosis:
   name: "Updated Diagnosis"
+
+hypertension:
+  name: "Hypertension"

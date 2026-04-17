@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
-  resources :patients
+  resources :patients do
+    resources :patient_diagnoses
+  end
   resources :diagnoses
   resources :surgery_procedures
   resources :surgeries

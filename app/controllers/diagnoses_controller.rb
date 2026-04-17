@@ -18,10 +18,14 @@ class DiagnosesController < ApplicationController
   def create
     @diagnosis = Diagnosis.new(diagnosis_params)
 
-    if @diagnosis.save
-      redirect_to @diagnosis, notice: "Diagnosis was successfully created."
-    else
-      render :new, status: :unprocessable_entity
+    respond_to do |format|
+      if @diagnosis.save
+        format.html { redirect_to @diagnosis, notice: "Diagnosis was successfully created." }
+        format.turbo_stream
+      else
+        format.html { render :new, status: :unprocessable_entity }
+        format.turbo_stream { render :new, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -34,8 +38,11 @@ class DiagnosesController < ApplicationController
   end
 
   def destroy
-    @diagnosis.destroy!
-    redirect_to diagnoses_path, notice: "Diagnosis was successfully destroyed.", status: :see_other
+    if @diagnosis.destroy
+      redirect_to diagnoses_path, notice: "Diagnosis was successfully destroyed.", status: :see_other
+    else
+      redirect_to diagnosis_path(@diagnosis), alert: @diagnosis.errors.full_messages.to_sentence, status: :see_other
+    end
   end
 
   private

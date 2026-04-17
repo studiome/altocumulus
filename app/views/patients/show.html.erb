@@ -43,6 +43,49 @@
         </div>
       </div>
 
+      <div class="divider">Diagnoses</div>
+
+      <div class="space-y-4 mb-8">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <h3 class="text-xl font-semibold">Diagnosis History</h3>
+            <p class="text-sm text-base-content/60">Register multiple diagnosis names and diagnosis dates for this patient.</p>
+          </div>
+          <%= link_to "Add Diagnosis", new_patient_patient_diagnosis_path(@patient), class: "btn btn-primary btn-sm" %>
+        </div>
+
+        <% if @patient_diagnoses.any? %>
+          <div class="overflow-x-auto border border-base-200 rounded-2xl">
+            <table class="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Diagnosis Name</th>
+                  <th>Diagnosed On</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @patient_diagnoses.each do |patient_diagnosis| %>
+                  <tr>
+                    <td class="font-semibold"><%= patient_diagnosis.diagnosis_name %></td>
+                    <td><%= patient_diagnosis.diagnosed_on.strftime("%Y-%m-%d") %></td>
+                    <td class="text-right flex justify-end gap-2">
+                      <%= link_to "View", patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-primary" %>
+                      <%= link_to "Edit", edit_patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-secondary" %>
+                      <%= button_to "Delete", patient_patient_diagnosis_path(@patient, patient_diagnosis), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <div class="rounded-2xl border border-dashed border-base-300 p-6 text-base-content/60">
+            No diagnosis entries have been registered yet.
+          </div>
+        <% end %>
+      </div>
+
       <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">
         <%= link_to "Edit Patient", edit_patient_path(@patient), class: "btn btn-secondary" %>
         <%= button_to "Delete Patient", @patient, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: "Are you sure?" } %>

@@ -10,12 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_26_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_17_100000) do
   create_table "diagnoses", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_diagnoses_on_name", unique: true
+  end
+
+  create_table "patient_diagnoses", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "diagnosed_on", null: false
+    t.integer "diagnosis_id", null: false
+    t.integer "patient_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["diagnosis_id"], name: "index_patient_diagnoses_on_diagnosis_id"
+    t.index ["patient_id", "diagnosed_on"], name: "index_patient_diagnoses_on_patient_id_and_diagnosed_on"
+    t.index ["patient_id"], name: "index_patient_diagnoses_on_patient_id"
   end
 
   create_table "patients", force: :cascade do |t|
@@ -57,6 +68,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_140000) do
     t.index ["name"], name: "index_surgery_procedures_on_name", unique: true
   end
 
+  add_foreign_key "patient_diagnoses", "diagnoses"
+  add_foreign_key "patient_diagnoses", "patients"
   add_foreign_key "surgeries", "patients"
   add_foreign_key "surgery_procedure_selections", "surgeries"
   add_foreign_key "surgery_procedure_selections", "surgery_procedures"

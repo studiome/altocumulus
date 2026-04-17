@@ -1,0 +1,22 @@
+<%= turbo_stream.append "patient_diagnosis_diagnosis_id" do %>
+  <%= tag.option @diagnosis.name, value: @diagnosis.id, selected: true %>
+<% end %>
+
+<%= turbo_stream.remove "patient_diagnosis_no_diagnoses_warning" %>
+
+<%= turbo_stream.replace "patient_diagnosis_submit" do %>
+  <div class="pt-4" id="patient_diagnosis_submit">
+    <%= tag.input type: "submit", value: "Save Diagnosis Entry", class: "btn btn-primary w-full" %>
+  </div>
+<% end %>
+
+<%= turbo_stream.replace "diagnosis_modal_frame" do %>
+  <%= turbo_frame_tag "diagnosis_modal_frame" do %>
+    <div class="p-6 text-center" data-controller="diagnosis-modal-success">
+      <div class="alert alert-success justify-start mb-4">
+        <span>Diagnosis was successfully created.</span>
+      </div>
+      <p class="text-sm text-base-content/60">The new diagnosis has been added to the diagnosis entry form.</p>
+    </div>
+  <% end %>
+<% end %>

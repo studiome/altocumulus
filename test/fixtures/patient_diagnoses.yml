@@ -1,0 +1,14 @@
+appendicitis:
+  patient: one
+  diagnosis: appendicitis
+  diagnosed_on: 2026-03-20
+
+hypertension:
+  patient: one
+  diagnosis: hypertension
+  diagnosed_on: 2026-04-01
+
+pneumonia:
+  patient: two
+  diagnosis: pneumonia
+  diagnosed_on: 2026-04-05

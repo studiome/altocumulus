@@ -1,0 +1,59 @@
+<% content_for :title, "Patient Diagnoses" %>
+
+<div class="max-w-4xl mx-auto w-full">
+  <% if notice.present? %>
+    <div class="toast toast-top toast-end z-50">
+      <div class="alert alert-success">
+        <span><%= notice %></span>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mb-8 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <%= link_to patient_path(@patient), class: "btn btn-circle btn-ghost" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+      <% end %>
+      <div>
+        <h1 class="font-bold text-4xl">Diagnoses</h1>
+        <p class="text-base-content/60"><%= @patient.name %> / <span class="font-mono"><%= @patient.hospital_id %></span></p>
+      </div>
+    </div>
+    <%= link_to "Add Diagnosis", new_patient_patient_diagnosis_path(@patient), class: "btn btn-primary" %>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200">Diagnosis Name</th>
+            <th class="bg-base-200">Diagnosed On</th>
+            <th class="bg-base-200 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @patient_diagnoses.any? %>
+            <% @patient_diagnoses.each do |patient_diagnosis| %>
+              <tr class="hover">
+                <td class="font-semibold"><%= patient_diagnosis.diagnosis_name %></td>
+                <td><%= patient_diagnosis.diagnosed_on.strftime("%Y-%m-%d") %></td>
+                <td class="text-right flex justify-end gap-2">
+                  <%= link_to "View", patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to "Edit", edit_patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to "Delete", patient_patient_diagnosis_path(@patient, patient_diagnosis), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="3" class="text-center py-10 text-base-content/50 italic">
+                No diagnoses found. Click "Add Diagnosis" to register the first entry.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
