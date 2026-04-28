@@ -5,17 +5,13 @@
   <% end %>
 
   <div class="space-y-4">
-    <div class="form-control w-full">
-      <%= selection_fields.label :laterality, class: "label" do %>
-        <span class="label-text font-semibold text-sm">Laterality</span>
-      <% end %>
+    <div class="app-field">
+      <%= selection_fields.label :laterality, "Laterality", class: "app-field-label" %>
       <%= selection_fields.select :laterality, laterality_options, {}, class: "select select-bordered w-full focus:select-primary" %>
     </div>
 
-    <div class="form-control w-full">
-      <%= selection_fields.label :surgery_procedure_id, class: "label" do %>
-        <span class="label-text font-semibold text-sm">Procedure</span>
-      <% end %>
+    <div class="app-field">
+      <%= selection_fields.label :surgery_procedure_id, "Procedure", class: "app-field-label" %>
       <% procedure_choices = procedure_options.map { |procedure| [procedure.name, procedure.id] } %>
       <%= selection_fields.select :surgery_procedure_id, procedure_choices, { prompt: "Select a procedure" }, class: "select select-bordered w-full focus:select-primary" %>
     </div>

@@ -1,6 +1,6 @@
 <% content_for :title, "Diagnoses" %>
 
-<div class="w-full">
+<div class="app-page">
   <% if notice.present? %>
     <div class="toast toast-top toast-end z-50">
       <div class="alert alert-success">
@@ -9,17 +9,20 @@
     </div>
   <% end %>
 
-  <div class="flex justify-between items-center mb-8">
-    <div>
-      <h1 class="font-bold text-4xl mb-2">Diagnoses</h1>
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker">Master Data</p>
+        <h1 class="app-page-title">Diagnoses</h1>
+      </div>
+      <%= link_to new_diagnosis_path, class: "btn btn-primary" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        New Diagnosis
+      <% end %>
     </div>
-    <%= link_to new_diagnosis_path, class: "btn btn-primary" do %>
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-      New Diagnosis
-    <% end %>
-  </div>
+  </section>
 
-  <div class="card bg-base-100 shadow-xl border border-base-200 overflow-hidden">
+  <div class="app-panel overflow-hidden">
     <div class="overflow-x-auto">
       <table class="table table-zebra w-full">
         <thead>

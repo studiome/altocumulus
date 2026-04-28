@@ -1,4 +1,4 @@
-<%= form_with(model: [patient, patient_diagnosis], class: "space-y-6") do |form| %>
+<%= form_with(model: [patient, patient_diagnosis], class: "app-form") do |form| %>
   <% if patient_diagnosis.errors.any? %>
     <div role="alert" class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -14,17 +14,13 @@
   <% end %>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <div class="form-control w-full">
-      <label class="label">
-        <span class="label-text font-semibold text-base">Patient Name</span>
-      </label>
+    <div class="app-field">
+      <label class="app-field-label">Patient Name</label>
       <input type="text" value="<%= patient.name %>" class="input input-bordered w-full" disabled>
     </div>
 
-    <div class="form-control w-full">
-      <label class="label">
-        <span class="label-text font-semibold text-base">Patient ID</span>
-      </label>
+    <div class="app-field">
+      <label class="app-field-label">Patient ID</label>
       <input type="text" value="<%= patient.hospital_id %>" class="input input-bordered w-full font-mono" disabled>
     </div>
   </div>
@@ -41,27 +37,21 @@
 
   <% laterality_options = [["Right", "right"], ["Left", "left"], ["Bilateral", "bilateral"], ["None", "none"]] %>
 
-  <div class="form-control w-full">
-    <%= form.label :laterality, class: "label" do %>
-      <span class="label-text font-semibold text-base">Laterality</span>
-    <% end %>
+  <div class="app-field">
+    <%= form.label :laterality, "Laterality", class: "app-field-label" %>
     <%= form.select :laterality, laterality_options, {}, class: "select select-bordered w-full focus:select-primary" %>
   </div>
 
-  <div class="form-control w-full">
+  <div class="app-field">
     <div class="flex items-center justify-between gap-3">
-      <%= form.label :diagnosis_id, class: "label" do %>
-        <span class="label-text font-semibold text-base">Diagnosis</span>
-      <% end %>
-      <%= link_to "New Diagnosis", new_diagnosis_path, class: "btn btn-link no-underline px-0", data: { turbo_frame: "diagnosis_modal_frame" } %>
+      <%= form.label :diagnosis_id, "Diagnosis", class: "app-field-label" %>
+      <%= link_to "New Diagnosis", new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_modal_frame" } %>
     </div>
     <%= form.collection_select :diagnosis_id, @diagnoses, :id, :name, { prompt: "Select a diagnosis" }, class: "select select-bordered w-full focus:select-primary" %>
   </div>
 
-  <div class="form-control w-full">
-    <%= form.label :diagnosed_on, class: "label" do %>
-      <span class="label-text font-semibold text-base">Diagnosed On</span>
-    <% end %>
+  <div class="app-field">
+    <%= form.label :diagnosed_on, "Diagnosed On", class: "app-field-label" %>
     <%= form.date_field :diagnosed_on, class: "input input-bordered w-full focus:input-primary" %>
   </div>
 

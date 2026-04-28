@@ -1,2 +1,70 @@
 @import "tailwindcss";
-@plugin "./plugins/daisyui.js";
+@plugin "./plugins/daisyui.js" {
+  themes: corporate --default, business --prefersdark;
+}
+
+@layer components {
+  .app-shell {
+    @apply min-h-screen bg-base-200 text-base-content;
+  }
+
+  .app-navbar {
+    @apply navbar border-b border-base-300 bg-base-100/90 px-4 shadow-sm backdrop-blur sm:px-8;
+  }
+
+  .app-main {
+    @apply mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8;
+  }
+
+  .app-page {
+    @apply space-y-6;
+  }
+
+  .app-page-header {
+    @apply hero rounded-box border border-base-300 bg-base-100 shadow-sm;
+  }
+
+  .app-page-header-body {
+    @apply hero-content w-full max-w-none flex-col gap-4 px-6 py-8 sm:flex-row sm:items-end sm:justify-between;
+  }
+
+  .app-page-title {
+    @apply text-3xl font-bold tracking-normal sm:text-4xl;
+  }
+
+  .app-page-kicker {
+    @apply text-sm font-medium uppercase tracking-wide text-primary;
+  }
+
+  .app-panel {
+    @apply card border border-base-200 bg-base-100 shadow-xl;
+  }
+
+  .app-panel-body {
+    @apply card-body;
+  }
+
+  .app-empty-state {
+    @apply rounded-box border border-dashed border-base-300 bg-base-100/60 p-4 text-sm text-base-content/60;
+  }
+
+  .app-form {
+    @apply space-y-6;
+  }
+
+  .app-field {
+    @apply fieldset w-full;
+  }
+
+  .app-field-label {
+    @apply label text-sm font-semibold text-base-content;
+  }
+
+  .app-helper {
+    @apply text-sm text-base-content/60;
+  }
+
+  .app-inline-link {
+    @apply link link-primary no-underline hover:underline;
+  }
+}

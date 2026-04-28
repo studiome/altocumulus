@@ -23,8 +23,8 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="bg-base-200 min-h-screen flex flex-col">
-    <header class="navbar bg-base-100 shadow-md px-4 sm:px-8">
+  <body class="app-shell flex flex-col">
+    <header class="app-navbar">
       <div class="flex-1">
         <%= link_to "Altocumulus", root_path, class: "btn btn-ghost text-xl font-bold text-primary" %>
       </div>
@@ -36,7 +36,7 @@
       </div>
     </header>
 
-    <main class="container mx-auto py-12 px-4 grow">
+    <main class="app-main">
       <%= yield %>
     </main>
 
