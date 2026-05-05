@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_17_133000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_05_000000) do
   create_table "diagnoses", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -51,14 +51,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_133000) do
     t.index ["patient_id"], name: "index_surgeries_on_patient_id"
   end
 
-  create_table "surgery_diagnoses", force: :cascade do |t|
+  create_table "surgery_diagnosis_links", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "patient_diagnosis_id", null: false
     t.integer "surgery_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["patient_diagnosis_id"], name: "index_surgery_diagnoses_on_patient_diagnosis_id"
-    t.index ["surgery_id", "patient_diagnosis_id"], name: "index_surgery_diagnoses_on_surgery_id_and_patient_diagnosis_id", unique: true
-    t.index ["surgery_id"], name: "index_surgery_diagnoses_on_surgery_id"
+    t.index ["patient_diagnosis_id"], name: "index_surgery_diagnosis_links_on_patient_diagnosis_id"
+    t.index ["surgery_id", "patient_diagnosis_id"], name: "idx_on_surgery_id_patient_diagnosis_id_434c0ea0bf", unique: true
+    t.index ["surgery_id"], name: "index_surgery_diagnosis_links_on_surgery_id"
   end
 
   create_table "surgery_procedure_selections", force: :cascade do |t|
@@ -82,8 +82,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_133000) do
   add_foreign_key "patient_diagnoses", "diagnoses"
   add_foreign_key "patient_diagnoses", "patients"
   add_foreign_key "surgeries", "patients"
-  add_foreign_key "surgery_diagnoses", "patient_diagnoses"
-  add_foreign_key "surgery_diagnoses", "surgeries"
+  add_foreign_key "surgery_diagnosis_links", "patient_diagnoses"
+  add_foreign_key "surgery_diagnosis_links", "surgeries"
   add_foreign_key "surgery_procedure_selections", "surgeries"
   add_foreign_key "surgery_procedure_selections", "surgery_procedures"
 end

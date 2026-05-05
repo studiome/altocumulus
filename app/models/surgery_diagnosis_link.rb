@@ -1,4 +1,4 @@
-class SurgeryDiagnosis < ApplicationRecord
+class SurgeryDiagnosisLink < ApplicationRecord
   belongs_to :surgery
   belongs_to :patient_diagnosis
 

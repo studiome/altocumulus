@@ -2,8 +2,8 @@ class Surgery < ApplicationRecord
   attribute :laterality, :string, default: "none"
 
   belongs_to :patient
-  has_many :surgery_diagnoses, dependent: :destroy
-  has_many :patient_diagnoses, through: :surgery_diagnoses
+  has_many :surgery_diagnosis_links, dependent: :destroy
+  has_many :patient_diagnoses, through: :surgery_diagnosis_links
   has_many :surgery_procedure_selections, -> { order(:id) }, dependent: :destroy, inverse_of: :surgery
   has_many :selected_surgery_procedures, through: :surgery_procedure_selections, source: :surgery_procedure
   belongs_to :surgery_procedure,

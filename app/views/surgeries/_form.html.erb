@@ -1,4 +1,4 @@
-<%= form_with(model: surgery, class: "app-form", data: { controller: "surgery-diagnosis-filter" }) do |form| %>
+<%= form_with(model: surgery, class: "app-form", data: { controller: "surgery-diagnosis-link-filter" }) do |form| %>
   <% if surgery.errors.any? %>
     <div role="alert" class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -36,7 +36,7 @@
   <div class="app-field">
     <%= form.label :patient_id, "Patient", class: "app-field-label" %>
     <% patient_options = defined?(@patients) ? @patients.map { |p| [ "#{p.hospital_id} - #{p.name}", p.id ] } : [] %>
-    <%= form.select :patient_id, patient_options, { prompt: "Select a patient" }, class: "select select-bordered w-full focus:select-primary", data: { surgery_diagnosis_filter_target: "patientSelect", action: "change->surgery-diagnosis-filter#filter" } %>
+    <%= form.select :patient_id, patient_options, { prompt: "Select a patient" }, class: "select select-bordered w-full focus:select-primary", data: { surgery_diagnosis_link_filter_target: "patientSelect", action: "change->surgery-diagnosis-link-filter#filter" } %>
   </div>
 
   <div class="space-y-3">
@@ -49,13 +49,13 @@
       <div class="space-y-3 rounded-box border border-base-200 bg-base-100 p-4">
         <%= hidden_field_tag "surgery[patient_diagnosis_ids][]", "" %>
         <% @patient_diagnoses.each do |entry| %>
-          <label class="label cursor-pointer justify-start gap-3 rounded-xl border border-base-200 px-4 py-3 has-checked:border-primary has-checked:bg-primary/5" data-surgery-diagnosis-filter-target="diagnosisOption" data-patient-id="<%= entry.patient_id %>">
+          <label class="label cursor-pointer justify-start gap-3 rounded-xl border border-base-200 px-4 py-3 has-checked:border-primary has-checked:bg-primary/5" data-surgery-diagnosis-link-filter-target="diagnosisOption" data-patient-id="<%= entry.patient_id %>">
             <%= check_box_tag "surgery[patient_diagnosis_ids][]", entry.id, surgery.patient_diagnosis_ids.include?(entry.id), class: "checkbox checkbox-primary" %>
             <span class="label-text"><%= "#{entry.patient.hospital_id} - #{entry.patient.name} / #{entry.display_name} (#{entry.diagnosed_on.strftime("%Y-%m-%d")})" %></span>
           </label>
         <% end %>
 
-        <div class="app-empty-state hidden" data-surgery-diagnosis-filter-target="emptyState">
+        <div class="app-empty-state hidden" data-surgery-diagnosis-link-filter-target="emptyState">
           No diagnoses are registered for the selected patient.
         </div>
       </div>

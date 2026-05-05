@@ -1,8 +1,8 @@
 class PatientDiagnosis < ApplicationRecord
   belongs_to :patient
   belongs_to :diagnosis
-  has_many :surgery_diagnoses, dependent: :restrict_with_error
-  has_many :surgeries, through: :surgery_diagnoses
+  has_many :surgery_diagnosis_links, dependent: :restrict_with_error
+  has_many :surgeries, through: :surgery_diagnosis_links
 
   LATERALITY_OPTIONS = {
     "right" => "Right",
