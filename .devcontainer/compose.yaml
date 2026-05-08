@@ -1,0 +1,14 @@
+services:
+  rails-app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ../..:/workspaces:cached
+    command: sleep infinity
+    environment:
+      BINDING: "0.0.0.0"
+
+  selenium:
+    image: selenium/standalone-chromium
+    restart: unless-stopped
