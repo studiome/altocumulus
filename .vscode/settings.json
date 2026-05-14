@@ -1,0 +1,6 @@
+{
+    "rubyLsp.bundleGemfile": "Gemfile",
+    "rubyLsp.rubyVersionManager": {
+        "identifier": "rbenv"
+    }
+}
