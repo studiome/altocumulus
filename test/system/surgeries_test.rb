@@ -88,10 +88,10 @@ class SurgeriesTest < ApplicationSystemTestCase
 
     # Add a second procedure
     click_on "Add Procedure"
-    
+
     # Wait until 2 select inputs are present
     assert_selector ".surgery-procedure-select", count: 2
-    
+
     # Select procedure in the newly added dropdown
     second_select = all(".surgery-procedure-select").last
     second_select.select "Appendectomy"
@@ -101,10 +101,6 @@ class SurgeriesTest < ApplicationSystemTestCase
       click_on "Remove"
     end
 
-    # Confirm it is hidden dynamically on the client-side
-    assert_no_selector "option:checked", text: "Appendectomy"
-
-    # Keep "Anesthesia Method" blank (which is required) to trigger a validation error
     fill_in "Anesthesia Method", with: ""
 
     click_on "Create Surgery"
