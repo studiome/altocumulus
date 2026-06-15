@@ -32,6 +32,33 @@ export default class extends Controller {
         this.refreshAddButtonState()
     }
 
+    addProcedureOption(event) {
+        const { id, name } = event.detail
+
+        this.element.querySelectorAll(".surgery-procedure-select").forEach((select) => {
+            if (!Array.from(select.options).some(opt => opt.value === id.toString())) {
+                const opt = document.createElement("option")
+                opt.value = id
+                opt.textContent = name
+                select.appendChild(opt)
+            }
+            if (select.value === "") {
+                select.value = id
+            }
+        })
+
+        if (this.hasTemplateTarget) {
+            const templateContent = this.templateTarget.content
+            const select = templateContent.querySelector(".surgery-procedure-select")
+            if (select && !Array.from(select.options).some(opt => opt.value === id.toString())) {
+                const opt = document.createElement("option")
+                opt.value = id
+                opt.textContent = name
+                select.appendChild(opt)
+            }
+        }
+    }
+
     refreshAddButtonState() {
         if (!this.hasAddButtonTarget) return
 

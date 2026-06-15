@@ -1,10 +1,9 @@
-<%= turbo_stream.append "surgery_procedure_procedure" do %>
-  <%= tag.option @surgery_procedure.name, value: @surgery_procedure.name, selected: true %>
-<% end %>
-
 <%= turbo_stream.replace "surgery_procedure_modal_frame" do %>
   <%= turbo_frame_tag "surgery_procedure_modal_frame" do %>
-    <div class="p-6 text-center" data-controller="surgery-procedure-modal-success">
+    <div class="p-6 text-center"
+         data-controller="surgery-procedure-modal-success"
+         data-procedure-id="<%= @surgery_procedure.id %>"
+         data-procedure-name="<%= @surgery_procedure.name %>">
       <div class="alert alert-success justify-start mb-4">
         <span>Surgery procedure was successfully created.</span>
       </div>

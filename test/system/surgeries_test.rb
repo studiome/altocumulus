@@ -45,4 +45,29 @@ class SurgeriesTest < ApplicationSystemTestCase
     assert_text "Bilateral Cholecystectomy"
     assert_text "Right Appendicitis"
   end
+
+  test "user can dynamically add a new surgery procedure and select it" do
+    visit new_surgery_path
+
+    # Open procedure modal
+    click_on "New Procedure", match: :first
+
+    within("turbo-frame#surgery_procedure_modal_frame") do
+      fill_in "Procedure Name", with: "Laparoscopic surgery"
+      click_on "Create Surgery procedure"
+    end
+
+    # Wait for the modal dialog to close/disappear and check option selection
+    assert_equal "Laparoscopic surgery", find(".surgery-procedure-select").find("option:checked").text
+
+    # Click "Add Procedure" to add a new row
+    click_on "Add Procedure"
+
+    # Verify that the new row (from the template) also contains the new option
+    selects = all(".surgery-procedure-select")
+    assert_equal 2, selects.size
+    selects.each do |select|
+      assert select.has_selector?("option", text: "Laparoscopic surgery")
+    end
+  end
 end

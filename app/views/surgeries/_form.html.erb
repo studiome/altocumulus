@@ -75,7 +75,7 @@
 
   <% laterality_options = [["Right", "right"], ["Left", "left"], ["Bilateral", "bilateral"], ["None", "none"]] %>
 
-  <div class="space-y-4" data-controller="surgery-procedure-fields" data-surgery-procedure-fields-max-items-value="5">
+  <div class="space-y-4" data-controller="surgery-procedure-fields" data-surgery-procedure-fields-max-items-value="5" data-action="procedure:created@window->surgery-procedure-fields#addProcedureOption">
     <div class="flex items-center justify-between gap-3">
       <div>
         <span class="app-field-label">Procedures</span>

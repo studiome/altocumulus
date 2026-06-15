@@ -13,7 +13,7 @@
     <div class="app-field">
       <%= selection_fields.label :surgery_procedure_id, "Procedure", class: "app-field-label" %>
       <% procedure_choices = procedure_options.map { |procedure| [procedure.name, procedure.id] } %>
-      <%= selection_fields.select :surgery_procedure_id, procedure_choices, { prompt: "Select a procedure" }, class: "select select-bordered w-full focus:select-primary" %>
+      <%= selection_fields.select :surgery_procedure_id, procedure_choices, { prompt: "Select a procedure" }, class: "select select-bordered w-full focus:select-primary surgery-procedure-select" %>
     </div>
   </div>
 
