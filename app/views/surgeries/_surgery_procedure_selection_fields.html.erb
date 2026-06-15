@@ -1,5 +1,5 @@
 <div class="rounded-box border border-base-200 bg-base-100 p-4 space-y-3" data-surgery-procedure-fields-target="item">
-  <%= selection_fields.hidden_field :_destroy, value: "0", data: { surgery_procedure_fields_target: "destroyField" } %>
+  <%= selection_fields.hidden_field :_destroy, data: { surgery_procedure_fields_target: "destroyField" } %>
   <% if selection_fields.object.persisted? %>
     <%= selection_fields.hidden_field :id %>
   <% end %>

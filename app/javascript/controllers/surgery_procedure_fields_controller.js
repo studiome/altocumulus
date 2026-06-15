@@ -7,7 +7,17 @@ export default class extends Controller {
     }
 
     connect() {
+        this.hideDestroyedItems()
         this.refreshAddButtonState()
+    }
+
+    hideDestroyedItems() {
+        this.itemTargets.forEach((item) => {
+            const destroyField = item.querySelector("[data-surgery-procedure-fields-target='destroyField']")
+            if (destroyField && destroyField.value === "1") {
+                item.hidden = true
+            }
+        })
     }
 
     add() {

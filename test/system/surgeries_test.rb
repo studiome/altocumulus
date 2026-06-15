@@ -70,4 +70,54 @@ class SurgeriesTest < ApplicationSystemTestCase
       assert select.has_selector?("option", text: "Laparoscopic surgery")
     end
   end
+
+  test "removed procedures do not reappear after validation error" do
+    visit new_surgery_path
+
+    select "H001 - John Doe", from: "Patient"
+    check "Right Appendicitis"
+    page.execute_script(<<~JS)
+      const surgeryDateInput = document.querySelector("#surgery_surgery_date")
+      surgeryDateInput.value = "2026-04-17"
+      surgeryDateInput.dispatchEvent(new Event("input", { bubbles: true }))
+      surgeryDateInput.dispatchEvent(new Event("change", { bubbles: true }))
+    JS
+
+    # Select primary procedure
+    select "Cholecystectomy", from: "Procedure"
+
+    # Add a second procedure
+    click_on "Add Procedure"
+    
+    # Wait until 2 select inputs are present
+    assert_selector ".surgery-procedure-select", count: 2
+    
+    # Select procedure in the newly added dropdown
+    second_select = all(".surgery-procedure-select").last
+    second_select.select "Appendectomy"
+
+    # Remove the second procedure
+    within(all("[data-surgery-procedure-fields-target='item']").last) do
+      click_on "Remove"
+    end
+
+    # Confirm it is hidden dynamically on the client-side
+    assert_no_selector "option:checked", text: "Appendectomy"
+
+    # Keep "Anesthesia Method" blank (which is required) to trigger a validation error
+    fill_in "Anesthesia Method", with: ""
+
+    click_on "Create Surgery"
+
+    # Should show validation error message
+    assert_text "Anesthesia method can't be blank"
+
+    # Verify that only 1 visible procedure row exists now
+    assert_selector "[data-surgery-procedure-fields-target='item']", count: 1
+
+    # Verify that the remaining visible row contains "Cholecystectomy"
+    within("[data-surgery-procedure-fields-target='item']") do
+      assert_equal "Cholecystectomy", find(".surgery-procedure-select").find("option:checked").text
+    end
+  end
 end
