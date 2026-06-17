@@ -58,7 +58,7 @@ class SurgeriesTest < ApplicationSystemTestCase
     end
 
     # Wait for the modal dialog to close/disappear and check option selection
-    assert_equal "Laparoscopic surgery", find(".surgery-procedure-select").find("option:checked").text
+    assert_selector ".surgery-procedure-select option:checked", text: "Laparoscopic surgery"
 
     # Click "Add Procedure" to add a new row
     click_on "Add Procedure"
@@ -113,7 +113,7 @@ class SurgeriesTest < ApplicationSystemTestCase
 
     # Verify that the remaining visible row contains "Cholecystectomy"
     within("[data-surgery-procedure-fields-target='item']") do
-      assert_equal "Cholecystectomy", find(".surgery-procedure-select").find("option:checked").text
+      assert_selector ".surgery-procedure-select option:checked", text: "Cholecystectomy"
     end
   end
 end
