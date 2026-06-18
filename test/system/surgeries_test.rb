@@ -78,6 +78,25 @@ class SurgeriesTest < ApplicationSystemTestCase
     end
   end
 
+  test "new surgery procedure is assigned to only one blank row" do
+    visit new_surgery_path
+
+    click_on "Add Procedure"
+    assert_selector ".surgery-procedure-select", count: 2
+
+    click_on "New Procedure", match: :first
+
+    within("turbo-frame#surgery_procedure_modal_frame") do
+      fill_in "Procedure Name", with: "Laser ablation"
+      click_on "Create Surgery procedure"
+    end
+
+    selected_values = all(".surgery-procedure-select").map(&:value)
+
+    assert_equal 1, selected_values.count(SurgeryProcedure.find_by!(name: "Laser ablation").id.to_s)
+    assert_includes selected_values, ""
+  end
+
   test "removed procedures do not reappear after validation error" do
     visit new_surgery_path
 

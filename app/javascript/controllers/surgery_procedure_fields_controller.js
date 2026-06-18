@@ -44,6 +44,7 @@ export default class extends Controller {
 
     addProcedureOption(event) {
         const { id, name } = event.detail
+        let assignedNewProcedure = false
 
         this.element.querySelectorAll(".surgery-procedure-select").forEach((select) => {
             if (!Array.from(select.options).some(opt => opt.value === id.toString())) {
@@ -52,8 +53,9 @@ export default class extends Controller {
                 opt.textContent = name
                 select.appendChild(opt)
             }
-            if (select.value === "") {
+            if (!assignedNewProcedure && select.value === "") {
                 select.value = id
+                assignedNewProcedure = true
             }
         })
 
