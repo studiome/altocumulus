@@ -1,5 +1,5 @@
 <%= turbo_stream.replace "surgery_procedure_modal_frame" do %>
-  <%= turbo_frame_tag "surgery_procedure_modal_frame" do %>
+  <%= turbo_frame_tag "surgery_procedure_modal_frame", data: { action: "turbo:frame-load->surgery-procedure-modal#open" } do %>
     <div class="p-6">
       <div class="flex items-start justify-between gap-4 mb-6">
         <div>

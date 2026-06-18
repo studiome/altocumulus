@@ -69,6 +69,13 @@ class SurgeriesTest < ApplicationSystemTestCase
     selects.each do |select|
       assert select.has_selector?("option", text: "Laparoscopic surgery")
     end
+
+    click_on "New Procedure", match: :first
+    assert_selector "#surgery_procedure_modal[open]"
+
+    within("turbo-frame#surgery_procedure_modal_frame") do
+      assert_field "Procedure Name"
+    end
   end
 
   test "removed procedures do not reappear after validation error" do

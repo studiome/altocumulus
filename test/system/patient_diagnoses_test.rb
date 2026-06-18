@@ -23,6 +23,23 @@ class PatientDiagnosesTest < ApplicationSystemTestCase
 
     assert_selector "option[selected]", text: "Migraine with aura"
 
+    click_on "New Diagnosis", match: :first
+    assert_selector "#diagnosis_modal[open]"
+
+    within("turbo-frame#diagnosis_modal_frame") do
+      fill_in "Diagnosis Name", with: "Migraine with aura"
+      click_on "Close"
+    end
+
+    # 再度開いた時に、入力欄が空（クリア）になっているべき！
+    click_on "New Diagnosis", match: :first
+    assert_selector "#diagnosis_modal[open]"
+
+    within("turbo-frame#diagnosis_modal_frame") do
+      assert_field "Diagnosis Name", with: ""
+      click_on "Close"
+    end
+
     page.execute_script(<<~JS)
       const diagnosedOnInput = document.querySelector("#patient_diagnosis_diagnosed_on")
       diagnosedOnInput.value = "2026-04-17"

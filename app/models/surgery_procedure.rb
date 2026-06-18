@@ -3,7 +3,8 @@ class SurgeryProcedure < ApplicationRecord
   has_many :surgeries,
            class_name: "Surgery",
            foreign_key: :procedure,
-           primary_key: :name
+           primary_key: :name,
+           dependent: :restrict_with_error
 
   validates :name, presence: true, uniqueness: true
 

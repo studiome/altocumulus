@@ -1,5 +1,5 @@
 <%= turbo_stream.replace "surgery_procedure_modal_frame" do %>
-  <%= turbo_frame_tag "surgery_procedure_modal_frame" do %>
+  <%= turbo_frame_tag "surgery_procedure_modal_frame", data: { action: "turbo:frame-load->surgery-procedure-modal#open" } do %>
     <div class="p-6 text-center"
          data-controller="surgery-procedure-modal-success"
          data-procedure-id="<%= @surgery_procedure.id %>"
