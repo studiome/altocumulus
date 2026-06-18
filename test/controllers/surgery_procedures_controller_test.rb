@@ -44,9 +44,18 @@ class SurgeryProceduresControllerTest < ActionDispatch::IntegrationTest
 
   test "should destroy surgery procedure" do
     assert_difference("SurgeryProcedure.count", -1) do
-      delete surgery_procedure_url(@surgery_procedure)
+      delete surgery_procedure_url(surgery_procedures(:updated_procedure))
     end
 
     assert_redirected_to surgery_procedures_url
+  end
+
+  test "should not destroy surgery procedure in use" do
+    assert_no_difference("SurgeryProcedure.count") do
+      delete surgery_procedure_url(@surgery_procedure)
+    end
+
+    assert_redirected_to surgery_procedure_url(@surgery_procedure)
+    assert_not_nil flash[:alert]
   end
 end

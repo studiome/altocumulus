@@ -18,4 +18,12 @@ class SurgeryProcedureTest < ActiveSupport::TestCase
 
     assert_not surgery_procedure.valid?
   end
+
+  test "should not destroy surgery procedure in use by selections" do
+    procedure = surgery_procedures(:appendectomy)
+    assert_no_difference("SurgeryProcedure.count") do
+      assert_not procedure.destroy
+    end
+    assert procedure.errors[:base].any?
+  end
 end

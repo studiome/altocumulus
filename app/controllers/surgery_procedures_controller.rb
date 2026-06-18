@@ -38,8 +38,11 @@ class SurgeryProceduresController < ApplicationController
   end
 
   def destroy
-    @surgery_procedure.destroy!
-    redirect_to surgery_procedures_path, notice: "Surgery procedure was successfully destroyed.", status: :see_other
+    if @surgery_procedure.destroy
+      redirect_to surgery_procedures_path, notice: "Surgery procedure was successfully destroyed.", status: :see_other
+    else
+      redirect_to surgery_procedure_path(@surgery_procedure), alert: @surgery_procedure.errors.full_messages.to_sentence, status: :see_other
+    end
   end
 
   private

@@ -1,5 +1,5 @@
 class SurgeryProcedure < ApplicationRecord
-  has_many :surgery_procedure_selections, dependent: :destroy
+  has_many :surgery_procedure_selections, dependent: :restrict_with_error
   has_many :surgeries,
            class_name: "Surgery",
            foreign_key: :procedure,
