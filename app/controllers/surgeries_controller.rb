@@ -4,7 +4,7 @@ class SurgeriesController < ApplicationController
 
   # GET /surgeries or /surgeries.json
   def index
-    @surgeries = Surgery.includes(:patient, patient_diagnoses: :diagnosis).order(surgery_date: :desc, created_at: :desc)
+    @surgeries = Surgery.includes(:patient, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure }).order(surgery_date: :desc, created_at: :desc)
   end
 
   # GET /surgeries/1 or /surgeries/1.json
