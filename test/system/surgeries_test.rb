@@ -97,6 +97,28 @@ class SurgeriesTest < ApplicationSystemTestCase
     assert_includes selected_values, ""
   end
 
+  test "new surgery procedure is assigned to visible blank row after removing another row" do
+    visit new_surgery_path
+
+    click_on "Add Procedure"
+    assert_selector ".surgery-procedure-select", count: 2
+
+    within(all("[data-surgery-procedure-fields-target='item']").first) do
+      click_on "Remove"
+    end
+
+    click_on "New Procedure", match: :first
+
+    within("turbo-frame#surgery_procedure_modal_frame") do
+      fill_in "Procedure Name", with: "Endoscopic repair"
+      click_on "Create Surgery procedure"
+    end
+
+    selected_options = all(".surgery-procedure-select option:checked").map(&:text)
+
+    assert_equal [ "Endoscopic repair" ], selected_options
+  end
+
   test "removed procedures do not reappear after validation error" do
     visit new_surgery_path
 

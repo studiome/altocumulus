@@ -53,7 +53,7 @@ export default class extends Controller {
                 opt.textContent = name
                 select.appendChild(opt)
             }
-            if (!assignedNewProcedure && select.value === "") {
+            if (!assignedNewProcedure && select.value === "" && this.isActiveSelect(select)) {
                 select.value = id
                 assignedNewProcedure = true
             }
@@ -82,5 +82,13 @@ export default class extends Controller {
             const destroyField = item.querySelector("[data-surgery-procedure-fields-target='destroyField']")
             return !item.hidden && destroyField?.value !== "1"
         })
+    }
+
+    isActiveSelect(select) {
+        const item = select.closest("[data-surgery-procedure-fields-target='item']")
+        if (!item) return true
+
+        const destroyField = item.querySelector("[data-surgery-procedure-fields-target='destroyField']")
+        return !item.hidden && destroyField?.value !== "1"
     }
 }
