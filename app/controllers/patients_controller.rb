@@ -8,7 +8,7 @@ class PatientsController < ApplicationController
 
   # GET /patients/1 or /patients/1.json
   def show
-    @patient_diagnoses = @patient.patient_diagnoses.includes(:diagnosis)
+    @patient_diagnoses = @patient.patient_diagnoses.includes(:diagnosis).recent_first
   end
 
   # GET /patients/new

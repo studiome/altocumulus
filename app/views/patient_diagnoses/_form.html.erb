@@ -47,7 +47,7 @@
       <%= form.label :diagnosis_id, "Diagnosis", class: "app-field-label" %>
       <%= link_to "New Diagnosis", new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_modal_frame" } %>
     </div>
-    <%= form.collection_select :diagnosis_id, @diagnoses, :id, :name, { prompt: "Select a diagnosis" }, class: "select select-bordered w-full focus:select-primary" %>
+    <%= form.collection_select :diagnosis_id, @diagnoses || [], :id, :name, { prompt: "Select a diagnosis" }, class: "select select-bordered w-full focus:select-primary" %>
   </div>
 
   <div class="app-field">

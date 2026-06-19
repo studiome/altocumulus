@@ -21,7 +21,10 @@ class DiagnosesController < ApplicationController
     respond_to do |format|
       if @diagnosis.save
         format.html { redirect_to @diagnosis, notice: "Diagnosis was successfully created." }
-        format.turbo_stream
+        format.turbo_stream do
+          @diagnoses = Diagnosis.order(:name)
+          render :create
+        end
       else
         format.html { render :new, status: :unprocessable_entity }
         format.turbo_stream { render :new, status: :unprocessable_entity }

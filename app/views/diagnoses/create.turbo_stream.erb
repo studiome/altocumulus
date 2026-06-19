@@ -1,5 +1,9 @@
-<%= turbo_stream.append "patient_diagnosis_diagnosis_id" do %>
-  <%= tag.option @diagnosis.name, value: @diagnosis.id, selected: true %>
+<%= turbo_stream.replace "patient_diagnosis_diagnosis_id" do %>
+  <%= select_tag "patient_diagnosis[diagnosis_id]",
+    options_from_collection_for_select(@diagnoses, :id, :name, @diagnosis.id),
+    id: "patient_diagnosis_diagnosis_id",
+    prompt: "Select a diagnosis",
+    class: "select select-bordered w-full focus:select-primary" %>
 <% end %>
 
 <%= turbo_stream.remove "patient_diagnosis_no_diagnoses_warning" %>
