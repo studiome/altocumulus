@@ -80,7 +80,6 @@ class SurgeriesController < ApplicationController
     def surgery_params
       params.require(:surgery).permit(
         :surgery_date,
-        :laterality,
         :duration_hours,
         :anesthesia_method,
         :patient_id,

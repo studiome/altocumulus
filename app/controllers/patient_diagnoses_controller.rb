@@ -1,5 +1,4 @@
 class PatientDiagnosesController < ApplicationController
-  before_action :refresh_patient_diagnosis_columns
   before_action :set_patient
   before_action :set_patient_diagnosis, only: %i[ show edit update destroy ]
   before_action :set_diagnoses, only: %i[ new edit create update ]
@@ -57,12 +56,6 @@ class PatientDiagnosesController < ApplicationController
   end
 
   private
-
-    def refresh_patient_diagnosis_columns
-      return if PatientDiagnosis.column_names.include?("laterality")
-
-      PatientDiagnosis.reset_column_information
-    end
 
     def set_patient
       @patient = Patient.find(params.expect(:patient_id))

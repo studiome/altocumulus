@@ -47,9 +47,13 @@
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Related Diagnoses</span>
           <span class="text-lg font-medium"><%= @surgery.diagnosis_names_display %></span>
         </div>
-        <div class="sm:col-span-2">
+        <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Procedures</span>
-          <span class="text-lg font-medium"><%= @surgery.display_procedure_name %></span>
+          <span class="text-lg font-medium"><%= @surgery.procedure_names_display %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Laterality</span>
+          <span class="text-lg font-medium"><%= @surgery.laterality_names_display %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Patient</span>

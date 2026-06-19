@@ -48,7 +48,7 @@ class Surgery < ApplicationRecord
   end
 
   def diagnosis_names_display
-    patient_diagnoses.includes(:diagnosis).map(&:display_name).join("、").presence || "-"
+    patient_diagnoses.map(&:display_name).join("、").presence || "-"
   end
 
   def procedure_display_names
@@ -68,8 +68,6 @@ class Surgery < ApplicationRecord
   private
 
   def sync_primary_procedure
-    return if active_surgery_procedure_selections.empty?
-
     self.procedure = procedure_names.first
   end
 
