@@ -44,29 +44,40 @@ export default class extends Controller {
 
     addProcedureOption(event) {
         const { id, name } = event.detail
-        let assignedNewProcedure = false
+        const optionValue = id.toString()
 
-        this.element.querySelectorAll(".surgery-procedure-select").forEach((select) => {
-            if (!Array.from(select.options).some(opt => opt.value === id.toString())) {
+        const appendOption = (select) => {
+            if (!Array.from(select.options).some((opt) => opt.value === optionValue)) {
                 const opt = document.createElement("option")
-                opt.value = id
+                opt.value = optionValue
                 opt.textContent = name
                 select.appendChild(opt)
             }
-            if (!assignedNewProcedure && select.value === "" && this.isActiveSelect(select)) {
-                select.value = id
-                assignedNewProcedure = true
-            }
+        }
+
+        this.element.querySelectorAll(".surgery-procedure-select").forEach((select) => {
+            appendOption(select)
         })
+
+        const blankActiveSelect = this.itemTargets
+            .filter((item) => this.isActiveItem(item))
+            .map((item) => item.querySelector(".surgery-procedure-select"))
+            .find((select) => select && (select.value === "" || select.value === null))
+
+        if (blankActiveSelect) {
+            const selectedOption = Array.from(blankActiveSelect.options).find((option) => option.value === optionValue)
+            if (selectedOption) {
+                selectedOption.selected = true
+                blankActiveSelect.value = optionValue
+                blankActiveSelect.dispatchEvent(new Event("change", { bubbles: true }))
+            }
+        }
 
         if (this.hasTemplateTarget) {
             const templateContent = this.templateTarget.content
             const select = templateContent.querySelector(".surgery-procedure-select")
-            if (select && !Array.from(select.options).some(opt => opt.value === id.toString())) {
-                const opt = document.createElement("option")
-                opt.value = id
-                opt.textContent = name
-                select.appendChild(opt)
+            if (select) {
+                appendOption(select)
             }
         }
     }
@@ -88,6 +99,10 @@ export default class extends Controller {
         const item = select.closest("[data-surgery-procedure-fields-target='item']")
         if (!item) return true
 
+        return this.isActiveItem(item)
+    }
+
+    isActiveItem(item) {
         const destroyField = item.querySelector("[data-surgery-procedure-fields-target='destroyField']")
         return !item.hidden && destroyField?.value !== "1"
     }

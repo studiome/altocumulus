@@ -107,6 +107,9 @@ class SurgeriesTest < ApplicationSystemTestCase
       click_on "Remove"
     end
 
+    # Wait for the first row to be hidden (only 1 visible row should remain)
+    assert_selector "[data-surgery-procedure-fields-target='item']", count: 1
+
     click_on "New Procedure", match: :first
 
     within("turbo-frame#surgery_procedure_modal_frame") do
@@ -114,7 +117,11 @@ class SurgeriesTest < ApplicationSystemTestCase
       click_on "Create Surgery procedure"
     end
 
+    # Wait for the option to be selected
+    assert_selector ".surgery-procedure-select option:checked", text: "Endoscopic repair"
+
     selected_options = all(".surgery-procedure-select option:checked").map(&:text)
+
 
     assert_equal [ "Endoscopic repair" ], selected_options
   end
