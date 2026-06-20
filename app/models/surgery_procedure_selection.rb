@@ -14,12 +14,12 @@ class SurgeryProcedureSelection < ApplicationRecord
   validates :laterality, inclusion: { in: LATERALITY_OPTIONS.keys }
 
   def procedure_name
-    surgery_procedure&.name || SurgeryProcedure.find_by(id: surgery_procedure_id)&.name
+    surgery_procedure&.name
   end
 
   def display_name
     name = procedure_name
-    return name if name.blank?
+    return nil if name.blank?
     return name if laterality == "none"
 
     prefix = LATERALITY_OPTIONS[laterality] || ""

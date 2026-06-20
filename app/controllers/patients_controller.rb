@@ -50,11 +50,14 @@ class PatientsController < ApplicationController
 
   # DELETE /patients/1 or /patients/1.json
   def destroy
-    @patient.destroy!
-
     respond_to do |format|
-      format.html { redirect_to patients_path, notice: "Patient was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
+      if @patient.destroy
+        format.html { redirect_to patients_path, notice: "Patient was successfully destroyed.", status: :see_other }
+        format.json { head :no_content }
+      else
+        format.html { redirect_to @patient, alert: @patient.errors.full_messages.to_sentence, status: :see_other }
+        format.json { render json: @patient.errors, status: :unprocessable_entity }
+      end
     end
   end
 
