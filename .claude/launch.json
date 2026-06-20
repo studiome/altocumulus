@@ -6,18 +6,6 @@
       "runtimeExecutable": "bin/dev",
       "runtimeArgs": [],
       "port": 3000
-    },
-    {
-      "name": "Rails web server",
-      "runtimeExecutable": "bin/rails",
-      "runtimeArgs": ["s", "-b", "0.0.0.0"],
-      "port": 3000
-    },
-    {
-      "name": "Tailwind CSS watcher",
-      "runtimeExecutable": "bin/rails",
-      "runtimeArgs": ["tailwindcss:watch"],
-      "port": null
     }
   ]
 }
