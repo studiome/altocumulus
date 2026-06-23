@@ -7,11 +7,12 @@ export default class extends Controller {
 
     disconnect() {
         clearTimeout(this.timeout)
+        clearTimeout(this.dismissTimeout)
     }
 
     dismiss() {
         this.element.style.transition = "opacity 0.4s ease"
         this.element.style.opacity = "0"
-        setTimeout(() => this.element.remove(), 400)
+        this.dismissTimeout = setTimeout(() => this.element.remove(), 400)
     }
 }

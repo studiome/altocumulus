@@ -5,3 +5,10 @@
     </div>
   </div>
 <% end %>
+<% if alert.present? %>
+  <div class="toast toast-top toast-end z-50" data-controller="flash-toast">
+    <div class="alert alert-error">
+      <span><%= alert %></span>
+    </div>
+  </div>
+<% end %>

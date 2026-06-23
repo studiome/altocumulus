@@ -54,11 +54,14 @@ class SurgeriesController < ApplicationController
 
   # DELETE /surgeries/1 or /surgeries/1.json
   def destroy
-    @surgery.destroy!
-
     respond_to do |format|
-      format.html { redirect_to surgeries_path, notice: "Surgery was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
+      if @surgery.destroy
+        format.html { redirect_to surgeries_path, notice: "Surgery was successfully destroyed.", status: :see_other }
+        format.json { head :no_content }
+      else
+        format.html { redirect_to @surgery, alert: @surgery.errors.full_messages.to_sentence, status: :see_other }
+        format.json { render json: @surgery.errors, status: :unprocessable_entity }
+      end
     end
   end
 
