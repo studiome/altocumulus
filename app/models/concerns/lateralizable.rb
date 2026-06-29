@@ -14,7 +14,7 @@ module Lateralizable
 
   class_methods do
     def laterality_form_options
-      Lateralizable::LATERALITY_OPTIONS.map { |k, v| [v, k] }
+      Lateralizable::LATERALITY_OPTIONS.map { |k, v| [ v, k ] }
     end
   end
 

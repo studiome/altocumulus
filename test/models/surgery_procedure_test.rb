@@ -26,5 +26,4 @@ class SurgeryProcedureTest < ActiveSupport::TestCase
     end
     assert procedure.errors[:base].any?
   end
-
 end
