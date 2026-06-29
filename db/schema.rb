@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_05_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_29_000000) do
   create_table "diagnoses", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -43,9 +43,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_05_000000) do
     t.string "anesthesia_method"
     t.datetime "created_at", null: false
     t.float "duration_hours"
-    t.string "laterality", default: "none", null: false
     t.integer "patient_id", null: false
-    t.string "procedure"
     t.date "surgery_date"
     t.datetime "updated_at", null: false
     t.index ["patient_id"], name: "index_surgeries_on_patient_id"

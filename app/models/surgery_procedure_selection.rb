@@ -1,17 +1,10 @@
 class SurgeryProcedureSelection < ApplicationRecord
+  include Lateralizable
+
   belongs_to :surgery
   belongs_to :surgery_procedure
 
   attribute :laterality, :string, default: "none"
-
-  LATERALITY_OPTIONS = {
-    "right" => "Right",
-    "left" => "Left",
-    "bilateral" => "Bilateral",
-    "none" => "None"
-  }.freeze
-
-  validates :laterality, inclusion: { in: LATERALITY_OPTIONS.keys }
 
   def procedure_name
     surgery_procedure&.name
@@ -22,11 +15,7 @@ class SurgeryProcedureSelection < ApplicationRecord
     return nil if name.blank?
     return name if laterality == "none"
 
-    prefix = LATERALITY_OPTIONS[laterality] || ""
+    prefix = Lateralizable::LATERALITY_OPTIONS[laterality] || ""
     prefix.present? ? "#{prefix} #{name}" : name
-  end
-
-  def laterality_label
-    LATERALITY_OPTIONS[laterality] || "None"
   end
 end

@@ -39,7 +39,7 @@ class SurgeryProceduresControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to surgery_procedure_url(@surgery_procedure)
     @surgery_procedure.reload
     assert_equal "Updated Appendectomy", @surgery_procedure.name
-    assert_equal "Updated Appendectomy", surgeries(:one).reload.procedure
+    assert_equal "Updated Appendectomy", surgeries(:one).reload.procedure_names.first
   end
 
   test "should destroy surgery procedure" do

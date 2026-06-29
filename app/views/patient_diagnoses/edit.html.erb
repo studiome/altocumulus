@@ -10,7 +10,7 @@
 
   <div class="card bg-base-100 shadow-xl border border-base-200">
     <div class="card-body">
-      <%= render "form", patient: @patient, patient_diagnosis: @patient_diagnosis %>
+      <%= render "form", patient: @patient, patient_diagnosis: @patient_diagnosis, diagnoses: @diagnoses %>
 
       <div class="mt-4 flex justify-center">
         <%= link_to "Show Detail", patient_patient_diagnosis_path(@patient, @patient_diagnosis), class: "btn btn-link no-underline" %>

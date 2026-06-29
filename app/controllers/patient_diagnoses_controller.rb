@@ -66,7 +66,7 @@ class PatientDiagnosesController < ApplicationController
     end
 
     def set_diagnoses
-      @diagnoses = Diagnosis.order(:name)
+      @diagnoses = Diagnosis.alphabetical
     end
 
     def patient_diagnosis_params

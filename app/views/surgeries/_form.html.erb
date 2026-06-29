@@ -13,7 +13,7 @@
     </div>
   <% end %>
 
-  <% if defined?(@patients) && @patients.none? %>
+  <% if patients.none? %>
     <div role="alert" class="alert alert-warning">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
       <div class="flex items-center justify-between w-full gap-4">
@@ -23,7 +23,7 @@
     </div>
   <% end %>
 
-  <% if defined?(@surgery_procedures) && @surgery_procedures.none? %>
+  <% if surgery_procedures.none? %>
     <div role="alert" class="alert alert-warning">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
       <div class="flex items-center justify-between w-full gap-4">
@@ -35,8 +35,7 @@
 
   <div class="app-field">
     <%= form.label :patient_id, "Patient", class: "app-field-label" %>
-    <% patient_options = defined?(@patients) ? @patients.map { |p| [ "#{p.hospital_id} - #{p.name}", p.id ] } : [] %>
-    <%= form.select :patient_id, patient_options, { prompt: "Select a patient" }, class: "select select-bordered w-full focus:select-primary", data: { surgery_diagnosis_link_filter_target: "patientSelect", action: "change->surgery-diagnosis-link-filter#filter" } %>
+    <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: "Select a patient" }, class: "select select-bordered w-full focus:select-primary", data: { surgery_diagnosis_link_filter_target: "patientSelect", action: "change->surgery-diagnosis-link-filter#filter" } %>
   </div>
 
   <div class="space-y-3">
@@ -45,10 +44,10 @@
       <p class="app-helper">Select one or more diagnoses that correspond to this surgery.</p>
     </div>
 
-    <% if defined?(@patient_diagnoses) && @patient_diagnoses.any? %>
+    <% if patient_diagnoses.any? %>
       <div class="space-y-3 rounded-box border border-base-200 bg-base-100 p-4">
         <%= hidden_field_tag "surgery[patient_diagnosis_ids][]", "" %>
-        <% @patient_diagnoses.each do |entry| %>
+        <% patient_diagnoses.each do |entry| %>
           <label class="label cursor-pointer justify-start gap-3 rounded-xl border border-base-200 px-4 py-3 has-checked:border-primary has-checked:bg-primary/5" data-surgery-diagnosis-link-filter-target="diagnosisOption" data-patient-id="<%= entry.patient_id %>">
             <%= check_box_tag "surgery[patient_diagnosis_ids][]", entry.id, surgery.patient_diagnosis_ids.include?(entry.id), class: "checkbox checkbox-primary" %>
             <span class="label-text"><%= "#{entry.patient.hospital_id} - #{entry.patient.name} / #{entry.display_name} (#{entry.diagnosed_on.strftime("%Y-%m-%d")})" %></span>
@@ -73,8 +72,6 @@
     <%= form.date_field :surgery_date, class: "input input-bordered w-full focus:input-primary" %>
   </div>
 
-  <% laterality_options = [["Right", "right"], ["Left", "left"], ["Bilateral", "bilateral"], ["None", "none"]] %>
-
   <div class="space-y-4" data-controller="surgery-procedure-fields" data-surgery-procedure-fields-max-items-value="5" data-action="procedure:created@window->surgery-procedure-fields#addProcedureOption">
     <div class="flex items-center justify-between gap-3">
       <div>
@@ -86,13 +83,13 @@
 
     <div class="space-y-3" data-surgery-procedure-fields-target="list">
       <%= form.fields_for :surgery_procedure_selections do |selection_fields| %>
-        <%= render "surgery_procedure_selection_fields", form: form, selection_fields: selection_fields, procedure_options: defined?(@surgery_procedures) ? @surgery_procedures : [], laterality_options: laterality_options %>
+        <%= render "surgery_procedure_selection_fields", form: form, selection_fields: selection_fields, procedure_options: surgery_procedures %>
       <% end %>
     </div>
 
     <template data-surgery-procedure-fields-target="template">
       <%= form.fields_for :surgery_procedure_selections, SurgeryProcedureSelection.new, child_index: "NEW_RECORD" do |selection_fields| %>
-        <%= render "surgery_procedure_selection_fields", form: form, selection_fields: selection_fields, procedure_options: defined?(@surgery_procedures) ? @surgery_procedures : [], laterality_options: laterality_options %>
+        <%= render "surgery_procedure_selection_fields", form: form, selection_fields: selection_fields, procedure_options: surgery_procedures %>
       <% end %>
     </template>
 

@@ -25,7 +25,7 @@
     </div>
   </div>
 
-  <% if defined?(@diagnoses) && @diagnoses.none? %>
+  <% if diagnoses.none? %>
     <div role="alert" class="alert alert-warning" id="patient_diagnosis_no_diagnoses_warning">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
       <div class="flex items-center justify-between w-full gap-4">
@@ -35,11 +35,9 @@
     </div>
   <% end %>
 
-  <% laterality_options = [["Right", "right"], ["Left", "left"], ["Bilateral", "bilateral"], ["None", "none"]] %>
-
   <div class="app-field">
     <%= form.label :laterality, "Laterality", class: "app-field-label" %>
-    <%= form.select :laterality, laterality_options, {}, class: "select select-bordered w-full focus:select-primary" %>
+    <%= form.select :laterality, PatientDiagnosis.laterality_form_options, {}, class: "select select-bordered w-full focus:select-primary" %>
   </div>
 
   <div class="app-field">
@@ -47,7 +45,7 @@
       <%= form.label :diagnosis_id, "Diagnosis", class: "app-field-label" %>
       <%= link_to "New Diagnosis", new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_modal_frame" } %>
     </div>
-    <%= form.collection_select :diagnosis_id, @diagnoses || [], :id, :name, { prompt: "Select a diagnosis" }, class: "select select-bordered w-full focus:select-primary" %>
+    <%= form.collection_select :diagnosis_id, diagnoses, :id, :name, { prompt: "Select a diagnosis" }, class: "select select-bordered w-full focus:select-primary" %>
   </div>
 
   <div class="app-field">
@@ -56,6 +54,6 @@
   </div>
 
   <div class="pt-4" id="patient_diagnosis_submit">
-    <%= form.submit "Save Diagnosis Entry", class: "btn btn-primary w-full", disabled: defined?(@diagnoses) && @diagnoses.none? %>
+    <%= form.submit "Save Diagnosis Entry", class: "btn btn-primary w-full", disabled: diagnoses.none? %>
   </div>
 <% end %>

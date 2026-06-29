@@ -2,7 +2,7 @@ class DiagnosesController < ApplicationController
   before_action :set_diagnosis, only: %i[ show edit update destroy ]
 
   def index
-    @diagnoses = Diagnosis.order(:name)
+    @diagnoses = Diagnosis.alphabetical
   end
 
   def show
@@ -22,7 +22,7 @@ class DiagnosesController < ApplicationController
       if @diagnosis.save
         format.html { redirect_to @diagnosis, notice: "Diagnosis was successfully created." }
         format.turbo_stream do
-          @diagnoses = Diagnosis.order(:name)
+          @diagnoses = Diagnosis.alphabetical
           render :create
         end
       else

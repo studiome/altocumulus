@@ -5,4 +5,8 @@ class Patient < ApplicationRecord
   validates :hospital_id, presence: true, uniqueness: true
   validates :name, presence: true
   validates :date_of_birth, presence: true
+
+  def to_s
+    "#{hospital_id} - #{name}"
+  end
 end

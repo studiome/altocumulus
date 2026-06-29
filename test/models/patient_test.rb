@@ -11,7 +11,6 @@ class PatientTest < ActiveSupport::TestCase
     Surgery.create!(
       patient: patient,
       surgery_date: Date.new(2026, 3, 1),
-      procedure: "Appendectomy",
       anesthesia_method: "General",
       duration_hours: 1.5,
       surgery_procedure_selections_attributes: [

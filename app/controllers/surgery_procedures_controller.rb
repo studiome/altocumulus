@@ -2,7 +2,7 @@ class SurgeryProceduresController < ApplicationController
   before_action :set_surgery_procedure, only: %i[ show edit update destroy ]
 
   def index
-    @surgery_procedures = SurgeryProcedure.order(:name)
+    @surgery_procedures = SurgeryProcedure.alphabetical
   end
 
   def show

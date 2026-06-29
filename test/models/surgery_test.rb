@@ -5,7 +5,6 @@ class SurgeryTest < ActiveSupport::TestCase
     surgery = Surgery.new(
       patient: patients(:one),
       surgery_date: Date.new(2026, 3, 1),
-      laterality: "right",
       anesthesia_method: "General",
       duration_hours: 1.5,
       surgery_procedure_selections_attributes: [
@@ -23,11 +22,10 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_not surgery.valid?
   end
 
-  test "should sync primary procedure from selections" do
+  test "first procedure_names entry reflects first selection" do
     surgery = Surgery.new(
       patient: patients(:one),
       surgery_date: Date.new(2026, 3, 1),
-      laterality: "right",
       anesthesia_method: "General",
       duration_hours: 1.5,
       surgery_procedure_selections_attributes: [
@@ -37,14 +35,13 @@ class SurgeryTest < ActiveSupport::TestCase
     )
 
     assert surgery.valid?
-    assert_equal "Cholecystectomy", surgery.procedure
+    assert_equal "Cholecystectomy", surgery.procedure_names.first
   end
 
   test "should require at least one procedure selection" do
     surgery = Surgery.new(
       patient: patients(:one),
       surgery_date: Date.new(2026, 3, 1),
-      laterality: "right",
       anesthesia_method: "General",
       duration_hours: 1.5
     )
@@ -57,7 +54,6 @@ class SurgeryTest < ActiveSupport::TestCase
     surgery = Surgery.new(
       patient: patients(:one),
       surgery_date: Date.new(2026, 3, 1),
-      laterality: "right",
       anesthesia_method: "General",
       duration_hours: 1.5,
       surgery_procedure_selections_attributes: [
@@ -78,7 +74,6 @@ class SurgeryTest < ActiveSupport::TestCase
     surgery = Surgery.new(
       patient: patients(:one),
       surgery_date: Date.new(2026, 3, 1),
-      laterality: "right",
       anesthesia_method: "General",
       duration_hours: 1.5,
       surgery_procedure_selections_attributes: [
@@ -107,7 +102,6 @@ class SurgeryTest < ActiveSupport::TestCase
     surgery = Surgery.new(
       patient: patients(:one),
       surgery_date: Date.new(2026, 3, 1),
-      laterality: "right",
       anesthesia_method: "General",
       duration_hours: 1.5,
       surgery_procedure_selections_attributes: [
@@ -123,7 +117,6 @@ class SurgeryTest < ActiveSupport::TestCase
     surgery = Surgery.new(
       patient: patients(:one),
       surgery_date: Date.new(2026, 3, 1),
-      laterality: "right",
       anesthesia_method: "General",
       duration_hours: 1.5,
       surgery_procedure_selections_attributes: [
