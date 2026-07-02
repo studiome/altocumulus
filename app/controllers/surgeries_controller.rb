@@ -22,7 +22,7 @@ class SurgeriesController < ApplicationController
     @surgery = Surgery.new(surgery_params)
 
     respond_to do |format|
-      if @surgery.save
+      if save_surgery { @surgery.save }
         format.html { redirect_to @surgery, notice: "Surgery was successfully created." }
         format.json { render :show, status: :created, location: @surgery }
       else
@@ -35,7 +35,7 @@ class SurgeriesController < ApplicationController
 
   def update
     respond_to do |format|
-      if @surgery.update(surgery_params)
+      if save_surgery { @surgery.update(surgery_params) }
         format.html { redirect_to @surgery, notice: "Surgery was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @surgery }
       else
@@ -68,6 +68,16 @@ class SurgeriesController < ApplicationController
       @patients = Patient.order(:id)
       @patient_diagnoses = PatientDiagnosis.includes(:patient, :diagnosis).recent_first
       @surgery_procedures = SurgeryProcedure.alphabetical
+    end
+
+    # Nested selections are saved row by row, so exchanging procedures between
+    # two existing rows hits the unique index mid-save even though the final
+    # state is valid. Surface that as a validation error instead of a 500.
+    def save_surgery
+      yield
+    rescue ActiveRecord::RecordNotUnique
+      @surgery.errors.add(:surgery_procedure_selections, "cannot swap procedures between existing rows in one save; change one row to a different procedure first")
+      false
     end
 
     def build_surgery_procedure_selections

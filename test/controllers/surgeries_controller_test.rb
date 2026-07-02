@@ -76,6 +76,27 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Left Updated Procedure、Right Appendectomy", @surgery.display_procedure_name
   end
 
+  test "should respond with unprocessable entity when procedures are swapped between rows" do
+    patch surgery_url(@surgery), params: { surgery: {
+      patient_id: @surgery.patient_id,
+      surgery_date: @surgery.surgery_date,
+      anesthesia_method: @surgery.anesthesia_method,
+      surgery_procedure_selections_attributes: {
+        "0" => {
+          id: surgery_procedure_selections(:one_appendectomy).id,
+          surgery_procedure_id: surgery_procedures(:knee_arthroscopy).id
+        },
+        "1" => {
+          id: surgery_procedure_selections(:one_knee_arthroscopy).id,
+          surgery_procedure_id: surgery_procedures(:appendectomy).id
+        }
+      }
+    } }
+
+    assert_response :unprocessable_entity
+    assert_equal [ "Appendectomy", "Knee arthroscopy" ], @surgery.reload.procedure_names
+  end
+
   test "should reject diagnosis belonging to another patient" do
     assert_no_difference("Surgery.count") do
       post surgeries_url, params: { surgery: {
