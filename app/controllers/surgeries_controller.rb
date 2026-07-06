@@ -75,9 +75,13 @@ class SurgeriesController < ApplicationController
     # state is valid. Surface that as a validation error instead of a 500.
     def save_surgery
       yield
-    rescue ActiveRecord::RecordNotUnique
-      @surgery.errors.add(:surgery_procedure_selections, "cannot swap procedures between existing rows in one save; change one row to a different procedure first")
-      false
+    rescue ActiveRecord::RecordNotUnique => e
+      if e.message.include?("surgery_procedure_selections")
+        @surgery.errors.add(:surgery_procedure_selections, "cannot swap procedures between existing rows in one save; change one row to a different procedure first")
+        false
+      else
+        raise e
+      end
     end
 
     def build_surgery_procedure_selections
