@@ -9,6 +9,7 @@ export default class extends Controller {
     connect() {
         this.hideDestroyedItems()
         this.refreshAddButtonState()
+        this.nextIndex = Date.now()
     }
 
     hideDestroyedItems() {
@@ -23,7 +24,7 @@ export default class extends Controller {
     add() {
         if (this.activeItems.length >= this.maxItemsValue) return
 
-        const content = this.templateTarget.innerHTML.replaceAll(/NEW_RECORD/g, `${Date.now()}-${Math.random().toString(36).slice(2)}`)
+        const content = this.templateTarget.innerHTML.replaceAll(/NEW_RECORD/g, `${this.nextIndex++}`)
         this.listTarget.insertAdjacentHTML("beforeend", content)
         this.refreshAddButtonState()
     }
