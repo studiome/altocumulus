@@ -38,21 +38,6 @@
     <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: "Select a patient" }, class: "select select-bordered w-full focus:select-primary" %>
   </div>
 
-  <div class="app-field">
-    <%= form.label :admission_date, "Admission Date", class: "app-field-label" %>
-    <%= form.date_field :admission_date, class: "input input-bordered w-full focus:input-primary" %>
-  </div>
-
-  <div class="app-field">
-    <%= form.label :planned_days, "Planned Length of Stay (Days)", class: "app-field-label" %>
-    <%= form.number_field :planned_days, class: "input input-bordered w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 5" %>
-  </div>
-
-  <div class="app-field">
-    <%= form.label :reason, "Reason for Admission", class: "app-field-label" %>
-    <%= form.text_area :reason, class: "textarea textarea-bordered w-full focus:textarea-primary", rows: 3 %>
-  </div>
-
   <div class="space-y-4" data-controller="hospitalization-diagnosis-fields" data-hospitalization-diagnosis-fields-max-items-value="10">
     <div class="flex items-center justify-between gap-3">
       <div>
@@ -78,6 +63,21 @@
       <span class="app-helper">If the right diagnosis is not listed, create a new one first.</span>
       <button type="button" class="btn btn-outline btn-sm" data-hospitalization-diagnosis-fields-target="addButton" data-action="hospitalization-diagnosis-fields#add">Add Diagnosis</button>
     </div>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :admission_date, "Admission Date", class: "app-field-label" %>
+    <%= form.date_field :admission_date, class: "input input-bordered w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :planned_days, "Planned Length of Stay (Days)", class: "app-field-label" %>
+    <%= form.number_field :planned_days, class: "input input-bordered w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 5" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :reason, "Reason for Admission", class: "app-field-label" %>
+    <%= form.text_area :reason, class: "textarea textarea-bordered w-full focus:textarea-primary", rows: 3 %>
   </div>
 
   <div class="app-field">
