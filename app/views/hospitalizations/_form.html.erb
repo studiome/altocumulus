@@ -1,0 +1,91 @@
+<%= form_with(model: hospitalization, class: "app-form") do |form| %>
+  <% if hospitalization.errors.any? %>
+    <div role="alert" class="alert alert-error mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <h3 class="font-bold"><%= pluralize(hospitalization.errors.count, "error") %> prohibited this hospitalization from being saved:</h3>
+        <ul class="list-disc ml-6">
+          <% hospitalization.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <% if patients.none? %>
+    <div role="alert" class="alert alert-warning">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+      <div class="flex items-center justify-between w-full gap-4">
+        <span>No patients found. Create a patient first to register a hospitalization.</span>
+        <%= link_to "New Patient", new_patient_path, class: "btn btn-sm btn-outline" %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if diagnoses.none? %>
+    <div role="alert" class="alert alert-warning">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+      <div class="flex items-center justify-between w-full gap-4">
+        <span>No diagnosis names found. Create a diagnosis master first.</span>
+        <%= link_to "New Diagnosis", new_diagnosis_path, class: "btn btn-sm btn-outline" %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="app-field">
+    <%= form.label :patient_id, "Patient", class: "app-field-label" %>
+    <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: "Select a patient" }, class: "select select-bordered w-full focus:select-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :admission_date, "Admission Date", class: "app-field-label" %>
+    <%= form.date_field :admission_date, class: "input input-bordered w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :planned_days, "Planned Length of Stay (Days)", class: "app-field-label" %>
+    <%= form.number_field :planned_days, class: "input input-bordered w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 5" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :reason, "Reason for Admission", class: "app-field-label" %>
+    <%= form.text_area :reason, class: "textarea textarea-bordered w-full focus:textarea-primary", rows: 3 %>
+  </div>
+
+  <div class="space-y-4" data-controller="hospitalization-diagnosis-fields" data-hospitalization-diagnosis-fields-max-items-value="10">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <span class="app-field-label">Diagnoses at Admission</span>
+        <p class="app-helper">Add one or more diagnosis names for this hospitalization.</p>
+      </div>
+      <%= link_to "New Diagnosis", new_diagnosis_path, class: "app-inline-link text-sm" %>
+    </div>
+
+    <div class="space-y-3" data-hospitalization-diagnosis-fields-target="list">
+      <%= form.fields_for :hospitalization_diagnoses do |diagnosis_fields| %>
+        <%= render "hospitalization_diagnosis_fields", diagnosis_fields: diagnosis_fields, diagnosis_options: diagnoses %>
+      <% end %>
+    </div>
+
+    <template data-hospitalization-diagnosis-fields-target="template">
+      <%= form.fields_for :hospitalization_diagnoses, HospitalizationDiagnosis.new, child_index: "NEW_RECORD" do |diagnosis_fields| %>
+        <%= render "hospitalization_diagnosis_fields", diagnosis_fields: diagnosis_fields, diagnosis_options: diagnoses %>
+      <% end %>
+    </template>
+
+    <div class="flex items-center justify-between gap-3">
+      <span class="app-helper">If the right diagnosis is not listed, create a new one first.</span>
+      <button type="button" class="btn btn-outline btn-sm" data-hospitalization-diagnosis-fields-target="addButton" data-action="hospitalization-diagnosis-fields#add">Add Diagnosis</button>
+    </div>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :room_preference, "Preferred Room", class: "app-field-label" %>
+    <%= form.text_field :room_preference, class: "input input-bordered w-full focus:input-primary", placeholder: "e.g. Private room" %>
+  </div>
+
+  <div class="pt-4">
+    <%= form.submit class: "btn btn-primary w-full" %>
+  </div>
+<% end %>

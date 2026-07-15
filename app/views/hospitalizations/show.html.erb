@@ -1,0 +1,70 @@
+<% content_for :title, "Hospitalization Details" %>
+
+<div class="max-w-2xl mx-auto w-full">
+
+  <div class="mb-8 flex items-center gap-4">
+    <%= link_to hospitalizations_path, class: "btn btn-circle btn-ghost" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+    <% end %>
+    <h1 class="font-bold text-4xl">Hospitalization Details</h1>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <h2 class="card-title text-3xl mb-1 text-primary"><%= @hospitalization.reason %></h2>
+          <p class="text-base-content/60 font-mono">
+            Admission Date: <%= @hospitalization.admission_date&.strftime("%Y-%m-%d") %>
+          </p>
+        </div>
+        <div class="badge badge-outline badge-lg p-4">Hospitalization Record</div>
+      </div>
+
+      <div class="divider">Information</div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Admission Date</span>
+          <span class="text-lg font-medium"><%= @hospitalization.admission_date&.strftime("%B %d, %Y") %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Planned Length of Stay</span>
+          <span class="text-lg font-medium"><%= @hospitalization.planned_days.present? ? "#{@hospitalization.planned_days} days" : "-" %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Reason for Admission</span>
+          <span class="text-lg font-medium"><%= @hospitalization.reason %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Diagnoses at Admission</span>
+          <span class="text-lg font-medium"><%= @hospitalization.diagnosis_names_display %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Preferred Room</span>
+          <span class="text-lg font-medium"><%= @hospitalization.room_preference.presence || "-" %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Patient ID</span>
+          <span class="text-lg font-medium font-mono"><%= @hospitalization.patient_id %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Patient</span>
+          <% if @hospitalization.patient %>
+            <span class="text-lg font-medium">
+              <%= link_to @hospitalization.patient.name.presence || "Patient ##{@hospitalization.patient_id}", @hospitalization.patient, class: "link link-primary" %>
+            </span>
+            <span class="text-base-content/60 font-mono block"><%= @hospitalization.patient.hospital_id %></span>
+          <% else %>
+            <span class="text-lg font-medium text-base-content/50 italic">Unknown</span>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">
+        <%= link_to "Edit Hospitalization", edit_hospitalization_path(@hospitalization), class: "btn btn-secondary" %>
+        <%= button_to "Delete Hospitalization", @hospitalization, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: "Are you sure?" } %>
+      </div>
+    </div>
+  </div>
+</div>

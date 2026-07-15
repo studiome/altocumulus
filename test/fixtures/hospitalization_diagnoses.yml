@@ -1,0 +1,11 @@
+one_pneumonia:
+  hospitalization: one
+  diagnosis: pneumonia
+
+one_hypertension:
+  hospitalization: one
+  diagnosis: hypertension
+
+two_updated_diagnosis:
+  hospitalization: two
+  diagnosis: updated_diagnosis
