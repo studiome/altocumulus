@@ -25,6 +25,10 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Diagnoses at Admission</span>
+          <span class="text-lg font-medium"><%= @hospitalization.diagnosis_names_display %></span>
+        </div>
+        <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Admission Date</span>
           <span class="text-lg font-medium"><%= @hospitalization.admission_date&.strftime("%B %d, %Y") %></span>
         </div>
@@ -35,10 +39,6 @@
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Reason for Admission</span>
           <span class="text-lg font-medium"><%= @hospitalization.reason %></span>
-        </div>
-        <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Diagnoses at Admission</span>
-          <span class="text-lg font-medium"><%= @hospitalization.diagnosis_names_display %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Preferred Room</span>
