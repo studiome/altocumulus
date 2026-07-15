@@ -1,0 +1,15 @@
+<div class="rounded-box border border-base-200 bg-base-100 p-4 space-y-3" data-hospitalization-diagnosis-fields-target="item">
+  <%= diagnosis_fields.hidden_field :_destroy, data: { hospitalization_diagnosis_fields_target: "destroyField" } %>
+  <% if diagnosis_fields.object.persisted? %>
+    <%= diagnosis_fields.hidden_field :id %>
+  <% end %>
+
+  <div class="app-field">
+    <%= diagnosis_fields.label :diagnosis_id, "Diagnosis", class: "app-field-label" %>
+    <%= diagnosis_fields.collection_select :diagnosis_id, diagnosis_options, :id, :name, { prompt: "Select a diagnosis" }, class: "select select-bordered w-full focus:select-primary hospitalization-diagnosis-select" %>
+  </div>
+
+  <div class="flex justify-end">
+    <button type="button" class="btn btn-ghost btn-sm" data-action="hospitalization-diagnosis-fields#remove">Remove</button>
+  </div>
+</div>

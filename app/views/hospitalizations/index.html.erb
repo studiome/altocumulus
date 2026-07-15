@@ -1,0 +1,69 @@
+<% content_for :title, "Hospitalizations" %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker">Admissions</p>
+        <h1 class="app-page-title">Hospitalizations</h1>
+      </div>
+      <%= link_to new_hospitalization_path, class: "btn btn-primary" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        New Hospitalization
+      <% end %>
+    </div>
+  </section>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200">Admission Date</th>
+            <th class="bg-base-200">Planned Days</th>
+            <th class="bg-base-200">Reason</th>
+            <th class="bg-base-200">Diagnoses</th>
+            <th class="bg-base-200">Preferred Room</th>
+            <th class="bg-base-200">Patient ID</th>
+            <th class="bg-base-200">Patient Name</th>
+            <th class="bg-base-200 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @hospitalizations.any? %>
+            <% @hospitalizations.each do |hospitalization| %>
+              <tr class="hover">
+                <td class="font-mono font-medium"><%= hospitalization.admission_date&.strftime("%Y-%m-%d") %></td>
+                <td><%= hospitalization.planned_days.present? ? "#{hospitalization.planned_days} days" : "-" %></td>
+                <td><%= hospitalization.reason %></td>
+                <td><%= hospitalization.diagnosis_names_display %></td>
+                <td><%= hospitalization.room_preference.presence || "-" %></td>
+                <td class="font-mono"><%= hospitalization.patient_id %></td>
+                <td>
+                  <% if hospitalization.patient %>
+                    <%= link_to hospitalization.patient.name.presence || "Patient ##{hospitalization.patient_id}", hospitalization.patient, class: "link link-primary" %>
+                    <span class="text-base-content/50 text-sm font-mono ml-2"><%= hospitalization.patient.hospital_id %></span>
+                  <% else %>
+                    <span class="text-base-content/50 italic">Unknown</span>
+                  <% end %>
+                </td>
+                <td class="text-right flex justify-end gap-2">
+                  <%= link_to "View", hospitalization, class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to "Edit", edit_hospitalization_path(hospitalization), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to "Delete", hospitalization, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="8" class="text-center py-10 text-base-content/50 italic">
+                No hospitalizations found. Click "New Hospitalization" to get started.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

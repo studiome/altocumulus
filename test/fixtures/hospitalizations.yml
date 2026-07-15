@@ -1,0 +1,13 @@
+one:
+  patient: one
+  admission_date: 2026-03-01
+  planned_days: 5
+  reason: "Community-acquired pneumonia"
+  room_preference: "Private room"
+
+two:
+  patient: two
+  admission_date: 2026-03-05
+  planned_days: 3
+  reason: "Post-surgical observation"
+  room_preference: "Shared room"

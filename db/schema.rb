@@ -10,12 +10,33 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_29_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_15_055456) do
   create_table "diagnoses", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_diagnoses_on_name", unique: true
+  end
+
+  create_table "hospitalization_diagnoses", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "diagnosis_id", null: false
+    t.integer "hospitalization_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["diagnosis_id"], name: "index_hospitalization_diagnoses_on_diagnosis_id"
+    t.index ["hospitalization_id", "diagnosis_id"], name: "index_hosp_diagnoses_on_hosp_id_and_diagnosis_id", unique: true
+    t.index ["hospitalization_id"], name: "index_hospitalization_diagnoses_on_hospitalization_id"
+  end
+
+  create_table "hospitalizations", force: :cascade do |t|
+    t.date "admission_date"
+    t.datetime "created_at", null: false
+    t.integer "patient_id", null: false
+    t.integer "planned_days"
+    t.text "reason"
+    t.string "room_preference"
+    t.datetime "updated_at", null: false
+    t.index ["patient_id"], name: "index_hospitalizations_on_patient_id"
   end
 
   create_table "patient_diagnoses", force: :cascade do |t|
@@ -77,6 +98,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_000000) do
     t.index ["name"], name: "index_surgery_procedures_on_name", unique: true
   end
 
+  add_foreign_key "hospitalization_diagnoses", "diagnoses"
+  add_foreign_key "hospitalization_diagnoses", "hospitalizations"
+  add_foreign_key "hospitalizations", "patients"
   add_foreign_key "patient_diagnoses", "diagnoses"
   add_foreign_key "patient_diagnoses", "patients"
   add_foreign_key "surgeries", "patients"
