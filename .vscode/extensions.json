@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "Shopify.ruby-lsp",
+        "KoichiSasada.vscode-rdbg",
+        "bradlc.vscode-tailwindcss",
+        "marcoroth.herb-lsp",
+        "GitHub.vscode-pull-request-github",
+        "ms-ceintl.vscode-language-pack-ja",
+        "Anthropic.claude-code",
+        "openai.chatgpt"
+    ]
+}
