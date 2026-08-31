@@ -138,6 +138,26 @@
 
     <div class="app-panel">
       <div class="app-panel-body">
+        <h2 class="font-bold text-lg mb-4">Scheduling Type Breakdown</h2>
+        <% scheduling_type_breakdown = @statistics.scheduling_type_breakdown %>
+        <% max_scheduling_type_count = scheduling_type_breakdown.map(&:last).max || 1 %>
+        <% if scheduling_type_breakdown.any? %>
+          <div class="space-y-2">
+            <% scheduling_type_breakdown.each do |label, count| %>
+              <div>
+                <div class="flex justify-between text-sm"><span><%= label %></span><span><%= count %></span></div>
+                <div class="bg-base-200 rounded"><div class="bg-error rounded h-2" style="width: <%= (count.to_f / max_scheduling_type_count * 100).round(1) %>%"></div></div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-base-content/50 italic">No data</p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="app-panel">
+      <div class="app-panel-body">
         <h2 class="font-bold text-lg mb-4">Outcome Breakdown</h2>
         <% outcome_breakdown = @statistics.outcome_breakdown %>
         <% max_outcome_count = outcome_breakdown.map(&:last).max || 1 %>

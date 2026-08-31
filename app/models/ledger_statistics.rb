@@ -65,6 +65,14 @@ class LedgerStatistics
       .to_a
   end
 
+  def scheduling_type_breakdown
+    surgeries_scope
+      .group(:scheduling_type)
+      .order(Arel.sql("COUNT(*) DESC"))
+      .count
+      .map { |scheduling_type, count| [ Surgery::SCHEDULING_TYPE_OPTIONS[scheduling_type] || scheduling_type, count ] }
+  end
+
   def outcome_breakdown
     hospitalizations_scope
       .discharged

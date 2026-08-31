@@ -93,6 +93,11 @@ class LedgerStatisticsTest < ActiveSupport::TestCase
     assert_equal({ "General" => 6, "Spinal" => 1 }, stats.anesthesia_breakdown.to_h)
   end
 
+  test "scheduling_type_breakdown groups surgeries by human-readable scheduling type label" do
+    stats = LedgerStatistics.new(year: 2026)
+    assert_equal({ "Elective" => 6, "Emergency" => 1 }, stats.scheduling_type_breakdown.to_h)
+  end
+
   test "outcome_breakdown groups discharged hospitalizations by human-readable outcome label" do
     stats = LedgerStatistics.new(year: 2026)
     assert_equal({ "Recovered" => 1, "Improved" => 1 }, stats.outcome_breakdown.to_h)

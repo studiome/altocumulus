@@ -1,0 +1,96 @@
+<% content_for :title, "Surgery Schedule" %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker">Operations</p>
+        <h1 class="app-page-title">Surgery Schedule</h1>
+        <p class="text-base-content/60 mt-1">
+          Week of <%= @week_start.strftime("%B %d, %Y") %>
+        </p>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= link_to "Prev Week", surgery_schedule_path(week_of: @previous_week), class: "btn btn-sm" %>
+        <%= link_to "This Week", surgery_schedule_path, class: "btn btn-sm btn-ghost" %>
+        <%= link_to "Next Week", surgery_schedule_path(week_of: @next_week), class: "btn btn-sm" %>
+        <%= link_to "Configure slots", elective_slot_rules_path, class: "btn btn-sm btn-outline" %>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 lg:grid-cols-7 gap-4">
+    <% @dates.each do |date| %>
+      <% usage = @slot_usages[date] %>
+      <div class="app-panel">
+        <div class="app-panel-body space-y-4">
+          <div>
+            <p class="text-xs font-bold uppercase text-base-content/40"><%= date.strftime("%A") %></p>
+            <p class="text-lg font-semibold"><%= date.strftime("%Y-%m-%d") %></p>
+            <p class="text-sm text-base-content/60">
+              <% if usage.configured? %>
+                Used <%= usage.used_slots %> / <%= usage.slot_count %> slots
+              <% else %>
+                No slots configured
+              <% end %>
+            </p>
+          </div>
+
+          <% usage.warnings.each do |warning| %>
+            <div role="alert" class="alert alert-warning py-2 text-xs"><span><%= warning %></span></div>
+          <% end %>
+
+          <div class="space-y-2">
+            <% usage.slot_count.times do |index| %>
+              <% surgery = usage.elective_surgeries[index] %>
+              <div class="rounded-box border border-base-200 p-3 text-sm <%= surgery ? "bg-base-100" : "bg-base-200/40 border-dashed" %>">
+                <% if surgery %>
+                  <div class="font-semibold"><%= surgery.patient&.name || "Patient ##{surgery.patient_id}" %></div>
+                  <div class="text-base-content/70"><%= surgery.display_procedure_name %></div>
+                  <div class="text-base-content/50 text-xs">
+                    <%= surgery.duration_hours.present? ? "#{surgery.duration_hours} h" : "-" %>
+                    <% if surgery.slot_overrun?(usage.rule) %>
+                      <span class="badge badge-warning badge-sm ml-1">Extended +<%= surgery.slot_overrun_minutes(usage.rule) %> min</span>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <span class="text-base-content/40 italic">Open</span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <% if usage.over_capacity? %>
+            <div class="space-y-2">
+              <p class="text-xs font-bold uppercase text-error">Over capacity</p>
+              <% usage.elective_surgeries[usage.slot_count..].to_a.each do |surgery| %>
+                <div class="rounded-box border border-error/40 bg-error/5 p-3 text-sm">
+                  <div class="font-semibold"><%= surgery.patient&.name || "Patient ##{surgery.patient_id}" %></div>
+                  <div class="text-base-content/70"><%= surgery.display_procedure_name %></div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
+          <div class="divider my-1">Emergency</div>
+          <div class="space-y-2">
+            <% if usage.emergency_surgeries.any? %>
+              <% usage.emergency_surgeries.each do |surgery| %>
+                <div class="rounded-box border border-error/40 p-3 text-sm">
+                  <div class="flex justify-between items-baseline">
+                    <span class="font-semibold"><%= surgery.patient&.name || "Patient ##{surgery.patient_id}" %></span>
+                    <span class="font-mono text-xs"><%= surgery.start_time_display %></span>
+                  </div>
+                  <div class="text-base-content/70"><%= surgery.display_procedure_name %></div>
+                </div>
+              <% end %>
+            <% else %>
+              <p class="text-base-content/40 italic text-sm">None</p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
