@@ -51,7 +51,7 @@
           <div class="flex flex-col items-center flex-1 h-full justify-end">
             <div class="text-xs mb-1"><%= count %></div>
             <div class="bg-primary w-full rounded-t" style="height: <%= (count.to_f / max_surgeries * 100).round(1) %>%"></div>
-            <div class="text-xs mt-1 text-base-content/60"><%= month.strftime("%b") %></div>
+            <div class="text-xs mt-1 text-base-content/60"><%= monthly_axis_label(month, monthly_surgeries.keys) %></div>
           </div>
         <% end %>
       </div>
@@ -68,7 +68,7 @@
           <div class="flex flex-col items-center flex-1 h-full justify-end">
             <div class="text-xs mb-1"><%= count %></div>
             <div class="bg-secondary w-full rounded-t" style="height: <%= (count.to_f / max_hospitalizations * 100).round(1) %>%"></div>
-            <div class="text-xs mt-1 text-base-content/60"><%= month.strftime("%b") %></div>
+            <div class="text-xs mt-1 text-base-content/60"><%= monthly_axis_label(month, monthly_hospitalizations.keys) %></div>
           </div>
         <% end %>
       </div>
