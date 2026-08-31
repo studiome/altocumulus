@@ -60,6 +60,20 @@
     @apply label text-sm font-semibold text-base-content;
   }
 
+  /* daisyUI 5 removed .form-control/.label-text, and .app-panel is a .card,
+     which pins flex-direction: column. Filter bars need their own row layout. */
+  .app-filter-bar {
+    @apply flex flex-wrap items-end gap-3 rounded-box border border-base-200 bg-base-100 p-4 shadow-xl;
+  }
+
+  .app-filter-field {
+    @apply fieldset min-w-0;
+  }
+
+  .app-filter-label {
+    @apply label text-xs font-semibold text-base-content;
+  }
+
   .app-helper {
     @apply text-sm text-base-content/60;
   }

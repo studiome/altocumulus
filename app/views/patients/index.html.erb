@@ -15,9 +15,9 @@
     </div>
   </section>
 
-  <%= form_with url: patients_path, method: :get, local: true, class: "app-panel p-4 flex flex-wrap items-end gap-3" do |f| %>
-    <div class="form-control">
-      <label class="label"><span class="label-text">Keyword</span></label>
+  <%= form_with url: patients_path, method: :get, local: true, class: "app-filter-bar" do |f| %>
+    <div class="app-filter-field">
+      <label class="app-filter-label">Keyword</label>
       <%= f.text_field :keyword, value: params[:keyword], placeholder: "Name or Hospital ID", class: "input input-bordered input-sm" %>
     </div>
     <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
