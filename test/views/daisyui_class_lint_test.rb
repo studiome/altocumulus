@@ -14,7 +14,9 @@ class DaisyuiClassLintTest < ActiveSupport::TestCase
   }.freeze
 
   CLASS_ATTRIBUTE = /class(?:=|:\s*)"([^"]*)"/
-  CLASS_TOKEN = /[A-Za-z][A-Za-z0-9_-]*/
+  # Variants and arbitrary values are part of the token, so that a legitimate
+  # "hover:opacity-80" is never mistaken for a bare "hover".
+  CLASS_TOKEN = %r{[A-Za-z][A-Za-z0-9:_./\[\]%-]*}
 
   test "views do not use daisyUI 4 class names that version 5 removed" do
     offenses = []

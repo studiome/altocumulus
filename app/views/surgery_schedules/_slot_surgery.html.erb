@@ -1,0 +1,13 @@
+<%# Renders one elective surgery on the week board, whether it sits in a slot
+    or spilled past the day's capacity. Kept in one place so the extension
+    badge cannot go missing from either. %>
+<%= link_to surgery, class: "block hover:opacity-80" do %>
+  <div class="font-semibold"><%= surgery.patient&.name || "Patient ##{surgery.patient_id}" %></div>
+  <div class="text-base-content/70"><%= surgery.display_procedure_name %></div>
+  <div class="text-base-content/50 text-xs">
+    <%= surgery.duration_hours.present? ? "#{surgery.duration_hours} h" : "-" %>
+    <% if surgery.slot_overrun?(rule) %>
+      <span class="badge badge-warning badge-sm ml-1">Extended +<%= surgery.slot_overrun_minutes(rule) %> min</span>
+    <% end %>
+  </div>
+<% end %>

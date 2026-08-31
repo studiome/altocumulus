@@ -13,6 +13,7 @@ class ElectiveSlotUsage
     rules = ElectiveSlotRule.by_day_of_week
     surgeries_by_date = Surgery.where(surgery_date: dates)
                                 .includes(:patient, { surgery_procedure_selections: :surgery_procedure })
+                                .order(:start_time, :id)
                                 .group_by(&:surgery_date)
 
     dates.index_with do |date|
@@ -80,9 +81,13 @@ class ElectiveSlotUsage
 
     if overrunning_surgeries.any?
       count = overrunning_surgeries.size
-      noun = count == 1 ? "surgery" : "surgeries"
-      verb = count == 1 ? "runs" : "run"
-      messages << "#{count} #{noun} #{verb} past its #{slot_duration_minutes} min slot."
+      clause = if count == 1
+        "1 surgery runs past its"
+      else
+        "#{count} surgeries run past their"
+      end
+      slot = count == 1 ? "slot" : "slots"
+      messages << "#{clause} #{slot_duration_minutes} min #{slot}."
     end
 
     messages

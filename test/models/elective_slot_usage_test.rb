@@ -93,6 +93,17 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_includes usage.warnings, "1 surgery runs past its 240 min slot."
   end
 
+  test "warnings uses plural agreement when several surgeries overrun" do
+    usage = ElectiveSlotUsage.new(
+      date: Date.new(2026, 3, 3),
+      rule: elective_slot_rules(:tuesday),
+      elective_surgeries: [ surgeries(:five), surgeries(:five) ],
+      emergency_surgeries: []
+    )
+
+    assert_includes usage.warnings, "2 surgeries run past their 240 min slots."
+  end
+
   test "warnings is empty for a fully within-capacity, non-overrunning day" do
     usage = ElectiveSlotUsage.new(
       date: Date.new(2026, 3, 4),

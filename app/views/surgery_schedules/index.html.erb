@@ -46,14 +46,7 @@
               <% surgery = usage.elective_surgeries[index] %>
               <div class="rounded-box border border-base-200 p-3 text-sm <%= surgery ? "bg-base-100" : "bg-base-200/40 border-dashed" %>">
                 <% if surgery %>
-                  <div class="font-semibold"><%= surgery.patient&.name || "Patient ##{surgery.patient_id}" %></div>
-                  <div class="text-base-content/70"><%= surgery.display_procedure_name %></div>
-                  <div class="text-base-content/50 text-xs">
-                    <%= surgery.duration_hours.present? ? "#{surgery.duration_hours} h" : "-" %>
-                    <% if surgery.slot_overrun?(usage.rule) %>
-                      <span class="badge badge-warning badge-sm ml-1">Extended +<%= surgery.slot_overrun_minutes(usage.rule) %> min</span>
-                    <% end %>
-                  </div>
+                  <%= render "slot_surgery", surgery: surgery, rule: usage.rule %>
                 <% else %>
                   <span class="text-base-content/40 italic">Open</span>
                 <% end %>
@@ -66,8 +59,7 @@
               <p class="text-xs font-bold uppercase text-error">Over capacity</p>
               <% usage.elective_surgeries[usage.slot_count..].to_a.each do |surgery| %>
                 <div class="rounded-box border border-error/40 bg-error/5 p-3 text-sm">
-                  <div class="font-semibold"><%= surgery.patient&.name || "Patient ##{surgery.patient_id}" %></div>
-                  <div class="text-base-content/70"><%= surgery.display_procedure_name %></div>
+                  <%= render "slot_surgery", surgery: surgery, rule: usage.rule %>
                 </div>
               <% end %>
             </div>
