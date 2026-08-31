@@ -20,8 +20,11 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
+            <th class="bg-base-200">Status</th>
             <th class="bg-base-200">Diagnoses</th>
             <th class="bg-base-200">Admission Date</th>
+            <th class="bg-base-200">Discharge Date</th>
+            <th class="bg-base-200">LOS</th>
             <th class="bg-base-200">Planned Days</th>
             <th class="bg-base-200">Reason</th>
             <th class="bg-base-200">Preferred Room</th>
@@ -34,8 +37,15 @@
           <% if @hospitalizations.any? %>
             <% @hospitalizations.each do |hospitalization| %>
               <tr class="hover">
+                <td>
+                  <span class="badge <%= hospitalization.in_hospital? ? "badge-warning" : "badge-ghost" %>">
+                    <%= hospitalization.status_label %>
+                  </span>
+                </td>
                 <td><%= hospitalization.diagnosis_names_display %></td>
                 <td class="font-mono font-medium"><%= hospitalization.admission_date&.strftime("%Y-%m-%d") %></td>
+                <td class="font-mono"><%= hospitalization.discharge_date&.strftime("%Y-%m-%d") || "-" %></td>
+                <td><%= hospitalization.length_of_stay.present? ? "#{hospitalization.length_of_stay} days" : "-" %></td>
                 <td><%= hospitalization.planned_days.present? ? "#{hospitalization.planned_days} days" : "-" %></td>
                 <td><%= hospitalization.reason %></td>
                 <td><%= hospitalization.room_preference.presence || "-" %></td>
@@ -57,7 +67,7 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="8" class="text-center py-10 text-base-content/50 italic">
+              <td colspan="11" class="text-center py-10 text-base-content/50 italic">
                 No hospitalizations found. Click "New Hospitalization" to get started.
               </td>
             </tr>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_15_055456) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_061324) do
   create_table "diagnoses", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -31,11 +31,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_055456) do
   create_table "hospitalizations", force: :cascade do |t|
     t.date "admission_date"
     t.datetime "created_at", null: false
+    t.date "discharge_date"
+    t.string "discharge_destination"
+    t.string "outcome"
     t.integer "patient_id", null: false
     t.integer "planned_days"
     t.text "reason"
     t.string "room_preference"
     t.datetime "updated_at", null: false
+    t.index ["discharge_date"], name: "index_hospitalizations_on_discharge_date"
+    t.index ["patient_id", "admission_date"], name: "index_hospitalizations_on_patient_id_and_admission_date"
     t.index ["patient_id"], name: "index_hospitalizations_on_patient_id"
   end
 

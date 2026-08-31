@@ -9,3 +9,7 @@ one_hypertension:
 two_updated_diagnosis:
   hospitalization: two
   diagnosis: updated_diagnosis
+
+three_appendicitis:
+  hospitalization: three
+  diagnosis: appendicitis

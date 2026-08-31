@@ -85,6 +85,23 @@
     <%= form.text_field :room_preference, class: "input input-bordered w-full focus:input-primary", placeholder: "e.g. Private room" %>
   </div>
 
+  <div class="divider">Discharge</div>
+
+  <div class="app-field">
+    <%= form.label :discharge_date, "Discharge Date", class: "app-field-label" %>
+    <%= form.date_field :discharge_date, class: "input input-bordered w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :outcome, "Outcome", class: "app-field-label" %>
+    <%= form.select :outcome, Hospitalization.outcome_form_options, { include_blank: true }, class: "select select-bordered w-full focus:select-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :discharge_destination, "Discharge Destination", class: "app-field-label" %>
+    <%= form.select :discharge_destination, Hospitalization.discharge_destination_form_options, { include_blank: true }, class: "select select-bordered w-full focus:select-primary" %>
+  </div>
+
   <div class="pt-4">
     <%= form.submit class: "btn btn-primary w-full" %>
   </div>

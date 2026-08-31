@@ -1,6 +1,9 @@
 one:
   patient: one
   admission_date: 2026-03-01
+  discharge_date: 2026-03-06
+  outcome: recovered
+  discharge_destination: home
   planned_days: 5
   reason: "Community-acquired pneumonia"
   room_preference: "Private room"
@@ -8,6 +11,15 @@ one:
 two:
   patient: two
   admission_date: 2026-03-05
+  discharge_date: 2026-03-08
+  outcome: improved
+  discharge_destination: home
   planned_days: 3
   reason: "Post-surgical observation"
   room_preference: "Shared room"
+
+three:
+  patient: one
+  admission_date: 2026-06-01
+  planned_days: 3
+  reason: "Observation"

@@ -87,6 +87,7 @@ class HospitalizationsController < ApplicationController
     def hospitalization_params
       params.expect(hospitalization: [
         :patient_id, :admission_date, :planned_days, :reason, :room_preference,
+        :discharge_date, :outcome, :discharge_destination,
         { hospitalization_diagnoses_attributes: [ [ :id, :diagnosis_id, :_destroy ] ] }
       ])
     end

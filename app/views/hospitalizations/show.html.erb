@@ -18,7 +18,7 @@
             Admission Date: <%= @hospitalization.admission_date&.strftime("%Y-%m-%d") %>
           </p>
         </div>
-        <div class="badge badge-outline badge-lg p-4">Hospitalization Record</div>
+        <div class="badge <%= @hospitalization.in_hospital? ? "badge-warning" : "badge-outline" %> badge-lg p-4"><%= @hospitalization.status_label %></div>
       </div>
 
       <div class="divider">Information</div>
@@ -43,6 +43,22 @@
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Preferred Room</span>
           <span class="text-lg font-medium"><%= @hospitalization.room_preference.presence || "-" %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Discharge Date</span>
+          <span class="text-lg font-medium"><%= @hospitalization.discharge_date&.strftime("%B %d, %Y") || "-" %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Outcome</span>
+          <span class="text-lg font-medium"><%= @hospitalization.outcome_label %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Discharge Destination</span>
+          <span class="text-lg font-medium"><%= @hospitalization.discharge_destination_label %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Length of Stay</span>
+          <span class="text-lg font-medium"><%= @hospitalization.length_of_stay.present? ? "#{@hospitalization.length_of_stay} days" : "-" %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Patient ID</span>

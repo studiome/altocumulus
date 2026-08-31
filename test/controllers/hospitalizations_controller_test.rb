@@ -20,6 +20,9 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
       post hospitalizations_url, params: { hospitalization: {
         patient_id: patients(:one).id,
         admission_date: "2026-05-01",
+        discharge_date: "2026-05-05",
+        outcome: "recovered",
+        discharge_destination: "home",
         planned_days: 4,
         reason: "Acute bronchitis",
         room_preference: "Private room",
@@ -78,6 +81,25 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to hospitalization_url(@hospitalization)
     @hospitalization.reload
     assert_equal [ diagnoses(:fracture).id, diagnoses(:appendicitis).id ].sort, @hospitalization.diagnoses.ids.sort
+  end
+
+  test "should record discharge information on update" do
+    hospitalization = hospitalizations(:three)
+
+    patch hospitalization_url(hospitalization), params: { hospitalization: {
+      patient_id: hospitalization.patient_id,
+      admission_date: hospitalization.admission_date,
+      reason: hospitalization.reason,
+      discharge_date: "2026-06-04",
+      outcome: "improved",
+      discharge_destination: "home"
+    } }
+
+    assert_redirected_to hospitalization_url(hospitalization)
+    hospitalization.reload
+    assert_equal Date.new(2026, 6, 4), hospitalization.discharge_date
+    assert_equal "improved", hospitalization.outcome
+    assert_equal "home", hospitalization.discharge_destination
   end
 
   test "should respond with unprocessable entity when diagnoses are swapped between rows" do
