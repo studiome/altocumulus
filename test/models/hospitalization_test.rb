@@ -234,4 +234,26 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_includes Hospitalization.admitted_between(Date.new(2026, 3, 1), nil), hospitalizations(:three)
     assert_not_includes Hospitalization.admitted_between(nil, Date.new(2026, 3, 4)), hospitalizations(:two)
   end
+
+  test "to_s renders patient and admission/discharge period" do
+    assert_equal "H001 - John Doe (2026-03-01 - 2026-03-06)", hospitalizations(:one).to_s
+    assert_equal "H001 - John Doe (2026-06-01 - in hospital)", hospitalizations(:three).to_s
+  end
+
+  test "surgeries are nullified when the hospitalization is destroyed" do
+    surgery = Surgery.create!(
+      patient: patients(:one),
+      hospitalization: hospitalizations(:one),
+      surgery_date: Date.new(2026, 3, 3),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    hospitalizations(:one).destroy!
+
+    assert_nil surgery.reload.hospitalization_id
+  end
 end

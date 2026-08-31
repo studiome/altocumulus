@@ -3,7 +3,7 @@ class SurgeriesController < ApplicationController
   before_action :set_form_collections, only: %i[ new edit create update ]
 
   def index
-    @surgeries = Surgery.includes(:patient, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure }).order(surgery_date: :desc, created_at: :desc)
+    @surgeries = Surgery.includes(:patient, :hospitalization, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure }).order(surgery_date: :desc, created_at: :desc)
   end
 
   def show
@@ -68,6 +68,7 @@ class SurgeriesController < ApplicationController
       @patients = Patient.order(:id)
       @patient_diagnoses = PatientDiagnosis.includes(:patient, :diagnosis).recent_first
       @surgery_procedures = SurgeryProcedure.alphabetical
+      @hospitalizations = Hospitalization.includes(:patient).order(admission_date: :desc)
     end
 
     # Nested selections are saved row by row, so exchanging procedures between
@@ -90,7 +91,7 @@ class SurgeriesController < ApplicationController
 
     def surgery_params
       params.expect(surgery: [
-        :surgery_date, :duration_hours, :anesthesia_method, :patient_id,
+        :surgery_date, :duration_hours, :anesthesia_method, :patient_id, :hospitalization_id,
         { patient_diagnosis_ids: [] },
         { surgery_procedure_selections_attributes: [ [ :id, :surgery_procedure_id, :laterality, :_destroy ] ] }
       ])

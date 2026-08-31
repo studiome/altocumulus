@@ -19,6 +19,7 @@ class Hospitalization < ApplicationRecord
   belongs_to :patient
   has_many :hospitalization_diagnoses, -> { order(:id) }, dependent: :destroy, inverse_of: :hospitalization
   has_many :diagnoses, through: :hospitalization_diagnoses
+  has_many :surgeries, dependent: :nullify
 
   accepts_nested_attributes_for :hospitalization_diagnoses,
                                 allow_destroy: true,

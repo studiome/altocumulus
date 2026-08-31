@@ -37,6 +37,43 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Bilateral Cholecystectomy、Left Appendectomy", Surgery.last.display_procedure_name
   end
 
+  test "should create surgery linked to a hospitalization" do
+    assert_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        hospitalization_id: hospitalizations(:one).id,
+        patient_diagnosis_ids: [ patient_diagnoses(:appendicitis).id ],
+        surgery_date: "2026-03-03",
+        anesthesia_method: "General",
+        duration_hours: 2.0,
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    assert_redirected_to surgery_url(Surgery.last)
+    assert_equal hospitalizations(:one), Surgery.last.hospitalization
+  end
+
+  test "should reject a surgery linked to another patient's hospitalization" do
+    assert_no_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:two).id,
+        hospitalization_id: hospitalizations(:one).id,
+        patient_diagnosis_ids: [ patient_diagnoses(:pneumonia).id ],
+        surgery_date: "2026-03-03",
+        anesthesia_method: "General",
+        duration_hours: 2.0,
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    assert_response :unprocessable_entity
+  end
+
   test "should show surgery" do
     get surgery_url(@surgery)
     assert_response :success

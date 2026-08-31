@@ -72,6 +72,11 @@
     <%= form.date_field :surgery_date, class: "input input-bordered w-full focus:input-primary" %>
   </div>
 
+  <div class="app-field">
+    <%= form.label :hospitalization_id, "Linked Hospitalization", class: "app-field-label" %>
+    <%= form.collection_select :hospitalization_id, hospitalizations, :id, :to_s, { include_blank: "Not linked (outpatient / standalone)" }, class: "select select-bordered w-full focus:select-primary" %>
+  </div>
+
   <div class="space-y-4" data-controller="surgery-procedure-fields" data-surgery-procedure-fields-max-items-value="5" data-action="procedure:created@window->surgery-procedure-fields#addProcedureOption">
     <div class="flex items-center justify-between gap-3">
       <div>

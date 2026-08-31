@@ -77,6 +77,24 @@
         </div>
       </div>
 
+      <div class="divider">Surgeries During This Hospitalization</div>
+
+      <% if @hospitalization.surgeries.any? %>
+        <ul class="space-y-2 mb-4">
+          <% @hospitalization.surgeries.order(surgery_date: :asc).each do |surgery| %>
+            <li class="flex items-center justify-between rounded-box border border-base-200 px-4 py-3">
+              <div>
+                <span class="font-mono text-sm text-base-content/60"><%= surgery.surgery_date&.strftime("%Y-%m-%d") %></span>
+                <span class="font-medium ml-2"><%= surgery.display_procedure_name %></span>
+              </div>
+              <%= link_to "View", surgery, class: "btn btn-ghost btn-xs text-primary" %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <div class="app-empty-state mb-4">No surgeries are linked to this hospitalization.</div>
+      <% end %>
+
       <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">
         <%= link_to "Edit Hospitalization", edit_hospitalization_path(@hospitalization), class: "btn btn-secondary" %>
         <%= button_to "Delete Hospitalization", @hospitalization, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: "Are you sure?" } %>

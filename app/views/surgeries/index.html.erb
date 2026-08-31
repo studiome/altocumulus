@@ -26,6 +26,7 @@
             <th class="bg-base-200">Duration</th>
             <th class="bg-base-200">Anesthesia</th>
             <th class="bg-base-200">Patient</th>
+            <th class="bg-base-200">Hospitalization</th>
             <th class="bg-base-200 text-right">Actions</th>
           </tr>
         </thead>
@@ -48,6 +49,13 @@
                     <span class="text-base-content/50 italic">Unknown</span>
                   <% end %>
                 </td>
+                <td>
+                  <% if surgery.hospitalization %>
+                    <%= link_to surgery.hospitalization.admission_date&.strftime("%Y-%m-%d"), surgery.hospitalization, class: "link link-primary" %>
+                  <% else %>
+                    <span class="text-base-content/50 italic">Standalone</span>
+                  <% end %>
+                </td>
                 <td class="text-right flex justify-end gap-2">
                   <%= link_to "View", surgery, class: "btn btn-ghost btn-xs text-primary" %>
                   <%= link_to "Edit", edit_surgery_path(surgery), class: "btn btn-ghost btn-xs text-secondary" %>
@@ -57,7 +65,7 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="7" class="text-center py-10 text-base-content/50 italic">
+              <td colspan="8" class="text-center py-10 text-base-content/50 italic">
                 No surgeries found. Click "New Surgery" to get started.
               </td>
             </tr>

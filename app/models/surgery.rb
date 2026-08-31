@@ -1,5 +1,6 @@
 class Surgery < ApplicationRecord
   belongs_to :patient
+  belongs_to :hospitalization, optional: true
   has_many :surgery_diagnosis_links, dependent: :destroy
   has_many :patient_diagnoses, through: :surgery_diagnosis_links
   has_many :surgery_procedure_selections, -> { order(:id) }, dependent: :destroy, inverse_of: :surgery
@@ -16,6 +17,11 @@ class Surgery < ApplicationRecord
   validate :must_have_at_least_one_procedure_selection
   validate :no_more_than_five_procedure_selections
   validate :no_duplicate_procedure_selections
+  validate :hospitalization_must_belong_to_same_patient
+  validate :surgery_date_must_fall_within_hospitalization_period
+
+  scope :linked_to_hospitalization, -> { where.not(hospitalization_id: nil) }
+  scope :standalone, -> { where(hospitalization_id: nil) }
 
   def display_procedure_name
     procedure_display_names.presence || "-"
@@ -70,5 +76,21 @@ class Surgery < ApplicationRecord
     return if procedure_names.uniq.size == procedure_names.size
 
     errors.add(:surgery_procedure_selections, "must not include duplicate procedures")
+  end
+
+  def hospitalization_must_belong_to_same_patient
+    return if hospitalization.blank? || patient_id.blank?
+    return if hospitalization.patient_id == patient_id
+
+    errors.add(:hospitalization, "must belong to the same patient as the surgery")
+  end
+
+  def surgery_date_must_fall_within_hospitalization_period
+    return if hospitalization.blank? || surgery_date.blank?
+    return if hospitalization.admission_date.blank?
+    return if surgery_date >= hospitalization.admission_date &&
+              (hospitalization.discharge_date.blank? || surgery_date <= hospitalization.discharge_date)
+
+    errors.add(:surgery_date, "must fall within the linked hospitalization period")
   end
 end
