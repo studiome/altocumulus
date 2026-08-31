@@ -230,8 +230,8 @@ class SurgeryTest < ActiveSupport::TestCase
   end
 
   test "filtered by keyword matches patient name or hospital_id" do
-    assert_equal [ surgeries(:two) ], Surgery.filtered(keyword: "jane").to_a
-    assert_equal [ surgeries(:one) ], Surgery.filtered(keyword: "H001").to_a
+    assert_equal [ surgeries(:two), surgeries(:four), surgeries(:six) ].sort_by(&:id), Surgery.filtered(keyword: "jane").sort_by(&:id)
+    assert_equal [ surgeries(:one), surgeries(:three), surgeries(:five), surgeries(:emergency_one) ].sort_by(&:id), Surgery.filtered(keyword: "H001").sort_by(&:id)
   end
 
   test "filtered by keyword escapes LIKE wildcards" do
@@ -239,19 +239,122 @@ class SurgeryTest < ActiveSupport::TestCase
   end
 
   test "filtered by surgery_procedure_id matches only surgeries using it" do
-    assert_equal [ surgeries(:one) ], Surgery.filtered(surgery_procedure_id: surgery_procedures(:appendectomy).id).to_a
+    expected = [ surgeries(:one), surgeries(:three), surgeries(:four), surgeries(:emergency_one) ].sort_by(&:id)
+    assert_equal expected, Surgery.filtered(surgery_procedure_id: surgery_procedures(:appendectomy).id).sort_by(&:id)
   end
 
   test "filtered by anesthesia_method matches exactly" do
-    assert_equal [ surgeries(:one) ], Surgery.filtered(anesthesia_method: "General").to_a
+    expected = [ surgeries(:one), surgeries(:three), surgeries(:four), surgeries(:five), surgeries(:six), surgeries(:emergency_one) ].sort_by(&:id)
+    assert_equal expected, Surgery.filtered(anesthesia_method: "General").sort_by(&:id)
   end
 
   test "filtered by performed_from and performed_to narrows the surgery date range" do
     result = Surgery.filtered(performed_from: "2026-03-02", performed_to: "2026-03-31")
-    assert_equal [ surgeries(:two) ], result.to_a
+    expected = [ surgeries(:two), surgeries(:three), surgeries(:four), surgeries(:five), surgeries(:six) ].sort_by(&:id)
+    assert_equal expected, result.sort_by(&:id)
   end
 
   test "anesthesia_methods scope returns distinct sorted non-blank methods" do
     assert_equal [ "General", "Spinal" ], Surgery.anesthesia_methods
+  end
+
+  test "scheduling_type defaults to elective" do
+    assert_equal "elective", surgeries(:one).scheduling_type
+  end
+
+  test "scheduling_type must be elective or emergency" do
+    surgery = surgeries(:one)
+
+    surgery.scheduling_type = "urgent"
+    assert_not surgery.valid?
+
+    surgery.scheduling_type = nil
+    assert_not surgery.valid?
+
+    surgery.scheduling_type = "emergency"
+    assert surgery.valid?
+  end
+
+  test "elective? and emergency? and scheduling_type_label" do
+    assert surgeries(:one).elective?
+    assert_not surgeries(:one).emergency?
+    assert_equal "Elective", surgeries(:one).scheduling_type_label
+
+    assert surgeries(:emergency_one).emergency?
+    assert_not surgeries(:emergency_one).elective?
+    assert_equal "Emergency", surgeries(:emergency_one).scheduling_type_label
+  end
+
+  test "elective and emergency scopes" do
+    assert_includes Surgery.elective, surgeries(:one)
+    assert_not_includes Surgery.elective, surgeries(:emergency_one)
+
+    assert_includes Surgery.emergency, surgeries(:emergency_one)
+    assert_not_includes Surgery.emergency, surgeries(:one)
+  end
+
+  test "start_time_display formats a start_time or shows a dash" do
+    assert_equal "23:30", surgeries(:emergency_one).start_time_display
+    assert_equal "-", surgeries(:one).start_time_display
+  end
+
+  test "an emergency surgery can be saved on an unconfigured weekday at night" do
+    surgery = Surgery.new(
+      patient: patients(:one),
+      surgery_date: Date.new(2026, 3, 1), # Sunday, no elective slot rule configured
+      scheduling_type: "emergency",
+      start_time: "02:00",
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    assert surgery.valid?
+  end
+
+  test "an elective surgery beyond slot capacity is still valid" do
+    surgery = Surgery.new(
+      patient: patients(:one),
+      surgery_date: Date.new(2026, 3, 3), # Tuesday, already at 4 elective surgeries in 3 slots
+      scheduling_type: "elective",
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    assert surgery.valid?
+  end
+
+  test "an elective surgery longer than its slot duration is still valid" do
+    surgery = surgeries(:five)
+    assert surgery.valid?
+  end
+
+  test "slot_overrun_minutes is nil for emergency surgeries regardless of rule" do
+    rule = elective_slot_rules(:tuesday)
+    assert_nil surgeries(:emergency_one).slot_overrun_minutes(rule)
+  end
+
+  test "slot_overrun_minutes is nil when no rule is given" do
+    assert_nil surgeries(:one).slot_overrun_minutes(nil)
+  end
+
+  test "slot_overrun_minutes is nil when the surgery fits within the slot" do
+    rule = elective_slot_rules(:tuesday)
+    assert_nil surgeries(:three).slot_overrun_minutes(rule)
+  end
+
+  test "slot_overrun_minutes returns the number of minutes past the slot duration" do
+    rule = elective_slot_rules(:tuesday)
+    assert_equal 60, surgeries(:five).slot_overrun_minutes(rule)
+    assert surgeries(:five).slot_overrun?(rule)
+  end
+
+  test "filtered by scheduling_type" do
+    assert_equal [ surgeries(:emergency_one) ], Surgery.filtered(scheduling_type: "emergency").to_a
   end
 end

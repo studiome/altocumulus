@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_065818) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_070029) do
   create_table "diagnoses", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -80,10 +80,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_065818) do
     t.float "duration_hours"
     t.integer "hospitalization_id"
     t.integer "patient_id", null: false
+    t.string "scheduling_type", default: "elective", null: false
+    t.time "start_time"
     t.date "surgery_date"
     t.datetime "updated_at", null: false
     t.index ["hospitalization_id"], name: "index_surgeries_on_hospitalization_id"
     t.index ["patient_id"], name: "index_surgeries_on_patient_id"
+    t.index ["surgery_date", "scheduling_type"], name: "index_surgeries_on_surgery_date_and_scheduling_type"
   end
 
   create_table "surgery_diagnosis_links", force: :cascade do |t|

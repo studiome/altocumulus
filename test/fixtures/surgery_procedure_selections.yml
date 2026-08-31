@@ -12,3 +12,28 @@ two_knee_arthroscopy:
   surgery: two
   surgery_procedure: knee_arthroscopy
   laterality: bilateral
+
+three_appendectomy:
+  surgery: three
+  surgery_procedure: appendectomy
+  laterality: right
+
+four_appendectomy:
+  surgery: four
+  surgery_procedure: appendectomy
+  laterality: left
+
+five_cholecystectomy:
+  surgery: five
+  surgery_procedure: cholecystectomy
+  laterality: none
+
+six_knee_arthroscopy:
+  surgery: six
+  surgery_procedure: knee_arthroscopy
+  laterality: right
+
+emergency_one_appendectomy:
+  surgery: emergency_one
+  surgery_procedure: appendectomy
+  laterality: none

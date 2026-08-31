@@ -29,6 +29,10 @@
       <%= f.select :anesthesia_method, @anesthesia_methods, { include_blank: "All", selected: params[:anesthesia_method] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
+      <label class="app-filter-label">Type</label>
+      <%= f.select :scheduling_type, Surgery.scheduling_type_form_options, { include_blank: "All", selected: params[:scheduling_type] }, { class: "select select-sm" } %>
+    </div>
+    <div class="app-filter-field">
       <label class="app-filter-label">Performed From</label>
       <%= f.date_field :performed_from, value: params[:performed_from], class: "input input-sm" %>
     </div>
@@ -37,7 +41,7 @@
       <%= f.date_field :performed_to, value: params[:performed_to], class: "input input-sm" %>
     </div>
     <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
-    <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to).any?(&:present?) %>
+    <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type).any?(&:present?) %>
       <%= link_to "Clear", surgeries_path, class: "btn btn-ghost btn-sm" %>
     <% end %>
   <% end %>
@@ -48,6 +52,8 @@
         <thead>
           <tr>
             <th class="bg-base-200">Surgery Date</th>
+            <th class="bg-base-200">Type</th>
+            <th class="bg-base-200">Start Time</th>
             <th class="bg-base-200">Diagnosis</th>
             <th class="bg-base-200">Procedures</th>
             <th class="bg-base-200">Duration</th>
@@ -60,11 +66,19 @@
         <tbody>
           <% if @surgeries.any? %>
             <% @surgeries.each do |surgery| %>
+              <% slot_rule = @slot_rules[surgery.surgery_date&.wday] %>
               <tr class="row-hover">
                 <td class="font-mono font-medium"><%= surgery.surgery_date&.strftime("%Y-%m-%d") %></td>
+                <td>
+                  <span class="badge <%= surgery.emergency? ? "badge-error" : "badge-ghost" %>"><%= surgery.scheduling_type_label %></span>
+                </td>
+                <td class="font-mono"><%= surgery.start_time_display %></td>
                 <td><%= surgery.diagnosis_names_display %></td>
                 <td>
                   <div class="font-semibold leading-snug"><%= surgery.display_procedure_name %></div>
+                  <% if surgery.slot_overrun?(slot_rule) %>
+                    <span class="badge badge-warning badge-sm mt-1">Extended +<%= surgery.slot_overrun_minutes(slot_rule) %> min</span>
+                  <% end %>
                 </td>
                 <td><%= surgery.duration_hours.present? ? "#{surgery.duration_hours} h" : "-" %></td>
                 <td><%= surgery.anesthesia_method %></td>
@@ -92,8 +106,8 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="8" class="text-center py-10 text-base-content/50 italic">
-                <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to).any?(&:present?) %>
+              <td colspan="10" class="text-center py-10 text-base-content/50 italic">
+                <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type).any?(&:present?) %>
                   No surgeries match your search.
                 <% else %>
                   No surgeries found. Click "New Surgery" to get started.

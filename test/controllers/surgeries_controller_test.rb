@@ -29,6 +29,18 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index filters by scheduling_type" do
+    get surgeries_url, params: { scheduling_type: "emergency" }
+    assert_response :success
+    assert_match(/Emergency/, @response.body)
+  end
+
+  test "index shows a slot overrun badge for a surgery that runs past its slot" do
+    get surgeries_url
+    assert_response :success
+    assert_match(/Extended/, @response.body)
+  end
+
   test "should get new" do
     get new_surgery_url
     assert_response :success
@@ -54,6 +66,46 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Cholecystectomy", "Appendectomy" ], Surgery.last.procedure_names
     assert_equal [ "bilateral", "left" ], Surgery.last.surgery_procedure_selections.order(:id).pluck(:laterality)
     assert_equal "Bilateral Cholecystectomy、Left Appendectomy", Surgery.last.display_procedure_name
+  end
+
+  test "should create an emergency surgery on an unconfigured weekday at night" do
+    assert_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        patient_diagnosis_ids: [ patient_diagnoses(:appendicitis).id ],
+        surgery_date: "2026-03-01",
+        scheduling_type: "emergency",
+        start_time: "02:15",
+        anesthesia_method: "General",
+        duration_hours: 1.0,
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    assert_redirected_to surgery_url(Surgery.last)
+    assert Surgery.last.emergency?
+    assert_equal "02:15", Surgery.last.start_time_display
+  end
+
+  test "should create an elective surgery beyond the configured slot capacity" do
+    assert_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        patient_diagnosis_ids: [ patient_diagnoses(:appendicitis).id ],
+        surgery_date: "2026-03-03",
+        scheduling_type: "elective",
+        anesthesia_method: "General",
+        duration_hours: 1.0,
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    assert_redirected_to surgery_url(Surgery.last)
+    assert Surgery.last.elective?
   end
 
   test "should create surgery linked to a hospitalization" do

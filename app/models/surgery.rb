@@ -1,4 +1,6 @@
 class Surgery < ApplicationRecord
+  SCHEDULING_TYPE_OPTIONS = { "elective" => "Elective", "emergency" => "Emergency" }.freeze
+
   belongs_to :patient
   belongs_to :hospitalization, optional: true
   has_many :surgery_diagnosis_links, dependent: :destroy
@@ -13,6 +15,7 @@ class Surgery < ApplicationRecord
   validates :surgery_date, presence: true
   validates :anesthesia_method, presence: true
   validates :duration_hours, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :scheduling_type, presence: true, inclusion: { in: SCHEDULING_TYPE_OPTIONS.keys }
   validate :patient_diagnoses_must_belong_to_patient
   validate :must_have_at_least_one_procedure_selection
   validate :no_more_than_five_procedure_selections
@@ -23,8 +26,14 @@ class Surgery < ApplicationRecord
   scope :linked_to_hospitalization, -> { where.not(hospitalization_id: nil) }
   scope :standalone, -> { where(hospitalization_id: nil) }
   scope :anesthesia_methods, -> { distinct.order(:anesthesia_method).pluck(:anesthesia_method).compact_blank }
+  scope :elective, -> { where(scheduling_type: "elective") }
+  scope :emergency, -> { where(scheduling_type: "emergency") }
 
-  def self.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil)
+  def self.scheduling_type_form_options
+    SCHEDULING_TYPE_OPTIONS.map { |k, v| [ v, k ] }
+  end
+
+  def self.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil, scheduling_type: nil)
     scope = all
 
     if keyword.present?
@@ -43,6 +52,7 @@ class Surgery < ApplicationRecord
     scope = scope.where(anesthesia_method: anesthesia_method) if anesthesia_method.present?
     scope = scope.where(surgery_date: performed_from..) if performed_from.present?
     scope = scope.where(surgery_date: ..performed_to) if performed_to.present?
+    scope = scope.where(scheduling_type: scheduling_type) if scheduling_type.present?
     scope
   end
 
@@ -72,6 +82,36 @@ class Surgery < ApplicationRecord
 
   def active_surgery_procedure_selections
     surgery_procedure_selections.reject(&:marked_for_destruction?)
+  end
+
+  def elective?
+    scheduling_type == "elective"
+  end
+
+  def emergency?
+    scheduling_type == "emergency"
+  end
+
+  def scheduling_type_label
+    SCHEDULING_TYPE_OPTIONS[scheduling_type] || scheduling_type
+  end
+
+  def start_time_display
+    start_time&.strftime("%H:%M") || "-"
+  end
+
+  # Emergency surgeries are intentionally unaffected: no rule lookup, no
+  # capacity check, no time-of-day check. Never add validations here -
+  # emergency surgeries must be saveable on any date, at any time.
+  def slot_overrun_minutes(rule)
+    return nil unless elective? && rule && duration_hours.present?
+
+    over = (duration_hours * 60).round - rule.slot_duration_minutes
+    over.positive? ? over : nil
+  end
+
+  def slot_overrun?(rule)
+    slot_overrun_minutes(rule).present?
   end
 
   private

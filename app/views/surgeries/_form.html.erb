@@ -73,6 +73,42 @@
   </div>
 
   <div class="app-field">
+    <span class="app-field-label">Scheduling Type</span>
+    <div class="flex gap-6 pt-1">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <%= form.radio_button :scheduling_type, "elective", class: "radio radio-primary" %>
+        Elective
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer">
+        <%= form.radio_button :scheduling_type, "emergency", class: "radio radio-primary" %>
+        Emergency
+      </label>
+    </div>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :start_time, "Start Time", class: "app-field-label" %>
+    <%= form.time_field :start_time, class: "input w-full focus:input-primary" %>
+    <p class="app-helper">Emergency surgeries can be scheduled at any time, including nights.</p>
+  </div>
+
+  <div class="rounded-box border border-base-200 bg-base-100 p-4 space-y-2">
+    <div class="flex items-center justify-between gap-3">
+      <span class="text-sm font-semibold">Elective Slot Rules</span>
+      <%= link_to "Manage slot rules", elective_slot_rules_path, class: "app-inline-link text-sm" %>
+    </div>
+    <% if elective_slot_rules.any? %>
+      <ul class="text-sm text-base-content/60 space-y-1">
+        <% elective_slot_rules.each do |rule| %>
+          <li><%= rule.to_s %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="app-helper">No elective slots are configured yet.</p>
+    <% end %>
+  </div>
+
+  <div class="app-field">
     <%= form.label :hospitalization_id, "Linked Hospitalization", class: "app-field-label" %>
     <%= form.collection_select :hospitalization_id, hospitalizations, :id, :to_s, { include_blank: "Not linked (outpatient / standalone)" }, class: "select w-full focus:select-primary" %>
   </div>

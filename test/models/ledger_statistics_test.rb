@@ -14,7 +14,7 @@ class LedgerStatisticsTest < ActiveSupport::TestCase
 
   test "surgeries_count and hospitalizations_count are scoped to the given year" do
     stats = LedgerStatistics.new(year: 2026)
-    assert_equal 2, stats.surgeries_count
+    assert_equal 7, stats.surgeries_count
     assert_equal 3, stats.hospitalizations_count
   end
 
@@ -42,7 +42,7 @@ class LedgerStatisticsTest < ActiveSupport::TestCase
     assert_equal 12, counts.size
     assert_equal Date.new(2026, 1, 1), counts.keys.first
     assert_equal Date.new(2026, 12, 1), counts.keys.last
-    assert_equal 2, counts[Date.new(2026, 3, 1)]
+    assert_equal 7, counts[Date.new(2026, 3, 1)]
     assert_equal 0, counts[Date.new(2026, 1, 1)]
   end
 
@@ -64,7 +64,7 @@ class LedgerStatisticsTest < ActiveSupport::TestCase
       assert_equal 12, counts.size
       assert_equal Date.new(2025, 9, 1), counts.keys.first
       assert_equal Date.new(2026, 8, 1), counts.keys.last
-      assert_equal 2, counts[Date.new(2026, 3, 1)]
+      assert_equal 7, counts[Date.new(2026, 3, 1)]
     end
   end
 
@@ -72,8 +72,8 @@ class LedgerStatisticsTest < ActiveSupport::TestCase
     stats = LedgerStatistics.new(year: 2026)
     top = stats.top_procedures(limit: 10)
 
-    assert_equal [ "Knee arthroscopy", 2 ], top.first
-    assert_includes top, [ "Appendectomy", 1 ]
+    assert_equal [ "Appendectomy", 4 ], top.first
+    assert_includes top, [ "Knee arthroscopy", 3 ]
   end
 
   test "top_procedures respects the limit" do
@@ -90,7 +90,7 @@ class LedgerStatisticsTest < ActiveSupport::TestCase
 
   test "anesthesia_breakdown groups surgeries by anesthesia method" do
     stats = LedgerStatistics.new(year: 2026)
-    assert_equal({ "General" => 1, "Spinal" => 1 }, stats.anesthesia_breakdown.to_h)
+    assert_equal({ "General" => 6, "Spinal" => 1 }, stats.anesthesia_breakdown.to_h)
   end
 
   test "outcome_breakdown groups discharged hospitalizations by human-readable outcome label" do
