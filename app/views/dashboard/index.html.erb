@@ -1,0 +1,159 @@
+<% content_for :title, "Dashboard" %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker">Overview</p>
+        <h1 class="app-page-title">Dashboard</h1>
+      </div>
+      <%= form_with url: dashboard_path, method: :get, local: true, class: "flex items-end gap-2" do |f| %>
+        <div class="form-control">
+          <label class="label"><span class="label-text">Year</span></label>
+          <%= f.select :year, @available_years, { include_blank: "All time", selected: @selected_year }, { class: "select select-bordered select-sm" } %>
+        </div>
+        <%= f.submit "View", class: "btn btn-primary btn-sm" %>
+      <% end %>
+    </div>
+  </section>
+
+  <div class="stats stats-vertical sm:stats-horizontal shadow app-panel w-full">
+    <div class="stat">
+      <div class="stat-title">Total Patients</div>
+      <div class="stat-value"><%= @statistics.total_patients %></div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Current Inpatients</div>
+      <div class="stat-value"><%= @statistics.current_inpatients_count %></div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Surgeries</div>
+      <div class="stat-value"><%= @statistics.surgeries_count %></div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Hospitalizations</div>
+      <div class="stat-value"><%= @statistics.hospitalizations_count %></div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Avg. Length of Stay</div>
+      <div class="stat-value"><%= @statistics.average_length_of_stay ? "#{@statistics.average_length_of_stay} days" : "-" %></div>
+    </div>
+  </div>
+
+  <div class="app-panel">
+    <div class="app-panel-body">
+      <h2 class="font-bold text-lg mb-4">Monthly Surgeries</h2>
+      <% monthly_surgeries = @statistics.monthly_surgery_counts %>
+      <% max_surgeries = [ monthly_surgeries.values.max, 1 ].max %>
+      <div class="flex items-end gap-2 h-40">
+        <% monthly_surgeries.each do |month, count| %>
+          <div class="flex flex-col items-center flex-1 h-full justify-end">
+            <div class="text-xs mb-1"><%= count %></div>
+            <div class="bg-primary w-full rounded-t" style="height: <%= (count.to_f / max_surgeries * 100).round(1) %>%"></div>
+            <div class="text-xs mt-1 text-base-content/60"><%= month.strftime("%b") %></div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-panel">
+    <div class="app-panel-body">
+      <h2 class="font-bold text-lg mb-4">Monthly Hospitalizations</h2>
+      <% monthly_hospitalizations = @statistics.monthly_hospitalization_counts %>
+      <% max_hospitalizations = [ monthly_hospitalizations.values.max, 1 ].max %>
+      <div class="flex items-end gap-2 h-40">
+        <% monthly_hospitalizations.each do |month, count| %>
+          <div class="flex flex-col items-center flex-1 h-full justify-end">
+            <div class="text-xs mb-1"><%= count %></div>
+            <div class="bg-secondary w-full rounded-t" style="height: <%= (count.to_f / max_hospitalizations * 100).round(1) %>%"></div>
+            <div class="text-xs mt-1 text-base-content/60"><%= month.strftime("%b") %></div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="app-panel">
+      <div class="app-panel-body">
+        <h2 class="font-bold text-lg mb-4">Top Procedures</h2>
+        <% top_procedures = @statistics.top_procedures %>
+        <% max_procedure_count = top_procedures.map(&:last).max || 1 %>
+        <% if top_procedures.any? %>
+          <div class="space-y-2">
+            <% top_procedures.each do |name, count| %>
+              <div>
+                <div class="flex justify-between text-sm"><span><%= name %></span><span><%= count %></span></div>
+                <div class="bg-base-200 rounded"><div class="bg-primary rounded h-2" style="width: <%= (count.to_f / max_procedure_count * 100).round(1) %>%"></div></div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-base-content/50 italic">No data</p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="app-panel">
+      <div class="app-panel-body">
+        <h2 class="font-bold text-lg mb-4">Top Diagnoses at Admission</h2>
+        <% top_diagnoses = @statistics.top_diagnoses %>
+        <% max_diagnosis_count = top_diagnoses.map(&:last).max || 1 %>
+        <% if top_diagnoses.any? %>
+          <div class="space-y-2">
+            <% top_diagnoses.each do |name, count| %>
+              <div>
+                <div class="flex justify-between text-sm"><span><%= name %></span><span><%= count %></span></div>
+                <div class="bg-base-200 rounded"><div class="bg-secondary rounded h-2" style="width: <%= (count.to_f / max_diagnosis_count * 100).round(1) %>%"></div></div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-base-content/50 italic">No data</p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="app-panel">
+      <div class="app-panel-body">
+        <h2 class="font-bold text-lg mb-4">Anesthesia Method Breakdown</h2>
+        <% anesthesia_breakdown = @statistics.anesthesia_breakdown %>
+        <% max_anesthesia_count = anesthesia_breakdown.map(&:last).max || 1 %>
+        <% if anesthesia_breakdown.any? %>
+          <div class="space-y-2">
+            <% anesthesia_breakdown.each do |label, count| %>
+              <div>
+                <div class="flex justify-between text-sm"><span><%= label %></span><span><%= count %></span></div>
+                <div class="bg-base-200 rounded"><div class="bg-accent rounded h-2" style="width: <%= (count.to_f / max_anesthesia_count * 100).round(1) %>%"></div></div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-base-content/50 italic">No data</p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="app-panel">
+      <div class="app-panel-body">
+        <h2 class="font-bold text-lg mb-4">Outcome Breakdown</h2>
+        <% outcome_breakdown = @statistics.outcome_breakdown %>
+        <% max_outcome_count = outcome_breakdown.map(&:last).max || 1 %>
+        <% if outcome_breakdown.any? %>
+          <div class="space-y-2">
+            <% outcome_breakdown.each do |label, count| %>
+              <div>
+                <div class="flex justify-between text-sm"><span><%= label %></span><span><%= count %></span></div>
+                <div class="bg-base-200 rounded"><div class="bg-info rounded h-2" style="width: <%= (count.to_f / max_outcome_count * 100).round(1) %>%"></div></div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-base-content/50 italic">No data</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
