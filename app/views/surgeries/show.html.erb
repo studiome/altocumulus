@@ -23,6 +23,9 @@
           <% if @surgery.slot_overrun?(@slot_rules[@surgery.surgery_date&.wday]) %>
             <span class="badge badge-warning">Extended +<%= @surgery.slot_overrun_minutes(@slot_rules[@surgery.surgery_date&.wday]) %> min</span>
           <% end %>
+          <% if @holiday %>
+            <span class="badge badge-secondary"><%= @holiday.name %></span>
+          <% end %>
         </div>
       </div>
 

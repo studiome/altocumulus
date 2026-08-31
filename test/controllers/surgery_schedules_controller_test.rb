@@ -43,4 +43,20 @@ class SurgerySchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/23:30/, @response.body)
     assert_match(/No elective slots are configured for Sunday/, @response.body)
   end
+
+  test "index shows the holiday name and no-slots message for a week containing a holiday" do
+    holiday = holidays(:national_holiday) # 2026-03-10, a Tuesday with a configured rule
+
+    get surgery_schedule_url, params: { week_of: holiday.date.to_s }
+
+    assert_response :success
+    assert_match(/#{Regexp.escape(holiday.name)}/, @response.body)
+    assert_match(/No elective slots \(holiday\)/, @response.body)
+  end
+
+  test "index links to the holidays page" do
+    get surgery_schedule_url
+    assert_response :success
+    assert_select "a[href=?]", holidays_path
+  end
 end

@@ -16,6 +16,7 @@
         <%= link_to "This Week", surgery_schedule_path, class: "btn btn-sm btn-ghost" %>
         <%= link_to "Next Week", surgery_schedule_path(week_of: @next_week), class: "btn btn-sm" %>
         <%= link_to "Configure slots", elective_slot_rules_path, class: "btn btn-sm btn-outline" %>
+        <%= link_to "Holidays", holidays_path, class: "btn btn-sm btn-outline" %>
       </div>
     </div>
   </section>
@@ -28,9 +29,14 @@
           <div>
             <p class="text-xs font-bold uppercase text-base-content/40"><%= date.strftime("%A") %></p>
             <p class="text-lg font-semibold"><%= date.strftime("%Y-%m-%d") %></p>
+            <% if usage.holiday? %>
+              <span class="badge badge-secondary badge-sm mt-1"><%= usage.holiday.name %></span>
+            <% end %>
             <p class="text-sm text-base-content/60">
               <% if usage.configured? %>
                 Used <%= usage.used_slots %> / <%= usage.slot_count %> slots
+              <% elsif usage.holiday? %>
+                No elective slots (holiday)
               <% else %>
                 No slots configured
               <% end %>
@@ -46,7 +52,7 @@
               <% surgery = usage.elective_surgeries[index] %>
               <div class="rounded-box border border-base-200 p-3 text-sm <%= surgery ? "bg-base-100" : "bg-base-200/40 border-dashed" %>">
                 <% if surgery %>
-                  <%= render "slot_surgery", surgery: surgery, rule: usage.rule %>
+                  <%= render "slot_surgery", surgery: surgery, rule: usage.effective_rule %>
                 <% else %>
                   <span class="text-base-content/40 italic">Open</span>
                 <% end %>
@@ -59,7 +65,7 @@
               <p class="text-xs font-bold uppercase text-error">Over capacity</p>
               <% usage.elective_surgeries[usage.slot_count..].to_a.each do |surgery| %>
                 <div class="rounded-box border border-error/40 bg-error/5 p-3 text-sm">
-                  <%= render "slot_surgery", surgery: surgery, rule: usage.rule %>
+                  <%= render "slot_surgery", surgery: surgery, rule: usage.effective_rule %>
                 </div>
               <% end %>
             </div>

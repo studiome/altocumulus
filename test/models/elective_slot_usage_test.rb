@@ -115,6 +115,65 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_empty usage.warnings
   end
 
+  test "holiday? reflects whether a holiday falls on the date" do
+    usages = ElectiveSlotUsage.for_dates([ Date.new(2026, 3, 3), holidays(:national_holiday).date ])
+
+    assert_not usages[Date.new(2026, 3, 3)].holiday?
+    assert usages[holidays(:national_holiday).date].holiday?
+    assert_equal holidays(:national_holiday), usages[holidays(:national_holiday).date].holiday
+  end
+
+  test "a holiday zeroes out the day's elective slots even though a rule exists" do
+    usage = ElectiveSlotUsage.for_dates([ holidays(:national_holiday).date ])[holidays(:national_holiday).date]
+
+    assert usage.rule.present? # Tuesday has a configured rule
+    assert_nil usage.effective_rule
+    assert_equal 0, usage.slot_count
+    assert_nil usage.slot_duration_minutes
+    assert_not usage.configured?
+    assert_empty usage.overrunning_surgeries
+  end
+
+  test "a holiday with elective surgeries warns and does not duplicate the unconfigured-day warning" do
+    holiday = holidays(:national_holiday)
+    surgery = Surgery.create!(
+      patient: patients(:one),
+      surgery_date: holiday.date,
+      scheduling_type: "elective",
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+
+    usage = ElectiveSlotUsage.for_dates([ holiday.date ])[holiday.date]
+
+    assert_includes usage.warnings, "#{holiday.name} is a holiday: no elective slots are available."
+    assert_not usage.warnings.any? { |message| message.start_with?("No elective slots are configured for") }
+    assert usage.over_capacity? # 1 elective surgery against 0 slots
+  ensure
+    surgery&.destroy
+  end
+
+  test "emergency surgeries are returned unaffected on a holiday" do
+    holiday = holidays(:national_holiday)
+    emergency_surgery = Surgery.create!(
+      patient: patients(:one),
+      surgery_date: holiday.date,
+      scheduling_type: "emergency",
+      start_time: "03:00",
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+
+    usage = ElectiveSlotUsage.for_dates([ holiday.date ])[holiday.date]
+
+    assert_includes usage.emergency_surgeries, emergency_surgery
+    assert_empty usage.warnings
+  ensure
+    emergency_surgery&.destroy
+  end
+
   test "for_dates does not issue more queries as the number of dates grows" do
     one_date_queries = count_queries { ElectiveSlotUsage.for_dates([ Date.new(2026, 3, 3) ]) }
     full_week_queries = count_queries { ElectiveSlotUsage.for_dates((Date.new(2026, 3, 1)..Date.new(2026, 3, 7)).to_a) }

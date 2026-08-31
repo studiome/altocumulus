@@ -15,6 +15,7 @@ class SurgeriesController < ApplicationController
 
   def show
     @slot_rules = ElectiveSlotRule.by_day_of_week
+    @holiday = Holiday.find_by(date: @surgery.surgery_date)
   end
 
   def new

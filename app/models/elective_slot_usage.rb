@@ -4,13 +4,14 @@
 # second one and never as invalid. Emergency surgeries are tracked
 # separately and never affect slot usage or warnings.
 class ElectiveSlotUsage
-  attr_reader :date, :rule, :elective_surgeries, :emergency_surgeries
+  attr_reader :date, :rule, :elective_surgeries, :emergency_surgeries, :holiday
 
   # Builds one ElectiveSlotUsage per date in a single pass, issuing a fixed
   # number of queries regardless of how many dates are given (no N+1).
   def self.for_dates(dates)
     dates = dates.to_a
     rules = ElectiveSlotRule.by_day_of_week
+    holidays = Holiday.by_date(dates)
     surgeries_by_date = Surgery.where(surgery_date: dates)
                                 .includes(:patient, { surgery_procedure_selections: :surgery_procedure })
                                 .order(:start_time, :id)
@@ -22,28 +23,41 @@ class ElectiveSlotUsage
         date: date,
         rule: rules[date.wday],
         elective_surgeries: day_surgeries.select(&:elective?),
-        emergency_surgeries: day_surgeries.select(&:emergency?)
+        emergency_surgeries: day_surgeries.select(&:emergency?),
+        holiday: holidays[date]
       )
     end
   end
 
-  def initialize(date:, rule:, elective_surgeries:, emergency_surgeries:)
+  def initialize(date:, rule:, elective_surgeries:, emergency_surgeries:, holiday: nil)
     @date = date
     @rule = rule
     @elective_surgeries = elective_surgeries
     @emergency_surgeries = emergency_surgeries
+    @holiday = holiday
+  end
+
+  def holiday?
+    holiday.present?
+  end
+
+  # The rule to actually apply for elective slots. A holiday shuts down
+  # elective slots for the day regardless of the weekday rule; emergency
+  # surgeries never consult this and are never affected.
+  def effective_rule
+    holiday? ? nil : rule
   end
 
   def configured?
-    rule.present?
+    effective_rule.present?
   end
 
   def slot_count
-    rule&.slot_count || 0
+    effective_rule&.slot_count || 0
   end
 
   def slot_duration_minutes
-    rule&.slot_duration_minutes
+    effective_rule&.slot_duration_minutes
   end
 
   def used_slots
@@ -63,15 +77,17 @@ class ElectiveSlotUsage
   end
 
   def overrunning_surgeries
-    return [] unless rule
+    return [] unless effective_rule
 
-    elective_surgeries.select { |surgery| surgery.slot_overrun?(rule) }
+    elective_surgeries.select { |surgery| surgery.slot_overrun?(effective_rule) }
   end
 
   def warnings
     messages = []
 
-    if !configured? && elective_surgeries.any?
+    if holiday? && elective_surgeries.any?
+      messages << "#{holiday.name} is a holiday: no elective slots are available."
+    elsif !configured? && elective_surgeries.any?
       messages << "No elective slots are configured for #{date.strftime('%A')}."
     end
 

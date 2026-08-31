@@ -150,6 +150,29 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show displays a holiday badge when the surgery date is a holiday" do
+    holiday = holidays(:national_holiday)
+    surgery = Surgery.create!(
+      patient: patients(:one),
+      surgery_date: holiday.date,
+      scheduling_type: "elective",
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+
+    get surgery_url(surgery)
+
+    assert_response :success
+    assert_match(/#{Regexp.escape(holiday.name)}/, @response.body)
+  end
+
+  test "show does not display a holiday badge on a non-holiday date" do
+    get surgery_url(@surgery)
+    assert_response :success
+    assert_no_match(/Vernal Equinox Day/, @response.body)
+  end
+
   test "should get edit" do
     get edit_surgery_url(@surgery)
     assert_response :success
