@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   resources :surgery_procedures
   resources :surgeries
   resources :hospitalizations
+  resources :elective_slot_rules
   get "dashboard" => "dashboard#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

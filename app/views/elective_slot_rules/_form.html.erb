@@ -1,0 +1,35 @@
+<%= form_with(model: elective_slot_rule, class: "app-form") do |form| %>
+  <% if elective_slot_rule.errors.any? %>
+    <div role="alert" class="alert alert-error mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <h3 class="font-bold"><%= pluralize(elective_slot_rule.errors.count, "error") %> prohibited this elective slot rule from being saved:</h3>
+        <ul class="list-disc ml-6">
+          <% elective_slot_rule.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="app-field">
+    <%= form.label :day_of_week, "Day of Week", class: "app-field-label" %>
+    <%= form.select :day_of_week, ElectiveSlotRule.day_of_week_form_options, { prompt: "Select a day" }, class: "select w-full focus:select-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :slot_count, "Number of Slots", class: "app-field-label" %>
+    <%= form.number_field :slot_count, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 3" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :slot_duration_minutes, "Slot Duration (minutes)", class: "app-field-label" %>
+    <%= form.number_field :slot_duration_minutes, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 240" %>
+    <p class="app-helper">The total time available in one slot. A surgery that runs longer is treated as extending its own slot, not consuming another.</p>
+  </div>
+
+  <div class="pt-4">
+    <%= form.submit class: "btn btn-primary w-full" %>
+  </div>
+<% end %>

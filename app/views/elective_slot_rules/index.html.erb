@@ -1,0 +1,48 @@
+<% content_for :title, "Elective Slot Rules" %>
+
+<div class="w-full">
+
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="font-bold text-4xl mb-2">Elective Slot Rules</h1>
+      <p class="text-base-content/60">One rule per weekday. Configure how many elective surgery slots repeat each week.</p>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200">Day</th>
+            <th class="bg-base-200">Slots</th>
+            <th class="bg-base-200">Slot Duration</th>
+            <th class="bg-base-200 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% ElectiveSlotRule::DAY_NAMES.each_with_index do |day_name, day_of_week| %>
+            <% rule = @elective_slot_rules[day_of_week] %>
+            <tr class="row-hover">
+              <td class="font-semibold"><%= day_name %></td>
+              <% if rule %>
+                <td><%= rule.slot_count %></td>
+                <td><%= rule.slot_duration_minutes %> min</td>
+                <td class="text-right flex justify-end gap-2">
+                  <%= link_to "View", rule, class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to "Edit", edit_elective_slot_rule_path(rule), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to "Delete", rule, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                </td>
+              <% else %>
+                <td colspan="2" class="text-base-content/50 italic">Not configured</td>
+                <td class="text-right">
+                  <%= link_to "Add", new_elective_slot_rule_path(day_of_week: day_of_week), class: "btn btn-ghost btn-xs text-primary" %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
