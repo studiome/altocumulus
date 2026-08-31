@@ -34,8 +34,18 @@
           <li><%= link_to "Patients", patients_path %></li>
           <li><%= link_to "Surgeries", surgeries_path %></li>
           <li><%= link_to "Hospitalizations", hospitalizations_path %></li>
-          <li><%= link_to "Slot Rules", elective_slot_rules_path %></li>
           <li><%= link_to "Schedule", surgery_schedule_path %></li>
+          <li>
+            <details>
+              <summary>Masters</summary>
+              <ul class="p-2 bg-base-100 rounded-t-none z-10 w-52">
+                <li><%= link_to "Diagnoses", diagnoses_path %></li>
+                <li><%= link_to "Procedures", surgery_procedures_path %></li>
+                <li><%= link_to "Slot Rules", elective_slot_rules_path %></li>
+                <li><%= link_to "Holidays", holidays_path %></li>
+              </ul>
+            </details>
+          </li>
         </ul>
       </div>
     </header>
