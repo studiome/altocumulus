@@ -28,4 +28,26 @@ class PatientTest < ActiveSupport::TestCase
     assert patients(:one).valid?
     assert patients(:two).valid?
   end
+
+  test "filtered with blank keyword returns all patients" do
+    assert_equal Patient.all.to_a.sort_by(&:id), Patient.filtered(keyword: "").to_a.sort_by(&:id)
+    assert_equal Patient.all.to_a.sort_by(&:id), Patient.filtered(keyword: nil).to_a.sort_by(&:id)
+  end
+
+  test "filtered matches by partial name" do
+    assert_equal [ patients(:one) ], Patient.filtered(keyword: "john").to_a
+  end
+
+  test "filtered matches by partial hospital_id" do
+    assert_equal [ patients(:two) ], Patient.filtered(keyword: "H002").to_a
+  end
+
+  test "filtered escapes LIKE wildcards in keyword" do
+    assert_equal [], Patient.filtered(keyword: "%").to_a
+    assert_equal [], Patient.filtered(keyword: "_ohn").to_a
+  end
+
+  test "ordered scope orders by hospital_id" do
+    assert_equal Patient.all.sort_by(&:hospital_id), Patient.ordered.to_a
+  end
 end

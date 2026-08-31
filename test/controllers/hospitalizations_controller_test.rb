@@ -10,6 +10,25 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index filters by keyword" do
+    get hospitalizations_url, params: { keyword: "jane" }
+    assert_response :success
+    assert_match(/Jane Smith/, @response.body)
+    assert_no_match(/John Doe/, @response.body)
+  end
+
+  test "index filters by status" do
+    get hospitalizations_url, params: { status: "in_hospital" }
+    assert_response :success
+    assert_match(/Observation/, @response.body)
+    assert_no_match(/Community-acquired pneumonia/, @response.body)
+  end
+
+  test "index paginates results" do
+    get hospitalizations_url, params: { page: 1 }
+    assert_response :success
+  end
+
   test "should get new" do
     get new_hospitalization_url
     assert_response :success

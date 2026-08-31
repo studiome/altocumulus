@@ -3,7 +3,8 @@ class PatientsController < ApplicationController
 
   # GET /patients or /patients.json
   def index
-    @patients = Patient.all
+    @pagination = Pagination.new(Patient.filtered(**filter_params).ordered, page: params[:page])
+    @patients = @pagination.records
   end
 
   # GET /patients/1 or /patients/1.json
@@ -70,5 +71,9 @@ class PatientsController < ApplicationController
     # Only allow a list of trusted parameters through.
     def patient_params
       params.expect(patient: [ :hospital_id, :name, :date_of_birth ])
+    end
+
+    def filter_params
+      params.permit(:keyword).to_h.symbolize_keys
     end
 end

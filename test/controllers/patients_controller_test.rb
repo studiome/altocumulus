@@ -11,6 +11,24 @@ class PatientsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{new_patient_patient_diagnosis_path(@patient)}']", text: "Add Diagnosis"
   end
 
+  test "index filters by keyword" do
+    get patients_url, params: { keyword: "jane" }
+    assert_response :success
+    assert_select "td", text: "Jane Smith"
+    assert_select "td", text: "John Doe", count: 0
+  end
+
+  test "index paginates results" do
+    26.times { |i| Patient.create!(hospital_id: "P#{100 + i}", name: "Patient #{i}", date_of_birth: "1990-01-01") }
+
+    get patients_url
+    assert_response :success
+    assert_select ".join .btn", text: "Next"
+
+    get patients_url, params: { page: 2 }
+    assert_response :success
+  end
+
   test "should get new" do
     get new_patient_url
     assert_response :success

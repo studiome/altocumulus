@@ -224,4 +224,34 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_includes Surgery.standalone, surgeries(:one)
     assert_not_includes Surgery.standalone, linked
   end
+
+  test "filtered with no filters returns everything" do
+    assert_equal Surgery.count, Surgery.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil).count
+  end
+
+  test "filtered by keyword matches patient name or hospital_id" do
+    assert_equal [ surgeries(:two) ], Surgery.filtered(keyword: "jane").to_a
+    assert_equal [ surgeries(:one) ], Surgery.filtered(keyword: "H001").to_a
+  end
+
+  test "filtered by keyword escapes LIKE wildcards" do
+    assert_equal [], Surgery.filtered(keyword: "%").to_a
+  end
+
+  test "filtered by surgery_procedure_id matches only surgeries using it" do
+    assert_equal [ surgeries(:one) ], Surgery.filtered(surgery_procedure_id: surgery_procedures(:appendectomy).id).to_a
+  end
+
+  test "filtered by anesthesia_method matches exactly" do
+    assert_equal [ surgeries(:one) ], Surgery.filtered(anesthesia_method: "General").to_a
+  end
+
+  test "filtered by performed_from and performed_to narrows the surgery date range" do
+    result = Surgery.filtered(performed_from: "2026-03-02", performed_to: "2026-03-31")
+    assert_equal [ surgeries(:two) ], result.to_a
+  end
+
+  test "anesthesia_methods scope returns distinct sorted non-blank methods" do
+    assert_equal [ "General", "Spinal" ], Surgery.anesthesia_methods
+  end
 end

@@ -3,7 +3,12 @@ class HospitalizationsController < ApplicationController
   before_action :set_form_collections, only: %i[ new edit create update ]
 
   def index
-    @hospitalizations = Hospitalization.includes(:patient, hospitalization_diagnoses: :diagnosis).order(admission_date: :desc, created_at: :desc)
+    @diagnoses = Diagnosis.alphabetical
+    scope = Hospitalization.includes(:patient, hospitalization_diagnoses: :diagnosis)
+                            .filtered(**filter_params)
+                            .order(admission_date: :desc, created_at: :desc)
+    @pagination = Pagination.new(scope, page: params[:page])
+    @hospitalizations = @pagination.records
   end
 
   def show
@@ -90,5 +95,9 @@ class HospitalizationsController < ApplicationController
         :discharge_date, :outcome, :discharge_destination,
         { hospitalization_diagnoses_attributes: [ [ :id, :diagnosis_id, :_destroy ] ] }
       ])
+    end
+
+    def filter_params
+      params.permit(:keyword, :diagnosis_id, :status, :admitted_from, :admitted_to).to_h.symbolize_keys
     end
 end

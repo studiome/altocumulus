@@ -15,6 +15,17 @@
     </div>
   </section>
 
+  <%= form_with url: patients_path, method: :get, local: true, class: "app-panel p-4 flex flex-wrap items-end gap-3" do |f| %>
+    <div class="form-control">
+      <label class="label"><span class="label-text">Keyword</span></label>
+      <%= f.text_field :keyword, value: params[:keyword], placeholder: "Name or Hospital ID", class: "input input-bordered input-sm" %>
+    </div>
+    <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
+    <% if params[:keyword].present? %>
+      <%= link_to "Clear", patients_path, class: "btn btn-ghost btn-sm" %>
+    <% end %>
+  <% end %>
+
   <div class="app-panel overflow-hidden">
     <div class="overflow-x-auto">
       <table class="table table-zebra w-full">
@@ -44,7 +55,11 @@
           <% else %>
             <tr>
               <td colspan="4" class="py-10 text-center text-base-content/50 italic">
-                No patients found. Click "New Patient" to get started.
+                <% if params[:keyword].present? %>
+                  No patients match your search.
+                <% else %>
+                  No patients found. Click "New Patient" to get started.
+                <% end %>
               </td>
             </tr>
           <% end %>
@@ -52,4 +67,6 @@
       </table>
     </div>
   </div>
+
+  <%= render "shared/pagination", pagination: @pagination %>
 </div>

@@ -22,6 +22,29 @@ class Surgery < ApplicationRecord
 
   scope :linked_to_hospitalization, -> { where.not(hospitalization_id: nil) }
   scope :standalone, -> { where(hospitalization_id: nil) }
+  scope :anesthesia_methods, -> { distinct.order(:anesthesia_method).pluck(:anesthesia_method).compact_blank }
+
+  def self.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil)
+    scope = all
+
+    if keyword.present?
+      pattern = "%#{sanitize_sql_like(keyword)}%"
+      scope = scope.joins(:patient).where(
+        "patients.name LIKE :pattern OR patients.hospital_id LIKE :pattern", pattern: pattern
+      )
+    end
+
+    if surgery_procedure_id.present?
+      scope = scope.joins(:surgery_procedure_selections)
+                   .where(surgery_procedure_selections: { surgery_procedure_id: surgery_procedure_id })
+                   .distinct
+    end
+
+    scope = scope.where(anesthesia_method: anesthesia_method) if anesthesia_method.present?
+    scope = scope.where(surgery_date: performed_from..) if performed_from.present?
+    scope = scope.where(surgery_date: ..performed_to) if performed_to.present?
+    scope
+  end
 
   def display_procedure_name
     procedure_display_names.presence || "-"

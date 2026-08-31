@@ -256,4 +256,38 @@ class HospitalizationTest < ActiveSupport::TestCase
 
     assert_nil surgery.reload.hospitalization_id
   end
+
+  test "filtered with no filters returns everything" do
+    assert_equal Hospitalization.count, Hospitalization.filtered(keyword: nil, diagnosis_id: nil, status: nil, admitted_from: nil, admitted_to: nil).count
+  end
+
+  test "filtered by keyword matches patient name, hospital_id, or reason" do
+    assert_equal [ hospitalizations(:two) ], Hospitalization.filtered(keyword: "jane").to_a
+    assert_equal [ hospitalizations(:two) ], Hospitalization.filtered(keyword: "H002").to_a
+    assert_equal [ hospitalizations(:one) ], Hospitalization.filtered(keyword: "community-acquired").to_a
+  end
+
+  test "filtered by keyword escapes LIKE wildcards" do
+    assert_equal [], Hospitalization.filtered(keyword: "%").to_a
+  end
+
+  test "filtered by diagnosis_id matches only hospitalizations linked to it" do
+    assert_equal [ hospitalizations(:three) ], Hospitalization.filtered(diagnosis_id: diagnoses(:appendicitis).id).to_a
+  end
+
+  test "filtered by status in_hospital or discharged" do
+    assert_equal [ hospitalizations(:three) ], Hospitalization.filtered(status: "in_hospital").to_a
+    assert_equal [ hospitalizations(:one), hospitalizations(:two) ].sort_by(&:id),
+                 Hospitalization.filtered(status: "discharged").to_a.sort_by(&:id)
+  end
+
+  test "filtered by admitted_from and admitted_to narrows the admission date range" do
+    result = Hospitalization.filtered(admitted_from: "2026-03-04", admitted_to: "2026-03-31")
+    assert_equal [ hospitalizations(:two) ], result.to_a
+  end
+
+  test "filtered combines multiple conditions" do
+    result = Hospitalization.filtered(keyword: "john", status: "in_hospital")
+    assert_equal [ hospitalizations(:three) ], result.to_a
+  end
 end

@@ -15,6 +15,33 @@
     </div>
   </section>
 
+  <%= form_with url: surgeries_path, method: :get, local: true, class: "app-panel p-4 flex flex-wrap items-end gap-3" do |f| %>
+    <div class="form-control">
+      <label class="label"><span class="label-text">Keyword</span></label>
+      <%= f.text_field :keyword, value: params[:keyword], placeholder: "Patient name or Hospital ID", class: "input input-bordered input-sm" %>
+    </div>
+    <div class="form-control">
+      <label class="label"><span class="label-text">Procedure</span></label>
+      <%= f.select :surgery_procedure_id, @surgery_procedures.map { |p| [ p.name, p.id ] }, { include_blank: "All", selected: params[:surgery_procedure_id] }, { class: "select select-bordered select-sm" } %>
+    </div>
+    <div class="form-control">
+      <label class="label"><span class="label-text">Anesthesia</span></label>
+      <%= f.select :anesthesia_method, @anesthesia_methods, { include_blank: "All", selected: params[:anesthesia_method] }, { class: "select select-bordered select-sm" } %>
+    </div>
+    <div class="form-control">
+      <label class="label"><span class="label-text">Performed From</span></label>
+      <%= f.date_field :performed_from, value: params[:performed_from], class: "input input-bordered input-sm" %>
+    </div>
+    <div class="form-control">
+      <label class="label"><span class="label-text">Performed To</span></label>
+      <%= f.date_field :performed_to, value: params[:performed_to], class: "input input-bordered input-sm" %>
+    </div>
+    <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
+    <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to).any?(&:present?) %>
+      <%= link_to "Clear", surgeries_path, class: "btn btn-ghost btn-sm" %>
+    <% end %>
+  <% end %>
+
   <div class="app-panel overflow-hidden">
     <div class="overflow-x-auto">
       <table class="table table-zebra w-full">
@@ -66,7 +93,11 @@
           <% else %>
             <tr>
               <td colspan="8" class="text-center py-10 text-base-content/50 italic">
-                No surgeries found. Click "New Surgery" to get started.
+                <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to).any?(&:present?) %>
+                  No surgeries match your search.
+                <% else %>
+                  No surgeries found. Click "New Surgery" to get started.
+                <% end %>
               </td>
             </tr>
           <% end %>
@@ -74,4 +105,6 @@
       </table>
     </div>
   </div>
+
+  <%= render "shared/pagination", pagination: @pagination %>
 </div>

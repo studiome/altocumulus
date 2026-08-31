@@ -54,6 +54,31 @@ class Hospitalization < ApplicationRecord
     DISCHARGE_DESTINATION_OPTIONS.map { |k, v| [ v, k ] }
   end
 
+  def self.filtered(keyword: nil, diagnosis_id: nil, status: nil, admitted_from: nil, admitted_to: nil)
+    scope = all
+
+    if keyword.present?
+      pattern = "%#{sanitize_sql_like(keyword)}%"
+      scope = scope.joins(:patient).where(
+        "patients.name LIKE :pattern OR patients.hospital_id LIKE :pattern OR hospitalizations.reason LIKE :pattern",
+        pattern: pattern
+      )
+    end
+
+    if diagnosis_id.present?
+      scope = scope.joins(:hospitalization_diagnoses)
+                   .where(hospitalization_diagnoses: { diagnosis_id: diagnosis_id })
+                   .distinct
+    end
+
+    case status
+    when "in_hospital" then scope = scope.in_hospital
+    when "discharged" then scope = scope.discharged
+    end
+
+    scope.admitted_between(admitted_from, admitted_to)
+  end
+
   def diagnosis_names_display
     active_hospitalization_diagnoses.filter_map(&:diagnosis_name).join("、").presence || "-"
   end

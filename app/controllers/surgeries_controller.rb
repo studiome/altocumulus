@@ -3,7 +3,13 @@ class SurgeriesController < ApplicationController
   before_action :set_form_collections, only: %i[ new edit create update ]
 
   def index
-    @surgeries = Surgery.includes(:patient, :hospitalization, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure }).order(surgery_date: :desc, created_at: :desc)
+    @surgery_procedures = SurgeryProcedure.alphabetical
+    @anesthesia_methods = Surgery.anesthesia_methods
+    scope = Surgery.includes(:patient, :hospitalization, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure })
+                    .filtered(**filter_params)
+                    .order(surgery_date: :desc, created_at: :desc)
+    @pagination = Pagination.new(scope, page: params[:page])
+    @surgeries = @pagination.records
   end
 
   def show
@@ -95,5 +101,9 @@ class SurgeriesController < ApplicationController
         { patient_diagnosis_ids: [] },
         { surgery_procedure_selections_attributes: [ [ :id, :surgery_procedure_id, :laterality, :_destroy ] ] }
       ])
+    end
+
+    def filter_params
+      params.permit(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to).to_h.symbolize_keys
     end
 end

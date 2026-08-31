@@ -10,6 +10,25 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index filters by keyword" do
+    get surgeries_url, params: { keyword: "jane" }
+    assert_response :success
+    assert_match(/Jane Smith/, @response.body)
+    assert_no_match(/John Doe/, @response.body)
+  end
+
+  test "index filters by anesthesia_method" do
+    get surgeries_url, params: { anesthesia_method: "Spinal" }
+    assert_response :success
+    assert_match(/Jane Smith/, @response.body)
+    assert_no_match(/John Doe/, @response.body)
+  end
+
+  test "index paginates results" do
+    get surgeries_url, params: { page: 1 }
+    assert_response :success
+  end
+
   test "should get new" do
     get new_surgery_url
     assert_response :success
