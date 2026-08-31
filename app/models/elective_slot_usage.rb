@@ -91,8 +91,12 @@ class ElectiveSlotUsage
       messages << "No elective slots are configured for #{date.strftime('%A')}."
     end
 
-    if over_capacity?
-      messages << "Over capacity: #{used_slots} elective surgeries in #{slot_count} slots."
+    # On a holiday the message above already explains why there is no slot,
+    # so reporting the same surgeries as "over capacity" only adds noise.
+    if over_capacity? && !holiday?
+      noun = used_slots == 1 ? "surgery" : "surgeries"
+      slots = slot_count == 1 ? "slot" : "slots"
+      messages << "Over capacity: #{used_slots} elective #{noun} in #{slot_count} #{slots}."
     end
 
     if overrunning_surgeries.any?

@@ -62,7 +62,7 @@
 
           <% if usage.over_capacity? %>
             <div class="space-y-2">
-              <p class="text-xs font-bold uppercase text-error">Over capacity</p>
+              <p class="text-xs font-bold uppercase text-error"><%= usage.holiday? ? "No slot available" : "Over capacity" %></p>
               <% usage.elective_surgeries[usage.slot_count..].to_a.each do |surgery| %>
                 <div class="rounded-box border border-error/40 bg-error/5 p-3 text-sm">
                   <%= render "slot_surgery", surgery: surgery, rule: usage.effective_rule %>

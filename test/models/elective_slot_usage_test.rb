@@ -93,6 +93,40 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_includes usage.warnings, "1 surgery runs past its 240 min slot."
   end
 
+  test "warnings uses singular agreement for a single over-capacity surgery" do
+    usage = ElectiveSlotUsage.new(
+      date: Date.new(2026, 3, 4),
+      rule: elective_slot_rules(:wednesday),
+      elective_surgeries: [ surgeries(:three), surgeries(:four), surgeries(:six) ],
+      emergency_surgeries: []
+    )
+
+    assert_includes usage.warnings, "Over capacity: 3 elective surgeries in 2 slots."
+
+    single = ElectiveSlotUsage.new(
+      date: Date.new(2026, 3, 4),
+      rule: nil,
+      elective_surgeries: [ surgeries(:three) ],
+      emergency_surgeries: []
+    )
+
+    assert_includes single.warnings, "Over capacity: 1 elective surgery in 0 slots."
+  end
+
+  test "warnings on a holiday says only that the day is a holiday" do
+    usage = ElectiveSlotUsage.new(
+      date: Date.new(2026, 3, 10),
+      rule: elective_slot_rules(:tuesday),
+      elective_surgeries: [ surgeries(:three) ],
+      emergency_surgeries: [],
+      holiday: holidays(:national_holiday)
+    )
+
+    assert_equal [ "#{holidays(:national_holiday).name} is a holiday: no elective slots are available." ],
+                 usage.warnings,
+                 "the holiday message already explains the missing slots; do not also report over capacity"
+  end
+
   test "warnings uses plural agreement when several surgeries overrun" do
     usage = ElectiveSlotUsage.new(
       date: Date.new(2026, 3, 3),
