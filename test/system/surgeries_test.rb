@@ -91,6 +91,10 @@ class SurgeriesTest < ApplicationSystemTestCase
       click_on "Create Surgery procedure"
     end
 
+    # Wait for the option to be selected before reading the selects; `all` does
+    # not retry, so without this it samples the DOM before Turbo has replaced it.
+    assert_selector ".surgery-procedure-select option:checked", text: "Laser ablation"
+
     selected_values = all(".surgery-procedure-select").map(&:value)
 
     assert_equal 1, selected_values.count(SurgeryProcedure.find_by!(name: "Laser ablation").id.to_s)
