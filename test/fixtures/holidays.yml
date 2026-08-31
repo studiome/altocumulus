@@ -1,0 +1,7 @@
+national_holiday:
+  date: 2026-03-10 # Tuesday, has a slot rule but no surgeries in the fixtures
+  name: "Vernal Equinox Day"
+
+year_end:
+  date: 2026-12-29
+  name: "Year-end closure"

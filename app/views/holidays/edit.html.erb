@@ -1,0 +1,20 @@
+<% content_for :title, "Edit Holiday" %>
+
+<div class="max-w-xl mx-auto w-full">
+  <div class="mb-8 flex items-center gap-4">
+    <%= link_to holidays_path, class: "btn btn-circle btn-ghost" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+    <% end %>
+    <h1 class="font-bold text-4xl">Edit Holiday</h1>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <%= render "form", holiday: @holiday %>
+
+      <div class="mt-4 flex justify-center">
+        <%= link_to "Show Detail", @holiday, class: "btn btn-link no-underline" %>
+      </div>
+    </div>
+  </div>
+</div>

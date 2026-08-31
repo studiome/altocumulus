@@ -1,0 +1,69 @@
+<% content_for :title, "Holidays" %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker">Master Data</p>
+        <h1 class="app-page-title">Holidays</h1>
+      </div>
+      <%= link_to new_holiday_path, class: "btn btn-primary" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        New Holiday
+      <% end %>
+    </div>
+  </section>
+
+  <%= form_with url: holidays_path, method: :get, local: true, class: "app-filter-bar" do |f| %>
+    <div class="app-filter-field">
+      <label class="app-filter-label">Year</label>
+      <%= f.select :year, @available_years, { include_blank: "All", selected: params[:year] }, { class: "select select-sm" } %>
+    </div>
+    <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
+    <% if params[:year].present? %>
+      <%= link_to "Clear", holidays_path, class: "btn btn-ghost btn-sm" %>
+    <% end %>
+  <% end %>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200">Date</th>
+            <th class="bg-base-200">Name</th>
+            <th class="bg-base-200 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @holidays.any? %>
+            <% @holidays.each do |holiday| %>
+              <tr class="row-hover">
+                <td class="font-mono font-medium"><%= holiday.date&.strftime("%Y-%m-%d") %></td>
+                <td class="font-semibold"><%= holiday.name %></td>
+                <td class="text-right flex justify-end gap-2">
+                  <%= link_to "View", holiday, class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to "Edit", edit_holiday_path(holiday), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to "Delete", holiday, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="3" class="text-center py-10 text-base-content/50 italic">
+                <% if params[:year].present? %>
+                  No holidays match your search.
+                <% else %>
+                  No holidays found. Click "New Holiday" to get started.
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <%= render "shared/pagination", pagination: @pagination %>
+</div>

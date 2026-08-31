@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_070029) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_080000) do
   create_table "diagnoses", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -25,6 +25,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_070029) do
     t.integer "slot_duration_minutes", null: false
     t.datetime "updated_at", null: false
     t.index ["day_of_week"], name: "index_elective_slot_rules_on_day_of_week", unique: true
+  end
+
+  create_table "holidays", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["date"], name: "index_holidays_on_date", unique: true
   end
 
   create_table "hospitalization_diagnoses", force: :cascade do |t|
