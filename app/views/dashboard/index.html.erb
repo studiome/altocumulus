@@ -11,7 +11,7 @@
       <%= form_with url: dashboard_path, method: :get, local: true, class: "flex items-end gap-2" do |f| %>
         <div class="app-filter-field">
           <label class="app-filter-label">Year</label>
-          <%= f.select :year, @available_years, { include_blank: "All time", selected: @selected_year }, { class: "select select-bordered select-sm" } %>
+          <%= f.select :year, @available_years, { include_blank: "All time", selected: @selected_year }, { class: "select select-sm" } %>
         </div>
         <%= f.submit "View", class: "btn btn-primary btn-sm" %>
       <% end %>

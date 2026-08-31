@@ -28,7 +28,7 @@
         <tbody>
           <% if @patient_diagnoses.any? %>
             <% @patient_diagnoses.each do |patient_diagnosis| %>
-              <tr class="hover">
+              <tr class="row-hover">
                 <td class="font-semibold"><%= patient_diagnosis.display_name %></td>
                 <td><%= patient_diagnosis.diagnosed_on.strftime("%Y-%m-%d") %></td>
                 <td class="text-right flex justify-end gap-2">

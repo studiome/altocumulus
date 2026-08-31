@@ -35,7 +35,7 @@
 
   <div class="app-field">
     <%= form.label :patient_id, "Patient", class: "app-field-label" %>
-    <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: "Select a patient" }, class: "select select-bordered w-full focus:select-primary" %>
+    <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: "Select a patient" }, class: "select w-full focus:select-primary" %>
   </div>
 
   <div class="space-y-4" data-controller="hospitalization-diagnosis-fields" data-hospitalization-diagnosis-fields-max-items-value="10">
@@ -67,39 +67,39 @@
 
   <div class="app-field">
     <%= form.label :admission_date, "Admission Date", class: "app-field-label" %>
-    <%= form.date_field :admission_date, class: "input input-bordered w-full focus:input-primary" %>
+    <%= form.date_field :admission_date, class: "input w-full focus:input-primary" %>
   </div>
 
   <div class="app-field">
     <%= form.label :planned_days, "Planned Length of Stay (Days)", class: "app-field-label" %>
-    <%= form.number_field :planned_days, class: "input input-bordered w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 5" %>
+    <%= form.number_field :planned_days, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 5" %>
   </div>
 
   <div class="app-field">
     <%= form.label :reason, "Reason for Admission", class: "app-field-label" %>
-    <%= form.text_area :reason, class: "textarea textarea-bordered w-full focus:textarea-primary", rows: 3 %>
+    <%= form.text_area :reason, class: "textarea w-full focus:textarea-primary", rows: 3 %>
   </div>
 
   <div class="app-field">
     <%= form.label :room_preference, "Preferred Room", class: "app-field-label" %>
-    <%= form.text_field :room_preference, class: "input input-bordered w-full focus:input-primary", placeholder: "e.g. Private room" %>
+    <%= form.text_field :room_preference, class: "input w-full focus:input-primary", placeholder: "e.g. Private room" %>
   </div>
 
   <div class="divider">Discharge</div>
 
   <div class="app-field">
     <%= form.label :discharge_date, "Discharge Date", class: "app-field-label" %>
-    <%= form.date_field :discharge_date, class: "input input-bordered w-full focus:input-primary" %>
+    <%= form.date_field :discharge_date, class: "input w-full focus:input-primary" %>
   </div>
 
   <div class="app-field">
     <%= form.label :outcome, "Outcome", class: "app-field-label" %>
-    <%= form.select :outcome, Hospitalization.outcome_form_options, { include_blank: true }, class: "select select-bordered w-full focus:select-primary" %>
+    <%= form.select :outcome, Hospitalization.outcome_form_options, { include_blank: true }, class: "select w-full focus:select-primary" %>
   </div>
 
   <div class="app-field">
     <%= form.label :discharge_destination, "Discharge Destination", class: "app-field-label" %>
-    <%= form.select :discharge_destination, Hospitalization.discharge_destination_form_options, { include_blank: true }, class: "select select-bordered w-full focus:select-primary" %>
+    <%= form.select :discharge_destination, Hospitalization.discharge_destination_form_options, { include_blank: true }, class: "select w-full focus:select-primary" %>
   </div>
 
   <div class="pt-4">

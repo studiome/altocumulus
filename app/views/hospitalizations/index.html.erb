@@ -18,23 +18,23 @@
   <%= form_with url: hospitalizations_path, method: :get, local: true, class: "app-filter-bar" do |f| %>
     <div class="app-filter-field">
       <label class="app-filter-label">Keyword</label>
-      <%= f.text_field :keyword, value: params[:keyword], placeholder: "Patient or reason", class: "input input-bordered input-sm" %>
+      <%= f.text_field :keyword, value: params[:keyword], placeholder: "Patient or reason", class: "input input-sm" %>
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label">Diagnosis</label>
-      <%= f.select :diagnosis_id, @diagnoses.map { |d| [ d.name, d.id ] }, { include_blank: "All", selected: params[:diagnosis_id] }, { class: "select select-bordered select-sm" } %>
+      <%= f.select :diagnosis_id, @diagnoses.map { |d| [ d.name, d.id ] }, { include_blank: "All", selected: params[:diagnosis_id] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label">Status</label>
-      <%= f.select :status, [ [ "In Hospital", "in_hospital" ], [ "Discharged", "discharged" ] ], { include_blank: "All", selected: params[:status] }, { class: "select select-bordered select-sm" } %>
+      <%= f.select :status, [ [ "In Hospital", "in_hospital" ], [ "Discharged", "discharged" ] ], { include_blank: "All", selected: params[:status] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label">Admitted From</label>
-      <%= f.date_field :admitted_from, value: params[:admitted_from], class: "input input-bordered input-sm" %>
+      <%= f.date_field :admitted_from, value: params[:admitted_from], class: "input input-sm" %>
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label">Admitted To</label>
-      <%= f.date_field :admitted_to, value: params[:admitted_to], class: "input input-bordered input-sm" %>
+      <%= f.date_field :admitted_to, value: params[:admitted_to], class: "input input-sm" %>
     </div>
     <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
     <% if params.values_at(:keyword, :diagnosis_id, :status, :admitted_from, :admitted_to).any?(&:present?) %>
@@ -63,7 +63,7 @@
         <tbody>
           <% if @hospitalizations.any? %>
             <% @hospitalizations.each do |hospitalization| %>
-              <tr class="hover">
+              <tr class="row-hover">
                 <td>
                   <span class="badge <%= hospitalization.in_hospital? ? "badge-warning" : "badge-ghost" %>">
                     <%= hospitalization.status_label %>

@@ -6,7 +6,7 @@
 
   <div class="app-field">
     <%= diagnosis_fields.label :diagnosis_id, "Diagnosis", class: "app-field-label" %>
-    <%= diagnosis_fields.collection_select :diagnosis_id, diagnosis_options, :id, :name, { prompt: "Select a diagnosis" }, class: "select select-bordered w-full focus:select-primary hospitalization-diagnosis-select" %>
+    <%= diagnosis_fields.collection_select :diagnosis_id, diagnosis_options, :id, :name, { prompt: "Select a diagnosis" }, class: "select w-full focus:select-primary hospitalization-diagnosis-select" %>
   </div>
 
   <div class="flex justify-end">

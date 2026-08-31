@@ -7,12 +7,12 @@
   <div class="space-y-4">
     <div class="app-field">
       <%= selection_fields.label :laterality, "Laterality", class: "app-field-label" %>
-      <%= selection_fields.select :laterality, SurgeryProcedureSelection.laterality_form_options, {}, class: "select select-bordered w-full focus:select-primary" %>
+      <%= selection_fields.select :laterality, SurgeryProcedureSelection.laterality_form_options, {}, class: "select w-full focus:select-primary" %>
     </div>
 
     <div class="app-field">
       <%= selection_fields.label :surgery_procedure_id, "Procedure", class: "app-field-label" %>
-      <%= selection_fields.collection_select :surgery_procedure_id, procedure_options, :id, :name, { prompt: "Select a procedure" }, class: "select select-bordered w-full focus:select-primary surgery-procedure-select" %>
+      <%= selection_fields.collection_select :surgery_procedure_id, procedure_options, :id, :name, { prompt: "Select a procedure" }, class: "select w-full focus:select-primary surgery-procedure-select" %>
     </div>
   </div>
 

@@ -16,12 +16,12 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div class="app-field">
       <label class="app-field-label">Patient Name</label>
-      <input type="text" value="<%= patient.name %>" class="input input-bordered w-full" disabled>
+      <input type="text" value="<%= patient.name %>" class="input w-full" disabled>
     </div>
 
     <div class="app-field">
       <label class="app-field-label">Patient ID</label>
-      <input type="text" value="<%= patient.hospital_id %>" class="input input-bordered w-full font-mono" disabled>
+      <input type="text" value="<%= patient.hospital_id %>" class="input w-full font-mono" disabled>
     </div>
   </div>
 
@@ -37,7 +37,7 @@
 
   <div class="app-field">
     <%= form.label :laterality, "Laterality", class: "app-field-label" %>
-    <%= form.select :laterality, PatientDiagnosis.laterality_form_options, {}, class: "select select-bordered w-full focus:select-primary" %>
+    <%= form.select :laterality, PatientDiagnosis.laterality_form_options, {}, class: "select w-full focus:select-primary" %>
   </div>
 
   <div class="app-field">
@@ -45,12 +45,12 @@
       <%= form.label :diagnosis_id, "Diagnosis", class: "app-field-label" %>
       <%= link_to "New Diagnosis", new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_modal_frame" } %>
     </div>
-    <%= form.collection_select :diagnosis_id, diagnoses, :id, :name, { prompt: "Select a diagnosis" }, class: "select select-bordered w-full focus:select-primary" %>
+    <%= form.collection_select :diagnosis_id, diagnoses, :id, :name, { prompt: "Select a diagnosis" }, class: "select w-full focus:select-primary" %>
   </div>
 
   <div class="app-field">
     <%= form.label :diagnosed_on, "Diagnosed On", class: "app-field-label" %>
-    <%= form.date_field :diagnosed_on, class: "input input-bordered w-full focus:input-primary" %>
+    <%= form.date_field :diagnosed_on, class: "input w-full focus:input-primary" %>
   </div>
 
   <div class="pt-4" id="patient_diagnosis_submit">

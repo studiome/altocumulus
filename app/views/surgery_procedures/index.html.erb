@@ -24,7 +24,7 @@
         <tbody>
           <% if @surgery_procedures.any? %>
             <% @surgery_procedures.each do |surgery_procedure| %>
-              <tr class="hover">
+              <tr class="row-hover">
                 <td class="font-semibold"><%= surgery_procedure.name %></td>
                 <td class="text-right flex justify-end gap-2">
                   <%= link_to "View", surgery_procedure, class: "btn btn-ghost btn-xs text-primary" %>
