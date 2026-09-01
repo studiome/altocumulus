@@ -1,7 +1,6 @@
 {
     "workbench.colorTheme": "Dark OG",
     "editor.fontFamily": "'SF Mono', Menlo, Monaco, 'Courier New', monospace",
-    "terminal.integrated.fontFamily": "'SFMono Terminal'",
     "terminal.integrated.fontSize": 10,
 
     // Ruby LSP (Shopify.ruby-lsp) + ruby-lsp-rails.
