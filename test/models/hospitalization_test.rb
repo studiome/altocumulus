@@ -181,6 +181,44 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert hospitalization.valid?
   end
 
+  test "rejects moving admission_date after a linked surgery date" do
+    hospitalization = hospitalizations(:one)
+    Surgery.create!(
+      patient: patients(:one),
+      hospitalization: hospitalization,
+      surgery_date: Date.new(2026, 3, 3),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    hospitalization.admission_date = Date.new(2026, 3, 4)
+
+    assert_not hospitalization.valid?
+    assert_includes hospitalization.errors[:admission_date], "must include all linked surgeries within the hospitalization period"
+  end
+
+  test "rejects moving discharge_date before a linked surgery date" do
+    hospitalization = hospitalizations(:one)
+    Surgery.create!(
+      patient: patients(:one),
+      hospitalization: hospitalization,
+      surgery_date: Date.new(2026, 3, 3),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    hospitalization.discharge_date = Date.new(2026, 3, 2)
+
+    assert_not hospitalization.valid?
+    assert_includes hospitalization.errors[:discharge_date], "must include all linked surgeries within the hospitalization period"
+  end
+
   test "discharged? and in_hospital?" do
     assert hospitalizations(:one).discharged?
     assert_not hospitalizations(:one).in_hospital?

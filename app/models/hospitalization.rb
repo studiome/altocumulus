@@ -36,6 +36,7 @@ class Hospitalization < ApplicationRecord
   validate :outcome_required_when_discharged
   validate :discharge_fields_require_discharge_date
   validate :no_overlapping_hospitalization_period
+  validate :linked_surgeries_must_remain_within_period
 
   scope :discharged, -> { where.not(discharge_date: nil) }
   scope :in_hospital, -> { where(discharge_date: nil) }
@@ -176,5 +177,20 @@ class Hospitalization < ApplicationRecord
       ).exists?
 
       errors.add(:admission_date, "overlaps another hospitalization for this patient") if conflict
+    end
+
+    def linked_surgeries_must_remain_within_period
+      return if admission_date.blank?
+
+      surgeries.each do |surgery|
+        next if surgery.surgery_date.blank?
+
+        if surgery.surgery_date < admission_date
+          errors.add(:admission_date, "must include all linked surgeries within the hospitalization period")
+        end
+        if discharge_date.present? && surgery.surgery_date > discharge_date
+          errors.add(:discharge_date, "must include all linked surgeries within the hospitalization period")
+        end
+      end
     end
 end
