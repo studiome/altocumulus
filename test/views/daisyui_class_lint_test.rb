@@ -36,4 +36,10 @@ class DaisyuiClassLintTest < ActiveSupport::TestCase
 
     assert_empty offenses, "Removed daisyUI 4 classes still in use:\n#{offenses.join("\n")}"
   end
+
+  test "daisyUI calendar component is excluded because the app does not use it" do
+    tailwind_source = Rails.root.join("app/assets/tailwind/application.css").read
+
+    assert_match(/exclude:\s*calendar\s*;/, tailwind_source)
+  end
 end

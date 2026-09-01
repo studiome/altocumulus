@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @plugin "./plugins/daisyui.js" {
   themes: corporate --default, business --prefersdark;
+  exclude: calendar;
 }
 
 @layer components {
