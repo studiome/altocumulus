@@ -35,16 +35,14 @@
           <li><%= link_to "Surgeries", surgeries_path %></li>
           <li><%= link_to "Hospitalizations", hospitalizations_path %></li>
           <li><%= link_to "Schedule", surgery_schedule_path %></li>
-          <li>
-            <details class="dropdown dropdown-end">
-              <summary class="btn btn-ghost">Masters</summary>
-              <ul class="dropdown-content menu z-10 w-52 rounded-box bg-base-100 p-2 shadow">
-                <li><%= link_to "Diagnoses", diagnoses_path %></li>
-                <li><%= link_to "Procedures", surgery_procedures_path %></li>
-                <li><%= link_to "Slot Rules", elective_slot_rules_path %></li>
-                <li><%= link_to "Holidays", holidays_path %></li>
-              </ul>
-            </details>
+          <li class="dropdown dropdown-end">
+            <button type="button" tabindex="0" class="btn btn-ghost">Masters</button>
+            <ul tabindex="0" class="dropdown-content menu z-10 w-52 rounded-box bg-base-100 p-2 shadow">
+              <li><%= link_to "Diagnoses", diagnoses_path %></li>
+              <li><%= link_to "Procedures", surgery_procedures_path %></li>
+              <li><%= link_to "Slot Rules", elective_slot_rules_path %></li>
+              <li><%= link_to "Holidays", holidays_path %></li>
+            </ul>
           </li>
         </ul>
       </div>
