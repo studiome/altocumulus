@@ -32,12 +32,6 @@ bin/ci                  # runs the same checks as CI (see config/ci.rb)
 
 There is no separate JS package manager/build step — JavaScript is served via `importmap-rails`, and CSS via `tailwindcss-rails` (`bin/rails tailwindcss:watch`, wired into `bin/dev`).
 
-### System tests and Selenium
-
-`test/application_system_test_case.rb` picks its driver based on `SELENIUM_HOST`:
-- **Unset** (plain local/CI runs): Capybara launches a local headless Chrome per test worker via Selenium Manager — parallel workers each get their own browser, no contention.
-- **Set** (inside `.devcontainer`, pointing at the `selenium` compose service): Capybara is pinned to a fixed host/port and drives the single shared `selenium/standalone-chromium` container, which only exposes **one** browser session. Because of that, this branch also forces `parallelize(workers: 1)` — running system tests across multiple parallel workers here races for that one shared session/port and manifests as `Net::ReadTimeout` on `visit`. Don't remove that `parallelize(workers: 1)` call without also giving each worker its own port and Selenium session.
-
 ## Architecture
 
 Rails 8.1 app (Propshaft + importmap + Turbo/Stimulus, no Webpack/Node build), SQLite, Solid Queue/Cache/Cable. It's a small clinical records app tracking patients, their diagnoses, surgeries, and hospitalizations.
