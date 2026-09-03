@@ -11,6 +11,11 @@ class PatientsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{new_patient_patient_diagnosis_path(@patient)}']", text: "Add Diagnosis"
   end
 
+  test "index does not error out on a crafted Array page param" do
+    get patients_url, params: { page: [ "1" ] }
+    assert_response :success
+  end
+
   test "index filters by keyword" do
     get patients_url, params: { keyword: "jane" }
     assert_response :success

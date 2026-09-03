@@ -103,14 +103,26 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
 
     assert_includes usage.warnings, "Over capacity: 3 elective surgeries in 2 slots."
 
+    # A rule that is configured but deliberately allows zero elective slots
+    # that day (as opposed to an unconfigured day, which is a separate
+    # "not configured" warning and must not also report "over capacity").
     single = ElectiveSlotUsage.new(
       date: Date.new(2026, 3, 4),
-      rule: nil,
+      rule: ElectiveSlotRule.new(day_of_week: 4, slot_count: 0, slot_duration_minutes: 60),
       elective_surgeries: [ surgeries(:three) ],
       emergency_surgeries: []
     )
 
+    assert single.configured?
     assert_includes single.warnings, "Over capacity: 1 elective surgery in 0 slots."
+  end
+
+  test "warnings on an unconfigured weekday with an elective surgery does not also report a meaningless over capacity" do
+    usage = ElectiveSlotUsage.for_dates([ Date.new(2026, 3, 1) ])[Date.new(2026, 3, 1)] # Sunday, no rule, surgeries(:one) is elective
+
+    assert_equal [ "No elective slots are configured for Sunday." ],
+                 usage.warnings,
+                 "an unconfigured day should not also report a nonsensical 'in 0 slots' over capacity warning"
   end
 
   test "warnings on a holiday says only that the day is a holiday" do

@@ -46,11 +46,11 @@ class Pagination
   private
 
     def clamp_per_page(value)
-      value.to_i.clamp(1, MAX_PER_PAGE)
+      (Integer(value, exception: false) || DEFAULT_PER_PAGE).clamp(1, MAX_PER_PAGE)
     end
 
     def clamp_page(value)
-      value = value.to_i
+      value = Integer(value, exception: false) || 1
       value = 1 if value < 1
       value.clamp(1, total_pages)
     end

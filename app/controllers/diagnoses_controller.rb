@@ -18,16 +18,18 @@ class DiagnosesController < ApplicationController
   def create
     @diagnosis = Diagnosis.new(diagnosis_params)
 
-    respond_to do |format|
-      if @diagnosis.save
-        format.html { redirect_to @diagnosis, notice: "Diagnosis was successfully created." }
-        format.turbo_stream do
-          @diagnoses = Diagnosis.alphabetical
-          render :create
-        end
+    if @diagnosis.save
+      if turbo_frame_request?
+        @diagnoses = Diagnosis.alphabetical
+        render :create, formats: :turbo_stream
       else
-        format.html { render :new, status: :unprocessable_entity }
-        format.turbo_stream { render :new, status: :unprocessable_entity }
+        redirect_to @diagnosis, notice: "Diagnosis was successfully created."
+      end
+    else
+      if turbo_frame_request?
+        render :new, formats: :turbo_stream, status: :unprocessable_entity
+      else
+        render :new, formats: :html, status: :unprocessable_entity
       end
     end
   end

@@ -69,7 +69,7 @@ class Surgery < ApplicationRecord
   end
 
   def diagnosis_names_display
-    patient_diagnoses.includes(:diagnosis).map(&:display_name).join("、").presence || "-"
+    patient_diagnoses.map(&:display_name).join("、").presence || "-"
   end
 
   def procedure_display_names

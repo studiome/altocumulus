@@ -16,7 +16,10 @@
 
 <%= turbo_stream.replace "diagnosis_modal_frame" do %>
   <%= turbo_frame_tag "diagnosis_modal_frame", data: { action: "turbo:frame-load->diagnosis-modal#open" } do %>
-    <div class="p-6 text-center" data-controller="diagnosis-modal-success">
+    <div class="p-6 text-center"
+         data-controller="diagnosis-modal-success"
+         data-diagnosis-id="<%= @diagnosis.id %>"
+         data-diagnosis-name="<%= @diagnosis.name %>">
       <div class="alert alert-success justify-start mb-4">
         <span>Diagnosis was successfully created.</span>
       </div>

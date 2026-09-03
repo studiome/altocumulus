@@ -1,6 +1,8 @@
 require "test_helper"
 
 class SurgeryProceduresControllerTest < ActionDispatch::IntegrationTest
+  TURBO_STREAM_ACCEPT = "text/vnd.turbo-stream.html, text/html, application/xhtml+xml"
+
   setup do
     @surgery_procedure = surgery_procedures(:appendectomy)
   end
@@ -21,6 +23,45 @@ class SurgeryProceduresControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to surgery_procedure_url(SurgeryProcedure.last)
+  end
+
+  test "should redirect after create when submitted from the standalone page (no Turbo-Frame header)" do
+    assert_difference("SurgeryProcedure.count") do
+      post surgery_procedures_url, params: { surgery_procedure: { name: "Laparoscopy" } },
+                                    headers: { "Accept" => TURBO_STREAM_ACCEPT }
+    end
+
+    assert_redirected_to surgery_procedure_url(SurgeryProcedure.last)
+  end
+
+  test "should respond with turbo stream after create when submitted from the modal frame" do
+    assert_difference("SurgeryProcedure.count") do
+      post surgery_procedures_url, params: { surgery_procedure: { name: "Laparoscopy" } },
+                                    headers: { "Accept" => TURBO_STREAM_ACCEPT, "Turbo-Frame" => "surgery_procedure_modal_frame" }
+    end
+
+    assert_response :success
+    assert_equal Mime[:turbo_stream].to_s, response.media_type
+  end
+
+  test "should render html on validation failure from the standalone page (no Turbo-Frame header)" do
+    assert_no_difference("SurgeryProcedure.count") do
+      post surgery_procedures_url, params: { surgery_procedure: { name: "" } },
+                                    headers: { "Accept" => TURBO_STREAM_ACCEPT }
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal Mime[:html].to_s, response.media_type
+  end
+
+  test "should respond with turbo stream on validation failure from the modal frame" do
+    assert_no_difference("SurgeryProcedure.count") do
+      post surgery_procedures_url, params: { surgery_procedure: { name: "" } },
+                                    headers: { "Accept" => TURBO_STREAM_ACCEPT, "Turbo-Frame" => "surgery_procedure_modal_frame" }
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal Mime[:turbo_stream].to_s, response.media_type
   end
 
   test "should show surgery procedure" do

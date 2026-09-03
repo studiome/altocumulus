@@ -1,6 +1,8 @@
 require "test_helper"
 
 class DiagnosesControllerTest < ActionDispatch::IntegrationTest
+  TURBO_STREAM_ACCEPT = "text/vnd.turbo-stream.html, text/html, application/xhtml+xml"
+
   setup do
     @diagnosis = diagnoses(:appendicitis)
   end
@@ -23,12 +25,42 @@ class DiagnosesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to diagnosis_url(Diagnosis.last)
   end
 
-  test "should create diagnosis via turbo stream" do
+  test "should redirect after create when submitted from the standalone page (no Turbo-Frame header)" do
     assert_difference("Diagnosis.count") do
-      post diagnoses_url(format: :turbo_stream), params: { diagnosis: { name: "Migraine with aura" } }
+      post diagnoses_url, params: { diagnosis: { name: "Migraine with aura" } },
+                           headers: { "Accept" => TURBO_STREAM_ACCEPT }
+    end
+
+    assert_redirected_to diagnosis_url(Diagnosis.last)
+  end
+
+  test "should respond with turbo stream after create when submitted from the modal frame" do
+    assert_difference("Diagnosis.count") do
+      post diagnoses_url, params: { diagnosis: { name: "Migraine with aura" } },
+                           headers: { "Accept" => TURBO_STREAM_ACCEPT, "Turbo-Frame" => "diagnosis_modal_frame" }
     end
 
     assert_response :success
+    assert_equal Mime[:turbo_stream].to_s, response.media_type
+  end
+
+  test "should render html on validation failure from the standalone page (no Turbo-Frame header)" do
+    assert_no_difference("Diagnosis.count") do
+      post diagnoses_url, params: { diagnosis: { name: "" } },
+                           headers: { "Accept" => TURBO_STREAM_ACCEPT }
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal Mime[:html].to_s, response.media_type
+  end
+
+  test "should respond with turbo stream on validation failure from the modal frame" do
+    assert_no_difference("Diagnosis.count") do
+      post diagnoses_url, params: { diagnosis: { name: "" } },
+                           headers: { "Accept" => TURBO_STREAM_ACCEPT, "Turbo-Frame" => "diagnosis_modal_frame" }
+    end
+
+    assert_response :unprocessable_entity
     assert_equal Mime[:turbo_stream].to_s, response.media_type
   end
 

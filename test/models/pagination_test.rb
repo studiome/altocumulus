@@ -28,6 +28,16 @@ class PaginationTest < ActiveSupport::TestCase
     assert_equal 1, pagination.page
   end
 
+  test "handles an Array page param gracefully (e.g. ?page[]=1)" do
+    pagination = Pagination.new(Patient.all, page: [ "1" ])
+    assert_equal 1, pagination.page
+  end
+
+  test "handles an Array per_page param gracefully" do
+    pagination = Pagination.new(Patient.all, page: 1, per_page: [ "1" ])
+    assert_equal Pagination::DEFAULT_PER_PAGE, pagination.per_page
+  end
+
   test "total_count 0 clamps page to 1 and total_pages to 1" do
     pagination = Pagination.new(Patient.where(id: nil), page: 5)
 

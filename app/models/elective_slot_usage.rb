@@ -91,9 +91,10 @@ class ElectiveSlotUsage
       messages << "No elective slots are configured for #{date.strftime('%A')}."
     end
 
-    # On a holiday the message above already explains why there is no slot,
-    # so reporting the same surgeries as "over capacity" only adds noise.
-    if over_capacity? && !holiday?
+    # On a holiday, or a weekday with no slot rule configured at all, the
+    # message above already explains why there is no slot, so reporting
+    # the same surgeries as "over capacity" only adds noise.
+    if over_capacity? && configured?
       noun = used_slots == 1 ? "surgery" : "surgeries"
       slots = slot_count == 1 ? "slot" : "slots"
       messages << "Over capacity: #{used_slots} elective #{noun} in #{slot_count} #{slots}."

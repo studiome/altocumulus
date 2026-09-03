@@ -1,5 +1,5 @@
 class SurgeriesController < ApplicationController
-  before_action :set_surgery, only: %i[ show edit update destroy ]
+  before_action :set_surgery, only: %i[ edit update destroy ]
   before_action :set_form_collections, only: %i[ new edit create update ]
 
   def index
@@ -14,6 +14,8 @@ class SurgeriesController < ApplicationController
   end
 
   def show
+    @surgery = Surgery.includes(:patient, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure })
+                       .find(params.expect(:id))
     @slot_rules = ElectiveSlotRule.by_day_of_week
     @holiday = Holiday.find_by(date: @surgery.surgery_date)
   end

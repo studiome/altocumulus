@@ -10,6 +10,11 @@ class HolidaysControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index does not error out on a crafted Array page param" do
+    get holidays_url, params: { page: [ "1" ] }
+    assert_response :success
+  end
+
   test "index lists holidays" do
     get holidays_url
     assert_response :success

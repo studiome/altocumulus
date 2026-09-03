@@ -357,4 +357,12 @@ class SurgeryTest < ActiveSupport::TestCase
   test "filtered by scheduling_type" do
     assert_equal [ surgeries(:emergency_one) ], Surgery.filtered(scheduling_type: "emergency").to_a
   end
+
+  test "diagnosis_names_display does not issue additional queries when patient_diagnoses are preloaded" do
+    surgeries = Surgery.includes(patient_diagnoses: :diagnosis).where(id: [ surgeries(:one).id, surgeries(:two).id ]).load
+
+    assert_queries_count(0) do
+      surgeries.each(&:diagnosis_names_display)
+    end
+  end
 end

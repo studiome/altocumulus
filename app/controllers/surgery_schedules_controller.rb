@@ -10,7 +10,7 @@ class SurgerySchedulesController < ApplicationController
   private
 
     def week_start
-      base = params[:week_of].present? ? Date.parse(params[:week_of]) : Date.current
+      base = params[:week_of].present? ? Date.parse(params[:week_of].to_s) : Date.current
       base.beginning_of_week
     rescue ArgumentError
       Date.current.beginning_of_week

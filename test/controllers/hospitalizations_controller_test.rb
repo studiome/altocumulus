@@ -10,6 +10,11 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index does not error out on a crafted Array page param" do
+    get hospitalizations_url, params: { page: [ "1" ] }
+    assert_response :success
+  end
+
   test "index filters by keyword" do
     get hospitalizations_url, params: { keyword: "jane" }
     assert_response :success
@@ -32,6 +37,13 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   test "should get new" do
     get new_hospitalization_url
     assert_response :success
+  end
+
+  test "new renders the diagnosis modal frame and turbo-frame New Diagnosis links" do
+    get new_hospitalization_url
+    assert_response :success
+    assert_select "turbo-frame#diagnosis_modal_frame"
+    assert_select "a[data-turbo-frame='diagnosis_modal_frame']", text: "New Diagnosis"
   end
 
   test "should create hospitalization" do
@@ -77,6 +89,13 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   test "should get edit" do
     get edit_hospitalization_url(@hospitalization)
     assert_response :success
+  end
+
+  test "edit renders the diagnosis modal frame and turbo-frame New Diagnosis links" do
+    get edit_hospitalization_url(@hospitalization)
+    assert_response :success
+    assert_select "turbo-frame#diagnosis_modal_frame"
+    assert_select "a[data-turbo-frame='diagnosis_modal_frame']", text: "New Diagnosis"
   end
 
   test "should update hospitalization" do

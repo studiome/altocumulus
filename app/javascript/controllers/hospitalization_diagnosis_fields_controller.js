@@ -46,6 +46,46 @@ export default class extends Controller {
         this.refreshAddButtonState()
     }
 
+    addDiagnosisOption(event) {
+        const { id, name } = event.detail
+        const optionValue = id.toString()
+
+        const appendOption = (select) => {
+            if (!Array.from(select.options).some((opt) => opt.value === optionValue)) {
+                const opt = document.createElement("option")
+                opt.value = optionValue
+                opt.textContent = name
+                select.appendChild(opt)
+            }
+        }
+
+        this.element.querySelectorAll(".hospitalization-diagnosis-select").forEach((select) => {
+            appendOption(select)
+        })
+
+        const blankActiveSelect = this.itemTargets
+            .filter((item) => this.isActiveItem(item))
+            .map((item) => item.querySelector(".hospitalization-diagnosis-select"))
+            .find((select) => select && (select.value === "" || select.value === null))
+
+        if (blankActiveSelect) {
+            const selectedOption = Array.from(blankActiveSelect.options).find((option) => option.value === optionValue)
+            if (selectedOption) {
+                selectedOption.selected = true
+                blankActiveSelect.value = optionValue
+                blankActiveSelect.dispatchEvent(new Event("change", { bubbles: true }))
+            }
+        }
+
+        if (this.hasTemplateTarget) {
+            const templateContent = this.templateTarget.content
+            const select = templateContent.querySelector(".hospitalization-diagnosis-select")
+            if (select) {
+                appendOption(select)
+            }
+        }
+    }
+
     refreshAddButtonState() {
         if (!this.hasAddButtonTarget) return
 
@@ -57,5 +97,10 @@ export default class extends Controller {
             const destroyField = item.querySelector("[data-hospitalization-diagnosis-fields-target='destroyField']")
             return !item.hidden && destroyField?.value !== "1"
         })
+    }
+
+    isActiveItem(item) {
+        const destroyField = item.querySelector("[data-hospitalization-diagnosis-fields-target='destroyField']")
+        return !item.hidden && destroyField?.value !== "1"
     }
 }

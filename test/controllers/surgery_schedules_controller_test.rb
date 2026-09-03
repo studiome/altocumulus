@@ -6,6 +6,11 @@ class SurgerySchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index does not error out on a crafted Array week_of param" do
+    get surgery_schedule_url, params: { week_of: [ "2026-03-01" ] }
+    assert_response :success
+  end
+
   test "index defaults to the week containing today" do
     travel_to Date.new(2026, 3, 4) do # Wednesday
       get surgery_schedule_url
@@ -42,6 +47,13 @@ class SurgerySchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/23:30/, @response.body)
     assert_match(/No elective slots are configured for Sunday/, @response.body)
+  end
+
+  test "index shows 'No slot available' instead of 'Over capacity' for an unconfigured day with an elective surgery" do
+    get surgery_schedule_url, params: { week_of: "2026-02-25" } # week of Mon 2026-02-23 .. Sun 2026-03-01; Sunday has no slot rule and surgeries(:one) is elective
+    assert_response :success
+    assert_match(/No slot available/, @response.body)
+    assert_no_match(/Over capacity/, @response.body)
   end
 
   test "index shows the holiday name and no-slots message for a week containing a holiday" do

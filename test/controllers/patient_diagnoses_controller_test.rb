@@ -34,6 +34,39 @@ class PatientDiagnosesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "should create patient diagnosis via json" do
+    assert_difference("PatientDiagnosis.count") do
+      post patient_patient_diagnoses_url(@patient, format: :json), params: {
+        patient_diagnosis: { diagnosis_id: diagnoses(:fracture).id, laterality: "left", diagnosed_on: Date.new(2026, 4, 17) }
+      }
+    end
+
+    assert_response :created
+    assert_equal Mime[:json].to_s, response.media_type
+    body = response.parsed_body
+    assert_equal PatientDiagnosis.last.id, body["id"]
+    assert_equal diagnoses(:fracture).name, body["diagnosis_name"]
+  end
+
+  test "should show patient diagnosis via json" do
+    get patient_patient_diagnosis_url(@patient, @patient_diagnosis, format: :json)
+
+    assert_response :success
+    assert_equal Mime[:json].to_s, response.media_type
+    body = response.parsed_body
+    assert_equal @patient_diagnosis.id, body["id"]
+    assert_equal @patient_diagnosis.display_name, body["display_name"]
+  end
+
+  test "should get index via json" do
+    get patient_patient_diagnoses_url(@patient, format: :json)
+
+    assert_response :success
+    assert_equal Mime[:json].to_s, response.media_type
+    body = response.parsed_body
+    assert_equal @patient.patient_diagnoses.count, body.size
+  end
+
   test "should get edit" do
     get edit_patient_patient_diagnosis_url(@patient, @patient_diagnosis)
     assert_response :success

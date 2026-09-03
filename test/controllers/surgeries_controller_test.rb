@@ -10,6 +10,11 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index does not error out on a crafted Array page param" do
+    get surgeries_url, params: { page: [ "1" ] }
+    assert_response :success
+  end
+
   test "index filters by keyword" do
     get surgeries_url, params: { keyword: "jane" }
     assert_response :success
@@ -150,6 +155,19 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show does not issue additional queries for extra patient_diagnoses or procedure selections" do
+    surgery = surgeries(:two) # starts with 1 diagnosis, 1 procedure selection
+    fewer_queries = capture_query_count { get surgery_url(surgery) }
+
+    extra_diagnosis = surgery.patient.patient_diagnoses.create!(diagnosis: diagnoses(:fracture), diagnosed_on: Date.new(2026, 4, 10))
+    surgery.surgery_diagnosis_links.create!(patient_diagnosis: extra_diagnosis)
+    surgery.surgery_procedure_selections.create!(surgery_procedure: surgery_procedures(:cholecystectomy))
+
+    more_queries = capture_query_count { get surgery_url(surgery) } # now 2 diagnoses, 2 procedure selections
+
+    assert_equal fewer_queries, more_queries
+  end
+
   test "show displays a holiday badge when the surgery date is a holiday" do
     holiday = holidays(:national_holiday)
     surgery = Surgery.create!(
@@ -270,4 +288,13 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to surgeries_url
   end
+
+  private
+
+    def capture_query_count
+      count = 0
+      counter = ->(*) { count += 1 }
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
+      count
+    end
 end

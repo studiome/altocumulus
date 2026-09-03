@@ -28,7 +28,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
       <div class="flex items-center justify-between w-full gap-4">
         <span>No diagnosis names found. Create a diagnosis master first.</span>
-        <%= link_to "New Diagnosis", new_diagnosis_path, class: "btn btn-sm btn-outline" %>
+        <%= link_to "New Diagnosis", new_diagnosis_path, class: "btn btn-sm btn-outline", data: { turbo_frame: "diagnosis_modal_frame" } %>
       </div>
     </div>
   <% end %>
@@ -38,13 +38,13 @@
     <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: "Select a patient" }, class: "select w-full focus:select-primary" %>
   </div>
 
-  <div class="space-y-4" data-controller="hospitalization-diagnosis-fields" data-hospitalization-diagnosis-fields-max-items-value="10">
+  <div class="space-y-4" data-controller="hospitalization-diagnosis-fields" data-hospitalization-diagnosis-fields-max-items-value="10" data-action="diagnosis:created@window->hospitalization-diagnosis-fields#addDiagnosisOption">
     <div class="flex items-center justify-between gap-3">
       <div>
         <span class="app-field-label">Diagnoses at Admission</span>
         <p class="app-helper">Add one or more diagnosis names for this hospitalization.</p>
       </div>
-      <%= link_to "New Diagnosis", new_diagnosis_path, class: "app-inline-link text-sm" %>
+      <%= link_to "New Diagnosis", new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_modal_frame" } %>
     </div>
 
     <div class="space-y-3" data-hospitalization-diagnosis-fields-target="list">
