@@ -10,7 +10,7 @@
   }
 
   .app-navbar {
-    @apply navbar border-b border-base-300 bg-base-100/90 px-4 shadow-sm backdrop-blur sm:px-8;
+    @apply navbar relative z-50 border-b border-base-300 bg-base-100/90 px-4 shadow-sm backdrop-blur sm:px-8;
   }
 
   .app-main {
