@@ -12,6 +12,11 @@ class DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_select "option[selected]", text: "2026"
   end
 
+  test "should ignore a non-scalar year parameter" do
+    get dashboard_url, params: { year: [ 2026 ] }
+    assert_response :success
+  end
+
   test "root still routes to patients#index" do
     get root_url
     assert_response :success
