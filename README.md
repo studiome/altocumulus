@@ -3,6 +3,7 @@
 [![CI](https://github.com/studiome/altocumulus/actions/workflows/ci.yml/badge.svg)](https://github.com/studiome/altocumulus/actions/workflows/ci.yml)
 [![Ruby 4.0](https://img.shields.io/badge/Ruby-4.0.6-CC342D?logo=ruby&logoColor=white)](.ruby-version)
 [![Rails 8.1](https://img.shields.io/badge/Rails-8.1-D30001?logo=rubyonrails&logoColor=white)](Gemfile)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 診療科単位で使う、患者・診断・手術・入院の診療台帳アプリケーション。
 外来から病棟までの記録を 1 か所にまとめ、**手術枠（elective slot）の消化状況**と
@@ -24,6 +25,7 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 - [テスト](#テスト)
 - [デプロイ](#デプロイ)
 - [開発ルール](#開発ルール)
+- [ライセンス](#ライセンス)
 
 ---
 
@@ -229,3 +231,7 @@ AI エージェントを含む開発フローの取り決めは以下にまと�
 - 回答・報告は日本語、コミットメッセージは英語。
 - Red/Green TDD。失敗するテストを先に書き、最小限の実装で通す。
 - 原則 `main` へ直接コミット。PR は明示的な指示があるときだけ作成する。
+
+## ライセンス
+
+[MIT License](LICENSE) — Copyright (c) 2026 Kazuhiro Miyahara
