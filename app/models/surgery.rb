@@ -24,6 +24,13 @@ class Surgery < ApplicationRecord
   validate :no_duplicate_procedure_selections
   validate :hospitalization_must_belong_to_same_patient
   validate :surgery_date_must_fall_within_hospitalization_period
+  validates :slot_number, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+
+  # Emergency surgeries are intentionally unaffected by the slot rules: no rule
+  # lookup, no capacity check, no time-of-day check. They must stay saveable on
+  # any date, at any time, so a stray slot number is cleared rather than
+  # rejected. Never turn this into a validation.
+  before_validation :clear_slot_number_for_emergency
 
   scope :linked_to_hospitalization, -> { where.not(hospitalization_id: nil) }
   scope :standalone, -> { where(hospitalization_id: nil) }
@@ -106,21 +113,17 @@ class Surgery < ApplicationRecord
     "#{surgery_date || 'Date not set'} - #{patient}"
   end
 
-  # Emergency surgeries are intentionally unaffected: no rule lookup, no
-  # capacity check, no time-of-day check. Never add validations here -
-  # emergency surgeries must be saveable on any date, at any time.
-  def slot_overrun_minutes(rule)
-    return nil unless elective? && rule && duration_hours.present?
+  def duration_minutes
+    return nil if duration_hours.blank?
 
-    over = (duration_hours * 60).round - rule.slot_duration_minutes
-    over.positive? ? over : nil
-  end
-
-  def slot_overrun?(rule)
-    slot_overrun_minutes(rule).present?
+    (duration_hours * 60).round
   end
 
   private
+
+  def clear_slot_number_for_emergency
+    self.slot_number = nil if emergency?
+  end
 
   def patient_diagnoses_must_belong_to_patient
     return if patient_diagnoses.empty? || patient_id.blank?

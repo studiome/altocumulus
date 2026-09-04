@@ -34,12 +34,24 @@ class SurgerySchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href*='week_of=2026-03-09']"
   end
 
-  test "index shows open and filled elective slots and an over capacity section" do
+  test "index shows each slot with the surgeries booked into it and an unassigned section" do
     get surgery_schedule_url, params: { week_of: "2026-03-03" } # week of Mon 2026-03-02 .. Sun 2026-03-08
     assert_response :success
-    assert_match(/Open/, @response.body)
-    assert_match(/Over capacity/, @response.body)
+    assert_match(/Slot 1/, @response.body)
+    assert_match(/Open/, @response.body)                    # slot 3 is empty
+    assert_match(/Not assigned to a slot/, @response.body)  # surgeries(:six) has no slot yet
     assert_match(/Emergency/, @response.body)
+  end
+
+  test "index reports a slot's combined time rather than flagging each surgery" do
+    get surgery_schedule_url, params: { week_of: "2026-03-03" }
+    assert_response :success
+
+    # Slot 1 holds two 60 min surgeries inside a 240 min slot, so it is fine;
+    # slot 2 holds a single 300 min surgery, so the slot is 60 min over.
+    assert_match(%r{120 / 240 min}, @response.body)
+    assert_match(/\+60 min over/, @response.body)
+    assert_no_match(/Extended/, @response.body)
   end
 
   test "index shows the emergency section, its start time, and unconfigured-day warnings for a week containing 2026-03-01" do

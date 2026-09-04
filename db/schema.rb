@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_04_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_04_120000) do
   create_table "audit_events", force: :cascade do |t|
     t.string "action", null: false
     t.integer "auditable_id", null: false
@@ -102,12 +102,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_04_000000) do
     t.integer "hospitalization_id"
     t.integer "patient_id", null: false
     t.string "scheduling_type", default: "elective", null: false
+    t.integer "slot_number"
     t.time "start_time"
     t.date "surgery_date"
     t.datetime "updated_at", null: false
     t.index ["hospitalization_id"], name: "index_surgeries_on_hospitalization_id"
     t.index ["patient_id"], name: "index_surgeries_on_patient_id"
     t.index ["surgery_date", "scheduling_type"], name: "index_surgeries_on_surgery_date_and_scheduling_type"
+    t.index ["surgery_date", "slot_number"], name: "index_surgeries_on_surgery_date_and_slot_number"
   end
 
   create_table "surgery_diagnosis_links", force: :cascade do |t|

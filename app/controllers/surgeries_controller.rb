@@ -104,7 +104,7 @@ class SurgeriesController < ApplicationController
     def surgery_params
       params.expect(surgery: [
         :surgery_date, :duration_hours, :anesthesia_method, :patient_id, :hospitalization_id,
-        :scheduling_type, :start_time,
+        :scheduling_type, :start_time, :slot_number,
         { patient_diagnosis_ids: [] },
         { surgery_procedure_selections_attributes: [ [ :id, :surgery_procedure_id, :laterality, :_destroy ] ] }
       ])

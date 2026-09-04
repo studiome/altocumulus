@@ -76,8 +76,12 @@
                 <td><%= surgery.diagnosis_names_display %></td>
                 <td>
                   <div class="font-semibold leading-snug"><%= surgery.display_procedure_name %></div>
-                  <% if surgery.slot_overrun?(slot_rule) %>
-                    <span class="badge badge-warning badge-sm mt-1">Extended +<%= surgery.slot_overrun_minutes(slot_rule) %> min</span>
+                  <% if surgery.elective? %>
+                    <% if surgery.slot_number %>
+                      <span class="badge badge-ghost badge-sm mt-1">Slot <%= surgery.slot_number %><% if slot_rule %> / <%= slot_rule.slot_count %><% end %></span>
+                    <% else %>
+                      <span class="badge badge-warning badge-sm mt-1">No slot assigned</span>
+                    <% end %>
                   <% end %>
                 </td>
                 <td><%= surgery.duration_hours.present? ? "#{surgery.duration_hours} h" : "-" %></td>

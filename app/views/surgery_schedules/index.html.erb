@@ -34,7 +34,8 @@
             <% end %>
             <p class="text-sm text-base-content/60">
               <% if usage.configured? %>
-                Used <%= usage.used_slots %> / <%= usage.slot_count %> slots
+                <%= usage.used_slots %> / <%= usage.slot_count %> slots in use
+                <span class="text-base-content/40">(<%= usage.used_minutes %> / <%= usage.capacity_minutes %> min)</span>
               <% elsif usage.holiday? %>
                 No elective slots (holiday)
               <% else %>
@@ -47,25 +48,44 @@
             <div role="alert" class="alert alert-warning py-2 text-xs"><span><%= warning %></span></div>
           <% end %>
 
+          <%# A slot is a whole day of one operating room, so it lists every
+              surgery booked into it and is flagged only when their combined
+              time runs past the slot's duration. %>
           <div class="space-y-2">
-            <% usage.slot_count.times do |index| %>
-              <% surgery = usage.elective_surgeries[index] %>
-              <div class="rounded-box border border-base-200 p-3 text-sm <%= surgery ? "bg-base-100" : "bg-base-200/40 border-dashed" %>">
-                <% if surgery %>
-                  <%= render "slot_surgery", surgery: surgery, rule: usage.effective_rule %>
-                <% else %>
+            <% usage.slots.each do |slot| %>
+              <div class="rounded-box border p-3 text-sm space-y-2 <%= slot.empty? ? "border-base-200 border-dashed bg-base-200/40" : slot.overrun? ? "border-warning/60 bg-warning/5" : "border-base-200 bg-base-100" %>">
+                <%# Stacked rather than side by side: the week board gives each
+                    day a narrow column, and a horizontal row wraps badly. %>
+                <div>
+                  <p class="text-xs font-bold uppercase text-base-content/40">Slot <%= slot.number %></p>
+                  <p class="font-mono text-xs text-base-content/50 whitespace-nowrap"><%= slot.used_minutes %> / <%= slot.duration_minutes %> min</p>
+                </div>
+
+                <% if slot.overrun? %>
+                  <span class="badge badge-warning badge-sm whitespace-nowrap">+<%= slot.overrun_minutes %> min over</span>
+                <% end %>
+
+                <% if slot.empty? %>
                   <span class="text-base-content/40 italic">Open</span>
+                <% else %>
+                  <div class="space-y-2">
+                    <% slot.surgeries.each do |surgery| %>
+                      <div class="rounded border border-base-200 bg-base-100 p-2">
+                        <%= render "slot_surgery", surgery: surgery %>
+                      </div>
+                    <% end %>
+                  </div>
                 <% end %>
               </div>
             <% end %>
           </div>
 
-          <% if usage.over_capacity? %>
+          <% if usage.unscheduled_surgeries.any? %>
             <div class="space-y-2">
-              <p class="text-xs font-bold uppercase text-error"><%= usage.configured? ? "Over capacity" : "No slot available" %></p>
-              <% usage.elective_surgeries[usage.slot_count..].to_a.each do |surgery| %>
+              <p class="text-xs font-bold uppercase text-error"><%= usage.configured? ? "Not assigned to a slot" : "No slot available" %></p>
+              <% usage.unscheduled_surgeries.each do |surgery| %>
                 <div class="rounded-box border border-error/40 bg-error/5 p-3 text-sm">
-                  <%= render "slot_surgery", surgery: surgery, rule: usage.effective_rule %>
+                  <%= render "slot_surgery", surgery: surgery %>
                 </div>
               <% end %>
             </div>

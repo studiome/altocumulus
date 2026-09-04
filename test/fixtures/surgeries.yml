@@ -11,13 +11,18 @@ two:
   duration_hours: 1.0
 
 # 2026-03-03 is a Tuesday, configured with 3 elective slots x 240 min
-# (see elective_slot_rules.yml). three/four/five/six together push
-# elective usage on that day to 4 surgeries (1 over the 3-slot capacity),
-# and "five" alone runs 60 min past the 240 min slot duration.
+# (see elective_slot_rules.yml). A slot holds a whole day of one operating
+# room, so several surgeries share it:
+#   slot 1 -> three + four = 120 min, well inside the 240 min slot
+#   slot 2 -> five alone   = 300 min, 60 min past the 240 min slot
+#   slot 3 -> empty
+#   six    -> no slot assigned yet, so it is unscheduled
 three:
   patient: one
   surgery_date: 2026-03-03
   scheduling_type: elective
+  slot_number: 1
+  start_time: "09:00"
   anesthesia_method: "General"
   duration_hours: 1.0
 
@@ -25,6 +30,8 @@ four:
   patient: two
   surgery_date: 2026-03-03
   scheduling_type: elective
+  slot_number: 1
+  start_time: "11:00"
   anesthesia_method: "General"
   duration_hours: 1.0
 
@@ -32,6 +39,8 @@ five:
   patient: one
   surgery_date: 2026-03-03
   scheduling_type: elective
+  slot_number: 2
+  start_time: "09:00"
   anesthesia_method: "General"
   duration_hours: 5.0
 
@@ -44,7 +53,7 @@ six:
 
 # Sunday 2026-03-01 has no elective slot rule configured. Emergency
 # surgeries must be unaffected by that: no slot count, no slot time,
-# even at night.
+# even at night. They never carry a slot number.
 emergency_one:
   patient: one
   surgery_date: 2026-03-01

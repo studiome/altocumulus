@@ -37,7 +37,7 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 | 患者診断 | `/patients/:id/patient_diagnoses` | 診断マスタを参照した患者ごとの診断履歴。診断日と左右区分（laterality）を保持 |
 | 手術記録 | `/surgeries` | 手術日・術式（最大 5 件）・麻酔法・所要時間・予定/緊急区分。患者診断および入院と紐付け |
 | 入院記録 | `/hospitalizations` | 入院日/退院日・転帰・退院先・病室希望。診断は 1 件以上必須 |
-| 手術枠スケジュール | `/surgery_schedule` | 週表示のカレンダー。枠の消化数・超過・時間超過・祝日を警告表示 |
+| 手術枠スケジュール | `/surgery_schedule` | 週表示のカレンダー。枠ごとの手術一覧と使用時間、枠の時間超過・未割当手術・祝日を警告表示 |
 | ダッシュボード | `/dashboard` | 年次で絞り込める統計（患者数・在院患者数・月別件数・平均在院日数・術式ランキング） |
 | 監査ログ | `/audit_events` | 患者・手術・入院の作成/更新/削除を、変更前後の値つきで記録・閲覧 |
 | マスタ管理 | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` | 診断名・術式・曜日別の手術枠ルール・祝日 |
@@ -134,6 +134,7 @@ erDiagram
         float  duration_hours
         string anesthesia_method
         string scheduling_type "elective/emergency"
+        int    slot_number "入る枠の番号 / 未割当は null"
     }
     Hospitalization {
         date   admission_date
@@ -156,14 +157,32 @@ erDiagram
 - `Surgery` は術式を **1〜5 件**、重複なしで持ちます。紐付ける患者診断はその手術の患者のものに限られます。
 - `Hospitalization` は診断が **1 件以上必須**、重複不可。同一患者の入院期間の重複も禁止です。
 - `Surgery` を入院に紐付ける場合、同一患者かつ手術日が入院期間内である必要があります。
+- `Surgery#slot_number` は 1 以上の整数（未割当は `null`）。枠数の超過や枠時間の超過は保存を
+  ブロックせず、スケジュール盤の警告として表示されます。
 
 ## 設計上のポイント
 
 ### 手術枠（elective slot）の消化管理
 
-`ElectiveSlotUsage`（PORO）が 1 日分の枠の使用状況を表します。**1 手術 = 1 枠**とし、
-枠時間を超過した手術は「自分の枠が延びた」と扱って 2 枠目を消費しません。祝日はその日の
-予定手術枠を無効化します。**緊急手術は枠ルールの対象外**で、枠の消化にも警告にも影響しません。
+**1 枠 = その日の手術室 1 部屋分の時間帯**です。1 枠には複数の手術（2〜3 件を想定）が入り、
+枠に入っている手術の**所要時間の合計**が枠時間（`slot_duration_minutes`）を超えたときに、
+その枠が超過として警告されます。判定は手術単位ではなく枠単位です。
+
+手術がどの枠に入るかは `Surgery#slot_number` で明示的に指定します（自動割り当てはしません）。
+枠番号が未設定、またはその日の枠数を超える番号を指している予定手術は、枠に入らず
+「Not assigned to a slot」として盤の下部に表示されます。
+
+祝日はその日の予定手術枠を無効化します。**緊急手術は枠ルールの対象外**で、枠の消化にも
+警告にも影響しません。緊急手術に枠番号が付いた場合は保存を失敗させず、
+`before_validation` で黙って消去します（緊急手術はいつでも保存できなければならないため）。
+
+主なオブジェクト:
+
+| 要素 | 役割 |
+| --- | --- |
+| `ElectiveSlotUsage` | 1 日分の枠の使用状況（PORO）。`slots` / `unscheduled_surgeries` / `warnings` を提供 |
+| `ElectiveSlotUsage::Slot` | 1 枠。`surgeries` / `used_minutes` / `remaining_minutes` / `overrun?` / `overrun_minutes` |
+| `ElectiveSlotRule` | 曜日ごとの枠数（`slot_count`）と 1 枠の分数（`slot_duration_minutes`） |
 
 `ElectiveSlotUsage.for_dates` は日数によらず固定回数のクエリで週表示分をまとめて構築し、
 N+1 を避けています。
@@ -204,8 +223,8 @@ bin/rails test:system   # Capybara + Selenium
 ```
 
 `test/` は `models` / `controllers` / `integration` / `system` / `helpers` / `views` に
-分かれています。fixtures（`test/fixtures/`）には手術枠の超過・時間超過を再現する
-データが意図的に仕込まれているため、変更時はコメントを確認してください。
+分かれています。fixtures（`test/fixtures/`）には「1 枠に 2 手術が収まる日」「1 枠が時間超過する日」
+「枠未割当の手術」を再現するデータが意図的に仕込まれているため、変更時はコメントを確認してください。
 
 ## デプロイ
 

@@ -334,24 +334,54 @@ class SurgeryTest < ActiveSupport::TestCase
     assert surgery.valid?
   end
 
-  test "slot_overrun_minutes is nil for emergency surgeries regardless of rule" do
-    rule = elective_slot_rules(:tuesday)
-    assert_nil surgeries(:emergency_one).slot_overrun_minutes(rule)
+  test "duration_minutes converts duration_hours, and is nil when unrecorded" do
+    assert_equal 60, surgeries(:three).duration_minutes
+    assert_equal 300, surgeries(:five).duration_minutes
+    assert_nil Surgery.new(duration_hours: nil).duration_minutes
   end
 
-  test "slot_overrun_minutes is nil when no rule is given" do
-    assert_nil surgeries(:one).slot_overrun_minutes(nil)
+  test "slot_number must be a positive integer when given" do
+    surgery = surgeries(:three)
+
+    surgery.slot_number = 0
+    assert_not surgery.valid?
+
+    surgery.slot_number = -1
+    assert_not surgery.valid?
+
+    surgery.slot_number = 1.5
+    assert_not surgery.valid?
+
+    surgery.slot_number = 2
+    assert surgery.valid?
   end
 
-  test "slot_overrun_minutes is nil when the surgery fits within the slot" do
-    rule = elective_slot_rules(:tuesday)
-    assert_nil surgeries(:three).slot_overrun_minutes(rule)
+  test "slot_number may be left blank so a surgery can wait to be scheduled" do
+    surgery = surgeries(:three)
+    surgery.slot_number = nil
+
+    assert surgery.valid?
   end
 
-  test "slot_overrun_minutes returns the number of minutes past the slot duration" do
-    rule = elective_slot_rules(:tuesday)
-    assert_equal 60, surgeries(:five).slot_overrun_minutes(rule)
-    assert surgeries(:five).slot_overrun?(rule)
+  # Emergency surgeries never occupy an elective slot, but they must still be
+  # saveable on any date at any time, so the slot number is cleared rather
+  # than rejected.
+  test "switching a surgery to emergency clears its slot number instead of failing" do
+    surgery = surgeries(:three)
+    assert_equal 1, surgery.slot_number
+
+    surgery.scheduling_type = "emergency"
+
+    assert surgery.valid?
+    assert_nil surgery.slot_number
+  end
+
+  test "an emergency surgery given a slot number saves with it cleared" do
+    surgery = surgeries(:emergency_one)
+    surgery.slot_number = 3
+
+    assert surgery.save
+    assert_nil surgery.reload.slot_number
   end
 
   test "filtered by scheduling_type" do

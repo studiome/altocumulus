@@ -92,6 +92,21 @@
     <p class="app-helper">Emergency surgeries can be scheduled at any time, including nights.</p>
   </div>
 
+  <div class="app-field">
+    <%= form.label :slot_number, "Elective Slot", class: "app-field-label" %>
+    <%= form.number_field :slot_number, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 1" %>
+    <p class="app-helper">
+      Which of the day's operating room slots this surgery runs in. A slot holds several
+      surgeries, so more than one surgery can share the same number. Leave blank until it is
+      scheduled. Ignored for emergency surgeries.
+      <% if @elective_slot_rules.present? %>
+        <br>
+        Configured slots per weekday:
+        <%= @elective_slot_rules.map { |rule| "#{rule.day_name}: #{rule.slot_count}" }.join(", ") %>.
+      <% end %>
+    </p>
+  </div>
+
   <div class="rounded-box border border-base-200 bg-base-100 p-4 space-y-2">
     <div class="flex items-center justify-between gap-3">
       <span class="text-sm font-semibold">Elective Slot Rules</span>

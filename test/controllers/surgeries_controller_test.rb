@@ -40,10 +40,11 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Emergency/, @response.body)
   end
 
-  test "index shows a slot overrun badge for a surgery that runs past its slot" do
+  test "index shows the assigned slot, and flags elective surgeries without one" do
     get surgeries_url
     assert_response :success
-    assert_match(/Extended/, @response.body)
+    assert_match(/Slot 1/, @response.body)          # surgeries(:three) and (:four)
+    assert_match(/No slot assigned/, @response.body) # surgeries(:six)
   end
 
   test "should get new" do
