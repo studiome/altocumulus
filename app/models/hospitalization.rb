@@ -1,4 +1,6 @@
 class Hospitalization < ApplicationRecord
+  include Auditable
+
   OUTCOME_OPTIONS = {
     "recovered" => "Recovered",
     "improved" => "Improved",

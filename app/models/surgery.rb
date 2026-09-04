@@ -1,4 +1,6 @@
 class Surgery < ApplicationRecord
+  include Auditable
+
   SCHEDULING_TYPE_OPTIONS = { "elective" => "Elective", "emergency" => "Emergency" }.freeze
 
   belongs_to :patient
@@ -98,6 +100,10 @@ class Surgery < ApplicationRecord
 
   def start_time_display
     start_time&.strftime("%H:%M") || "-"
+  end
+
+  def to_s
+    "#{surgery_date || 'Date not set'} - #{patient}"
   end
 
   # Emergency surgeries are intentionally unaffected: no rule lookup, no

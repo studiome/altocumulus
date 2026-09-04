@@ -1,0 +1,43 @@
+<% content_for :title, "Audit Event" %>
+
+<div class="app-page">
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker">Audit Log</p>
+        <h1 class="app-page-title"><%= @audit_event.record_label %></h1>
+      </div>
+      <%= link_to "Back", audit_events_path, class: "btn btn-ghost" %>
+    </div>
+  </section>
+
+  <div class="app-panel p-6">
+    <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div><dt class="text-sm text-base-content/60">Time</dt><dd class="font-medium"><%= @audit_event.created_at.strftime("%Y-%m-%d %H:%M:%S") %></dd></div>
+      <div><dt class="text-sm text-base-content/60">Record type</dt><dd class="font-medium"><%= @audit_event.auditable_type %></dd></div>
+      <div><dt class="text-sm text-base-content/60">Record ID</dt><dd class="font-mono"><%= @audit_event.auditable_id %></dd></div>
+      <div><dt class="text-sm text-base-content/60">Action</dt><dd><span class="badge badge-outline"><%= @audit_event.action %></span></dd></div>
+    </dl>
+  </div>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead><tr><th class="bg-base-200">Field</th><th class="bg-base-200">Before</th><th class="bg-base-200">After</th></tr></thead>
+        <tbody>
+          <% if @audit_event.change_data.any? %>
+            <% @audit_event.change_data.each do |attribute, values| %>
+              <tr>
+                <td class="font-semibold"><%= attribute.humanize %></td>
+                <td class="font-mono whitespace-pre-wrap"><%= values[0].nil? ? "—" : values[0] %></td>
+                <td class="font-mono whitespace-pre-wrap"><%= values[1].nil? ? "—" : values[1] %></td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr><td colspan="3" class="text-center py-10 text-base-content/50 italic">No attribute changes recorded.</td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

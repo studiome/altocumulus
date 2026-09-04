@@ -1,0 +1,60 @@
+<% content_for :title, "Audit Log" %>
+
+<div class="app-page">
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker">Activity</p>
+        <h1 class="app-page-title">Audit Log</h1>
+      </div>
+    </div>
+  </section>
+
+  <%= form_with url: audit_events_path, method: :get, local: true, class: "app-filter-bar" do |f| %>
+    <div class="app-filter-field">
+      <label class="app-filter-label">Record type</label>
+      <%= f.select :auditable_type, AuditEvent::AUDITABLE_TYPES, { include_blank: "All", selected: params[:auditable_type] }, { class: "select select-sm" } %>
+    </div>
+    <div class="app-filter-field">
+      <label class="app-filter-label">Action</label>
+      <%= f.select :action, AuditEvent::ACTIONS, { include_blank: "All", selected: params[:action] }, { class: "select select-sm" } %>
+    </div>
+    <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
+    <% if params[:auditable_type].present? || params[:action].present? %>
+      <%= link_to "Clear", audit_events_path, class: "btn btn-ghost btn-sm" %>
+    <% end %>
+  <% end %>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200">Time</th>
+            <th class="bg-base-200">Record type</th>
+            <th class="bg-base-200">Action</th>
+            <th class="bg-base-200">Record</th>
+            <th class="bg-base-200 text-right">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @audit_events.any? %>
+            <% @audit_events.each do |audit_event| %>
+              <tr class="row-hover">
+                <td class="font-mono"><%= audit_event.created_at.strftime("%Y-%m-%d %H:%M:%S") %></td>
+                <td><%= audit_event.auditable_type %></td>
+                <td><span class="badge badge-outline"><%= audit_event.action %></span></td>
+                <td class="font-semibold"><%= audit_event.record_label %></td>
+                <td class="text-right"><%= link_to "View", audit_event, class: "btn btn-ghost btn-xs text-primary" %></td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr><td colspan="5" class="text-center py-10 text-base-content/50 italic">No audit events found.</td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <%= render "shared/pagination", pagination: @pagination %>
+</div>

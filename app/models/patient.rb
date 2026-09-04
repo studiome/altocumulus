@@ -1,4 +1,6 @@
 class Patient < ApplicationRecord
+  include Auditable
+
   has_many :surgeries, dependent: :destroy
   has_many :patient_diagnoses, -> { recent_first }, dependent: :destroy
   has_many :hospitalizations, dependent: :destroy
