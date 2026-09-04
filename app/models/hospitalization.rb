@@ -21,7 +21,9 @@ class Hospitalization < ApplicationRecord
   belongs_to :patient
   has_many :hospitalization_diagnoses, -> { order(:id) }, dependent: :destroy, inverse_of: :hospitalization
   has_many :diagnoses, through: :hospitalization_diagnoses
-  has_many :surgeries, dependent: :nullify
+  has_many :surgeries
+
+  before_destroy :unlink_surgeries
 
   accepts_nested_attributes_for :hospitalization_diagnoses,
                                 allow_destroy: true,
@@ -127,6 +129,17 @@ class Hospitalization < ApplicationRecord
   end
 
   private
+
+    # dependent: :nullify unlinks the surgeries with a single update_all, which
+    # skips callbacks and so leaves them missing from the audit log. Saving each
+    # record instead keeps the audit trail; validations stay skipped to match
+    # what :nullify did, so an already-invalid surgery cannot block the destroy.
+    def unlink_surgeries
+      surgeries.each do |surgery|
+        surgery.hospitalization_id = nil
+        surgery.save!(validate: false)
+      end
+    end
 
     def diagnosis_ids_in_use
       active_hospitalization_diagnoses.filter_map(&:diagnosis_id)

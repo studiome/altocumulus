@@ -11,7 +11,11 @@ class AuditEventsController < ApplicationController
 
   private
 
+    # The filter field cannot be named "action": params[:action] is always the
+    # routing action ("index"), and leaking it into query_parameters makes the
+    # pagination links generate a URL for a non-existent audit_events#create.
     def filter_params
-      params.permit(:auditable_type, :action).to_h.symbolize_keys
+      permitted = params.permit(:auditable_type, :audit_action)
+      { auditable_type: permitted[:auditable_type], action: permitted[:audit_action] }
     end
 end

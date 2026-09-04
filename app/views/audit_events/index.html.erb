@@ -17,10 +17,10 @@
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label">Action</label>
-      <%= f.select :action, AuditEvent::ACTIONS, { include_blank: "All", selected: params[:action] }, { class: "select select-sm" } %>
+      <%= f.select :audit_action, AuditEvent::ACTIONS, { include_blank: "All", selected: params[:audit_action] }, { class: "select select-sm" } %>
     </div>
     <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
-    <% if params[:auditable_type].present? || params[:action].present? %>
+    <% if params[:auditable_type].present? || params[:audit_action].present? %>
       <%= link_to "Clear", audit_events_path, class: "btn btn-ghost btn-sm" %>
     <% end %>
   <% end %>

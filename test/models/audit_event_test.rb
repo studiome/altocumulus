@@ -53,6 +53,20 @@ class AuditEventTest < ActiveSupport::TestCase
     end
   end
 
+  test "records an update when a hospitalization destroy nullifies its surgeries" do
+    hospitalization = hospitalizations(:one)
+    surgery = surgeries(:one)
+    surgery.update_columns(hospitalization_id: hospitalization.id)
+
+    assert_difference("AuditEvent.where(auditable_type: 'Surgery', action: 'update').count", 1) do
+      hospitalization.destroy!
+    end
+
+    assert_nil surgery.reload.hospitalization_id
+    event = AuditEvent.where(auditable_type: "Surgery", auditable_id: surgery.id, action: "update").last
+    assert_equal [ hospitalization.id, nil ], event.change_data.fetch("hospitalization_id")
+  end
+
   test "validates action and filters by type and action" do
     event = AuditEvent.new(auditable_type: "Patient", auditable_id: 1, action: "publish", record_label: "Patient")
     assert_not event.valid?
@@ -66,13 +80,27 @@ class AuditEventTest < ActiveSupport::TestCase
 
   test "audit failure rolls back the auditable save" do
     patient = Patient.new(hospital_id: "H-ROLLBACK", name: "Rollback", date_of_birth: Date.new(1990, 1, 1))
-    original_create = AuditEvent.method(:create!)
-    AuditEvent.define_singleton_method(:create!) { |**| raise ActiveRecord::RecordInvalid }
 
-    assert_raises(ActiveRecord::RecordInvalid) { patient.save! }
+    stubbing_audit_event_create_failure do
+      assert_raises(ActiveRecord::RecordInvalid) { patient.save! }
+    end
 
     assert_not Patient.exists?(hospital_id: "H-ROLLBACK")
-  ensure
-    AuditEvent.define_singleton_method(:create!) { |**attributes| original_create.call(**attributes) } if original_create
+
+    # The stub must not outlive the block: create! keeps accepting a positional
+    # hash, which a keyword-only replacement would reject.
+    restored = AuditEvent.create!({ auditable_type: "Patient", auditable_id: 1, action: "create", record_label: "Positional hash" })
+    assert_equal "Positional hash", restored.record_label
   end
+
+  private
+
+    # Removes the singleton method again rather than redefining it, so the real
+    # AuditEvent.create! (and its full signature) is what later tests see.
+    def stubbing_audit_event_create_failure
+      AuditEvent.define_singleton_method(:create!) { |*, **| raise ActiveRecord::RecordInvalid }
+      yield
+    ensure
+      AuditEvent.singleton_class.send(:remove_method, :create!)
+    end
 end
