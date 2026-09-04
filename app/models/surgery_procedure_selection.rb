@@ -1,5 +1,8 @@
 class SurgeryProcedureSelection < ApplicationRecord
+  include AuditsAssociatedChanges
   include Lateralizable
+
+  audits_associated_changes_to :surgery, foreign_key: :surgery_id
 
   belongs_to :surgery
   belongs_to :surgery_procedure

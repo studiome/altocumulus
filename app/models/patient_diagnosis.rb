@@ -1,5 +1,8 @@
 class PatientDiagnosis < ApplicationRecord
+  include AuditsAssociatedChanges
   include Lateralizable
+
+  audits_associated_changes_to :patient, foreign_key: :patient_id
 
   belongs_to :patient
   belongs_to :diagnosis

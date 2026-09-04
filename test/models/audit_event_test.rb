@@ -67,6 +67,131 @@ class AuditEventTest < ActiveSupport::TestCase
     assert_equal [ hospitalization.id, nil ], event.change_data.fetch("hospitalization_id")
   end
 
+  test "records surgery procedure selection changes against its surgery" do
+    surgery = surgeries(:two)
+    selection = surgery.surgery_procedure_selections.create!(
+      surgery_procedure: surgery_procedures(:appendectomy), laterality: "right"
+    )
+
+    created = latest_associated_event(surgery)
+    assert_equal [ nil, surgery_procedures(:appendectomy).id ],
+                 created.change_data.fetch(associated_key(selection, :surgery_procedure_id))
+    assert_equal [ "none", "right" ], created.change_data.fetch(associated_key(selection, :laterality))
+    assert_no_match(/(?:created_at|updated_at|surgery_id)\z/, created.change_data.keys.join("\n"))
+
+    selection.update!(laterality: "left")
+
+    updated = latest_associated_event(surgery)
+    assert_equal [ "right", "left" ], updated.change_data.fetch(associated_key(selection, :laterality))
+
+    selection.destroy!
+
+    destroyed = latest_associated_event(surgery)
+    assert_equal [ "left", nil ], destroyed.change_data.fetch(associated_key(selection, :laterality))
+    assert_equal [ surgery_procedures(:appendectomy).id, nil ],
+                 destroyed.change_data.fetch(associated_key(selection, :surgery_procedure_id))
+  end
+
+  test "records surgery diagnosis link changes against its surgery" do
+    surgery = surgeries(:one)
+    existing_link = surgery.surgery_diagnosis_links.first
+    existing_link.destroy!
+
+    link = surgery.surgery_diagnosis_links.create!(patient_diagnosis: patient_diagnoses(:hypertension))
+
+    created = latest_associated_event(surgery)
+    assert_equal [ nil, patient_diagnoses(:hypertension).id ],
+                 created.change_data.fetch(associated_key(link, :patient_diagnosis_id))
+
+    link.update!(patient_diagnosis: patient_diagnoses(:appendicitis))
+
+    updated = latest_associated_event(surgery)
+    assert_equal [ patient_diagnoses(:hypertension).id, patient_diagnoses(:appendicitis).id ],
+                 updated.change_data.fetch(associated_key(link, :patient_diagnosis_id))
+
+    link.destroy!
+
+    destroyed = latest_associated_event(surgery)
+    assert_equal [ patient_diagnoses(:appendicitis).id, nil ],
+                 destroyed.change_data.fetch(associated_key(link, :patient_diagnosis_id))
+  end
+
+  test "records hospitalization diagnosis changes against its hospitalization" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.hospitalization_diagnoses.find_by!(diagnosis: diagnoses(:hypertension)).destroy!
+
+    link = hospitalization.hospitalization_diagnoses.create!(diagnosis: diagnoses(:fracture))
+
+    created = latest_associated_event(hospitalization)
+    assert_equal [ nil, diagnoses(:fracture).id ], created.change_data.fetch(associated_key(link, :diagnosis_id))
+
+    link.update!(diagnosis: diagnoses(:hypertension))
+
+    updated = latest_associated_event(hospitalization)
+    assert_equal [ diagnoses(:fracture).id, diagnoses(:hypertension).id ],
+                 updated.change_data.fetch(associated_key(link, :diagnosis_id))
+
+    link.destroy!
+
+    destroyed = latest_associated_event(hospitalization)
+    assert_equal [ diagnoses(:hypertension).id, nil ], destroyed.change_data.fetch(associated_key(link, :diagnosis_id))
+  end
+
+  test "records patient diagnosis create update and destroy against its patient" do
+    patient = patients(:one)
+    diagnosis = patient.patient_diagnoses.create!(
+      diagnosis: diagnoses(:fracture), laterality: "right", diagnosed_on: Date.new(2026, 5, 1)
+    )
+
+    created = latest_associated_event(patient)
+    assert_equal [ nil, diagnoses(:fracture).id ], created.change_data.fetch(associated_key(diagnosis, :diagnosis_id))
+    assert_equal [ "none", "right" ], created.change_data.fetch(associated_key(diagnosis, :laterality))
+    assert_equal [ nil, "2026-05-01" ], created.change_data.fetch(associated_key(diagnosis, :diagnosed_on))
+
+    diagnosis.update!(laterality: "left")
+
+    updated = latest_associated_event(patient)
+    assert_equal [ "right", "left" ], updated.change_data.fetch(associated_key(diagnosis, :laterality))
+
+    diagnosis.destroy!
+
+    destroyed = latest_associated_event(patient)
+    assert_equal [ "left", nil ], destroyed.change_data.fetch(associated_key(diagnosis, :laterality))
+    assert_equal [ "2026-05-01", nil ], destroyed.change_data.fetch(associated_key(diagnosis, :diagnosed_on))
+  end
+
+  test "does not create associated update events while destroying a parent" do
+    surgery = surgeries(:one)
+    hospitalization = hospitalizations(:one)
+    patient = Patient.create!(hospital_id: "H-AUDIT-DEPENDENT", name: "Dependent", date_of_birth: Date.new(1985, 4, 12))
+    patient.patient_diagnoses.create!(diagnosis: diagnoses(:fracture), diagnosed_on: Date.new(2026, 5, 1))
+
+    surgery_update_count = associated_update_count(surgery)
+    hospitalization_update_count = associated_update_count(hospitalization)
+    patient_update_count = associated_update_count(patient)
+
+    surgery.destroy!
+    hospitalization.destroy!
+    patient.destroy!
+
+    assert_equal surgery_update_count, associated_update_count(surgery)
+    assert_equal hospitalization_update_count, associated_update_count(hospitalization)
+    assert_equal patient_update_count, associated_update_count(patient)
+  end
+
+  test "rolls back an associated change when its audit event cannot be created" do
+    surgery = surgeries(:two)
+    procedure = surgery_procedures(:appendectomy)
+
+    stubbing_audit_event_create_failure do
+      assert_raises(ActiveRecord::RecordInvalid) do
+        surgery.surgery_procedure_selections.create!(surgery_procedure: procedure, laterality: "right")
+      end
+    end
+
+    assert_not surgery.surgery_procedure_selections.exists?(surgery_procedure: procedure)
+  end
+
   test "validates action and filters by type and action" do
     event = AuditEvent.new(auditable_type: "Patient", auditable_id: 1, action: "publish", record_label: "Patient")
     assert_not event.valid?
@@ -94,6 +219,21 @@ class AuditEventTest < ActiveSupport::TestCase
   end
 
   private
+
+    def latest_associated_event(parent)
+      AuditEvent.where(auditable_type: parent.class.name, auditable_id: parent.id, action: "update").order(:id).last.tap do |event|
+        assert_not_nil event
+        assert_equal parent.to_s, event.record_label
+      end
+    end
+
+    def associated_update_count(parent)
+      AuditEvent.where(auditable_type: parent.class.name, auditable_id: parent.id, action: "update").count
+    end
+
+    def associated_key(record, attribute)
+      "#{record.model_name.singular}[#{record.id}].#{attribute}"
+    end
 
     # Removes the singleton method again rather than redefining it, so the real
     # AuditEvent.create! (and its full signature) is what later tests see.
