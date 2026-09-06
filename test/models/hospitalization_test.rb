@@ -219,6 +219,74 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_includes hospitalization.errors[:discharge_date], "must include all linked surgeries within the hospitalization period"
   end
 
+  test "rejects a shrunken discharge_date even when surgeries was cached before the surgery was linked" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.valid? # caches an empty `surgeries` association on this instance
+
+    Surgery.create!(
+      patient: patients(:one),
+      hospitalization: hospitalization,
+      surgery_date: Date.new(2026, 3, 3),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    hospitalization.discharge_date = Date.new(2026, 3, 2)
+
+    assert_not hospitalization.valid?
+    assert_includes hospitalization.errors[:discharge_date], "must include all linked surgeries within the hospitalization period"
+  end
+
+  test "reports the discharge_date message only once even with several out-of-range surgeries" do
+    hospitalization = hospitalizations(:one)
+    2.times do
+      Surgery.create!(
+        patient: patients(:one),
+        hospitalization: hospitalization,
+        surgery_date: Date.new(2026, 3, 3),
+        anesthesia_method: "General",
+        duration_hours: 1.0,
+        surgery_procedure_selections_attributes: [
+          { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        ]
+      )
+    end
+
+    hospitalization.discharge_date = Date.new(2026, 3, 2)
+
+    assert_not hospitalization.valid?
+    assert_equal 1, hospitalization.errors[:discharge_date].count { |message| message == "must include all linked surgeries within the hospitalization period" }
+  end
+
+  test "rejects reassigning the patient while a surgery is linked" do
+    hospitalization = hospitalizations(:one)
+    Surgery.create!(
+      patient: patients(:one),
+      hospitalization: hospitalization,
+      surgery_date: Date.new(2026, 3, 3),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    hospitalization.patient_id = patients(:two).id
+
+    assert_not hospitalization.valid?
+    assert_includes hospitalization.errors[:patient_id], "must match the patient of every linked surgery"
+  end
+
+  test "allows reassigning the patient when no surgeries are linked" do
+    hospitalization = hospitalizations(:three)
+    hospitalization.patient_id = patients(:two).id
+
+    assert hospitalization.valid?
+  end
+
   test "discharged? and in_hospital?" do
     assert hospitalizations(:one).discharged?
     assert_not hospitalizations(:one).in_hospital?

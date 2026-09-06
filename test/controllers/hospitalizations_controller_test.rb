@@ -121,6 +121,33 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ diagnoses(:fracture).id, diagnoses(:appendicitis).id ].sort, @hospitalization.diagnoses.ids.sort
   end
 
+  test "should reject reassigning the patient while a surgery is linked" do
+    other_patient = Patient.create!(hospital_id: "H999", name: "Unrelated Patient", date_of_birth: "1975-01-01")
+    surgery = Surgery.create!(
+      patient: patients(:one),
+      hospitalization: @hospitalization,
+      surgery_date: Date.new(2026, 3, 3),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    patch hospitalization_url(@hospitalization), params: { hospitalization: {
+      patient_id: other_patient.id,
+      admission_date: @hospitalization.admission_date,
+      planned_days: @hospitalization.planned_days,
+      reason: @hospitalization.reason
+    } }
+
+    assert_response :unprocessable_entity
+    surgery.reload
+    assert_equal patients(:one).id, surgery.patient_id
+    assert_equal @hospitalization.id, surgery.hospitalization_id
+    assert_equal patients(:one).id, @hospitalization.reload.patient_id
+  end
+
   test "should record discharge information on update" do
     hospitalization = hospitalizations(:three)
 

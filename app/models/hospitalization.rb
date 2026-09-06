@@ -41,6 +41,9 @@ class Hospitalization < ApplicationRecord
   validate :discharge_fields_require_discharge_date
   validate :no_overlapping_hospitalization_period
   validate :linked_surgeries_must_remain_within_period
+  validate :linked_surgeries_must_belong_to_same_patient
+
+  before_validation :reset_linked_surgeries_memo
 
   scope :discharged, -> { where.not(discharge_date: nil) }
   scope :in_hospital, -> { where(discharge_date: nil) }
@@ -197,15 +200,33 @@ class Hospitalization < ApplicationRecord
     def linked_surgeries_must_remain_within_period
       return if admission_date.blank?
 
-      surgeries.each do |surgery|
-        next if surgery.surgery_date.blank?
+      dates = linked_surgeries.filter_map(&:surgery_date)
+      return if dates.empty?
 
-        if surgery.surgery_date < admission_date
-          errors.add(:admission_date, "must include all linked surgeries within the hospitalization period")
-        end
-        if discharge_date.present? && surgery.surgery_date > discharge_date
-          errors.add(:discharge_date, "must include all linked surgeries within the hospitalization period")
-        end
+      if dates.any? { |date| date < admission_date }
+        errors.add(:admission_date, "must include all linked surgeries within the hospitalization period")
       end
+
+      if discharge_date.present? && dates.any? { |date| date > discharge_date }
+        errors.add(:discharge_date, "must include all linked surgeries within the hospitalization period")
+      end
+    end
+
+    def linked_surgeries_must_belong_to_same_patient
+      return if patient_id.blank?
+      return if linked_surgeries.all? { |surgery| surgery.patient_id == patient_id }
+
+      errors.add(:patient_id, "must match the patient of every linked surgery")
+    end
+
+    def reset_linked_surgeries_memo
+      @linked_surgeries = nil
+    end
+
+    # An earlier validation pass may have cached this association (a new record
+    # caches an empty list), so re-read it once per validation run and share
+    # that read between both validations above.
+    def linked_surgeries
+      @linked_surgeries ||= persisted? ? surgeries.reload.to_a : surgeries.to_a
     end
 end
