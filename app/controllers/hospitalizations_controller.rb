@@ -12,6 +12,9 @@ class HospitalizationsController < ApplicationController
   end
 
   def show
+    @surgeries = @hospitalization.surgeries
+                                 .includes(surgery_procedure_selections: :surgery_procedure)
+                                 .order(surgery_date: :asc)
   end
 
   def new

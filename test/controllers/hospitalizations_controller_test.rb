@@ -213,4 +213,66 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to hospitalizations_url
   end
+
+  test "show does not issue more queries as more surgeries are linked" do
+    patient_a = Patient.create!(hospital_id: "H901", name: "Patient A", date_of_birth: "1970-01-01")
+    patient_b = Patient.create!(hospital_id: "H902", name: "Patient B", date_of_birth: "1970-01-01")
+
+    one_surgery_hospitalization = Hospitalization.create!(
+      patient: patient_a,
+      admission_date: Date.new(2027, 5, 1),
+      discharge_date: Date.new(2027, 5, 10),
+      outcome: "recovered",
+      reason: "Observation",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+    Surgery.create!(
+      patient: patient_a,
+      hospitalization: one_surgery_hospitalization,
+      surgery_date: Date.new(2027, 5, 3),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    three_surgery_hospitalization = Hospitalization.create!(
+      patient: patient_b,
+      admission_date: Date.new(2027, 5, 1),
+      discharge_date: Date.new(2027, 5, 10),
+      outcome: "recovered",
+      reason: "Observation",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+    [ :appendectomy, :cholecystectomy, :knee_arthroscopy ].each do |procedure|
+      Surgery.create!(
+        patient: patient_b,
+        hospitalization: three_surgery_hospitalization,
+        surgery_date: Date.new(2027, 5, 3),
+        anesthesia_method: "General",
+        duration_hours: 1.0,
+        surgery_procedure_selections_attributes: [
+          { surgery_procedure_id: surgery_procedures(procedure).id, laterality: "right" }
+        ]
+      )
+    end
+
+    one_surgery_queries = count_sql_queries { get hospitalization_url(one_surgery_hospitalization) }
+    assert_response :success
+
+    three_surgery_queries = count_sql_queries { get hospitalization_url(three_surgery_hospitalization) }
+    assert_response :success
+
+    assert_equal one_surgery_queries, three_surgery_queries
+  end
+
+  private
+
+    def count_sql_queries
+      count = 0
+      callback = ->(*, payload) { count += 1 unless %w[SCHEMA TRANSACTION].include?(payload[:name]) }
+      ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { yield }
+      count
+    end
 end

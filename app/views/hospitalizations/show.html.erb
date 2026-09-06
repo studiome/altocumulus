@@ -79,9 +79,9 @@
 
       <div class="divider">Surgeries During This Hospitalization</div>
 
-      <% if @hospitalization.surgeries.any? %>
+      <% if @surgeries.any? %>
         <ul class="space-y-2 mb-4">
-          <% @hospitalization.surgeries.order(surgery_date: :asc).each do |surgery| %>
+          <% @surgeries.each do |surgery| %>
             <li class="flex items-center justify-between rounded-box border border-base-200 px-4 py-3">
               <div>
                 <span class="font-mono text-sm text-base-content/60"><%= surgery.surgery_date&.strftime("%Y-%m-%d") %></span>
