@@ -12,6 +12,12 @@ class LedgerStatisticsTest < ActiveSupport::TestCase
     assert_equal 1, stats.current_inpatients_count
   end
 
+  test "current_inpatients_count excludes hospitalizations admitted in the future" do
+    travel_to Date.new(2026, 5, 31) do
+      assert_equal 0, LedgerStatistics.new.current_inpatients_count
+    end
+  end
+
   test "surgeries_count and hospitalizations_count are scoped to the given year" do
     stats = LedgerStatistics.new(year: 2026)
     assert_equal 7, stats.surgeries_count

@@ -46,7 +46,7 @@ class Hospitalization < ApplicationRecord
   before_validation :reset_linked_surgeries_memo
 
   scope :discharged, -> { where.not(discharge_date: nil) }
-  scope :in_hospital, -> { where(discharge_date: nil) }
+  scope :in_hospital, -> { where(discharge_date: nil).where(admission_date: ..Date.current) }
   scope :admitted_between, ->(from, to) {
     scope = all
     scope = scope.where(admission_date: from..) if from.present?
@@ -100,7 +100,7 @@ class Hospitalization < ApplicationRecord
   end
 
   def in_hospital?
-    admission_date.present? && discharge_date.blank?
+    admission_date.present? && admission_date <= Date.current && discharge_date.blank?
   end
 
   def length_of_stay
@@ -116,7 +116,10 @@ class Hospitalization < ApplicationRecord
   end
 
   def status_label
-    discharged? ? "Discharged" : "In Hospital"
+    return "Discharged" if discharged?
+    return "Scheduled" if admission_date.present? && admission_date > Date.current
+
+    "In Hospital"
   end
 
   def outcome_label

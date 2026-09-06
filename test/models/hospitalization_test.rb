@@ -309,6 +309,27 @@ class HospitalizationTest < ActiveSupport::TestCase
     end
   end
 
+  test "future admission is not in hospital and is scheduled" do
+    travel_to Date.new(2026, 5, 31) do
+      hospitalization = hospitalizations(:three)
+
+      assert_not hospitalization.in_hospital?
+      assert_nil hospitalization.days_since_admission
+      assert_equal "Scheduled", hospitalization.status_label
+    end
+  end
+
+  test "in_hospital scope excludes future admissions but includes today's admission" do
+    travel_to Date.new(2026, 5, 31) do
+      assert_not_includes Hospitalization.in_hospital, hospitalizations(:three)
+    end
+
+    travel_to Date.new(2026, 6, 1) do
+      assert_includes Hospitalization.in_hospital, hospitalizations(:three)
+      assert_equal 1, hospitalizations(:three).days_since_admission
+    end
+  end
+
   test "status_label reflects discharge state" do
     assert_equal "Discharged", hospitalizations(:one).status_label
     assert_equal "In Hospital", hospitalizations(:three).status_label
