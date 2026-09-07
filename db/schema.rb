@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_07_000200) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_07_054231) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -102,10 +102,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_000200) do
   end
 
   create_table "patients", force: :cascade do |t|
+    t.text "clinical_info"
     t.datetime "created_at", null: false
     t.date "date_of_birth"
     t.string "hospital_id"
     t.string "name"
+    t.string "name_kana"
+    t.string "sex"
+    t.string "telephone"
     t.datetime "updated_at", null: false
     t.index ["hospital_id"], name: "index_patients_on_hospital_id", unique: true
   end
