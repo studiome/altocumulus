@@ -37,6 +37,7 @@ Rails.application.routes.draw do
   get "surgery_schedule" => "surgery_schedules#index", as: :surgery_schedule
   get "operations_calendar" => "operations_calendar#index", as: :operations_calendar
   get "dashboard" => "dashboard#index"
+  get "search" => "searches#index", as: :search
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

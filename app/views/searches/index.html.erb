@@ -1,0 +1,96 @@
+<% content_for :title, "Search" %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker">Cross-Search</p>
+        <h1 class="app-page-title">Search</h1>
+      </div>
+      <%= form_with url: search_path, method: :get, local: true, class: "flex items-end gap-2 flex-wrap" do |f| %>
+        <div class="app-filter-field">
+          <label class="app-filter-label">Keyword</label>
+          <%= f.text_field :keyword, value: @keyword, placeholder: "Patient name, hospital ID, reason...", class: "input input-sm w-72", autofocus: true %>
+        </div>
+        <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
+        <% if @keyword.present? %>
+          <%= link_to "Clear", search_path, class: "btn btn-ghost btn-sm" %>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+
+  <% if @keyword.blank? %>
+    <div class="app-empty-state">Enter a keyword above to search across patients, hospitalizations, and surgeries.</div>
+  <% else %>
+    <div class="space-y-6">
+      <div class="app-panel overflow-hidden">
+        <div class="app-panel-body">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="card-title">Patients</h2>
+            <%= link_to "See all in Patients", patients_path(keyword: @keyword), class: "app-inline-link text-sm" %>
+          </div>
+          <% if @patients.any? %>
+            <ul class="space-y-1 text-sm">
+              <% @patients.each do |patient| %>
+                <li class="flex items-center justify-between gap-2 border-b border-base-200 py-1 last:border-0">
+                  <%= link_to patient.name, patient, class: "app-inline-link" %>
+                  <span class="text-base-content/50 font-mono"><%= patient.hospital_id %></span>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-base-content/40 italic text-sm">No matching patients.</p>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="app-panel overflow-hidden">
+        <div class="app-panel-body">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="card-title">Hospitalizations</h2>
+            <%= link_to "See all in Hospitalizations", hospitalizations_path(keyword: @keyword), class: "app-inline-link text-sm" %>
+          </div>
+          <% if @hospitalizations.any? %>
+            <ul class="space-y-1 text-sm">
+              <% @hospitalizations.each do |hospitalization| %>
+                <li class="flex items-center justify-between gap-2 border-b border-base-200 py-1 last:border-0">
+                  <%= link_to hospitalization.reason.presence || "(no reason)", hospitalization, class: "app-inline-link truncate" %>
+                  <span class="text-base-content/50 whitespace-nowrap">
+                    <%= hospitalization.patient&.name %>
+                    &middot;
+                    <%= hospitalization.effective_admission_date&.strftime("%Y-%m-%d") || "Undated" %>
+                  </span>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-base-content/40 italic text-sm">No matching hospitalizations.</p>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="app-panel overflow-hidden">
+        <div class="app-panel-body">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="card-title">Surgeries</h2>
+            <%= link_to "See all in Surgeries", surgeries_path(keyword: @keyword), class: "app-inline-link text-sm" %>
+          </div>
+          <% if @surgeries.any? %>
+            <ul class="space-y-1 text-sm">
+              <% @surgeries.each do |surgery| %>
+                <li class="flex items-center justify-between gap-2 border-b border-base-200 py-1 last:border-0">
+                  <%= link_to surgery.patient&.name || "Patient ##{surgery.patient_id}", surgery, class: "app-inline-link truncate" %>
+                  <span class="text-base-content/50 whitespace-nowrap"><%= surgery.surgery_date_display %></span>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-base-content/40 italic text-sm">No matching surgeries.</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
