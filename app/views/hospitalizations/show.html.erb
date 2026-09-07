@@ -25,7 +25,7 @@
         <div class="flex flex-col items-end gap-2">
           <div class="badge <%= @hospitalization.in_hospital? ? "badge-warning" : "badge-outline" %> badge-lg p-4"><%= @hospitalization.status_label %></div>
           <div class="badge <%= @hospitalization.admin_status == "confirmed" ? "badge-success" : "badge-ghost" %>">
-            <%= Hospitalization::ADMIN_STATUS_OPTIONS[@hospitalization.admin_status] %>
+            <%= Hospitalization.admin_status_options[@hospitalization.admin_status] %>
           </div>
           <% if @hospitalization.deleted? %>
             <div class="badge badge-error">Deleted</div>
@@ -50,11 +50,11 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Reservation Status</span>
-          <span class="text-lg font-medium"><%= Hospitalization::RESERVATION_STATUS_OPTIONS[@hospitalization.reservation_status] %></span>
+          <span class="text-lg font-medium"><%= Hospitalization.reservation_status_options[@hospitalization.reservation_status] %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Purpose</span>
-          <span class="text-lg font-medium"><%= Hospitalization::PURPOSE_OPTIONS[@hospitalization.purpose] %></span>
+          <span class="text-lg font-medium"><%= Hospitalization.purpose_options[@hospitalization.purpose] %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Planned Length of Stay</span>

@@ -220,3 +220,100 @@ en:
               must_be_entered_or_undecided: "must be entered, or choose Undecided"
             surgery_date_status:
               not_valid: "is not valid"
+
+  # Stage 2 of the i18n rollout: display strings built by models and helpers
+  # (option-constant labels, derived status text, warning/summary messages).
+  # DB columns keep their English keys forever -- only these looked-up labels
+  # are localized. English values here must stay byte-identical to what the
+  # constants/strings used to hard-code, since existing tests assert them.
+  models:
+    hospitalization:
+      outcome_options:
+        recovered: "Recovered"
+        improved: "Improved"
+        unchanged: "Unchanged"
+        worsened: "Worsened"
+        transferred: "Transferred"
+        died: "Died"
+      discharge_destination_options:
+        home: "Home"
+        hospital: "Another Hospital"
+        facility: "Nursing Facility"
+        death: "Death"
+        other: "Other"
+      reservation_status_options:
+        requested: "Requested"
+        waiting: "Waiting for Admission"
+        date_fixed: "Admission Date Fixed"
+        surgery_date_fixed: "Surgery Date Fixed"
+        admitted: "Admitted"
+        admitted_other_dept: "Admitted (Other Dept.)"
+        on_hold: "On Hold"
+        discharged: "Discharged"
+      purpose_options:
+        surgery: "Surgery"
+        examination: "Examination / Procedure"
+        chemotherapy: "Chemotherapy"
+      admin_status_options:
+        unconfirmed: "Unconfirmed"
+        confirmed: "Confirmed"
+      status_filter_options:
+        in_hospital: "In Hospital"
+        discharged: "Discharged"
+        upcoming: "Upcoming"
+        waiting: "Waiting"
+        unconfirmed: "Unconfirmed"
+        recently_updated: "Recently Updated"
+        referred: "Referred"
+      status_label:
+        discharged: "Discharged"
+        in_hospital: "In Hospital"
+        scheduled: "Scheduled"
+      to_s:
+        date_not_set: "date not set"
+        in_hospital: "in hospital"
+    surgery:
+      scheduling_type_options:
+        elective: "Elective"
+        emergency: "Emergency"
+      surgery_date_status_options:
+        scheduled: "Date Specified"
+        undecided: "Undecided"
+      surgery_date_display_undated: "Undated"
+      to_s_date_not_set: "Date not set"
+    patient:
+      sex_options:
+        male: "Male"
+        female: "Female"
+        other: "Other"
+    lateralizable:
+      laterality_options:
+        right: "Right"
+        left: "Left"
+        bilateral: "Bilateral"
+        none: "None"
+    elective_slot_rule:
+      to_s: "%{day} - %{count} slots x %{minutes} min"
+    elective_slot_usage:
+      warnings:
+        holiday: "%{holiday_name} is a holiday: no elective slots are available."
+        not_configured: "No elective slots are configured for %{day}."
+        unscheduled:
+          one: "1 elective surgery is not assigned to an available slot."
+          other: "%{count} elective surgeries are not assigned to an available slot."
+        overrun:
+          single: "Slot %{number} is booked %{overrun} min past its %{limit} min limit."
+          same_limit: "Slots %{numbers} are booked past their %{limit} min limit."
+          item: "Slot %{number} is booked past its %{limit} min limit."
+
+  helpers:
+    hospitalizations:
+      length_of_stay:
+        days:
+          one: "%{count} day"
+          other: "%{count} days"
+        ongoing: "Day %{count} (ongoing)"
+        unknown: "-"
+    audit_events:
+      "yes": "Yes"
+      "no": "No"

@@ -77,11 +77,11 @@
                     <%= hospitalization.status_label %>
                   </span>
                 </td>
-                <td><%= Hospitalization::RESERVATION_STATUS_OPTIONS[hospitalization.reservation_status] %></td>
-                <td><%= Hospitalization::PURPOSE_OPTIONS[hospitalization.purpose] %></td>
+                <td><%= Hospitalization.reservation_status_options[hospitalization.reservation_status] %></td>
+                <td><%= Hospitalization.purpose_options[hospitalization.purpose] %></td>
                 <td>
                   <span class="badge <%= hospitalization.admin_status == "confirmed" ? "badge-success" : "badge-ghost" %>">
-                    <%= Hospitalization::ADMIN_STATUS_OPTIONS[hospitalization.admin_status] %>
+                    <%= Hospitalization.admin_status_options[hospitalization.admin_status] %>
                   </span>
                 </td>
                 <td><%= hospitalization.diagnosis_names_display %></td>

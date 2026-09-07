@@ -179,7 +179,7 @@ class OperationsCalendarTest < ActiveSupport::TestCase
 
   test "purpose_groups covers every non-default purpose without hardcoding the list" do
     calendar = OperationsCalendar.build
-    expected = Hospitalization::PURPOSE_OPTIONS.keys - [ Hospitalization.column_defaults["purpose"] ]
+    expected = Hospitalization::PURPOSE_KEYS - [ Hospitalization.column_defaults["purpose"] ]
     assert_equal expected.sort, calendar.purpose_groups.keys.sort
   end
 

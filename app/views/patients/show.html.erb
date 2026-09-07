@@ -40,7 +40,7 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Sex</span>
-          <span class="text-lg font-medium"><%= Patient::SEX_OPTIONS[@patient.sex] || "-" %></span>
+          <span class="text-lg font-medium"><%= Patient.sex_options[@patient.sex] || "-" %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Telephone</span>

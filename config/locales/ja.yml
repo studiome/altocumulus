@@ -298,3 +298,95 @@ ja:
               must_be_entered_or_undecided: "を入力するか「未定」を選択してください"
             surgery_date_status:
               not_valid: "は正しくありません"
+
+  # Stage 2 of the i18n rollout (see en.yml for the design notes). DB columns
+  # keep their English keys; only these looked-up labels are localized.
+  models:
+    hospitalization:
+      outcome_options:
+        recovered: "治癒"
+        improved: "軽快"
+        unchanged: "不変"
+        worsened: "増悪"
+        transferred: "転院"
+        died: "死亡"
+      discharge_destination_options:
+        home: "自宅"
+        hospital: "他院"
+        facility: "施設"
+        death: "死亡"
+        other: "その他"
+      reservation_status_options:
+        requested: "依頼"
+        waiting: "入院待ち"
+        date_fixed: "入院日確定"
+        surgery_date_fixed: "手術日確定"
+        admitted: "入院済み"
+        admitted_other_dept: "入院済み(他科)"
+        on_hold: "保留"
+        discharged: "退院済み"
+      purpose_options:
+        surgery: "手術"
+        examination: "検査・処置"
+        chemotherapy: "化学療法"
+      admin_status_options:
+        unconfirmed: "未確認"
+        confirmed: "確認済み"
+      status_filter_options:
+        in_hospital: "入院中"
+        discharged: "退院済み"
+        upcoming: "入院予定"
+        waiting: "入院待ち"
+        unconfirmed: "未確認"
+        recently_updated: "最近更新"
+        referred: "紹介あり"
+      status_label:
+        discharged: "退院済み"
+        in_hospital: "入院中"
+        scheduled: "入院予定"
+      to_s:
+        date_not_set: "日付未定"
+        in_hospital: "入院中"
+    surgery:
+      scheduling_type_options:
+        elective: "予定"
+        emergency: "緊急"
+      surgery_date_status_options:
+        scheduled: "日付指定"
+        undecided: "未定"
+      surgery_date_display_undated: "未定"
+      to_s_date_not_set: "日付未定"
+    patient:
+      sex_options:
+        male: "男性"
+        female: "女性"
+        other: "その他"
+    lateralizable:
+      laterality_options:
+        right: "右"
+        left: "左"
+        bilateral: "両側"
+        none: "なし"
+    elective_slot_rule:
+      to_s: "%{day} - %{count}枠 x %{minutes}分"
+    elective_slot_usage:
+      warnings:
+        holiday: "%{holiday_name}は休日のため、利用できる手術枠がありません。"
+        not_configured: "%{day}には手術枠が設定されていません。"
+        unscheduled:
+          other: "%{count}件の予定手術が利用可能な枠に割り当てられていません。"
+        overrun:
+          single: "第%{number}枠は上限%{limit}分を%{overrun}分超過しています。"
+          same_limit: "枠%{numbers}は上限%{limit}分を超過しています。"
+          item: "第%{number}枠は上限%{limit}分を超過しています。"
+
+  helpers:
+    hospitalizations:
+      length_of_stay:
+        days:
+          other: "%{count}日"
+        ongoing: "入院%{count}日目(継続中)"
+        unknown: "-"
+    audit_events:
+      "yes": "はい"
+      "no": "いいえ"

@@ -60,7 +60,7 @@
       <%= render "summary_list", title: "Referred", records: @calendar.referred %>
 
       <% @calendar.purpose_groups.each do |purpose, records| %>
-        <%= render "summary_list", title: Hospitalization::PURPOSE_OPTIONS[purpose], records: records %>
+        <%= render "summary_list", title: Hospitalization.purpose_options[purpose], records: records %>
       <% end %>
 
       <div class="app-panel">

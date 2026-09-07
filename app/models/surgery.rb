@@ -1,8 +1,11 @@
 class Surgery < ApplicationRecord
   include Auditable
 
-  SCHEDULING_TYPE_OPTIONS = { "elective" => "Elective", "emergency" => "Emergency" }.freeze
-  SURGERY_DATE_STATUS_OPTIONS = { "scheduled" => "Date Specified", "undecided" => "Undecided" }.freeze
+  # Only the valid DB keys live here -- labels come from
+  # config/locales/*.yml (models.surgery.*_options), see Hospitalization for
+  # the same pattern.
+  SCHEDULING_TYPE_KEYS = %w[elective emergency].freeze
+  SURGERY_DATE_STATUS_KEYS = %w[scheduled undecided].freeze
 
   belongs_to :patient
   belongs_to :hospitalization, optional: true
@@ -17,7 +20,7 @@ class Surgery < ApplicationRecord
 
   validates :anesthesia_method, presence: true
   validates :duration_hours, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :scheduling_type, presence: true, inclusion: { in: SCHEDULING_TYPE_OPTIONS.keys }
+  validates :scheduling_type, presence: true, inclusion: { in: SCHEDULING_TYPE_KEYS }
   validate :patient_diagnoses_must_belong_to_patient
   validate :must_have_at_least_one_procedure_selection
   validate :no_more_than_five_procedure_selections
@@ -48,12 +51,20 @@ class Surgery < ApplicationRecord
   # to the very end regardless of the direction of the date sort that follows.
   scope :ordered_by_surgery_date, -> { order(Arel.sql("surgery_date IS NULL"), surgery_date: :desc, created_at: :desc) }
 
+  def self.scheduling_type_options
+    SCHEDULING_TYPE_KEYS.index_with { |key| I18n.t("models.surgery.scheduling_type_options.#{key}") }
+  end
+
+  def self.surgery_date_status_options
+    SURGERY_DATE_STATUS_KEYS.index_with { |key| I18n.t("models.surgery.surgery_date_status_options.#{key}") }
+  end
+
   def self.scheduling_type_form_options
-    SCHEDULING_TYPE_OPTIONS.map { |k, v| [ v, k ] }
+    scheduling_type_options.map { |k, v| [ v, k ] }
   end
 
   def self.surgery_date_status_form_options
-    SURGERY_DATE_STATUS_OPTIONS.map { |k, v| [ v, k ] }
+    surgery_date_status_options.map { |k, v| [ v, k ] }
   end
 
   def self.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil, scheduling_type: nil, undated: nil)
@@ -119,7 +130,7 @@ class Surgery < ApplicationRecord
   end
 
   def scheduling_type_label
-    SCHEDULING_TYPE_OPTIONS[scheduling_type] || scheduling_type
+    self.class.scheduling_type_options[scheduling_type] || scheduling_type
   end
 
   def start_time_display
@@ -127,7 +138,7 @@ class Surgery < ApplicationRecord
   end
 
   def surgery_date_display
-    surgery_date&.strftime("%Y-%m-%d") || "Undated"
+    surgery_date&.strftime("%Y-%m-%d") || I18n.t("models.surgery.surgery_date_display_undated")
   end
 
   # Lets a form explicitly choose between a scheduled surgery_date and
@@ -147,7 +158,7 @@ class Surgery < ApplicationRecord
   end
 
   def to_s
-    "#{surgery_date || 'Date not set'} - #{patient}"
+    "#{surgery_date || I18n.t('models.surgery.to_s_date_not_set')} - #{patient}"
   end
 
   def duration_minutes
@@ -210,7 +221,7 @@ class Surgery < ApplicationRecord
   def valid_surgery_date_status
     return unless surgery_date_status_specified?
 
-    unless SURGERY_DATE_STATUS_OPTIONS.key?(@surgery_date_status)
+    unless SURGERY_DATE_STATUS_KEYS.include?(@surgery_date_status)
       errors.add(:surgery_date_status, :not_valid)
       return
     end

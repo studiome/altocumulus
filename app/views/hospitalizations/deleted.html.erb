@@ -32,8 +32,8 @@
           <% if @hospitalizations.any? %>
             <% @hospitalizations.each do |hospitalization| %>
               <tr class="row-hover">
-                <td><%= Hospitalization::RESERVATION_STATUS_OPTIONS[hospitalization.reservation_status] %></td>
-                <td><%= Hospitalization::PURPOSE_OPTIONS[hospitalization.purpose] %></td>
+                <td><%= Hospitalization.reservation_status_options[hospitalization.reservation_status] %></td>
+                <td><%= Hospitalization.purpose_options[hospitalization.purpose] %></td>
                 <td><%= hospitalization.diagnosis_names_display %></td>
                 <td class="font-mono"><%= hospitalization.effective_admission_date&.strftime("%Y-%m-%d") || "-" %></td>
                 <td><%= hospitalization.reason %></td>

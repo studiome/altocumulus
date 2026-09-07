@@ -18,7 +18,7 @@ class SurgeryProcedureSelection < ApplicationRecord
     return nil if name.blank?
     return name if laterality == "none"
 
-    prefix = Lateralizable::LATERALITY_OPTIONS[laterality] || ""
+    prefix = Lateralizable.laterality_options[laterality] || ""
     prefix.present? ? "#{prefix} #{name}" : name
   end
 end

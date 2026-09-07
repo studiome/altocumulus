@@ -92,8 +92,8 @@ class HospitalizationTest < ActiveSupport::TestCase
   end
 
   test "reservation_status_form_options and purpose_form_options mirror the option constants" do
-    assert_equal Hospitalization::RESERVATION_STATUS_OPTIONS.map { |k, v| [ v, k ] }, Hospitalization.reservation_status_form_options
-    assert_equal Hospitalization::PURPOSE_OPTIONS.map { |k, v| [ v, k ] }, Hospitalization.purpose_form_options
+    assert_equal Hospitalization.reservation_status_options.map { |k, v| [ v, k ] }, Hospitalization.reservation_status_form_options
+    assert_equal Hospitalization.purpose_options.map { |k, v| [ v, k ] }, Hospitalization.purpose_form_options
   end
 
   test "admin_status defaults to unconfirmed" do
@@ -110,7 +110,7 @@ class HospitalizationTest < ActiveSupport::TestCase
   end
 
   test "admin_status_form_options mirrors the option constant" do
-    assert_equal Hospitalization::ADMIN_STATUS_OPTIONS.map { |k, v| [ v, k ] }, Hospitalization.admin_status_form_options
+    assert_equal Hospitalization.admin_status_options.map { |k, v| [ v, k ] }, Hospitalization.admin_status_form_options
   end
 
   test "saving as a non-admin user resets admin_status to unconfirmed" do

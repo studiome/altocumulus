@@ -70,7 +70,7 @@
   <div class="app-field">
     <span class="app-field-label">Surgery Date</span>
     <div class="flex gap-6 pt-1">
-      <% Surgery::SURGERY_DATE_STATUS_OPTIONS.each do |value, label| %>
+      <% Surgery.surgery_date_status_options.each do |value, label| %>
         <label class="flex items-center gap-2 cursor-pointer">
           <%= form.radio_button :surgery_date_status, value, checked: surgery.surgery_date_status == value, class: "radio radio-primary" %>
           <%= label %>
