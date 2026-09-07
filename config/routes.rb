@@ -35,6 +35,7 @@ Rails.application.routes.draw do
   resources :holidays
   resources :audit_events, only: %i[ index show ]
   get "surgery_schedule" => "surgery_schedules#index", as: :surgery_schedule
+  get "operations_calendar" => "operations_calendar#index", as: :operations_calendar
   get "dashboard" => "dashboard#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
@@ -47,5 +48,5 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   # Defines the root path route ("/")
-  root "patients#index"
+  root "operations_calendar#index"
 end

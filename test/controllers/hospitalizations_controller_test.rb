@@ -129,6 +129,12 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "new pre-fills the scheduled admission date from a query param" do
+    get new_hospitalization_url, params: { scheduled_admission_date: "2027-02-01" }
+    assert_response :success
+    assert_select "input#hospitalization_scheduled_admission_date[value='2027-02-01']"
+  end
+
   test "new renders the diagnosis modal frame and turbo-frame New Diagnosis links" do
     get new_hospitalization_url
     assert_response :success

@@ -28,7 +28,9 @@ class HospitalizationsController < ApplicationController
   end
 
   def new
-    @hospitalization = Hospitalization.new(patient_id: params[:patient_id])
+    @hospitalization = Hospitalization.new(
+      patient_id: params[:patient_id], scheduled_admission_date: params[:scheduled_admission_date]
+    )
     build_hospitalization_diagnoses
   end
 

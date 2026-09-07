@@ -33,5 +33,10 @@ module Altocumulus
     # invalidated. Overridable per-environment via ENV so ops can tighten or
     # relax this without a code change.
     config.x.session_idle_timeout = (ENV["SESSION_IDLE_TIMEOUT_MINUTES"].presence || 10).to_i.minutes
+
+    # The operations calendar flags a day whose admission count exceeds this
+    # as a "congestion" warning. Display-only: it never blocks a save (see
+    # OperationsCalendar). Overridable per-environment via ENV.
+    config.x.admission_warning_threshold = (ENV["ADMISSION_WARNING_THRESHOLD"].presence || 5).to_i
   end
 end

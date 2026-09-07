@@ -16,9 +16,4 @@ class DashboardControllerTest < ActionDispatch::IntegrationTest
     get dashboard_url, params: { year: [ 2026 ] }
     assert_response :success
   end
-
-  test "root still routes to patients#index" do
-    get root_url
-    assert_response :success
-  end
 end

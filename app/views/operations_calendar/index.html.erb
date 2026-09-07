@@ -1,0 +1,102 @@
+<% content_for :title, "Operations Calendar" %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker">Operations</p>
+        <h1 class="app-page-title">Operations Calendar</h1>
+        <p class="text-base-content/60 mt-1">
+          <%= @calendar.dates.first.strftime("%B %d, %Y") %> &ndash; <%= @calendar.dates.last.strftime("%B %d, %Y") %>
+          (<%= @calendar.days %> days)
+        </p>
+      </div>
+      <%= form_with url: operations_calendar_path, method: :get, local: true, class: "flex items-end gap-2 flex-wrap" do |f| %>
+        <div class="app-filter-field">
+          <label class="app-filter-label">Start</label>
+          <%= f.date_field :start, value: @calendar.start_date, class: "input input-sm" %>
+        </div>
+        <div class="app-filter-field">
+          <label class="app-filter-label">Days</label>
+          <%= f.number_field :days, value: @calendar.days, min: 1, max: OperationsCalendar::MAX_DAYS, class: "input input-sm w-24" %>
+        </div>
+        <%= f.submit "Apply", class: "btn btn-primary btn-sm" %>
+        <%= link_to "Today", operations_calendar_path, class: "btn btn-ghost btn-sm" %>
+      <% end %>
+    </div>
+  </section>
+
+  <% if @calendar.announcements.any? %>
+    <div class="space-y-2">
+      <% @calendar.announcements.each do |announcement| %>
+        <div role="alert" class="alert alert-info items-start">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <div>
+            <h3 class="font-bold"><%= announcement.title %></h3>
+            <p class="text-sm"><%= announcement.body %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div class="lg:col-span-2 space-y-4">
+      <% @calendar.dates.each do |date| %>
+        <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar %>
+      <% end %>
+    </div>
+
+    <div class="space-y-4">
+      <%= render "summary_list", title: "Waiting", records: @calendar.waiting %>
+      <%= render "summary_list", title: "Upcoming", records: @calendar.upcoming %>
+      <%= render "summary_list", title: "Unconfirmed", records: @calendar.unconfirmed %>
+      <%= render "summary_list", title: "Recently Updated", records: @calendar.recently_updated %>
+      <%= render "summary_list", title: "Referred", records: @calendar.referred %>
+
+      <% @calendar.purpose_groups.each do |purpose, records| %>
+        <%= render "summary_list", title: Hospitalization::PURPOSE_OPTIONS[purpose], records: records %>
+      <% end %>
+
+      <div class="app-panel">
+        <div class="app-panel-body space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold">Undated Surgeries</h3>
+            <span class="badge badge-neutral"><%= @calendar.undated_surgeries.size %></span>
+          </div>
+          <% if @calendar.undated_surgeries.any? %>
+            <ul class="space-y-1 text-sm">
+              <% @calendar.undated_surgeries.each do |surgery| %>
+                <li><%= link_to surgery.patient&.name || "Patient ##{surgery.patient_id}", surgery, class: "app-inline-link" %></li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-base-content/40 italic text-sm">None</p>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="app-panel">
+        <div class="app-panel-body space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold">Outside Regular Surgery Days</h3>
+            <span class="badge badge-neutral"><%= @calendar.outside_regular_day_surgeries.size %></span>
+          </div>
+          <% if @calendar.outside_regular_day_surgeries.any? %>
+            <ul class="space-y-1 text-sm">
+              <% @calendar.outside_regular_day_surgeries.each do |date, surgery| %>
+                <li class="flex items-center justify-between gap-2">
+                  <%= link_to surgery.patient&.name || "Patient ##{surgery.patient_id}", surgery, class: "app-inline-link truncate" %>
+                  <span class="text-base-content/50 whitespace-nowrap"><%= date.strftime("%Y-%m-%d") %></span>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-base-content/40 italic text-sm">None</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
