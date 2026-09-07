@@ -3,7 +3,7 @@
     <div role="alert" class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       <div>
-        <h3 class="font-bold"><%= pluralize(hospitalization.errors.count, "error") %> prohibited this hospitalization from being saved:</h3>
+        <h3 class="font-bold"><%= t(".errors_heading", count: hospitalization.errors.count) %></h3>
         <ul class="list-disc ml-6">
           <% hospitalization.errors.each do |error| %>
             <li><%= error.full_message %></li>
@@ -17,8 +17,8 @@
     <div role="alert" class="alert alert-warning">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
       <div class="flex items-center justify-between w-full gap-4">
-        <span>No patients found. Create a patient first to register a hospitalization.</span>
-        <%= link_to "New Patient", new_patient_path, class: "btn btn-sm btn-outline" %>
+        <span><%= t(".no_patients_warning") %></span>
+        <%= link_to t(".new_patient_link"), new_patient_path, class: "btn btn-sm btn-outline" %>
       </div>
     </div>
   <% end %>
@@ -27,54 +27,54 @@
     <div role="alert" class="alert alert-warning">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
       <div class="flex items-center justify-between w-full gap-4">
-        <span>No diagnosis names found. Create a diagnosis master first.</span>
-        <%= link_to "New Diagnosis", new_diagnosis_path, class: "btn btn-sm btn-outline", data: { turbo_frame: "diagnosis_modal_frame" } %>
+        <span><%= t(".no_diagnoses_warning") %></span>
+        <%= link_to t(".new_diagnosis_link"), new_diagnosis_path, class: "btn btn-sm btn-outline", data: { turbo_frame: "diagnosis_modal_frame" } %>
       </div>
     </div>
   <% end %>
 
   <section class="space-y-4">
-    <h2 class="text-lg font-bold text-primary">Patient & Schedule</h2>
+    <h2 class="text-lg font-bold text-primary"><%= t(".patient_schedule_heading") %></h2>
 
     <div class="app-field">
-      <%= form.label :patient_id, "Patient", class: "app-field-label" %>
-      <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: "Select a patient" }, class: "select w-full focus:select-primary" %>
+      <%= form.label :patient_id, Hospitalization.human_attribute_name(:patient_id), class: "app-field-label" %>
+      <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: t(".select_patient_prompt") }, class: "select w-full focus:select-primary" %>
     </div>
 
     <div class="app-field">
-      <%= form.label :reservation_status, "Reservation Status", class: "app-field-label" %>
+      <%= form.label :reservation_status, t("hospitalizations.labels.reservation_status"), class: "app-field-label" %>
       <%= form.select :reservation_status, Hospitalization.reservation_status_form_options, {}, class: "select w-full focus:select-primary" %>
     </div>
 
     <div class="app-field">
-      <%= form.label :purpose, "Purpose", class: "app-field-label" %>
+      <%= form.label :purpose, Hospitalization.human_attribute_name(:purpose), class: "app-field-label" %>
       <%= form.select :purpose, Hospitalization.purpose_form_options, {}, class: "select w-full focus:select-primary" %>
     </div>
 
     <div class="app-field">
-      <%= form.label :scheduled_admission_date, "Scheduled Admission Date", class: "app-field-label" %>
+      <%= form.label :scheduled_admission_date, t("hospitalizations.labels.scheduled_admission_date"), class: "app-field-label" %>
       <%= form.date_field :scheduled_admission_date, class: "input w-full focus:input-primary" %>
-      <p class="app-helper">Set this while the admission is still a reservation. Leave undecided if unknown.</p>
+      <p class="app-helper"><%= t(".scheduled_admission_date_helper") %></p>
     </div>
 
     <div class="app-field">
-      <%= form.label :admission_date, "Admission Date (Actual)", class: "app-field-label" %>
+      <%= form.label :admission_date, t("hospitalizations.labels.admission_date_actual"), class: "app-field-label" %>
       <%= form.date_field :admission_date, class: "input w-full focus:input-primary" %>
-      <p class="app-helper">Either this or the scheduled admission date above must be set.</p>
+      <p class="app-helper"><%= t(".admission_date_helper") %></p>
     </div>
 
     <div class="app-field">
-      <%= form.label :discharge_date, "Discharge Date", class: "app-field-label" %>
+      <%= form.label :discharge_date, t("hospitalizations.labels.discharge_date"), class: "app-field-label" %>
       <%= form.date_field :discharge_date, class: "input w-full focus:input-primary" %>
     </div>
 
     <div class="app-field">
-      <%= form.label :planned_days, "Planned Length of Stay (Days)", class: "app-field-label" %>
-      <%= form.number_field :planned_days, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 5" %>
+      <%= form.label :planned_days, t(".planned_days_label"), class: "app-field-label" %>
+      <%= form.number_field :planned_days, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: t(".planned_days_placeholder") %>
     </div>
 
     <div class="app-field">
-      <%= form.label :submitted_on, "Submitted On", class: "app-field-label" %>
+      <%= form.label :submitted_on, t("hospitalizations.labels.submitted_on"), class: "app-field-label" %>
       <%= form.date_field :submitted_on, class: "input w-full focus:input-primary" %>
     </div>
   </section>
@@ -82,15 +82,15 @@
   <div class="divider"></div>
 
   <section class="space-y-4">
-    <h2 class="text-lg font-bold text-primary">Admission & Surgery Details</h2>
+    <h2 class="text-lg font-bold text-primary"><%= t(".admission_surgery_heading") %></h2>
 
     <div class="space-y-4" data-controller="hospitalization-diagnosis-fields" data-hospitalization-diagnosis-fields-max-items-value="10" data-action="diagnosis:created@window->hospitalization-diagnosis-fields#addDiagnosisOption">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <span class="app-field-label">Diagnoses at Admission</span>
-          <p class="app-helper">Add one or more diagnosis names for this hospitalization.</p>
+          <span class="app-field-label"><%= t("hospitalizations.labels.diagnoses_at_admission") %></span>
+          <p class="app-helper"><%= t(".diagnoses_helper") %></p>
         </div>
-        <%= link_to "New Diagnosis", new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_modal_frame" } %>
+        <%= link_to t(".new_diagnosis_link"), new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_modal_frame" } %>
       </div>
 
       <div class="space-y-3" data-hospitalization-diagnosis-fields-target="list">
@@ -106,48 +106,48 @@
       </template>
 
       <div class="flex items-center justify-between gap-3">
-        <span class="app-helper">If the right diagnosis is not listed, create a new one first.</span>
-        <button type="button" class="btn btn-outline btn-sm" data-hospitalization-diagnosis-fields-target="addButton" data-action="hospitalization-diagnosis-fields#add">Add Diagnosis</button>
+        <span class="app-helper"><%= t(".diagnosis_row_helper") %></span>
+        <button type="button" class="btn btn-outline btn-sm" data-hospitalization-diagnosis-fields-target="addButton" data-action="hospitalization-diagnosis-fields#add"><%= t(".add_diagnosis_button") %></button>
       </div>
     </div>
 
     <div class="app-field">
-      <%= form.label :reservation_doctor, "Reservation Doctor", class: "app-field-label" %>
+      <%= form.label :reservation_doctor, t("hospitalizations.labels.reservation_doctor"), class: "app-field-label" %>
       <%= form.text_field :reservation_doctor, class: "input w-full focus:input-primary" %>
     </div>
 
     <div class="app-field">
-      <%= form.label :attending_doctor, "Attending Doctor", class: "app-field-label" %>
+      <%= form.label :attending_doctor, t("hospitalizations.labels.attending_doctor"), class: "app-field-label" %>
       <%= form.text_field :attending_doctor, class: "input w-full focus:input-primary" %>
     </div>
 
     <div class="app-field">
-      <%= form.label :ward, "Ward", class: "app-field-label" %>
+      <%= form.label :ward, Hospitalization.human_attribute_name(:ward), class: "app-field-label" %>
       <%= form.text_field :ward, class: "input w-full focus:input-primary" %>
     </div>
 
     <div class="app-field">
-      <%= form.label :room_preference, "Preferred Room", class: "app-field-label" %>
-      <%= form.text_field :room_preference, class: "input w-full focus:input-primary", placeholder: "e.g. Private room" %>
+      <%= form.label :room_preference, t("hospitalizations.labels.preferred_room"), class: "app-field-label" %>
+      <%= form.text_field :room_preference, class: "input w-full focus:input-primary", placeholder: t(".room_preference_placeholder") %>
     </div>
 
     <div class="app-field">
-      <%= form.label :referred_from, "Referred From", class: "app-field-label" %>
+      <%= form.label :referred_from, t("hospitalizations.labels.referred_from"), class: "app-field-label" %>
       <%= form.text_field :referred_from, class: "input w-full focus:input-primary" %>
     </div>
 
     <div class="app-field">
-      <%= form.label :adl, "ADL", class: "app-field-label" %>
+      <%= form.label :adl, t("hospitalizations.labels.adl"), class: "app-field-label" %>
       <%= form.text_field :adl, class: "input w-full focus:input-primary" %>
     </div>
 
     <div class="app-field">
-      <%= form.label :outcome, "Outcome", class: "app-field-label" %>
+      <%= form.label :outcome, Hospitalization.human_attribute_name(:outcome), class: "app-field-label" %>
       <%= form.select :outcome, Hospitalization.outcome_form_options, { include_blank: true }, class: "select w-full focus:select-primary" %>
     </div>
 
     <div class="app-field">
-      <%= form.label :discharge_destination, "Discharge Destination", class: "app-field-label" %>
+      <%= form.label :discharge_destination, t("hospitalizations.labels.discharge_destination"), class: "app-field-label" %>
       <%= form.select :discharge_destination, Hospitalization.discharge_destination_form_options, { include_blank: true }, class: "select w-full focus:select-primary" %>
     </div>
   </section>
@@ -155,15 +155,15 @@
   <div class="divider"></div>
 
   <section class="space-y-4">
-    <h2 class="text-lg font-bold text-primary">Comments</h2>
+    <h2 class="text-lg font-bold text-primary"><%= t(".comments_heading") %></h2>
 
     <div class="app-field">
-      <%= form.label :reason, "Reason for Admission", class: "app-field-label" %>
+      <%= form.label :reason, t("hospitalizations.labels.reason_for_admission"), class: "app-field-label" %>
       <%= form.text_area :reason, class: "textarea w-full focus:textarea-primary", rows: 3 %>
     </div>
 
     <div class="app-field">
-      <%= form.label :clinical_comment, "Clinical Comment", class: "app-field-label" %>
+      <%= form.label :clinical_comment, t("hospitalizations.labels.clinical_comment"), class: "app-field-label" %>
       <%= form.text_area :clinical_comment, class: "textarea w-full focus:textarea-primary", rows: 3 %>
     </div>
   </section>

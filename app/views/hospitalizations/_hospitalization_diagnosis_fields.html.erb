@@ -5,11 +5,11 @@
   <% end %>
 
   <div class="app-field">
-    <%= diagnosis_fields.label :diagnosis_id, "Diagnosis", class: "app-field-label" %>
-    <%= diagnosis_fields.collection_select :diagnosis_id, diagnosis_options, :id, :name, { prompt: "Select a diagnosis" }, class: "select w-full focus:select-primary hospitalization-diagnosis-select" %>
+    <%= diagnosis_fields.label :diagnosis_id, HospitalizationDiagnosis.human_attribute_name(:diagnosis_id), class: "app-field-label" %>
+    <%= diagnosis_fields.collection_select :diagnosis_id, diagnosis_options, :id, :name, { prompt: t(".select_diagnosis_prompt") }, class: "select w-full focus:select-primary hospitalization-diagnosis-select" %>
   </div>
 
   <div class="flex justify-end">
-    <button type="button" class="btn btn-ghost btn-sm" data-action="hospitalization-diagnosis-fields#remove">Remove</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-action="hospitalization-diagnosis-fields#remove"><%= t(".remove_button") %></button>
   </div>
 </div>

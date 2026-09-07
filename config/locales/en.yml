@@ -99,6 +99,12 @@ en:
       default: "%a, %d %b %Y %H:%M:%S %z"
       short: "%d %b %H:%M"
       long: "%B %d, %Y %H:%M"
+      # Stage 3 group 3a (Hospitalizations) additions: a full timestamp (used
+      # for the show page's own update-history rows) and a shorter one with
+      # no seconds (used for the deleted list's "Deleted At" column) -- both
+      # replace a raw `strftime` call that used to hard-code this pattern.
+      timestamp: "%Y-%m-%d %H:%M:%S"
+      short_timestamp: "%Y-%m-%d %H:%M"
     am: "am"
     pm: "pm"
 
@@ -621,3 +627,148 @@ en:
       patient_name: "Patient Name"
       patient_id: "Patient ID"
       diagnosed_on: "Diagnosed On"
+
+  # Stage 3 group 3a (Hospitalizations). Follows the conventions established
+  # by groups 1/2 above. This is the app's most complex screen group (a
+  # 3-section form, a nested diagnosis-row sub-form, an inline update-history
+  # table, and a deleted list), so a few extra notes:
+  #
+  #   - `labels:` here holds every attribute-derived label whose text is
+  #     reused across more than one action (index/show/deleted/form) but
+  #     does not match `Hospitalization.human_attribute_name` verbatim (e.g.
+  #     "Reservation Status" vs the default humanize "Reservation status").
+  #     Where a label's text is reused but IS an exact match to
+  #     human_attribute_name (Purpose, Ward, Outcome, Reason, Patient), the
+  #     view calls `Hospitalization.human_attribute_name` directly instead of
+  #     adding a redundant key here -- same rule groups 1/2 used.
+  #   - A label used in only one action (e.g. show's own "Planned Length of
+  #     Stay", the form's "Planned Length of Stay (Days)", index's plain
+  #     "Planned Days" column) is intentionally 3 separate keys, one per
+  #     action's own scope, rather than a shared `labels:` key -- the English
+  #     text genuinely differs between the three screens.
+  #   - `hospitalization_diagnosis_fields:` covers the nested diagnosis-row
+  #     partial (`_hospitalization_diagnosis_fields.html.erb`), which is
+  #     rendered twice from `_form.html.erb` (the persisted-rows loop and the
+  #     `<template>` used to clone new rows) but keeps its own scope the same
+  #     way `_form.html.erb` keeps `form:` -- Rails' lazy lookup keys off the
+  #     partial's own virtual path.
+  #   - The show page's own inline change-history table ("Field"/"Before"/
+  #     "After" headers, "Update History" divider) is a separate, pre-existing
+  #     copy of markup that also appears in `audit_events/show.html.erb`
+  #     (a different group's file) -- kept as hospitalizations-show-scoped
+  #     keys rather than shared ones, since this group cannot touch that
+  #     other file. `AuditEventsHelper` itself (the label/before/after *cell
+  #     values*, as opposed to these column headers) was already localized in
+  #     stage 2 and is reused as-is.
+  #   - New `time.formats` keys (`timestamp`, `short_timestamp`) replace two
+  #     raw `strftime` patterns this group's views used to hard-code.
+  hospitalizations:
+    index:
+      title: "Hospitalizations"
+      deleted_link: "Deleted"
+      new_button: "New Hospitalization"
+      keyword_label: "Keyword"
+      keyword_placeholder: "Patient or reason"
+      diagnosis_label: "Diagnosis"
+      status_filter_label: "Status"
+      admitted_from_label: "Admitted From"
+      admitted_to_label: "Admitted To"
+      all_option: "All"
+      admin_status_header: "Admin Status"
+      planned_days_header: "Planned Days"
+      patient_name_header: "Patient Name"
+      scheduled_suffix: "(scheduled)"
+      empty_no_filter: "No hospitalizations found. Click \"New Hospitalization\" to get started."
+      empty_filtered: "No hospitalizations match your search."
+    show:
+      title: "Hospitalization Details"
+      admission_date_prefix: "Admission Date"
+      deleted_badge: "Deleted"
+      planned_length_of_stay_label: "Planned Length of Stay"
+      surgeries_divider: "Surgeries During This Hospitalization"
+      no_surgeries: "No surgeries are linked to this hospitalization."
+      update_history_divider: "Update History"
+      no_update_history: "No update history recorded for this hospitalization."
+      field_header: "Field"
+      before_header: "Before"
+      after_header: "After"
+      audit_event_details_link: "Details"
+      view_full_audit_log_link: "View Full Audit Log"
+      admin_actions_divider: "Admin Actions"
+      confirm_button: "Confirm"
+      view_deleted_link: "View Deleted Hospitalizations"
+      copy_date_label: "Copy to New Scheduled Admission Date"
+      copy_submit: "Copy (Rebook)"
+      edit_button: "Edit Hospitalization"
+      delete_button: "Delete Hospitalization"
+    new:
+      title: "New Hospitalization"
+    edit:
+      title: "Edit Hospitalization"
+    deleted:
+      title: "Deleted Hospitalizations"
+      back_link: "Back to Hospitalizations"
+      deleted_at_header: "Deleted At"
+      empty: "No deleted hospitalizations."
+    create:
+      success_notice: "Hospitalization was successfully created."
+    update:
+      success_notice: "Hospitalization was successfully updated."
+    destroy:
+      success_notice: "Hospitalization was successfully deleted."
+    confirm:
+      success_notice: "Hospitalization was confirmed."
+    restore:
+      success_notice: "Hospitalization was restored."
+    copy:
+      success_notice: "Hospitalization was copied. Fill in the remaining details."
+      failure_alert: "Could not copy: %{errors}"
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this hospitalization from being saved:"
+        other: "%{count} errors prohibited this hospitalization from being saved:"
+      no_patients_warning: "No patients found. Create a patient first to register a hospitalization."
+      new_patient_link: "New Patient"
+      no_diagnoses_warning: "No diagnosis names found. Create a diagnosis master first."
+      new_diagnosis_link: "New Diagnosis"
+      patient_schedule_heading: "Patient & Schedule"
+      select_patient_prompt: "Select a patient"
+      scheduled_admission_date_helper: "Set this while the admission is still a reservation. Leave undecided if unknown."
+      admission_date_helper: "Either this or the scheduled admission date above must be set."
+      planned_days_label: "Planned Length of Stay (Days)"
+      planned_days_placeholder: "e.g. 5"
+      admission_surgery_heading: "Admission & Surgery Details"
+      diagnoses_helper: "Add one or more diagnosis names for this hospitalization."
+      diagnosis_row_helper: "If the right diagnosis is not listed, create a new one first."
+      add_diagnosis_button: "Add Diagnosis"
+      room_preference_placeholder: "e.g. Private room"
+      comments_heading: "Comments"
+    hospitalization_diagnosis_fields:
+      select_diagnosis_prompt: "Select a diagnosis"
+      remove_button: "Remove"
+    # Shared across more than one action within this resource (see design
+    # note above).
+    labels:
+      kicker: "Admissions"
+      diagnoses_header: "Diagnoses"
+      admission_date_header: "Admission Date"
+      discharge_date: "Discharge Date"
+      length_of_stay: "Length of Stay"
+      preferred_room: "Preferred Room"
+      patient_id: "Patient ID"
+      reservation_status: "Reservation Status"
+      scheduled_admission_date: "Scheduled Admission Date"
+      admission_date_actual: "Admission Date (Actual)"
+      reason_for_admission: "Reason for Admission"
+      referred_from: "Referred From"
+      adl: "ADL"
+      reservation_doctor: "Reservation Doctor"
+      attending_doctor: "Attending Doctor"
+      submitted_on: "Submitted On"
+      clinical_comment: "Clinical Comment"
+      discharge_destination: "Discharge Destination"
+      diagnoses_at_admission: "Diagnoses at Admission"
+      unknown_patient_name: "Patient #%{id}"
+      unknown_patient: "Unknown"
+      restore: "Restore"
+      planned_days_value: "%{count} days"

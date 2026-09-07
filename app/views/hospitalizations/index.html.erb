@@ -1,20 +1,20 @@
-<% content_for :title, "Hospitalizations" %>
+<% content_for :title, t(".title") %>
 
 <div class="app-page">
 
   <section class="app-page-header">
     <div class="app-page-header-body">
       <div>
-        <p class="app-page-kicker">Admissions</p>
-        <h1 class="app-page-title">Hospitalizations</h1>
+        <p class="app-page-kicker"><%= t("hospitalizations.labels.kicker") %></p>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
       <div class="flex items-center gap-2">
         <% if admin? %>
-          <%= link_to "Deleted", deleted_hospitalizations_path, class: "btn btn-ghost" %>
+          <%= link_to t(".deleted_link"), deleted_hospitalizations_path, class: "btn btn-ghost" %>
         <% end %>
         <%= link_to new_hospitalization_path, class: "btn btn-primary" do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-          New Hospitalization
+          <%= t(".new_button") %>
         <% end %>
       </div>
     </div>
@@ -22,28 +22,28 @@
 
   <%= form_with url: hospitalizations_path, method: :get, local: true, class: "app-filter-bar" do |f| %>
     <div class="app-filter-field">
-      <label class="app-filter-label">Keyword</label>
-      <%= f.text_field :keyword, value: params[:keyword], placeholder: "Patient or reason", class: "input input-sm" %>
+      <label class="app-filter-label"><%= t(".keyword_label") %></label>
+      <%= f.text_field :keyword, value: params[:keyword], placeholder: t(".keyword_placeholder"), class: "input input-sm" %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Diagnosis</label>
-      <%= f.select :diagnosis_id, @diagnoses.map { |d| [ d.name, d.id ] }, { include_blank: "All", selected: params[:diagnosis_id] }, { class: "select select-sm" } %>
+      <label class="app-filter-label"><%= t(".diagnosis_label") %></label>
+      <%= f.select :diagnosis_id, @diagnoses.map { |d| [ d.name, d.id ] }, { include_blank: t(".all_option"), selected: params[:diagnosis_id] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Status</label>
-      <%= f.select :status, Hospitalization.status_filter_form_options, { include_blank: "All", selected: params[:status] }, { class: "select select-sm" } %>
+      <label class="app-filter-label"><%= t(".status_filter_label") %></label>
+      <%= f.select :status, Hospitalization.status_filter_form_options, { include_blank: t(".all_option"), selected: params[:status] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Admitted From</label>
+      <label class="app-filter-label"><%= t(".admitted_from_label") %></label>
       <%= f.date_field :admitted_from, value: params[:admitted_from], class: "input input-sm" %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Admitted To</label>
+      <label class="app-filter-label"><%= t(".admitted_to_label") %></label>
       <%= f.date_field :admitted_to, value: params[:admitted_to], class: "input input-sm" %>
     </div>
-    <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
+    <%= f.submit t("common.search"), class: "btn btn-primary btn-sm" %>
     <% if params.values_at(:keyword, :diagnosis_id, :status, :admitted_from, :admitted_to).any?(&:present?) %>
-      <%= link_to "Clear", hospitalizations_path, class: "btn btn-ghost btn-sm" %>
+      <%= link_to t("common.clear"), hospitalizations_path, class: "btn btn-ghost btn-sm" %>
     <% end %>
   <% end %>
 
@@ -52,20 +52,20 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200">Status</th>
-            <th class="bg-base-200">Reservation Status</th>
-            <th class="bg-base-200">Purpose</th>
-            <th class="bg-base-200">Admin Status</th>
-            <th class="bg-base-200">Diagnoses</th>
-            <th class="bg-base-200">Admission Date</th>
-            <th class="bg-base-200">Discharge Date</th>
-            <th class="bg-base-200">Length of Stay</th>
-            <th class="bg-base-200">Planned Days</th>
-            <th class="bg-base-200">Reason</th>
-            <th class="bg-base-200">Preferred Room</th>
-            <th class="bg-base-200">Patient ID</th>
-            <th class="bg-base-200">Patient Name</th>
-            <th class="bg-base-200 text-right">Actions</th>
+            <th class="bg-base-200"><%= t(".status_filter_label") %></th>
+            <th class="bg-base-200"><%= t("hospitalizations.labels.reservation_status") %></th>
+            <th class="bg-base-200"><%= Hospitalization.human_attribute_name(:purpose) %></th>
+            <th class="bg-base-200"><%= t(".admin_status_header") %></th>
+            <th class="bg-base-200"><%= t("hospitalizations.labels.diagnoses_header") %></th>
+            <th class="bg-base-200"><%= t("hospitalizations.labels.admission_date_header") %></th>
+            <th class="bg-base-200"><%= t("hospitalizations.labels.discharge_date") %></th>
+            <th class="bg-base-200"><%= t("hospitalizations.labels.length_of_stay") %></th>
+            <th class="bg-base-200"><%= t(".planned_days_header") %></th>
+            <th class="bg-base-200"><%= Hospitalization.human_attribute_name(:reason) %></th>
+            <th class="bg-base-200"><%= t("hospitalizations.labels.preferred_room") %></th>
+            <th class="bg-base-200"><%= t("hospitalizations.labels.patient_id") %></th>
+            <th class="bg-base-200"><%= t(".patient_name_header") %></th>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>
@@ -87,31 +87,31 @@
                 <td><%= hospitalization.diagnosis_names_display %></td>
                 <td class="font-mono font-medium">
                   <% if hospitalization.admission_date.present? %>
-                    <%= hospitalization.admission_date.strftime("%Y-%m-%d") %>
+                    <%= l(hospitalization.admission_date, format: :default) %>
                   <% elsif hospitalization.scheduled_admission_date.present? %>
-                    <%= hospitalization.scheduled_admission_date.strftime("%Y-%m-%d") %> <span class="text-base-content/50 italic">(scheduled)</span>
+                    <%= l(hospitalization.scheduled_admission_date, format: :default) %> <span class="text-base-content/50 italic"><%= t(".scheduled_suffix") %></span>
                   <% else %>
                     -
                   <% end %>
                 </td>
-                <td class="font-mono"><%= hospitalization.discharge_date&.strftime("%Y-%m-%d") || "-" %></td>
+                <td class="font-mono"><%= hospitalization.discharge_date ? l(hospitalization.discharge_date, format: :default) : "-" %></td>
                 <td class="whitespace-nowrap"><%= length_of_stay_display(hospitalization) %></td>
-                <td><%= hospitalization.planned_days.present? ? "#{hospitalization.planned_days} days" : "-" %></td>
+                <td><%= hospitalization.planned_days.present? ? t("hospitalizations.labels.planned_days_value", count: hospitalization.planned_days) : "-" %></td>
                 <td><%= hospitalization.reason %></td>
-                <td><%= hospitalization.room_preference.presence || "-" %></td>
+                <td><%= hospitalization.room_preference.presence || t("common.none") %></td>
                 <td class="font-mono"><%= hospitalization.patient_id %></td>
                 <td>
                   <% if hospitalization.patient %>
-                    <%= link_to hospitalization.patient.name.presence || "Patient ##{hospitalization.patient_id}", hospitalization.patient, class: "link link-primary" %>
+                    <%= link_to hospitalization.patient.name.presence || t("hospitalizations.labels.unknown_patient_name", id: hospitalization.patient_id), hospitalization.patient, class: "link link-primary" %>
                     <span class="text-base-content/50 text-sm font-mono ml-2"><%= hospitalization.patient.hospital_id %></span>
                   <% else %>
-                    <span class="text-base-content/50 italic">Unknown</span>
+                    <span class="text-base-content/50 italic"><%= t("hospitalizations.labels.unknown_patient") %></span>
                   <% end %>
                 </td>
                 <td class="text-right flex justify-end gap-2">
-                  <%= link_to "View", hospitalization, class: "btn btn-ghost btn-xs text-primary" %>
-                  <%= link_to "Edit", edit_hospitalization_path(hospitalization), class: "btn btn-ghost btn-xs text-secondary" %>
-                  <%= button_to "Delete", hospitalization, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                  <%= link_to t("common.view"), hospitalization, class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to t("common.edit"), edit_hospitalization_path(hospitalization), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to t("common.delete"), hospitalization, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
                 </td>
               </tr>
             <% end %>
@@ -119,9 +119,9 @@
             <tr>
               <td colspan="14" class="text-center py-10 text-base-content/50 italic">
                 <% if params.values_at(:keyword, :diagnosis_id, :status, :admitted_from, :admitted_to).any?(&:present?) %>
-                  No hospitalizations match your search.
+                  <%= t(".empty_filtered") %>
                 <% else %>
-                  No hospitalizations found. Click "New Hospitalization" to get started.
+                  <%= t(".empty_no_filter") %>
                 <% end %>
               </td>
             </tr>
