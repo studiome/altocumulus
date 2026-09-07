@@ -377,3 +377,34 @@ en:
     confirm_delete: "Are you sure?"
     none: "-"
 
+  diagnoses:
+    index:
+      title: "Diagnoses"
+      new_button: "New Diagnosis"
+      empty: "No diagnoses found. Click \"New Diagnosis\" to get started."
+    show:
+      title: "Diagnosis Details"
+      subtitle: "Diagnosis Master"
+      edit_button: "Edit Diagnosis"
+      delete_button: "Delete Diagnosis"
+    new:
+      title: "New Diagnosis"
+      modal_description: "Create a diagnosis master without leaving this diagnosis entry form."
+    edit:
+      title: "Edit Diagnosis"
+    create:
+      success_notice: "Diagnosis was successfully created."
+      added_helper_text: "The new diagnosis has been added to the diagnosis entry form."
+      select_diagnosis_prompt: "Select a diagnosis"
+      save_entry_submit: "Save Diagnosis Entry"
+    update:
+      success_notice: "Diagnosis was successfully updated."
+    destroy:
+      success_notice: "Diagnosis was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this diagnosis from being saved:"
+        other: "%{count} errors prohibited this diagnosis from being saved:"
+      name_label: "Diagnosis Name"
+      name_placeholder: "e.g. Acute appendicitis"
+

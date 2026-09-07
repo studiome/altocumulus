@@ -23,7 +23,7 @@ class DiagnosesController < ApplicationController
         @diagnoses = Diagnosis.alphabetical
         render :create, formats: :turbo_stream
       else
-        redirect_to @diagnosis, notice: "Diagnosis was successfully created."
+        redirect_to @diagnosis, notice: t(".success_notice")
       end
     else
       if turbo_frame_request?
@@ -36,7 +36,7 @@ class DiagnosesController < ApplicationController
 
   def update
     if @diagnosis.update(diagnosis_params)
-      redirect_to @diagnosis, notice: "Diagnosis was successfully updated.", status: :see_other
+      redirect_to @diagnosis, notice: t(".success_notice"), status: :see_other
     else
       render :edit, status: :unprocessable_entity
     end
@@ -44,7 +44,7 @@ class DiagnosesController < ApplicationController
 
   def destroy
     if @diagnosis.destroy
-      redirect_to diagnoses_path, notice: "Diagnosis was successfully destroyed.", status: :see_other
+      redirect_to diagnoses_path, notice: t(".success_notice"), status: :see_other
     else
       redirect_to diagnosis_path(@diagnosis), alert: @diagnosis.errors.full_messages.to_sentence, status: :see_other
     end

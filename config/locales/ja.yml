@@ -413,3 +413,33 @@ ja:
     confirm_delete: "本当によろしいですか?"
     none: "-"
 
+  diagnoses:
+    index:
+      title: "診断名"
+      new_button: "新規診断名"
+      empty: "診断名が登録されていません。「新規診断名」から作成してください。"
+    show:
+      title: "診断名の詳細"
+      subtitle: "診断名マスタ"
+      edit_button: "診断名を編集"
+      delete_button: "診断名を削除"
+    new:
+      title: "新規診断名"
+      modal_description: "この診断名入力フォームを離れずに診断名マスタを作成できます。"
+    edit:
+      title: "診断名を編集"
+    create:
+      success_notice: "診断名を作成しました。"
+      added_helper_text: "新しい診断名が診断名入力フォームに追加されました。"
+      select_diagnosis_prompt: "診断名を選択してください"
+      save_entry_submit: "診断エントリを保存"
+    update:
+      success_notice: "診断名を更新しました。"
+    destroy:
+      success_notice: "診断名を削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの診断名を保存できませんでした:"
+      name_label: "診断名"
+      name_placeholder: "例: 急性虫垂炎"
+
