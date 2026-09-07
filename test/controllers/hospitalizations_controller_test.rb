@@ -480,6 +480,69 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "unconfirmed", @hospitalization.reload.admin_status
   end
 
+  test "should get new with the three form sections" do
+    get new_hospitalization_url
+
+    assert_response :success
+    assert_select "h2", text: "Patient & Schedule"
+    assert_select "h2", text: "Admission & Surgery Details"
+    assert_select "h2", text: "Comments"
+  end
+
+  test "show renders the diagnosis name, not a raw object, in the update history" do
+    @hospitalization.hospitalization_diagnoses.create!(diagnosis: diagnoses(:fracture))
+
+    get hospitalization_url(@hospitalization)
+
+    assert_response :success
+    assert_match(/Fracture/, @response.body)
+    assert_no_match(/#&lt;Diagnosis/, @response.body)
+  end
+
+  test "show displays only this hospitalization's own update history" do
+    @hospitalization.update!(room_preference: "History target room")
+    hospitalizations(:two).update!(room_preference: "Other hospitalization room")
+
+    get hospitalization_url(@hospitalization)
+
+    assert_response :success
+    assert_match(/History target room/, @response.body)
+    assert_no_match(/Other hospitalization room/, @response.body)
+  end
+
+  test "show does not issue more queries as more audit events exist for the hospitalization" do
+    patient_a = Patient.create!(hospital_id: "H920", name: "Audit Patient A", date_of_birth: "1970-01-01")
+    patient_b = Patient.create!(hospital_id: "H921", name: "Audit Patient B", date_of_birth: "1970-01-01")
+
+    one_update_hospitalization = Hospitalization.create!(
+      patient: patient_a,
+      admission_date: Date.new(2027, 6, 1),
+      discharge_date: Date.new(2027, 6, 10),
+      outcome: "recovered",
+      reason: "Observation",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+    one_update_hospitalization.update!(room_preference: "First update")
+
+    many_updates_hospitalization = Hospitalization.create!(
+      patient: patient_b,
+      admission_date: Date.new(2027, 7, 1),
+      discharge_date: Date.new(2027, 7, 10),
+      outcome: "recovered",
+      reason: "Observation",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+    5.times { |n| many_updates_hospitalization.update!(room_preference: "Update #{n}") }
+
+    one_update_queries = count_sql_queries { get hospitalization_url(one_update_hospitalization) }
+    assert_response :success
+
+    many_updates_queries = count_sql_queries { get hospitalization_url(many_updates_hospitalization) }
+    assert_response :success
+
+    assert_equal one_update_queries, many_updates_queries
+  end
+
   test "show does not issue more queries as more surgeries are linked" do
     patient_a = Patient.create!(hospital_id: "H901", name: "Patient A", date_of_birth: "1970-01-01")
     patient_b = Patient.create!(hospital_id: "H902", name: "Patient B", date_of_birth: "1970-01-01")

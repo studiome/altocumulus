@@ -1,4 +1,9 @@
 class HospitalizationsController < ApplicationController
+  # A hospitalization can accumulate many audit events over its lifetime; the
+  # detail page only needs enough of the recent trail to be useful, with a
+  # link out to the full audit log for anything older.
+  RECENT_AUDIT_EVENTS_LIMIT = 10
+
   before_action :set_hospitalization, only: %i[ show edit update destroy confirm restore copy ]
   before_action :set_form_collections, only: %i[ new edit create update ]
   before_action :require_admin, only: %i[ confirm restore copy deleted ]
@@ -16,6 +21,10 @@ class HospitalizationsController < ApplicationController
     @surgeries = @hospitalization.surgeries
                                  .includes(surgery_procedure_selections: :surgery_procedure)
                                  .order(surgery_date: :asc)
+    @audit_events = AuditEvent.where(auditable_type: "Hospitalization", auditable_id: @hospitalization.id)
+                               .includes(:user)
+                               .recent_first
+                               .limit(RECENT_AUDIT_EVENTS_LIMIT)
   end
 
   def new

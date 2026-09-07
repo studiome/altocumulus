@@ -147,6 +147,46 @@
         <div class="app-empty-state mb-4">No surgeries are linked to this hospitalization.</div>
       <% end %>
 
+      <div class="divider">Update History</div>
+
+      <% if @audit_events.any? %>
+        <ul class="space-y-3 mb-4">
+          <% @audit_events.each do |audit_event| %>
+            <li class="rounded-box border border-base-200 px-4 py-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-sm text-base-content/60"><%= audit_event.created_at.strftime("%Y-%m-%d %H:%M:%S") %></span>
+                  <span class="badge badge-outline"><%= audit_event.action %></span>
+                  <span class="text-sm"><%= audit_event.user&.name || "-" %></span>
+                </div>
+                <%= link_to "Details", audit_event_path(audit_event), class: "btn btn-ghost btn-xs text-primary" %>
+              </div>
+              <% change_rows = audit_change_rows(audit_event) %>
+              <% if change_rows.any? %>
+                <div class="overflow-x-auto">
+                  <table class="table table-sm w-full">
+                    <thead><tr><th>Field</th><th>Before</th><th>After</th></tr></thead>
+                    <tbody>
+                      <% change_rows.each do |row| %>
+                        <tr>
+                          <td class="font-semibold"><%= row[:label] %></td>
+                          <td class="whitespace-pre-wrap"><%= row[:before] %></td>
+                          <td class="whitespace-pre-wrap"><%= row[:after] %></td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <div class="app-empty-state mb-4">No update history recorded for this hospitalization.</div>
+      <% end %>
+
+      <%= link_to "View Full Audit Log", audit_events_path(auditable_type: "Hospitalization"), class: "app-inline-link text-sm mb-4 inline-block" %>
+
       <% if admin? %>
         <div class="divider">Admin Actions</div>
 
