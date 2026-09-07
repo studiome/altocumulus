@@ -15,7 +15,7 @@ module Admin
       @user = User.new(user_params)
 
       if @user.save
-        redirect_to admin_users_path, notice: "User was successfully created."
+        redirect_to admin_users_path, notice: t(".success_notice")
       else
         render :new, status: :unprocessable_entity
       end
@@ -26,7 +26,7 @@ module Admin
 
     def update
       if @user.update(user_update_params)
-        redirect_to admin_users_path, notice: "User was successfully updated."
+        redirect_to admin_users_path, notice: t(".success_notice")
       else
         render :edit, status: :unprocessable_entity
       end
@@ -36,7 +36,7 @@ module Admin
       temporary_password = SecureRandom.alphanumeric(12)
 
       if @user.update(password: temporary_password, password_confirmation: temporary_password)
-        redirect_to admin_users_path, notice: "Password was reset. Temporary password: #{temporary_password}"
+        redirect_to admin_users_path, notice: t(".success_notice", password: temporary_password)
       else
         redirect_to admin_users_path, alert: @user.errors.full_messages.to_sentence
       end

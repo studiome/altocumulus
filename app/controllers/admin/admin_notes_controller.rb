@@ -12,7 +12,7 @@ module Admin
       @admin_note.user = current_user
 
       if @admin_note.save
-        redirect_to admin_admin_notes_path, notice: "Note was successfully added."
+        redirect_to admin_admin_notes_path, notice: t(".success_notice")
       else
         @admin_notes = AdminNote.recent_first.includes(:user)
         render :index, status: :unprocessable_entity
@@ -21,7 +21,7 @@ module Admin
 
     def destroy
       AdminNote.find(params.expect(:id)).destroy
-      redirect_to admin_admin_notes_path, notice: "Note was successfully deleted.", status: :see_other
+      redirect_to admin_admin_notes_path, notice: t(".success_notice"), status: :see_other
     end
 
     private

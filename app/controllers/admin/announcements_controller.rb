@@ -15,7 +15,7 @@ module Admin
       @announcement = Announcement.new(announcement_params)
 
       if @announcement.save
-        redirect_to admin_announcements_path, notice: "Announcement was successfully created."
+        redirect_to admin_announcements_path, notice: t(".success_notice")
       else
         render :new, status: :unprocessable_entity
       end
@@ -26,7 +26,7 @@ module Admin
 
     def update
       if @announcement.update(announcement_params)
-        redirect_to admin_announcements_path, notice: "Announcement was successfully updated.", status: :see_other
+        redirect_to admin_announcements_path, notice: t(".success_notice"), status: :see_other
       else
         render :edit, status: :unprocessable_entity
       end
@@ -34,7 +34,7 @@ module Admin
 
     def destroy
       @announcement.destroy
-      redirect_to admin_announcements_path, notice: "Announcement was successfully deleted.", status: :see_other
+      redirect_to admin_announcements_path, notice: t(".success_notice"), status: :see_other
     end
 
     private

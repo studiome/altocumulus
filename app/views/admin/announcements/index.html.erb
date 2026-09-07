@@ -1,16 +1,16 @@
-<% content_for :title, "Announcements" %>
+<% content_for :title, t(".title") %>
 
 <div class="app-page">
 
   <section class="app-page-header">
     <div class="app-page-header-body">
       <div>
-        <p class="app-page-kicker">Administration</p>
-        <h1 class="app-page-title">Announcements</h1>
+        <p class="app-page-kicker"><%= t("admin.kicker") %></p>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
       <%= link_to new_admin_announcement_path, class: "btn btn-primary" do %>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        New Announcement
+        <%= t(".new_button") %>
       <% end %>
     </div>
   </section>
@@ -20,21 +20,21 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200">Title</th>
-            <th class="bg-base-200">Status</th>
-            <th class="bg-base-200">Updated</th>
-            <th class="bg-base-200 text-right">Actions</th>
+            <th class="bg-base-200"><%= Announcement.human_attribute_name(:title) %></th>
+            <th class="bg-base-200"><%= t(".status_header") %></th>
+            <th class="bg-base-200"><%= t(".updated_header") %></th>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>
           <% @announcements.each do |announcement| %>
             <tr class="row-hover">
               <td class="font-semibold"><%= announcement.title %></td>
-              <td><span class="badge <%= announcement.published? ? "badge-success" : "badge-ghost" %>"><%= announcement.published? ? "Published" : "Draft" %></span></td>
-              <td><%= announcement.updated_at.strftime("%Y-%m-%d") %></td>
+              <td><span class="badge <%= announcement.published? ? "badge-success" : "badge-ghost" %>"><%= announcement.published? ? t(".published_status") : t(".draft_status") %></span></td>
+              <td><%= l(announcement.updated_at, format: :default) %></td>
               <td class="text-right flex justify-end gap-2">
-                <%= link_to "Edit", edit_admin_announcement_path(announcement), class: "btn btn-ghost btn-xs text-secondary" %>
-                <%= button_to "Delete", admin_announcement_path(announcement), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Delete this announcement?" } %>
+                <%= link_to t("common.edit"), edit_admin_announcement_path(announcement), class: "btn btn-ghost btn-xs text-secondary" %>
+                <%= button_to t("common.delete"), admin_announcement_path(announcement), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t(".delete_confirm") } %>
               </td>
             </tr>
           <% end %>
