@@ -26,3 +26,11 @@ japanese_member:
   role: user
   active: true
   locale: ja
+
+japanese_admin:
+  email: ja-admin@example.com
+  name: Japanese Admin
+  password_digest: <%= BCrypt::Password.create("password") %>
+  role: admin
+  active: true
+  locale: ja

@@ -96,12 +96,28 @@ class LocaleI18nTest < ActionDispatch::IntegrationTest
       patient_patient_diagnoses_url(patients(:one)),
       patient_patient_diagnosis_url(patients(:one), patient_diagnoses(:appendicitis)),
       new_patient_patient_diagnosis_url(patients(:one)),
-      edit_patient_patient_diagnosis_url(patients(:one), patient_diagnoses(:appendicitis))
+      edit_patient_patient_diagnosis_url(patients(:one), patient_diagnoses(:appendicitis)),
+      new_hospitalization_url,
+      edit_hospitalization_url(hospitalizations(:one))
     ].each do |url|
       get url
       assert_response :success, "expected #{url} to render successfully in ja"
       assert_no_match(/[Tt]ranslation missing/, response.body, "translation missing while rendering #{url}")
     end
+  end
+
+  # Stage 3 group 3a (Hospitalizations): the deleted list and its
+  # confirm/restore/copy actions are admin-only (see
+  # HospitalizationsController#require_admin), so they need an admin whose
+  # locale is Japanese rather than the plain japanese_member fixture used
+  # above.
+  test "no translation missing on the deleted hospitalizations list rendered in Japanese" do
+    sign_in_as(users(:japanese_admin))
+
+    get deleted_hospitalizations_url
+
+    assert_response :success
+    assert_no_match(/[Tt]ranslation missing/, response.body)
   end
 
   test "activerecord attribute names render in Japanese for validation errors" do
