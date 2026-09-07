@@ -4,16 +4,16 @@
   <div class="app-panel-body space-y-3">
     <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <p class="text-xs font-bold uppercase text-base-content/40"><%= date.strftime("%A") %></p>
-        <%= link_to date.strftime("%Y-%m-%d"), new_hospitalization_path(scheduled_admission_date: date), class: "text-lg font-semibold app-inline-link" %>
+        <p class="text-xs font-bold uppercase text-base-content/40"><%= l(date, format: :weekday) %></p>
+        <%= link_to l(date, format: :default), new_hospitalization_path(scheduled_admission_date: date), class: "text-lg font-semibold app-inline-link" %>
         <div class="flex flex-wrap gap-1 mt-1">
           <% if usage.holiday? %>
-            <span class="badge badge-secondary badge-sm">Closed: <%= usage.holiday.name %></span>
+            <span class="badge badge-secondary badge-sm"><%= t(".closed_badge", name: usage.holiday.name) %></span>
           <% elsif usage.holiday&.note.present? %>
-            <span class="badge badge-ghost badge-sm">Note</span>
+            <span class="badge badge-ghost badge-sm"><%= t(".note_badge") %></span>
           <% end %>
           <% if calendar.admission_warning?(date) %>
-            <span class="badge badge-warning badge-sm">Congestion</span>
+            <span class="badge badge-warning badge-sm"><%= t(".congestion_badge") %></span>
           <% end %>
         </div>
         <% if usage.holiday&.note.present? %>
@@ -23,19 +23,19 @@
 
       <div class="text-sm text-right space-y-1">
         <div>
-          Admissions:
+          <%= t(".admissions_label") %>
           <span class="font-mono <%= "text-warning font-bold" if calendar.admission_warning?(date) %>">
             <%= calendar.admission_count_for(date) %>
           </span>
         </div>
         <div class="text-base-content/60">
           <% if usage.configured? %>
-            <%= usage.used_slots %> / <%= usage.total_slots %> slots
-            (<%= usage.used_minutes %> / <%= usage.capacity_minutes %> min)
+            <%= t(".slots_summary", used: usage.used_slots, total: usage.total_slots) %>
+            <%= t(".minutes_summary", used: usage.used_minutes, capacity: usage.capacity_minutes) %>
           <% elsif usage.holiday? %>
-            No elective slots (holiday)
+            <%= t(".no_slots_holiday") %>
           <% else %>
-            No slots configured
+            <%= t(".no_slots_configured") %>
           <% end %>
         </div>
       </div>
@@ -54,13 +54,13 @@
         <% end %>
         <% usage.emergency_surgeries.each do |surgery| %>
           <div class="rounded border border-error/40 bg-error/5 p-2 text-sm">
-            <span class="badge badge-error badge-xs mb-1">Emergency</span>
+            <span class="badge badge-error badge-xs mb-1"><%= Surgery.scheduling_type_options["emergency"] %></span>
             <%= render "surgery_schedules/slot_surgery", surgery: surgery %>
           </div>
         <% end %>
       </div>
     <% else %>
-      <p class="text-base-content/40 italic text-sm">No surgeries scheduled</p>
+      <p class="text-base-content/40 italic text-sm"><%= t(".no_surgeries") %></p>
     <% end %>
   </div>
 </div>

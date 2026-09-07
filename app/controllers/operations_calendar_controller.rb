@@ -6,6 +6,6 @@ class OperationsCalendarController < ApplicationController
   def index
     @calendar = OperationsCalendar.build(start: params[:start], days: params[:days])
   rescue OperationsCalendar::InvalidRangeError
-    redirect_to operations_calendar_path, alert: "The requested date range was invalid. Showing the default range instead."
+    redirect_to operations_calendar_path, alert: t(".alert")
   end
 end
