@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_07_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_07_000200) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -29,11 +29,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_000100) do
     t.string "auditable_type", null: false
     t.json "change_data", default: {}, null: false
     t.datetime "created_at", null: false
+    t.string "ip_address"
     t.string "record_label", null: false
     t.datetime "updated_at", null: false
+    t.integer "user_id"
     t.index ["auditable_type", "action"], name: "index_audit_events_on_auditable_type_and_action"
     t.index ["auditable_type", "auditable_id"], name: "index_audit_events_on_auditable_type_and_auditable_id"
     t.index ["created_at"], name: "index_audit_events_on_created_at"
+    t.index ["user_id"], name: "index_audit_events_on_user_id"
   end
 
   create_table "diagnoses", force: :cascade do |t|
@@ -164,6 +167,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_000100) do
   end
 
   add_foreign_key "access_logs", "users"
+  add_foreign_key "audit_events", "users"
   add_foreign_key "hospitalization_diagnoses", "diagnoses"
   add_foreign_key "hospitalization_diagnoses", "hospitalizations"
   add_foreign_key "hospitalizations", "patients"

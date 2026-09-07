@@ -54,7 +54,9 @@ module AuditsAssociatedChanges
         auditable_id: parent.id,
         action: "update",
         record_label: parent.to_s,
-        change_data: changes
+        change_data: changes,
+        user_id: Current.user&.id,
+        ip_address: Current.ip_address
       )
     end
 end

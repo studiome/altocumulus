@@ -37,7 +37,9 @@ module Auditable
         auditable_id: id,
         action: action,
         record_label: to_s,
-        change_data: change_data
+        change_data: change_data,
+        user_id: Current.user&.id,
+        ip_address: Current.ip_address
       )
     end
 end
