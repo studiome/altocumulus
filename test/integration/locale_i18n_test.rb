@@ -98,7 +98,8 @@ class LocaleI18nTest < ActionDispatch::IntegrationTest
       new_patient_patient_diagnosis_url(patients(:one)),
       edit_patient_patient_diagnosis_url(patients(:one), patient_diagnoses(:appendicitis)),
       new_hospitalization_url,
-      edit_hospitalization_url(hospitalizations(:one))
+      edit_hospitalization_url(hospitalizations(:one)),
+      new_surgery_url
     ].each do |url|
       get url
       assert_response :success, "expected #{url} to render successfully in ja"
