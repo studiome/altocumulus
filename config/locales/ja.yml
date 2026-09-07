@@ -127,6 +127,20 @@ ja:
       too_short: "は%{count}文字以上で入力してください"
       wrong_length: "は%{count}文字で入力してください"
 
+  # `Array#to_sentence` (used by several controllers on
+  # `errors.full_messages.to_sentence` for a destroy/copy failure alert) asks
+  # I18n for these three connector keys before falling back to its own
+  # English defaults (", " / " and " / ", and "). Without a ja override here,
+  # a multi-error Japanese flash was joined with those English connectors
+  # even though every other word in the sentence was Japanese. Not defined in
+  # en.yml since English already gets exactly this text from to_sentence's
+  # own built-in defaults.
+  support:
+    array:
+      words_connector: "、"
+      two_words_connector: "と"
+      last_word_connector: "、"
+
   activerecord:
     models:
       access_log: "アクセスログ"
