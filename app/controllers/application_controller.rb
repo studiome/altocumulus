@@ -47,16 +47,20 @@ class ApplicationController < ActionController::Base
     current_user&.admin? || false
   end
 
+  # These two run as a before_action shared by every controller, so they
+  # cannot use lazy `t(".key")` lookup -- the resolved scope would depend on
+  # whichever controller/action happened to trigger the redirect. Fixed
+  # `common.*` keys instead.
   def require_login
     return if current_user
 
-    redirect_to login_path, alert: "Please sign in to continue."
+    redirect_to login_path, alert: t("common.please_sign_in")
   end
 
   def require_admin
     return if admin?
 
-    redirect_to root_path, alert: "You are not authorized to perform this action."
+    redirect_to root_path, alert: t("common.not_authorized")
   end
 
   def set_current_attributes

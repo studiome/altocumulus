@@ -19,7 +19,7 @@ class SessionsController < ApplicationController
       session[:user_id] = user.id
       session[:last_seen_at] = Time.current.to_i
       record_access_log(user: user, event: "login")
-      redirect_to root_path, notice: "Signed in successfully."
+      redirect_to root_path, notice: t(".success_notice")
     else
       # `authenticate_by` returns nil both for "wrong password" and for
       # "no matching (active) user", so we can no longer tell which user a
@@ -29,7 +29,7 @@ class SessionsController < ApplicationController
       # account exists. IP, user agent and timestamp are still recorded.
       # Please do not "fix" this back to attributing failures to a user.
       record_access_log(user: nil, event: "login_failed")
-      flash.now[:alert] = "Invalid email or password."
+      flash.now[:alert] = t(".invalid_credentials_alert")
       render :new, status: :unprocessable_entity
     end
   end
@@ -37,7 +37,7 @@ class SessionsController < ApplicationController
   def destroy
     record_access_log(user: current_user, event: "logout") if current_user
     reset_session
-    redirect_to login_path, notice: "Signed out."
+    redirect_to login_path, notice: t(".success_notice")
   end
 
   private
