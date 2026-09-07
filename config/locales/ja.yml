@@ -415,6 +415,11 @@ ja:
     information: "詳細情報"
     confirm_delete: "本当によろしいですか?"
     none: "-"
+    please_sign_in: "続行するにはサインインしてください。"
+    not_authorized: "この操作を行う権限がありません。"
+    field_header: "項目"
+    before_header: "変更前"
+    after_header: "変更後"
 
   diagnoses:
     index:
@@ -666,9 +671,6 @@ ja:
       no_surgeries: "この入院に紐づく手術はありません。"
       update_history_divider: "更新履歴"
       no_update_history: "この入院の更新履歴はまだありません。"
-      field_header: "項目"
-      before_header: "変更前"
-      after_header: "変更後"
       audit_event_details_link: "詳細"
       view_full_audit_log_link: "監査ログをすべて見る"
       admin_actions_divider: "管理者操作"
@@ -868,3 +870,118 @@ ja:
       duration_minutes_value: "%{minutes}分"
     labels:
       unknown_patient_name: "患者 #%{id}"
+
+  # Stage 3 group 4a: Admin (Users / Announcements / AdminNotes), AuditEvents,
+  # Accounts, Sessions, and the app-wide shared partials. See en.yml for the
+  # design notes.
+  admin:
+    kicker: "管理"
+    users:
+      index:
+        title: "利用者"
+        new_button: "新規利用者"
+        status_header: "ステータス"
+        active_status: "有効"
+        inactive_status: "無効"
+        reset_password_button: "パスワードをリセット"
+        reset_password_confirm: "この利用者のパスワードをリセットしますか?"
+      new:
+        title: "新規利用者"
+      edit:
+        title: "利用者を編集"
+      form:
+        errors_heading:
+          other: "%{count}件のエラーによりこの利用者を保存できませんでした:"
+      create:
+        success_notice: "利用者を作成しました。"
+      update:
+        success_notice: "利用者を更新しました。"
+      reset_password:
+        success_notice: "パスワードをリセットしました。仮パスワード: %{password}"
+    announcements:
+      index:
+        title: "お知らせ"
+        new_button: "新規お知らせ"
+        status_header: "ステータス"
+        updated_header: "更新日"
+        published_status: "公開済み"
+        draft_status: "下書き"
+        delete_confirm: "このお知らせを削除しますか?"
+      new:
+        title: "新規お知らせ"
+      edit:
+        title: "お知らせを編集"
+      form:
+        errors_heading:
+          other: "%{count}件のエラーによりこのお知らせを保存できませんでした:"
+        published_helper: "公開されたお知らせのみ、運用カレンダーに表示されます。"
+      create:
+        success_notice: "お知らせを作成しました。"
+      update:
+        success_notice: "お知らせを更新しました。"
+      destroy:
+        success_notice: "お知らせを削除しました。"
+    admin_notes:
+      index:
+        title: "管理者メモ"
+        new_note_label: "新しいメモ"
+        add_note_submit: "メモを追加"
+        note_header: "メモ"
+        by_header: "作成者"
+        added_header: "登録日時"
+        delete_confirm: "このメモを削除しますか?"
+      create:
+        success_notice: "メモを追加しました。"
+      destroy:
+        success_notice: "メモを削除しました。"
+
+  audit_events:
+    labels:
+      time: "日時"
+      record_type: "対象種別"
+      operator: "操作者"
+    index:
+      title: "監査ログ"
+      kicker: "アクティビティ"
+      all_option: "すべて"
+      record_header: "対象"
+      details_link: "詳細"
+      empty: "監査イベントが見つかりません。"
+    show:
+      title: "監査イベント"
+      kicker: "監査ログ"
+      record_id_label: "レコードID"
+      ip_address_label: "IPアドレス"
+      no_changes: "属性の変更は記録されていません。"
+
+  accounts:
+    show:
+      title: "アカウント"
+      change_password_divider: "パスワードの変更"
+      password_helper: "現在のパスワードのままにする場合は、これらの項目を空欄にしてください。"
+      current_password_label: "現在のパスワード"
+      new_password_label: "新しいパスワード"
+      confirm_new_password_label: "新しいパスワード(確認)"
+      save_changes_submit: "変更を保存"
+      errors_heading:
+        other: "%{count}件のエラーによりこのアカウントを保存できませんでした:"
+    update:
+      success_notice: "アカウントを更新しました。"
+
+  sessions:
+    new:
+      title: "サインイン"
+      submit_button: "サインイン"
+    create:
+      success_notice: "サインインしました。"
+      invalid_credentials_alert: "メールアドレスまたはパスワードが正しくありません。"
+    destroy:
+      success_notice: "サインアウトしました。"
+
+  shared:
+    pagination:
+      prev: "前へ"
+      next: "次へ"
+      page_of: "%{page} / %{total} ページ"
+    diagnosis_modal:
+      loading: "読み込み中..."

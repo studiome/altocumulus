@@ -386,6 +386,22 @@ en:
     information: "Information"
     confirm_delete: "Are you sure?"
     none: "-"
+    # Stage 3 group 4a additions: require_login / require_admin live in
+    # ApplicationController and run as a before_action shared by every
+    # controller, so they cannot use lazy `t(".key")` lookup (the resolved
+    # scope would vary with whichever controller/action happened to trigger
+    # the redirect) -- fixed keys here instead.
+    please_sign_in: "Please sign in to continue."
+    not_authorized: "You are not authorized to perform this action."
+    # The Field/Before/After update-history table headers used to be
+    # duplicated as hospitalizations.show-scoped keys (group 3a couldn't
+    # touch audit_events/show.html.erb, which renders the identical table
+    # structure) -- group 4a, which owns that file, consolidated both call
+    # sites onto these shared keys instead. See hospitalizations/show.html.erb
+    # and audit_events/show.html.erb.
+    field_header: "Field"
+    before_header: "Before"
+    after_header: "After"
 
   diagnoses:
     index:
@@ -658,10 +674,15 @@ en:
   #     partial's own virtual path.
   #   - The show page's own inline change-history table ("Field"/"Before"/
   #     "After" headers, "Update History" divider) is a separate, pre-existing
-  #     copy of markup that also appears in `audit_events/show.html.erb`
-  #     (a different group's file) -- kept as hospitalizations-show-scoped
-  #     keys rather than shared ones, since this group cannot touch that
-  #     other file. `AuditEventsHelper` itself (the label/before/after *cell
+  #     copy of markup that also appears in `audit_events/show.html.erb` (a
+  #     different group's file at the time this group ran). The "Update
+  #     History" divider stayed hospitalizations-show-scoped (its own text,
+  #     not shared with audit_events/show), but the "Field"/"Before"/"After"
+  #     headers -- identical in both places -- were later consolidated by
+  #     group 4a (which owns audit_events/show.html.erb) onto shared
+  #     `common.field_header` / `common.before_header` / `common.after_header`
+  #     keys; both view files reference those now instead of keeping separate
+  #     copies. `AuditEventsHelper` itself (the label/before/after *cell
   #     values*, as opposed to these column headers) was already localized in
   #     stage 2 and is reused as-is.
   #   - New `time.formats` keys (`timestamp`, `short_timestamp`) replace two
@@ -693,9 +714,6 @@ en:
       no_surgeries: "No surgeries are linked to this hospitalization."
       update_history_divider: "Update History"
       no_update_history: "No update history recorded for this hospitalization."
-      field_header: "Field"
-      before_header: "Before"
-      after_header: "After"
       audit_event_details_link: "Details"
       view_full_audit_log_link: "View Full Audit Log"
       admin_actions_divider: "Admin Actions"
@@ -929,3 +947,158 @@ en:
     # _slot_surgery partial it renders alongside.
     labels:
       unknown_patient_name: "Patient #%{id}"
+
+  # Stage 3 group 4a: Admin (Users / Announcements / AdminNotes), AuditEvents,
+  # Accounts, Sessions, and the app-wide shared partials (_pagination,
+  # _diagnosis_modal). Follows the conventions established by groups 1-3b:
+  #
+  #   - Top-level `admin:` mirrors the `Admin::` controller/view module, with
+  #     one sub-key per sub-resource (`users:`, `announcements:`,
+  #     `admin_notes:`) matching each view's own virtual path
+  #     (`admin/users/index` -> `admin.users.index`), so lazy `t(".key")`
+  #     resolves the same way it does for every other group's views.
+  #     `admin.kicker` ("Administration") is the one string shared *across*
+  #     those three sub-resources' index pages -- kept as a direct child of
+  #     `admin:` rather than duplicated three times, since (unlike `common:`)
+  #     it is specific to this module's own page headers.
+  #   - Attribute labels that match `User`/`Announcement`
+  #     `human_attribute_name` verbatim (Name, Email, Role, Title, Published)
+  #     call that directly instead of adding a redundant key, same rule
+  #     earlier groups used. Ones that don't match (e.g. the "Status" column
+  #     header, which isn't itself an attribute name) get their own key.
+  #   - `sessions.new.title` doubles as the h1 heading, the browser tab
+  #     title, and (via `sessions.new.submit_button`, kept as a *separate*
+  #     key despite the identical English text) is available if the submit
+  #     label and page title ever need to diverge later.
+  #   - Login form's email/password labels reuse `User.human_attribute_name`
+  #     directly: `form_with scope: :session` isn't backed by a real model,
+  #     so Rails' automatic label translation has no `User` attribute
+  #     metadata to draw on and would otherwise stay stuck on the raw
+  #     humanized attribute name in every locale. Since the fields really are
+  #     a User's email/password, reusing that model's own translations avoids
+  #     a duplicate pair of keys with the identical text.
+  #   - `shared.pagination.*` and `shared.diagnosis_modal.*` are keyed off
+  #     their partials' own virtual paths (`shared/_pagination.html.erb`,
+  #     `shared/_diagnosis_modal.html.erb`), same as any other partial.
+  #     `_diagnosis_modal.html.erb`'s static title/description (shown before
+  #     the turbo-frame it wraps replaces them with the real
+  #     `diagnoses/new.html.erb` content) reuse `diagnoses.new.title` /
+  #     `diagnoses.new.modal_description` and `common.close` rather than
+  #     duplicating that group 1 text -- it is genuinely the same modal, just
+  #     its pre-turbo-frame-load fallback markup.
+  admin:
+    kicker: "Administration"
+    users:
+      index:
+        title: "Users"
+        new_button: "New User"
+        status_header: "Status"
+        active_status: "Active"
+        inactive_status: "Inactive"
+        reset_password_button: "Reset Password"
+        reset_password_confirm: "Reset this user's password?"
+      new:
+        title: "New User"
+      edit:
+        title: "Edit User"
+      form:
+        errors_heading:
+          one: "%{count} error prohibited this user from being saved:"
+          other: "%{count} errors prohibited this user from being saved:"
+      create:
+        success_notice: "User was successfully created."
+      update:
+        success_notice: "User was successfully updated."
+      reset_password:
+        success_notice: "Password was reset. Temporary password: %{password}"
+    announcements:
+      index:
+        title: "Announcements"
+        new_button: "New Announcement"
+        status_header: "Status"
+        updated_header: "Updated"
+        published_status: "Published"
+        draft_status: "Draft"
+        delete_confirm: "Delete this announcement?"
+      new:
+        title: "New Announcement"
+      edit:
+        title: "Edit Announcement"
+      form:
+        errors_heading:
+          one: "%{count} error prohibited this announcement from being saved:"
+          other: "%{count} errors prohibited this announcement from being saved:"
+        published_helper: "Only published announcements are visible on the operations calendar."
+      create:
+        success_notice: "Announcement was successfully created."
+      update:
+        success_notice: "Announcement was successfully updated."
+      destroy:
+        success_notice: "Announcement was successfully deleted."
+    admin_notes:
+      index:
+        title: "Admin Notes"
+        new_note_label: "New Note"
+        add_note_submit: "Add Note"
+        note_header: "Note"
+        by_header: "By"
+        added_header: "Added"
+        delete_confirm: "Delete this note?"
+      create:
+        success_notice: "Note was successfully added."
+      destroy:
+        success_notice: "Note was successfully deleted."
+
+  audit_events:
+    # Shared between index's filter-form labels/table headers and show's
+    # own detail list (see design note above `common:`).
+    labels:
+      time: "Time"
+      record_type: "Record type"
+      operator: "Operator"
+    index:
+      title: "Audit Log"
+      kicker: "Activity"
+      all_option: "All"
+      record_header: "Record"
+      details_link: "Details"
+      empty: "No audit events found."
+    show:
+      title: "Audit Event"
+      kicker: "Audit Log"
+      record_id_label: "Record ID"
+      ip_address_label: "IP Address"
+      no_changes: "No attribute changes recorded."
+
+  accounts:
+    show:
+      title: "My Account"
+      change_password_divider: "Change Password"
+      password_helper: "Leave these blank to keep your current password."
+      current_password_label: "Current Password"
+      new_password_label: "New Password"
+      confirm_new_password_label: "Confirm New Password"
+      save_changes_submit: "Save Changes"
+      errors_heading:
+        one: "%{count} error prohibited this account from being saved:"
+        other: "%{count} errors prohibited this account from being saved:"
+    update:
+      success_notice: "Account was successfully updated."
+
+  sessions:
+    new:
+      title: "Sign In"
+      submit_button: "Sign In"
+    create:
+      success_notice: "Signed in successfully."
+      invalid_credentials_alert: "Invalid email or password."
+    destroy:
+      success_notice: "Signed out."
+
+  shared:
+    pagination:
+      prev: "Prev"
+      next: "Next"
+      page_of: "Page %{page} of %{total}"
+    diagnosis_modal:
+      loading: "Loading..."
