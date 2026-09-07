@@ -7,7 +7,7 @@
 
   <div class="app-panel">
     <div class="app-panel-body">
-      <%= form_with url: login_path, method: :post, scope: :session, local: true, class: "app-form", data: { turbo: false } do |form| %>
+      <%= form_with url: login_path, method: :post, scope: :session, local: true, class: "app-form" do |form| %>
         <% if flash[:alert].present? %>
           <div role="alert" class="alert alert-error mb-6">
             <span><%= flash[:alert] %></span>
