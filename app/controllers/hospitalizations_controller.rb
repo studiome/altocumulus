@@ -75,7 +75,9 @@ class HospitalizationsController < ApplicationController
   end
 
   def deleted
-    @hospitalizations = Hospitalization.discarded.includes(:patient).order(updated_at: :desc)
+    scope = Hospitalization.discarded.includes(:patient, hospitalization_diagnoses: :diagnosis).order(updated_at: :desc)
+    @pagination = Pagination.new(scope, page: params[:page])
+    @hospitalizations = @pagination.records
   end
 
   def copy

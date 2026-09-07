@@ -17,8 +17,12 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200">Reason</th>
+            <th class="bg-base-200">Reservation Status</th>
+            <th class="bg-base-200">Purpose</th>
+            <th class="bg-base-200">Diagnoses</th>
             <th class="bg-base-200">Admission Date</th>
+            <th class="bg-base-200">Reason</th>
+            <th class="bg-base-200">Patient ID</th>
             <th class="bg-base-200">Patient</th>
             <th class="bg-base-200">Deleted At</th>
             <th class="bg-base-200 text-right">Actions</th>
@@ -28,8 +32,12 @@
           <% if @hospitalizations.any? %>
             <% @hospitalizations.each do |hospitalization| %>
               <tr class="row-hover">
-                <td><%= hospitalization.reason %></td>
+                <td><%= Hospitalization::RESERVATION_STATUS_OPTIONS[hospitalization.reservation_status] %></td>
+                <td><%= Hospitalization::PURPOSE_OPTIONS[hospitalization.purpose] %></td>
+                <td><%= hospitalization.diagnosis_names_display %></td>
                 <td class="font-mono"><%= hospitalization.effective_admission_date&.strftime("%Y-%m-%d") || "-" %></td>
+                <td><%= hospitalization.reason %></td>
+                <td class="font-mono"><%= hospitalization.patient_id %></td>
                 <td>
                   <% if hospitalization.patient %>
                     <%= link_to hospitalization.patient.name.presence || "Patient ##{hospitalization.patient_id}", hospitalization.patient, class: "link link-primary" %>
@@ -46,11 +54,13 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="5" class="text-center py-10 text-base-content/50 italic">No deleted hospitalizations.</td>
+              <td colspan="9" class="text-center py-10 text-base-content/50 italic">No deleted hospitalizations.</td>
             </tr>
           <% end %>
         </tbody>
       </table>
     </div>
   </div>
+
+  <%= render "shared/pagination", pagination: @pagination %>
 </div>

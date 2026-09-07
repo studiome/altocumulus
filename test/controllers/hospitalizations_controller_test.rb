@@ -342,6 +342,32 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
+  test "deleted list paginates results" do
+    @hospitalization.discard!
+
+    get deleted_hospitalizations_url, params: { page: 1 }
+
+    assert_response :success
+  end
+
+  test "deleted list does not error out on a crafted Array page param" do
+    @hospitalization.discard!
+
+    get deleted_hospitalizations_url, params: { page: [ "1" ] }
+
+    assert_response :success
+  end
+
+  test "deleted list shows the deletion time and a restore action" do
+    @hospitalization.discard!
+
+    get deleted_hospitalizations_url
+
+    assert_response :success
+    assert_match(/Restore/, @response.body)
+    assert_match(/#{@hospitalization.deleted_at.strftime("%Y-%m-%d")}/, @response.body)
+  end
+
   test "admin can copy a hospitalization to a new scheduled admission date" do
     hospitalization = hospitalizations(:two)
 
