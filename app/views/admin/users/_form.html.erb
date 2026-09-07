@@ -37,7 +37,7 @@
 
   <div class="app-field">
     <%= form.label :role, class: "app-field-label" %>
-    <%= form.select :role, User::ROLES, {}, class: "select w-full" %>
+    <%= form.select :role, User.role_form_options, {}, class: "select w-full" %>
   </div>
 
   <div class="app-field">

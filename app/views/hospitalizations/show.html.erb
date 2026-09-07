@@ -156,7 +156,7 @@
               <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <div class="flex items-center gap-2">
                   <span class="font-mono text-sm text-base-content/60"><%= l(audit_event.created_at, format: :timestamp) %></span>
-                  <span class="badge badge-outline"><%= audit_event.action %></span>
+                  <span class="badge badge-outline"><%= audit_event.action_label %></span>
                   <span class="text-sm"><%= audit_event.user&.name || t("common.none") %></span>
                 </div>
                 <%= link_to t(".audit_event_details_link"), audit_event_path(audit_event), class: "btn btn-ghost btn-xs text-primary print:hidden" %>

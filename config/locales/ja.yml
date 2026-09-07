@@ -383,6 +383,19 @@ ja:
           single: "第%{number}枠は上限%{limit}分を%{overrun}分超過しています。"
           same_limit: "枠%{numbers}は上限%{limit}分を超過しています。"
           item: "第%{number}枠は上限%{limit}分を超過しています。"
+    user:
+      role_options:
+        user: "利用者"
+        admin: "管理者"
+    audit_event:
+      # AUDITABLE_TYPES itself (Patient/Surgery/Hospitalization) is not
+      # listed here -- it reuses activerecord.models.* via
+      # `AuditEvent.auditable_type_options` (see app/models/audit_event.rb)
+      # rather than duplicating those same three model names under a new key.
+      action_options:
+        create: "作成"
+        update: "更新"
+        destroy: "削除"
 
   # `helpers.submit` is intentionally defined ONLY here, not in en.yml (see
   # the note above en.yml's own `helpers:` block -- Rails' English default

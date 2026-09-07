@@ -26,12 +26,24 @@ class User < ApplicationRecord
 
   scope :active, -> { where(active: true) }
 
+  def self.role_options
+    ROLES.index_with { |key| I18n.t("models.user.role_options.#{key}") }
+  end
+
+  def self.role_form_options
+    role_options.map { |k, v| [ v, k ] }
+  end
+
   def admin?
     role == "admin"
   end
 
   def active?
     active
+  end
+
+  def role_label
+    self.class.role_options[role] || role
   end
 
   def to_s

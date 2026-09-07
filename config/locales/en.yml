@@ -320,6 +320,20 @@ en:
           single: "Slot %{number} is booked %{overrun} min past its %{limit} min limit."
           same_limit: "Slots %{numbers} are booked past their %{limit} min limit."
           item: "Slot %{number} is booked past its %{limit} min limit."
+    user:
+      role_options:
+        user: "User"
+        admin: "Admin"
+    audit_event:
+      # AUDITABLE_TYPES itself (Patient/Surgery/Hospitalization) is not
+      # listed here -- it reuses activerecord.models.* via
+      # `AuditEvent.auditable_type_options` (see app/models/audit_event.rb),
+      # which for English is just Rails' own humanize default and already
+      # matches the raw value this used to render directly.
+      action_options:
+        create: "Create"
+        update: "Update"
+        destroy: "Delete"
 
   # `helpers.submit` is deliberately NOT defined here -- Rails' own English
   # default template for a bare `form.submit` ("Create %{model}" /

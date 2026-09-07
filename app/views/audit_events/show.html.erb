@@ -14,9 +14,9 @@
   <div class="app-panel p-6">
     <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div><dt class="text-sm text-base-content/60"><%= t("audit_events.labels.time") %></dt><dd class="font-medium"><%= l(@audit_event.created_at, format: :timestamp) %></dd></div>
-      <div><dt class="text-sm text-base-content/60"><%= t("audit_events.labels.record_type") %></dt><dd class="font-medium"><%= @audit_event.auditable_type %></dd></div>
+      <div><dt class="text-sm text-base-content/60"><%= t("audit_events.labels.record_type") %></dt><dd class="font-medium"><%= @audit_event.auditable_type_label %></dd></div>
       <div><dt class="text-sm text-base-content/60"><%= t(".record_id_label") %></dt><dd class="font-mono"><%= @audit_event.auditable_id %></dd></div>
-      <div><dt class="text-sm text-base-content/60"><%= AuditEvent.human_attribute_name(:action) %></dt><dd><span class="badge badge-outline"><%= @audit_event.action %></span></dd></div>
+      <div><dt class="text-sm text-base-content/60"><%= AuditEvent.human_attribute_name(:action) %></dt><dd><span class="badge badge-outline"><%= @audit_event.action_label %></span></dd></div>
       <div><dt class="text-sm text-base-content/60"><%= t("audit_events.labels.operator") %></dt><dd class="font-medium"><%= @audit_event.user&.name || t("common.none") %></dd></div>
       <div><dt class="text-sm text-base-content/60"><%= t(".ip_address_label") %></dt><dd class="font-mono"><%= @audit_event.ip_address || t("common.none") %></dd></div>
     </dl>

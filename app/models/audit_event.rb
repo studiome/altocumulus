@@ -18,4 +18,39 @@ class AuditEvent < ApplicationRecord
     scope = scope.where(user_id: user_id) if user_id.present?
     scope
   end
+
+  # Unlike every other *_options method in this app (which look labels up
+  # from config/locales/*.yml under models.<model>.*_options), AUDITABLE_TYPES
+  # is deliberately keyed off each actual model class's own
+  # `model_name.human` instead of a new set of translation keys: its values
+  # (Patient/Surgery/Hospitalization) already ARE real model class names, and
+  # #audit_change_label in AuditEventsHelper already resolves an associated
+  # model's display name the same way for the change-history table's row
+  # labels. Reusing it here avoids a second, redundant Japanese translation
+  # of "Patient"/"Surgery"/"Hospitalization" alongside
+  # activerecord.models.patient/surgery/hospitalization, and stays in sync
+  # automatically if those ever change.
+  def self.auditable_type_options
+    AUDITABLE_TYPES.index_with { |type| type.constantize.model_name.human }
+  end
+
+  def self.action_options
+    ACTIONS.index_with { |key| I18n.t("models.audit_event.action_options.#{key}") }
+  end
+
+  def self.auditable_type_form_options
+    auditable_type_options.map { |k, v| [ v, k ] }
+  end
+
+  def self.action_form_options
+    action_options.map { |k, v| [ v, k ] }
+  end
+
+  def auditable_type_label
+    self.class.auditable_type_options[auditable_type] || auditable_type
+  end
+
+  def action_label
+    self.class.action_options[action] || action
+  end
 end
