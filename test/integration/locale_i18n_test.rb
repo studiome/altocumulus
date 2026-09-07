@@ -75,6 +75,30 @@ class LocaleI18nTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # Stage 2 of the i18n rollout localized the model/helper display strings
+  # that these particular show/edit pages render (status_label, outcome/
+  # purpose/reservation_status/admin_status labels, laterality labels,
+  # length_of_stay_display, ElectiveSlotRule day names and to_s). Covering
+  # them by URL (rather than only at the model/helper unit level) catches a
+  # missing key that a unit test's stubbed data might not exercise.
+  test "no translation missing on hospitalization, surgery, patient, and elective slot rule detail pages rendered in Japanese" do
+    sign_in_as(users(:japanese_member))
+
+    [
+      patient_url(patients(:one)),
+      surgery_url(surgeries(:one)),
+      hospitalization_url(hospitalizations(:one)),
+      hospitalization_url(hospitalizations(:three)),
+      edit_surgery_url(surgeries(:one)),
+      edit_patient_url(patients(:one)),
+      elective_slot_rule_url(elective_slot_rules(:tuesday))
+    ].each do |url|
+      get url
+      assert_response :success, "expected #{url} to render successfully in ja"
+      assert_no_match(/[Tt]ranslation missing/, response.body, "translation missing while rendering #{url}")
+    end
+  end
+
   test "activerecord attribute names render in Japanese for validation errors" do
     sign_in_as(users(:japanese_member))
 
