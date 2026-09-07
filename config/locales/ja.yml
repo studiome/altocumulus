@@ -462,6 +462,7 @@ ja:
     field_header: "項目"
     before_header: "変更前"
     after_header: "変更後"
+    list_separator: "、"
 
   diagnoses:
     index:

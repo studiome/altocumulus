@@ -247,7 +247,7 @@ class SurgeryTest < ActiveSupport::TestCase
       ]
     )
 
-    assert_equal "Appendectomy、Left Knee arthroscopy", surgery.display_procedure_name
+    assert_equal "Appendectomy, Left Knee arthroscopy", surgery.display_procedure_name
   end
 
   test "display_procedure_name should prefix laterality when present" do
@@ -262,7 +262,40 @@ class SurgeryTest < ActiveSupport::TestCase
       ]
     )
 
-    assert_equal "Right Appendectomy、Bilateral Knee arthroscopy", surgery.display_procedure_name
+    assert_equal "Right Appendectomy, Bilateral Knee arthroscopy", surgery.display_procedure_name
+  end
+
+  # The multi-value display helpers used to hard-code "、" (the Japanese
+  # ideographic comma) as their join separator regardless of the active
+  # locale, so an English-locale screen showing e.g. two procedure names
+  # rendered "Appendectomy、Left Knee arthroscopy" -- Japanese punctuation
+  # leaking into English UI. They now join with the locale-aware
+  # `common.list_separator` (", " in English, "、" in Japanese), matching the
+  # convention used for other locale-dependent formatting in this app.
+  test "multi-value display helpers use the locale-aware list separator" do
+    surgery = Surgery.new(
+      patient: patients(:one),
+      surgery_date: Date.new(2026, 3, 1),
+      anesthesia_method: "General",
+      duration_hours: 1.5,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" },
+        { surgery_procedure_id: surgery_procedures(:knee_arthroscopy).id, laterality: "bilateral" }
+      ],
+      patient_diagnoses: [ patient_diagnoses(:appendicitis), patient_diagnoses(:hypertension) ]
+    )
+
+    assert_equal "Appendectomy, Knee arthroscopy", surgery.procedure_names_display
+    assert_equal "Right, Bilateral", surgery.laterality_names_display
+    assert_equal "Right Appendectomy, Bilateral Knee arthroscopy", surgery.display_procedure_name
+    assert_equal "Right Appendicitis, Hypertension", surgery.diagnosis_names_display
+
+    I18n.with_locale(:ja) do
+      assert_equal "Appendectomy、Knee arthroscopy", surgery.procedure_names_display
+      assert_equal "右、両側", surgery.laterality_names_display
+      assert_equal "右 Appendectomy、両側 Knee arthroscopy", surgery.display_procedure_name
+      assert_equal "右 Appendicitis、Hypertension", surgery.diagnosis_names_display
+    end
   end
 
   test "should allow a surgery linked to a hospitalization of the same patient within its period" do

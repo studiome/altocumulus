@@ -424,6 +424,15 @@ en:
     field_header: "Field"
     before_header: "Before"
     after_header: "After"
+    # Used by Hospitalization#diagnosis_names_display and Surgery's
+    # procedure_names_display / laterality_names_display / diagnosis_names_display
+    # / procedure_display_names to join a plain list of names for display
+    # (not a natural-language sentence, so `support.array`'s to_sentence
+    # connectors -- which add "and" -- don't apply here). These used to
+    # hard-code "、" (the Japanese ideographic comma) regardless of locale,
+    # so an English screen showing more than one diagnosis/procedure name
+    # rendered Japanese punctuation (e.g. "Pneumonia、Hypertension").
+    list_separator: ", "
 
   diagnoses:
     index:

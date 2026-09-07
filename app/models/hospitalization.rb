@@ -178,7 +178,7 @@ class Hospitalization < ApplicationRecord
   end
 
   def diagnosis_names_display
-    active_hospitalization_diagnoses.filter_map(&:diagnosis_name).join("、").presence || "-"
+    active_hospitalization_diagnoses.filter_map(&:diagnosis_name).join(I18n.t("common.list_separator")).presence || "-"
   end
 
   def active_hospitalization_diagnoses

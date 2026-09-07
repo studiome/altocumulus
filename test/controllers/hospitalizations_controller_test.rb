@@ -194,7 +194,7 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to hospitalization_url(Hospitalization.last)
     assert_equal [ diagnoses(:pneumonia).id, diagnoses(:hypertension).id ].sort, Hospitalization.last.diagnoses.ids.sort
-    assert_equal "Pneumonia、Hypertension", Hospitalization.last.diagnosis_names_display
+    assert_equal "Pneumonia, Hypertension", Hospitalization.last.diagnosis_names_display
   end
 
   test "should reject create without any diagnosis" do

@@ -100,7 +100,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
   assert_equal [ patient_diagnoses(:appendicitis).id, patient_diagnoses(:hypertension).id ].sort, Surgery.last.patient_diagnoses.ids.sort
     assert_equal [ "Cholecystectomy", "Appendectomy" ], Surgery.last.procedure_names
     assert_equal [ "bilateral", "left" ], Surgery.last.surgery_procedure_selections.order(:id).pluck(:laterality)
-    assert_equal "Bilateral Cholecystectomy、Left Appendectomy", Surgery.last.display_procedure_name
+    assert_equal "Bilateral Cholecystectomy, Left Appendectomy", Surgery.last.display_procedure_name
   end
 
   test "should create a surgery with an undecided surgery_date" do
@@ -346,7 +346,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ patient_diagnoses(:appendicitis).id, patient_diagnoses(:hypertension).id ].sort, @surgery.patient_diagnoses.ids.sort
     assert_equal [ "Updated Procedure", "Appendectomy" ], @surgery.procedure_names
     assert_equal [ "left", "right" ], @surgery.surgery_procedure_selections.order(:id).pluck(:laterality)
-    assert_equal "Left Updated Procedure、Right Appendectomy", @surgery.display_procedure_name
+    assert_equal "Left Updated Procedure, Right Appendectomy", @surgery.display_procedure_name
   end
 
   test "should respond with unprocessable entity when procedures are swapped between rows" do

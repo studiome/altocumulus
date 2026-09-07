@@ -98,19 +98,19 @@ class Surgery < ApplicationRecord
   end
 
   def procedure_names_display
-    procedure_names.join("、").presence || "-"
+    procedure_names.join(I18n.t("common.list_separator")).presence || "-"
   end
 
   def laterality_names_display
-    active_surgery_procedure_selections.map(&:laterality_label).join("、").presence || "-"
+    active_surgery_procedure_selections.map(&:laterality_label).join(I18n.t("common.list_separator")).presence || "-"
   end
 
   def diagnosis_names_display
-    patient_diagnoses.map(&:display_name).join("、").presence || "-"
+    patient_diagnoses.map(&:display_name).join(I18n.t("common.list_separator")).presence || "-"
   end
 
   def procedure_display_names
-    active_surgery_procedure_selections.map(&:display_name).join("、").presence
+    active_surgery_procedure_selections.map(&:display_name).join(I18n.t("common.list_separator")).presence
   end
 
   def procedure_names

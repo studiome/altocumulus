@@ -27,7 +27,7 @@ class HospitalizationsTest < ApplicationSystemTestCase
       assert_text "Hospitalization was successfully created."
     end
 
-    assert_text "Pneumonia、Hypertension"
+    assert_text "Pneumonia, Hypertension"
   end
 
   test "user can remove an added diagnosis row before saving" do
