@@ -29,3 +29,32 @@
 
 en:
   hello: "Hello world"
+
+  nav:
+    app_name: "Altocumulus"
+    open_menu: "Open menu"
+    calendar: "Calendar"
+    patients: "Patients"
+    surgeries: "Surgeries"
+    hospitalizations: "Hospitalizations"
+    search: "Search"
+    reports: "Reports"
+    dashboard: "Dashboard"
+    schedule: "Schedule"
+    audit_log: "Audit Log"
+    masters: "Masters"
+    diagnoses: "Diagnoses"
+    procedures: "Procedures"
+    slot_rules: "Slot Rules"
+    holidays: "Holidays"
+    admin: "Admin"
+    users: "Users"
+    announcements: "Announcements"
+    admin_notes: "Admin Notes"
+    account: "Account"
+    sign_out: "Sign Out"
+
+  locale:
+    switch_label: "Language"
+    en: "English"
+    ja: "日本語"

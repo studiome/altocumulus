@@ -31,39 +31,41 @@
             (that's what overflowed the 375px viewport). Hidden at lg and up,
             where the grouped horizontal menu below takes over instead. %>
         <div class="dropdown lg:hidden">
-          <button type="button" tabindex="0" class="btn btn-ghost btn-square" aria-label="Open menu">
+          <button type="button" tabindex="0" class="btn btn-ghost btn-square" aria-label="<%= t('nav.open_menu') %>">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <ul tabindex="0" class="menu dropdown-content menu-sm z-20 mt-3 w-64 rounded-box bg-base-100 p-2 shadow">
-            <li><%= link_to "Calendar", operations_calendar_path %></li>
-            <li><%= link_to "Patients", patients_path %></li>
-            <li><%= link_to "Surgeries", surgeries_path %></li>
-            <li><%= link_to "Hospitalizations", hospitalizations_path %></li>
-            <li><%= link_to "Search", search_path %></li>
-            <li class="menu-title">Reports</li>
-            <li><%= link_to "Dashboard", dashboard_path %></li>
-            <li><%= link_to "Schedule", surgery_schedule_path %></li>
-            <li><%= link_to "Audit Log", audit_events_path %></li>
-            <li class="menu-title">Masters</li>
-            <li><%= link_to "Diagnoses", diagnoses_path %></li>
-            <li><%= link_to "Procedures", surgery_procedures_path %></li>
-            <li><%= link_to "Slot Rules", elective_slot_rules_path %></li>
-            <li><%= link_to "Holidays", holidays_path %></li>
+            <li><%= link_to t("nav.calendar"), operations_calendar_path %></li>
+            <li><%= link_to t("nav.patients"), patients_path %></li>
+            <li><%= link_to t("nav.surgeries"), surgeries_path %></li>
+            <li><%= link_to t("nav.hospitalizations"), hospitalizations_path %></li>
+            <li><%= link_to t("nav.search"), search_path %></li>
+            <li class="menu-title"><%= t("nav.reports") %></li>
+            <li><%= link_to t("nav.dashboard"), dashboard_path %></li>
+            <li><%= link_to t("nav.schedule"), surgery_schedule_path %></li>
+            <li><%= link_to t("nav.audit_log"), audit_events_path %></li>
+            <li class="menu-title"><%= t("nav.masters") %></li>
+            <li><%= link_to t("nav.diagnoses"), diagnoses_path %></li>
+            <li><%= link_to t("nav.procedures"), surgery_procedures_path %></li>
+            <li><%= link_to t("nav.slot_rules"), elective_slot_rules_path %></li>
+            <li><%= link_to t("nav.holidays"), holidays_path %></li>
             <% if current_user %>
               <% if admin? %>
-                <li class="menu-title">Admin</li>
-                <li><%= link_to "Users", admin_users_path %></li>
-                <li><%= link_to "Announcements", admin_announcements_path %></li>
-                <li><%= link_to "Admin Notes", admin_admin_notes_path %></li>
+                <li class="menu-title"><%= t("nav.admin") %></li>
+                <li><%= link_to t("nav.users"), admin_users_path %></li>
+                <li><%= link_to t("nav.announcements"), admin_announcements_path %></li>
+                <li><%= link_to t("nav.admin_notes"), admin_admin_notes_path %></li>
               <% end %>
               <li class="menu-title"><%= current_user.name %></li>
-              <li><%= link_to "Account", account_path %></li>
-              <li><%= button_to "Sign Out", logout_path, method: :delete %></li>
+              <li><%= link_to t("nav.account"), account_path %></li>
+              <li><%= button_to t("nav.sign_out"), logout_path, method: :delete %></li>
             <% end %>
+            <li class="menu-title"><%= t("locale.switch_label") %></li>
+            <%= render "shared/locale_switcher" %>
           </ul>
         </div>
 
-        <%= link_to "Altocumulus", root_path, class: "btn btn-ghost text-xl font-bold text-primary" %>
+        <%= link_to t("nav.app_name"), root_path, class: "btn btn-ghost text-xl font-bold text-primary" %>
       </div>
 
       <%# Desktop menu: the same links, grouped into a handful of dropdowns
@@ -72,44 +74,50 @@
           above takes over instead. %>
       <div class="hidden flex-none lg:flex lg:items-center lg:gap-2">
         <ul class="menu menu-horizontal px-1">
-          <li><%= link_to "Calendar", operations_calendar_path %></li>
-          <li><%= link_to "Patients", patients_path %></li>
-          <li><%= link_to "Surgeries", surgeries_path %></li>
-          <li><%= link_to "Hospitalizations", hospitalizations_path %></li>
-          <li><%= link_to "Search", search_path %></li>
+          <li><%= link_to t("nav.calendar"), operations_calendar_path %></li>
+          <li><%= link_to t("nav.patients"), patients_path %></li>
+          <li><%= link_to t("nav.surgeries"), surgeries_path %></li>
+          <li><%= link_to t("nav.hospitalizations"), hospitalizations_path %></li>
+          <li><%= link_to t("nav.search"), search_path %></li>
           <li class="dropdown dropdown-end">
-            <button type="button" tabindex="0">Reports</button>
+            <button type="button" tabindex="0"><%= t("nav.reports") %></button>
             <ul tabindex="0" class="dropdown-content menu z-10 w-52 rounded-box bg-base-100 p-2 shadow">
-              <li><%= link_to "Dashboard", dashboard_path %></li>
-              <li><%= link_to "Schedule", surgery_schedule_path %></li>
-              <li><%= link_to "Audit Log", audit_events_path %></li>
+              <li><%= link_to t("nav.dashboard"), dashboard_path %></li>
+              <li><%= link_to t("nav.schedule"), surgery_schedule_path %></li>
+              <li><%= link_to t("nav.audit_log"), audit_events_path %></li>
             </ul>
           </li>
           <li class="dropdown dropdown-end">
-            <button type="button" tabindex="0">Masters</button>
+            <button type="button" tabindex="0"><%= t("nav.masters") %></button>
             <ul tabindex="0" class="dropdown-content menu z-10 w-52 rounded-box bg-base-100 p-2 shadow">
-              <li><%= link_to "Diagnoses", diagnoses_path %></li>
-              <li><%= link_to "Procedures", surgery_procedures_path %></li>
-              <li><%= link_to "Slot Rules", elective_slot_rules_path %></li>
-              <li><%= link_to "Holidays", holidays_path %></li>
+              <li><%= link_to t("nav.diagnoses"), diagnoses_path %></li>
+              <li><%= link_to t("nav.procedures"), surgery_procedures_path %></li>
+              <li><%= link_to t("nav.slot_rules"), elective_slot_rules_path %></li>
+              <li><%= link_to t("nav.holidays"), holidays_path %></li>
             </ul>
           </li>
           <% if current_user && admin? %>
             <li class="dropdown dropdown-end">
-              <button type="button" tabindex="0">Admin</button>
+              <button type="button" tabindex="0"><%= t("nav.admin") %></button>
               <ul tabindex="0" class="dropdown-content menu z-10 w-52 rounded-box bg-base-100 p-2 shadow">
-                <li><%= link_to "Users", admin_users_path %></li>
-                <li><%= link_to "Announcements", admin_announcements_path %></li>
-                <li><%= link_to "Admin Notes", admin_admin_notes_path %></li>
+                <li><%= link_to t("nav.users"), admin_users_path %></li>
+                <li><%= link_to t("nav.announcements"), admin_announcements_path %></li>
+                <li><%= link_to t("nav.admin_notes"), admin_admin_notes_path %></li>
               </ul>
             </li>
           <% end %>
+          <li class="dropdown dropdown-end">
+            <button type="button" tabindex="0"><%= t("locale.switch_label") %></button>
+            <ul tabindex="0" class="dropdown-content menu z-10 w-40 rounded-box bg-base-100 p-2 shadow">
+              <%= render "shared/locale_switcher" %>
+            </ul>
+          </li>
         </ul>
         <% if current_user %>
           <div class="flex items-center gap-2">
-            <%= link_to "Account", account_path, class: "btn btn-ghost btn-sm" %>
+            <%= link_to t("nav.account"), account_path, class: "btn btn-ghost btn-sm" %>
             <span class="text-sm text-base-content/60"><%= current_user.name %></span>
-            <%= button_to "Sign Out", logout_path, method: :delete, class: "btn btn-ghost btn-sm" %>
+            <%= button_to t("nav.sign_out"), logout_path, method: :delete, class: "btn btn-ghost btn-sm" %>
           </div>
         <% end %>
       </div>
