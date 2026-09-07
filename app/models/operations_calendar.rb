@@ -92,8 +92,13 @@ class OperationsCalendar
     # hospitalization is counted exactly once, on that one day, never on both
     # its scheduled and actual dates.
     def build_admission_counts
+      # effective_date_order is our own fixed SQL fragment (not user input),
+      # but building the IN clause via Arel's #in -- rather than interpolating
+      # it into a "... IN (?)" string -- keeps `dates` properly bound instead
+      # of string-substituted, which is both correct and what satisfies
+      # Brakeman's SQL-injection check on this line.
       counts = Hospitalization.active
-                               .where("#{effective_date_order} IN (?)", dates)
+                               .where(effective_date_order.in(dates))
                                .group(effective_date_order)
                                .count
 
