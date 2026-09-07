@@ -83,16 +83,21 @@ class OperationsCalendar
       Arel.sql("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date)")
     end
 
-    # Two group(:column).count queries regardless of how many dates are in
-    # `dates` (they compile to a single WHERE ... IN (...) each), then merged
-    # in memory. A hospitalization contributes to both its scheduled date and
-    # its actual admission date when both fall inside the range and differ,
-    # since each represents a distinct day's real admission workload.
+    # One group(...).count query regardless of how many dates are in `dates`
+    # (it compiles to a single WHERE effective_date IN (...) GROUP BY), keyed
+    # by the same effective_admission_date (actual if present, otherwise
+    # scheduled) that the rest of the app already treats as the single
+    # canonical date of a hospitalization -- see Hospitalization#upcoming,
+    # #admitted_between, and #no_overlapping_hospitalization_period. Each
+    # hospitalization is counted exactly once, on that one day, never on both
+    # its scheduled and actual dates.
     def build_admission_counts
-      scheduled = Hospitalization.active.where(scheduled_admission_date: dates).group(:scheduled_admission_date).count
-      actual = Hospitalization.active.where(admission_date: dates).group(:admission_date).count
+      counts = Hospitalization.active
+                               .where("#{effective_date_order} IN (?)", dates)
+                               .group(effective_date_order)
+                               .count
 
-      dates.index_with { |date| scheduled[date].to_i + actual[date].to_i }
+      counts.transform_keys { |date| date.is_a?(Date) ? date : Date.parse(date.to_s) }
     end
 
     # Every purpose other than the model's own default is treated as a

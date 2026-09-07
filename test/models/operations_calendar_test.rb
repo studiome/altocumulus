@@ -60,15 +60,33 @@ class OperationsCalendarTest < ActiveSupport::TestCase
     assert_equal 1, calendar.admission_count_for(date)
   end
 
-  test "admission_count_for counts a hospitalization on both its scheduled and actual dates" do
+  # The whole app treats effective_admission_date (actual if present,
+  # otherwise scheduled) as the single canonical date of a hospitalization --
+  # sorting, Hospitalization.filtered's date-range filter, and the overlap
+  # validation all key off it. The calendar's admission count must follow the
+  # same rule: one hospitalization contributes to exactly one day's count,
+  # never two, even when the scheduled and actual dates differ.
+  test "admission_count_for counts a hospitalization once, at its effective (actual) date, not its superseded scheduled date" do
     scheduled_date = Date.current + 5
     actual_date = Date.current + 6
     create_hospitalization(scheduled_admission_date: scheduled_date, admission_date: actual_date)
 
     calendar = OperationsCalendar.build(start: scheduled_date - 1, days: 5)
 
-    assert_equal 1, calendar.admission_count_for(scheduled_date)
+    assert_equal 0, calendar.admission_count_for(scheduled_date)
     assert_equal 1, calendar.admission_count_for(actual_date)
+  end
+
+  # This is the regression case: admitting a patient on exactly the day that
+  # was scheduled (the ordinary, common case) must still count as one
+  # admission for that day, not two.
+  test "admission_count_for counts a hospitalization once when the actual admission date matches the scheduled date" do
+    date = Date.current + 5
+    create_hospitalization(scheduled_admission_date: date, admission_date: date)
+
+    calendar = OperationsCalendar.build(start: date - 1, days: 3)
+
+    assert_equal 1, calendar.admission_count_for(date)
   end
 
   test "admission_warning? is driven by the configured threshold" do
