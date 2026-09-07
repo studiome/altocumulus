@@ -94,8 +94,12 @@ class LedgerStatistics
       @year ? Surgery.where(surgery_date: year_range) : Surgery.all
     end
 
+    # Statistics report on what actually happened, so a reservation-stage
+    # hospitalization (scheduled_admission_date set, admission_date still
+    # nil) must never be counted here, in any breakdown.
     def hospitalizations_scope
-      @year ? Hospitalization.where(admission_date: year_range) : Hospitalization.all
+      scope = Hospitalization.where.not(admission_date: nil)
+      @year ? scope.where(admission_date: year_range) : scope
     end
 
     def year_range

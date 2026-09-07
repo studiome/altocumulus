@@ -18,6 +18,23 @@ class Hospitalization < ApplicationRecord
     "other" => "Other"
   }.freeze
 
+  RESERVATION_STATUS_OPTIONS = {
+    "requested" => "Requested",
+    "waiting" => "Waiting for Admission",
+    "date_fixed" => "Admission Date Fixed",
+    "surgery_date_fixed" => "Surgery Date Fixed",
+    "admitted" => "Admitted",
+    "admitted_other_dept" => "Admitted (Other Dept.)",
+    "on_hold" => "On Hold",
+    "discharged" => "Discharged"
+  }.freeze
+
+  PURPOSE_OPTIONS = {
+    "surgery" => "Surgery",
+    "examination" => "Examination / Procedure",
+    "chemotherapy" => "Chemotherapy"
+  }.freeze
+
   belongs_to :patient
   has_many :hospitalization_diagnoses, -> { order(:id) }, dependent: :destroy, inverse_of: :hospitalization
   has_many :diagnoses, through: :hospitalization_diagnoses
@@ -29,11 +46,14 @@ class Hospitalization < ApplicationRecord
                                 allow_destroy: true,
                                 reject_if: ->(attributes) { attributes["diagnosis_id"].blank? }
 
-  validates :admission_date, presence: true
   validates :reason, presence: true
   validates :planned_days, numericality: { greater_than: 0, only_integer: true }, allow_nil: true
   validates :outcome, inclusion: { in: OUTCOME_OPTIONS.keys }, allow_blank: true
   validates :discharge_destination, inclusion: { in: DISCHARGE_DESTINATION_OPTIONS.keys }, allow_blank: true
+  validates :reservation_status, inclusion: { in: RESERVATION_STATUS_OPTIONS.keys }
+  validates :purpose, inclusion: { in: PURPOSE_OPTIONS.keys }
+  validate :valid_date_values
+  validate :admission_date_or_scheduled_admission_date_required
   validate :must_have_at_least_one_diagnosis
   validate :no_duplicate_diagnoses
   validate :discharge_date_on_or_after_admission_date
@@ -47,10 +67,13 @@ class Hospitalization < ApplicationRecord
 
   scope :discharged, -> { where.not(discharge_date: nil) }
   scope :in_hospital, -> { where(discharge_date: nil).where(admission_date: ..Date.current) }
+  # Reservation-stage hospitalizations only carry scheduled_admission_date, so
+  # the effective admission date (actual if present, otherwise scheduled) is
+  # what a date-range filter or sort should compare against.
   scope :admitted_between, ->(from, to) {
     scope = all
-    scope = scope.where(admission_date: from..) if from.present?
-    scope = scope.where(admission_date: ..to) if to.present?
+    scope = scope.where("COALESCE(admission_date, scheduled_admission_date) >= ?", from) if from.present?
+    scope = scope.where("COALESCE(admission_date, scheduled_admission_date) <= ?", to) if to.present?
     scope
   }
 
@@ -60,6 +83,14 @@ class Hospitalization < ApplicationRecord
 
   def self.discharge_destination_form_options
     DISCHARGE_DESTINATION_OPTIONS.map { |k, v| [ v, k ] }
+  end
+
+  def self.reservation_status_form_options
+    RESERVATION_STATUS_OPTIONS.map { |k, v| [ v, k ] }
+  end
+
+  def self.purpose_form_options
+    PURPOSE_OPTIONS.map { |k, v| [ v, k ] }
   end
 
   def self.filtered(keyword: nil, diagnosis_id: nil, status: nil, admitted_from: nil, admitted_to: nil)
@@ -95,6 +126,14 @@ class Hospitalization < ApplicationRecord
     hospitalization_diagnoses.reject(&:marked_for_destruction?)
   end
 
+  # The actual admission_date once the patient has checked in; falls back to
+  # the scheduled_admission_date while the hospitalization is still a
+  # reservation. Overlap/period validations and sorting/filtering are all
+  # expressed in terms of this single effective date.
+  def effective_admission_date
+    admission_date || scheduled_admission_date
+  end
+
   def discharged?
     discharge_date.present?
   end
@@ -104,7 +143,7 @@ class Hospitalization < ApplicationRecord
   end
 
   def length_of_stay
-    return nil unless discharged?
+    return nil unless discharged? && admission_date.present?
 
     (discharge_date - admission_date).to_i + 1
   end
@@ -115,11 +154,14 @@ class Hospitalization < ApplicationRecord
     (Date.current - admission_date).to_i + 1
   end
 
+  # status_label is a derived read of the actual state (has the patient
+  # checked in, are they discharged) and is intentionally independent from
+  # reservation_status, which is a separate, user-selected field.
   def status_label
     return "Discharged" if discharged?
-    return "Scheduled" if admission_date.present? && admission_date > Date.current
+    return "In Hospital" if in_hospital?
 
-    "In Hospital"
+    "Scheduled"
   end
 
   def outcome_label
@@ -131,7 +173,7 @@ class Hospitalization < ApplicationRecord
   end
 
   def to_s
-    "#{patient} (#{admission_date} - #{discharge_date || 'in hospital'})"
+    "#{patient} (#{effective_admission_date || 'date not set'} - #{discharge_date || 'in hospital'})"
   end
 
   private
@@ -187,27 +229,52 @@ class Hospitalization < ApplicationRecord
       end
     end
 
+    def admission_date_or_scheduled_admission_date_required
+      return if admission_date.present? || scheduled_admission_date.present?
+
+      errors.add(:admission_date, "or a scheduled admission date must be present")
+    end
+
+    # scheduled_admission_date, admission_date, and discharge_date all mean
+    # "undecided" when left blank, but a string that fails to parse into a
+    # date (e.g. a typo) should surface as an error rather than silently
+    # becoming nil. Comparing the raw pre-cast value against the cast value
+    # tells the two cases apart.
+    def valid_date_values
+      %i[scheduled_admission_date admission_date discharge_date].each do |field|
+        raw = public_send("#{field}_before_type_cast")
+        errors.add(field, "is not a valid date") if raw.present? && public_send(field).nil?
+      end
+    end
+
+    # Which field carries the "when" of this hospitalization for error
+    # reporting: the actual admission_date once set, otherwise the scheduled
+    # one during the reservation stage.
+    def effective_admission_date_field
+      admission_date.present? ? :admission_date : :scheduled_admission_date
+    end
+
     def no_overlapping_hospitalization_period
-      return if patient_id.blank? || admission_date.blank?
+      return if patient_id.blank? || effective_admission_date.blank?
 
       scope = Hospitalization.where(patient_id: patient_id)
       scope = scope.where.not(id: id) if persisted?
       conflict = scope.where(
-        "(:end_date IS NULL OR admission_date <= :end_date) AND (discharge_date IS NULL OR discharge_date >= :start_date)",
-        start_date: admission_date, end_date: discharge_date
+        "(:end_date IS NULL OR COALESCE(admission_date, scheduled_admission_date) <= :end_date) AND (discharge_date IS NULL OR discharge_date >= :start_date)",
+        start_date: effective_admission_date, end_date: discharge_date
       ).exists?
 
-      errors.add(:admission_date, "overlaps another hospitalization for this patient") if conflict
+      errors.add(effective_admission_date_field, "overlaps another hospitalization for this patient") if conflict
     end
 
     def linked_surgeries_must_remain_within_period
-      return if admission_date.blank?
+      return if effective_admission_date.blank?
 
       dates = linked_surgeries.filter_map(&:surgery_date)
       return if dates.empty?
 
-      if dates.any? { |date| date < admission_date }
-        errors.add(:admission_date, "must include all linked surgeries within the hospitalization period")
+      if dates.any? { |date| date < effective_admission_date }
+        errors.add(effective_admission_date_field, "must include all linked surgeries within the hospitalization period")
       end
 
       if discharge_date.present? && dates.any? { |date| date > discharge_date }

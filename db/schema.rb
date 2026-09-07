@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_07_054231) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_07_054328) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -74,19 +74,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_054231) do
   end
 
   create_table "hospitalizations", force: :cascade do |t|
+    t.string "adl"
     t.date "admission_date"
+    t.string "attending_doctor"
+    t.text "clinical_comment"
     t.datetime "created_at", null: false
     t.date "discharge_date"
     t.string "discharge_destination"
     t.string "outcome"
     t.integer "patient_id", null: false
     t.integer "planned_days"
+    t.string "purpose", default: "surgery", null: false
     t.text "reason"
+    t.string "referred_from"
+    t.string "reservation_doctor"
+    t.string "reservation_status", default: "requested", null: false
     t.string "room_preference"
+    t.date "scheduled_admission_date"
+    t.date "submitted_on"
     t.datetime "updated_at", null: false
+    t.string "ward"
     t.index ["discharge_date"], name: "index_hospitalizations_on_discharge_date"
     t.index ["patient_id", "admission_date"], name: "index_hospitalizations_on_patient_id_and_admission_date"
     t.index ["patient_id"], name: "index_hospitalizations_on_patient_id"
+    t.index ["scheduled_admission_date"], name: "index_hospitalizations_on_scheduled_admission_date"
   end
 
   create_table "patient_diagnoses", force: :cascade do |t|

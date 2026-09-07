@@ -159,8 +159,8 @@ class Surgery < ApplicationRecord
 
   def surgery_date_must_fall_within_hospitalization_period
     return if hospitalization.blank? || surgery_date.blank?
-    return if hospitalization.admission_date.blank?
-    return if surgery_date >= hospitalization.admission_date &&
+    return if hospitalization.effective_admission_date.blank?
+    return if surgery_date >= hospitalization.effective_admission_date &&
               (hospitalization.discharge_date.blank? || surgery_date <= hospitalization.discharge_date)
 
     errors.add(:surgery_date, "must fall within the linked hospitalization period")

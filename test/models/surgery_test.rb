@@ -206,6 +206,51 @@ class SurgeryTest < ActiveSupport::TestCase
     assert surgery.valid?
   end
 
+  test "should allow a surgery within the scheduled period of a reservation-only hospitalization" do
+    hospitalization = Hospitalization.create!(
+      patient: patients(:two),
+      scheduled_admission_date: Date.new(2026, 9, 10),
+      reason: "Planned surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    surgery = Surgery.new(
+      patient: patients(:two),
+      hospitalization: hospitalization,
+      surgery_date: Date.new(2026, 9, 12),
+      anesthesia_method: "General",
+      duration_hours: 1.5,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    assert surgery.valid?
+  end
+
+  test "should reject a surgery_date before the scheduled_admission_date of a reservation-only hospitalization" do
+    hospitalization = Hospitalization.create!(
+      patient: patients(:two),
+      scheduled_admission_date: Date.new(2026, 9, 10),
+      reason: "Planned surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    surgery = Surgery.new(
+      patient: patients(:two),
+      hospitalization: hospitalization,
+      surgery_date: Date.new(2026, 9, 9),
+      anesthesia_method: "General",
+      duration_hours: 1.5,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    assert_not surgery.valid?
+    assert_includes surgery.errors[:surgery_date], "must fall within the linked hospitalization period"
+  end
+
   test "linked_to_hospitalization and standalone scopes" do
     linked = Surgery.create!(
       patient: patients(:one),

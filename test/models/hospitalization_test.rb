@@ -18,10 +18,82 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert hospitalization.valid?
   end
 
-  test "should require admission_date" do
+  test "should require admission_date or scheduled_admission_date" do
     hospitalization = hospitalizations(:one)
     hospitalization.admission_date = nil
     assert_not hospitalization.valid?
+    assert_includes hospitalization.errors[:admission_date], "or a scheduled admission date must be present"
+
+    hospitalization.scheduled_admission_date = Date.new(2026, 9, 1)
+    assert hospitalization.valid?
+  end
+
+  test "can be saved with only a scheduled_admission_date" do
+    hospitalization = Hospitalization.new(
+      patient: patients(:two),
+      scheduled_admission_date: Date.new(2026, 9, 1),
+      reason: "Planned surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    assert hospitalization.valid?
+    assert_nil hospitalization.admission_date
+  end
+
+  test "invalid date strings are rejected while blank fields are treated as undecided" do
+    hospitalization = hospitalizations(:one)
+
+    hospitalization.scheduled_admission_date = "not-a-date"
+    assert_not hospitalization.valid?
+    assert_includes hospitalization.errors[:scheduled_admission_date], "is not a valid date"
+
+    hospitalization.scheduled_admission_date = ""
+    assert hospitalization.valid?
+    assert_nil hospitalization.scheduled_admission_date
+
+    hospitalization.discharge_date = "also-not-a-date"
+    assert_not hospitalization.valid?
+    assert_includes hospitalization.errors[:discharge_date], "is not a valid date"
+  end
+
+  test "effective_admission_date prefers admission_date over scheduled_admission_date" do
+    hospitalization = Hospitalization.new(admission_date: Date.new(2026, 5, 1), scheduled_admission_date: Date.new(2026, 4, 20))
+    assert_equal Date.new(2026, 5, 1), hospitalization.effective_admission_date
+
+    hospitalization.admission_date = nil
+    assert_equal Date.new(2026, 4, 20), hospitalization.effective_admission_date
+
+    hospitalization.scheduled_admission_date = nil
+    assert_nil hospitalization.effective_admission_date
+  end
+
+  test "reservation_status must be one of the allowed options" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.reservation_status = "not_a_real_status"
+    assert_not hospitalization.valid?
+
+    hospitalization.reservation_status = "waiting"
+    assert hospitalization.valid?
+  end
+
+  test "purpose must be one of the allowed options" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.purpose = "not_a_real_purpose"
+    assert_not hospitalization.valid?
+
+    hospitalization.purpose = "examination"
+    assert hospitalization.valid?
+  end
+
+  test "reservation_status and purpose default to requested and surgery" do
+    hospitalization = Hospitalization.new
+    assert_equal "requested", hospitalization.reservation_status
+    assert_equal "surgery", hospitalization.purpose
+  end
+
+  test "reservation_status_form_options and purpose_form_options mirror the option constants" do
+    assert_equal Hospitalization::RESERVATION_STATUS_OPTIONS.map { |k, v| [ v, k ] }, Hospitalization.reservation_status_form_options
+    assert_equal Hospitalization::PURPOSE_OPTIONS.map { |k, v| [ v, k ] }, Hospitalization.purpose_form_options
   end
 
   test "should require reason" do
@@ -181,6 +253,39 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert hospitalization.valid?
   end
 
+  test "rejects overlap when the new hospitalization is reservation-only" do
+    hospitalization = Hospitalization.new(
+      patient: patients(:one),
+      scheduled_admission_date: Date.new(2026, 3, 3),
+      reason: "Fever",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    assert_not hospitalization.valid?
+    assert_includes hospitalization.errors[:scheduled_admission_date], "overlaps another hospitalization for this patient"
+  end
+
+  test "rejects overlap when the existing hospitalization is reservation-only" do
+    reservation = Hospitalization.create!(
+      patient: patients(:two),
+      scheduled_admission_date: Date.new(2026, 9, 10),
+      reason: "Planned surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    overlapping = Hospitalization.new(
+      patient: patients(:two),
+      admission_date: Date.new(2026, 9, 10),
+      reason: "Fever",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    assert_not overlapping.valid?
+    assert_includes overlapping.errors[:admission_date], "overlaps another hospitalization for this patient"
+    assert overlapping.invalid?
+    assert reservation.persisted?
+  end
+
   test "rejects moving admission_date after a linked surgery date" do
     hospitalization = hospitalizations(:one)
     Surgery.create!(
@@ -261,6 +366,30 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_equal 1, hospitalization.errors[:discharge_date].count { |message| message == "must include all linked surgeries within the hospitalization period" }
   end
 
+  test "linked surgeries must remain within the scheduled period when admission_date is not yet set" do
+    hospitalization = Hospitalization.create!(
+      patient: patients(:two),
+      scheduled_admission_date: Date.new(2026, 9, 10),
+      reason: "Planned surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+    Surgery.create!(
+      patient: patients(:two),
+      hospitalization: hospitalization,
+      surgery_date: Date.new(2026, 9, 12),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    hospitalization.scheduled_admission_date = Date.new(2026, 9, 13)
+
+    assert_not hospitalization.valid?
+    assert_includes hospitalization.errors[:scheduled_admission_date], "must include all linked surgeries within the hospitalization period"
+  end
+
   test "rejects reassigning the patient while a surgery is linked" do
     hospitalization = hospitalizations(:one)
     Surgery.create!(
@@ -335,6 +464,20 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_equal "In Hospital", hospitalizations(:three).status_label
   end
 
+  test "in_hospital?, status_label, and length_of_stay stay safe when admission_date is nil" do
+    hospitalization = Hospitalization.new(
+      patient: patients(:two),
+      scheduled_admission_date: Date.new(2026, 9, 10),
+      reason: "Planned surgery"
+    )
+
+    assert_not hospitalization.in_hospital?
+    assert_not hospitalization.discharged?
+    assert_equal "Scheduled", hospitalization.status_label
+    assert_nil hospitalization.length_of_stay
+    assert_nil hospitalization.days_since_admission
+  end
+
   test "outcome_label and discharge_destination_label" do
     assert_equal "Recovered", hospitalizations(:one).outcome_label
     assert_equal "Home", hospitalizations(:one).discharge_destination_label
@@ -360,6 +503,20 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_includes Hospitalization.admitted_between(nil, nil), hospitalizations(:one)
     assert_includes Hospitalization.admitted_between(Date.new(2026, 3, 1), nil), hospitalizations(:three)
     assert_not_includes Hospitalization.admitted_between(nil, Date.new(2026, 3, 4)), hospitalizations(:two)
+  end
+
+  test "admitted_between scope falls back to scheduled_admission_date when admission_date is nil" do
+    reservation = Hospitalization.create!(
+      patient: patients(:two),
+      scheduled_admission_date: Date.new(2026, 9, 10),
+      reason: "Planned surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    result = Hospitalization.admitted_between(Date.new(2026, 9, 1), Date.new(2026, 9, 30))
+    assert_includes result, reservation
+
+    assert_not_includes Hospitalization.admitted_between(Date.new(2026, 10, 1), nil), reservation
   end
 
   test "to_s renders patient and admission/discharge period" do
