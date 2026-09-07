@@ -52,6 +52,16 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "new excludes discarded hospitalizations from the linked hospitalization dropdown" do
+    hospitalizations(:one).discard!
+
+    get new_surgery_url
+
+    assert_response :success
+    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:one).id}']", count: 0
+    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:two).id}']", count: 1
+  end
+
   test "should create surgery" do
     assert_difference("Surgery.count") do
       post surgeries_url, params: { surgery: {

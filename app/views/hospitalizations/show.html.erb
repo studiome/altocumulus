@@ -22,7 +22,15 @@
             <% end %>
           </p>
         </div>
-        <div class="badge <%= @hospitalization.in_hospital? ? "badge-warning" : "badge-outline" %> badge-lg p-4"><%= @hospitalization.status_label %></div>
+        <div class="flex flex-col items-end gap-2">
+          <div class="badge <%= @hospitalization.in_hospital? ? "badge-warning" : "badge-outline" %> badge-lg p-4"><%= @hospitalization.status_label %></div>
+          <div class="badge <%= @hospitalization.admin_status == "confirmed" ? "badge-success" : "badge-ghost" %>">
+            <%= Hospitalization::ADMIN_STATUS_OPTIONS[@hospitalization.admin_status] %>
+          </div>
+          <% if @hospitalization.deleted? %>
+            <div class="badge badge-error">Deleted</div>
+          <% end %>
+        </div>
       </div>
 
       <div class="divider">Information</div>
@@ -137,6 +145,30 @@
         </ul>
       <% else %>
         <div class="app-empty-state mb-4">No surgeries are linked to this hospitalization.</div>
+      <% end %>
+
+      <% if admin? %>
+        <div class="divider">Admin Actions</div>
+
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <% unless @hospitalization.admin_status == "confirmed" %>
+            <%= button_to "Confirm", confirm_hospitalization_path(@hospitalization), method: :patch, class: "btn btn-success btn-sm" %>
+          <% end %>
+
+          <% if @hospitalization.deleted? %>
+            <%= button_to "Restore", restore_hospitalization_path(@hospitalization), method: :patch, class: "btn btn-warning btn-sm" %>
+          <% end %>
+
+          <%= link_to "View Deleted Hospitalizations", deleted_hospitalizations_path, class: "btn btn-ghost btn-sm" %>
+        </div>
+
+        <%= form_with url: copy_hospitalization_path(@hospitalization), method: :post, class: "flex flex-wrap items-end gap-3 mb-4" do |f| %>
+          <div class="app-field">
+            <%= f.label :scheduled_admission_date, "Copy to New Scheduled Admission Date", class: "app-field-label" %>
+            <%= f.date_field :scheduled_admission_date, class: "input input-sm" %>
+          </div>
+          <%= f.submit "Copy (Rebook)", class: "btn btn-outline btn-sm" %>
+        <% end %>
       <% end %>
 
       <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">

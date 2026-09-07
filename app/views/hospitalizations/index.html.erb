@@ -8,10 +8,15 @@
         <p class="app-page-kicker">Admissions</p>
         <h1 class="app-page-title">Hospitalizations</h1>
       </div>
-      <%= link_to new_hospitalization_path, class: "btn btn-primary" do %>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        New Hospitalization
-      <% end %>
+      <div class="flex items-center gap-2">
+        <% if admin? %>
+          <%= link_to "Deleted", deleted_hospitalizations_path, class: "btn btn-ghost" %>
+        <% end %>
+        <%= link_to new_hospitalization_path, class: "btn btn-primary" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+          New Hospitalization
+        <% end %>
+      </div>
     </div>
   </section>
 

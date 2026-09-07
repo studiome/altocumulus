@@ -96,6 +96,74 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_equal Hospitalization::PURPOSE_OPTIONS.map { |k, v| [ v, k ] }, Hospitalization.purpose_form_options
   end
 
+  test "admin_status defaults to unconfirmed" do
+    assert_equal "unconfirmed", Hospitalization.new.admin_status
+  end
+
+  test "admin_status must be one of the allowed options" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.admin_status = "not_a_real_status"
+    assert_not hospitalization.valid?
+
+    hospitalization.admin_status = "confirmed"
+    assert hospitalization.valid?
+  end
+
+  test "admin_status_form_options mirrors the option constant" do
+    assert_equal Hospitalization::ADMIN_STATUS_OPTIONS.map { |k, v| [ v, k ] }, Hospitalization.admin_status_form_options
+  end
+
+  test "saving as a non-admin user resets admin_status to unconfirmed" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.update!(admin_status: "confirmed") # simulate an already-confirmed record
+
+    Current.user = users(:member)
+    hospitalization.room_preference = "Updated by member"
+    hospitalization.save!
+
+    assert_equal "unconfirmed", hospitalization.reload.admin_status
+  ensure
+    Current.user = nil
+  end
+
+  test "saving as an admin user does not reset admin_status" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.update!(admin_status: "confirmed")
+
+    Current.user = users(:admin)
+    hospitalization.room_preference = "Updated by admin"
+    hospitalization.save!
+
+    assert_equal "confirmed", hospitalization.reload.admin_status
+  ensure
+    Current.user = nil
+  end
+
+  test "saving with no Current.user does not reset admin_status (system/console actor)" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.update!(admin_status: "confirmed")
+
+    Current.user = nil
+    hospitalization.room_preference = "Updated by console"
+    hospitalization.save!
+
+    assert_equal "confirmed", hospitalization.reload.admin_status
+  end
+
+  test "admin_status reset does not apply on create" do
+    Current.user = users(:member)
+    hospitalization = Hospitalization.create!(
+      patient: patients(:two),
+      scheduled_admission_date: Date.new(2026, 9, 1),
+      reason: "Planned surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    assert_equal "unconfirmed", hospitalization.admin_status
+  ensure
+    Current.user = nil
+  end
+
   test "should require reason" do
     hospitalization = hospitalizations(:one)
     hospitalization.reason = nil
@@ -522,6 +590,153 @@ class HospitalizationTest < ActiveSupport::TestCase
   test "to_s renders patient and admission/discharge period" do
     assert_equal "H001 - John Doe (2026-03-01 - 2026-03-06)", hospitalizations(:one).to_s
     assert_equal "H001 - John Doe (2026-06-01 - in hospital)", hospitalizations(:three).to_s
+  end
+
+  test "discard! soft-deletes without removing the record" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.discard!
+
+    assert hospitalization.deleted?
+    assert hospitalization.reload.deleted_at.present?
+    assert Hospitalization.exists?(hospitalization.id)
+  end
+
+  test "restore! clears deleted_at" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.discard!
+
+    hospitalization.restore!
+
+    assert_not hospitalization.deleted?
+    assert_nil hospitalization.reload.deleted_at
+  end
+
+  test "active and discarded scopes partition on deleted_at" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.discard!
+
+    assert_not_includes Hospitalization.active, hospitalization
+    assert_includes Hospitalization.discarded, hospitalization
+    assert_includes Hospitalization.active, hospitalizations(:two)
+    assert_not_includes Hospitalization.discarded, hospitalizations(:two)
+  end
+
+  test "discard! does not unlink surgeries" do
+    hospitalization = hospitalizations(:one)
+    surgery = Surgery.create!(
+      patient: patients(:one),
+      hospitalization: hospitalization,
+      surgery_date: Date.new(2026, 3, 3),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    hospitalization.discard!
+
+    assert_equal hospitalization.id, surgery.reload.hospitalization_id
+  end
+
+  test "filtered excludes discarded hospitalizations" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.discard!
+
+    assert_not_includes Hospitalization.filtered, hospitalization
+  end
+
+  test "captures a patient snapshot on create" do
+    patient = patients(:two)
+    patient.update!(name: "Snapshot Name", sex: "female", date_of_birth: Date.current - 40.years)
+
+    hospitalization = Hospitalization.create!(
+      patient: patient,
+      scheduled_admission_date: Date.new(2026, 9, 1),
+      reason: "Planned surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    assert_equal "Snapshot Name", hospitalization.patient_name_snapshot
+    assert_equal "female", hospitalization.patient_sex_snapshot
+    assert_equal 40, hospitalization.patient_age_snapshot
+  end
+
+  test "recaptures the patient snapshot when patient_id changes" do
+    hospitalization = hospitalizations(:three)
+    other_patient = patients(:two)
+    other_patient.update!(name: "New Assigned Patient", sex: "male", date_of_birth: Date.current - 55.years)
+
+    hospitalization.update!(patient_id: other_patient.id)
+
+    assert_equal "New Assigned Patient", hospitalization.patient_name_snapshot
+    assert_equal "male", hospitalization.patient_sex_snapshot
+    assert_equal 55, hospitalization.patient_age_snapshot
+  end
+
+  test "does not recapture the patient snapshot on an ordinary update" do
+    hospitalization = Hospitalization.create!(
+      patient: patients(:two),
+      scheduled_admission_date: Date.new(2026, 9, 1),
+      reason: "Planned surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+    original_snapshot = hospitalization.patient_name_snapshot
+    assert original_snapshot.present?
+
+    patients(:two).update!(name: "Changed Later")
+    hospitalization.update!(room_preference: "New room")
+
+    assert_equal original_snapshot, hospitalization.reload.patient_name_snapshot
+  end
+
+  test "rebook creates a new requested/unconfirmed hospitalization without actuals, discharge info, or surgery links, but keeps diagnoses" do
+    original = hospitalizations(:two)
+    original.update!(admin_status: "confirmed")
+    Surgery.create!(
+      patient: original.patient,
+      hospitalization: original,
+      surgery_date: Date.new(2026, 3, 6),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    copy = original.rebook(scheduled_admission_date: Date.new(2027, 1, 15))
+
+    assert copy.persisted?
+    assert_not_equal original.id, copy.id
+    assert_equal Date.new(2027, 1, 15), copy.scheduled_admission_date
+    assert_nil copy.admission_date
+    assert_nil copy.discharge_date
+    assert_nil copy.outcome
+    assert_nil copy.discharge_destination
+    assert_nil copy.deleted_at
+    assert_equal "requested", copy.reservation_status
+    assert_equal "unconfirmed", copy.admin_status
+    assert_equal Date.current, copy.submitted_on
+    assert_equal copy.diagnoses.ids.sort, original.diagnoses.ids.sort
+    assert_equal 0, copy.surgeries.count
+  end
+
+  test "rebook does not persist with a blank scheduled_admission_date" do
+    original = hospitalizations(:one)
+
+    copy = original.rebook(scheduled_admission_date: "")
+
+    assert_not copy.persisted?
+    assert_includes copy.errors[:admission_date], "or a scheduled admission date must be present"
+  end
+
+  test "rebook does not persist with an invalid scheduled_admission_date" do
+    original = hospitalizations(:one)
+
+    copy = original.rebook(scheduled_admission_date: "not-a-date")
+
+    assert_not copy.persisted?
+    assert_includes copy.errors[:scheduled_admission_date], "is not a valid date"
   end
 
   test "surgeries are nullified when the hospitalization is destroyed" do

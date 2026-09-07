@@ -1,0 +1,56 @@
+<% content_for :title, "Deleted Hospitalizations" %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker">Admissions</p>
+        <h1 class="app-page-title">Deleted Hospitalizations</h1>
+      </div>
+      <%= link_to "Back to Hospitalizations", hospitalizations_path, class: "btn btn-ghost" %>
+    </div>
+  </section>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200">Reason</th>
+            <th class="bg-base-200">Admission Date</th>
+            <th class="bg-base-200">Patient</th>
+            <th class="bg-base-200">Deleted At</th>
+            <th class="bg-base-200 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @hospitalizations.any? %>
+            <% @hospitalizations.each do |hospitalization| %>
+              <tr class="row-hover">
+                <td><%= hospitalization.reason %></td>
+                <td class="font-mono"><%= hospitalization.effective_admission_date&.strftime("%Y-%m-%d") || "-" %></td>
+                <td>
+                  <% if hospitalization.patient %>
+                    <%= link_to hospitalization.patient.name.presence || "Patient ##{hospitalization.patient_id}", hospitalization.patient, class: "link link-primary" %>
+                  <% else %>
+                    <span class="text-base-content/50 italic">Unknown</span>
+                  <% end %>
+                </td>
+                <td class="font-mono"><%= hospitalization.deleted_at&.strftime("%Y-%m-%d %H:%M") %></td>
+                <td class="text-right flex justify-end gap-2">
+                  <%= link_to "View", hospitalization, class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= button_to "Restore", restore_hospitalization_path(hospitalization), method: :patch, class: "btn btn-ghost btn-xs text-secondary" %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="5" class="text-center py-10 text-base-content/50 italic">No deleted hospitalizations.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

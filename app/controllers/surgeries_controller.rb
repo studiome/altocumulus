@@ -79,7 +79,7 @@ class SurgeriesController < ApplicationController
       @patients = Patient.order(:id)
       @patient_diagnoses = PatientDiagnosis.includes(:patient, :diagnosis).recent_first
       @surgery_procedures = SurgeryProcedure.alphabetical
-      @hospitalizations = Hospitalization.includes(:patient).order(admission_date: :desc)
+      @hospitalizations = Hospitalization.active.includes(:patient).order(admission_date: :desc)
       @elective_slot_rules = ElectiveSlotRule.ordered
     end
 

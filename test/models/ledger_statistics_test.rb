@@ -134,4 +134,31 @@ class LedgerStatisticsTest < ActiveSupport::TestCase
     stats_no_year = LedgerStatistics.new
     assert_equal Hospitalization.where.not(admission_date: nil).count, stats_no_year.hospitalizations_count
   end
+
+  test "discarded hospitalizations are excluded from every statistic" do
+    hospitalizations(:three).discard! # in_hospital, admitted 2026-06-01, no discharge yet
+
+    stats = LedgerStatistics.new(year: 2026)
+    assert_equal 0, LedgerStatistics.new.current_inpatients_count
+    assert_equal 2, stats.hospitalizations_count
+    assert_equal 0, stats.monthly_hospitalization_counts[Date.new(2026, 6, 1)]
+
+    discharged_and_deleted = hospitalizations(:one)
+    discharged_and_deleted.discard!
+    assert_equal 1, LedgerStatistics.new(year: 2026).hospitalizations_count
+    assert_equal 4.0, LedgerStatistics.new(year: 2026).average_length_of_stay
+  end
+
+  test "available_years excludes discarded hospitalizations" do
+    Hospitalization.create!(
+      patient: patients(:two),
+      admission_date: Date.new(2030, 1, 1),
+      discharge_date: Date.new(2030, 1, 2),
+      outcome: "recovered",
+      reason: "Far future admission",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    ).discard!
+
+    assert_not_includes LedgerStatistics.new.available_years, 2030
+  end
 end

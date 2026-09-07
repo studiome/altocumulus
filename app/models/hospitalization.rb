@@ -35,6 +35,11 @@ class Hospitalization < ApplicationRecord
     "chemotherapy" => "Chemotherapy"
   }.freeze
 
+  ADMIN_STATUS_OPTIONS = {
+    "unconfirmed" => "Unconfirmed",
+    "confirmed" => "Confirmed"
+  }.freeze
+
   belongs_to :patient
   has_many :hospitalization_diagnoses, -> { order(:id) }, dependent: :destroy, inverse_of: :hospitalization
   has_many :diagnoses, through: :hospitalization_diagnoses
@@ -52,6 +57,7 @@ class Hospitalization < ApplicationRecord
   validates :discharge_destination, inclusion: { in: DISCHARGE_DESTINATION_OPTIONS.keys }, allow_blank: true
   validates :reservation_status, inclusion: { in: RESERVATION_STATUS_OPTIONS.keys }
   validates :purpose, inclusion: { in: PURPOSE_OPTIONS.keys }
+  validates :admin_status, inclusion: { in: ADMIN_STATUS_OPTIONS.keys }
   validate :valid_date_values
   validate :admission_date_or_scheduled_admission_date_required
   validate :must_have_at_least_one_diagnosis
@@ -65,6 +71,27 @@ class Hospitalization < ApplicationRecord
 
   before_validation :reset_linked_surgeries_memo
 
+  # A non-admin's update always drops back to "unconfirmed", regardless of
+  # whether admin_status itself was touched (it is not even in the
+  # controller's strong parameters, so this is the actual enforcement point).
+  # Only an admin (via the #confirm action) can make it "confirmed". A save
+  # with no Current.user (console, seeds, background jobs) is treated as a
+  # trusted system actor and left alone.
+  before_update :reset_admin_status_for_non_admin_update,
+                unless: -> { Current.user.nil? || Current.user.admin? }
+
+  # The snapshot records what the patient looked like at reservation time, so
+  # it is only (re)captured when the patient link itself is established or
+  # changes -- never on an ordinary field edit, or it would silently drift
+  # away from being a point-in-time record.
+  before_save :capture_patient_snapshot, if: -> { new_record? || patient_id_changed? }
+
+  # No default_scope: it would fight the deleted list, restore, and admin
+  # tooling, which all need to see discarded records. Every other read path
+  # (index, LedgerStatistics, jbuilder, associations shown to end users) has
+  # to opt in to .active explicitly.
+  scope :active, -> { where(deleted_at: nil) }
+  scope :discarded, -> { where.not(deleted_at: nil) }
   scope :discharged, -> { where.not(discharge_date: nil) }
   scope :in_hospital, -> { where(discharge_date: nil).where(admission_date: ..Date.current) }
   # Reservation-stage hospitalizations only carry scheduled_admission_date, so
@@ -93,8 +120,12 @@ class Hospitalization < ApplicationRecord
     PURPOSE_OPTIONS.map { |k, v| [ v, k ] }
   end
 
+  def self.admin_status_form_options
+    ADMIN_STATUS_OPTIONS.map { |k, v| [ v, k ] }
+  end
+
   def self.filtered(keyword: nil, diagnosis_id: nil, status: nil, admitted_from: nil, admitted_to: nil)
-    scope = all
+    scope = active
 
     if keyword.present?
       pattern = "%#{sanitize_sql_like(keyword)}%"
@@ -132,6 +163,21 @@ class Hospitalization < ApplicationRecord
   # expressed in terms of this single effective date.
   def effective_admission_date
     admission_date || scheduled_admission_date
+  end
+
+  def deleted?
+    deleted_at.present?
+  end
+
+  # Logical delete only: surgeries stay linked so a restore puts everything
+  # back exactly as it was. Real destruction (see #unlink_surgeries) is a
+  # separate, physical-only path that this never calls.
+  def discard!
+    update!(deleted_at: Time.current)
+  end
+
+  def restore!
+    update!(deleted_at: nil)
   end
 
   def discharged?
@@ -176,7 +222,46 @@ class Hospitalization < ApplicationRecord
     "#{patient} (#{effective_admission_date || 'date not set'} - #{discharge_date || 'in hospital'})"
   end
 
+  # Builds (and saves) a fresh "requested" reservation from this one, for the
+  # common "patient needs to be rebooked" workflow. Actuals, discharge info,
+  # admin confirmation, and surgery links intentionally do not carry over;
+  # the diagnoses at admission do, since altocumulus keeps those in their own
+  # table rather than a single string column.
+  def rebook(scheduled_admission_date:)
+    copy = dup
+    copy.admission_date = nil
+    copy.discharge_date = nil
+    copy.outcome = nil
+    copy.discharge_destination = nil
+    copy.deleted_at = nil
+    copy.reservation_status = "requested"
+    copy.admin_status = "unconfirmed"
+    copy.submitted_on = Date.current
+    copy.scheduled_admission_date = scheduled_admission_date
+    copy.hospitalization_diagnoses_attributes =
+      active_hospitalization_diagnoses.map { |hd| { diagnosis_id: hd.diagnosis_id } }
+    copy.save
+    copy
+  end
+
   private
+
+    def reset_admin_status_for_non_admin_update
+      self.admin_status = "unconfirmed"
+    end
+
+    def capture_patient_snapshot
+      unless patient
+        self.patient_name_snapshot = nil
+        self.patient_age_snapshot = nil
+        self.patient_sex_snapshot = nil
+        return
+      end
+
+      self.patient_name_snapshot = patient.name
+      self.patient_age_snapshot = patient.age
+      self.patient_sex_snapshot = patient.sex
+    end
 
     # dependent: :nullify unlinks the surgeries with a single update_all, which
     # skips callbacks and so leaves them missing from the audit log. Saving each

@@ -10,6 +10,16 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index.json excludes discarded hospitalizations" do
+    @hospitalization.discard!
+
+    get hospitalizations_url(format: :json)
+
+    assert_response :success
+    ids = JSON.parse(@response.body).map { |h| h["id"] }
+    assert_not_includes ids, @hospitalization.id
+  end
+
   test "index does not error out on a crafted Array page param" do
     get hospitalizations_url, params: { page: [ "1" ] }
     assert_response :success
@@ -223,11 +233,161 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should destroy hospitalization" do
-    assert_difference("Hospitalization.count", -1) do
+    # destroy is now a logical delete: the row survives, moves out of the
+    # default index/API scope, and shows up in the deleted list instead.
+    assert_no_difference("Hospitalization.count") do
       delete hospitalization_url(@hospitalization)
     end
 
     assert_redirected_to hospitalizations_url
+    assert @hospitalization.reload.deleted?
+
+    get hospitalizations_url
+    assert_no_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+
+    get deleted_hospitalizations_url
+    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+  end
+
+  test "admin can restore a discarded hospitalization" do
+    @hospitalization.discard!
+
+    patch restore_hospitalization_url(@hospitalization)
+
+    assert_redirected_to hospitalization_url(@hospitalization)
+    assert_not @hospitalization.reload.deleted?
+  end
+
+  test "a general user cannot restore a discarded hospitalization" do
+    @hospitalization.discard!
+    sign_out
+    sign_in_as(users(:member))
+
+    patch restore_hospitalization_url(@hospitalization)
+
+    assert_redirected_to root_url
+    assert @hospitalization.reload.deleted?
+  end
+
+  test "a general user cannot view the deleted list" do
+    sign_out
+    sign_in_as(users(:member))
+
+    get deleted_hospitalizations_url
+
+    assert_redirected_to root_url
+  end
+
+  test "admin can copy a hospitalization to a new scheduled admission date" do
+    hospitalization = hospitalizations(:two)
+
+    assert_difference("Hospitalization.count", 1) do
+      post copy_hospitalization_url(hospitalization), params: { scheduled_admission_date: "2027-02-01" }
+    end
+
+    copy = Hospitalization.order(:id).last
+    assert_redirected_to edit_hospitalization_url(copy)
+    assert_equal Date.new(2027, 2, 1), copy.scheduled_admission_date
+    assert_equal "requested", copy.reservation_status
+    assert_equal "unconfirmed", copy.admin_status
+  end
+
+  test "copy with a blank date does not save and redirects back to the original" do
+    hospitalization = hospitalizations(:two)
+
+    assert_no_difference("Hospitalization.count") do
+      post copy_hospitalization_url(hospitalization), params: { scheduled_admission_date: "" }
+    end
+
+    assert_redirected_to hospitalization_url(hospitalization)
+  end
+
+  test "a general user cannot copy a hospitalization" do
+    hospitalization = hospitalizations(:two)
+    sign_out
+    sign_in_as(users(:member))
+
+    assert_no_difference("Hospitalization.count") do
+      post copy_hospitalization_url(hospitalization), params: { scheduled_admission_date: "2027-02-01" }
+    end
+
+    assert_redirected_to root_url
+  end
+
+  test "discarding a hospitalization does not unlink its surgeries" do
+    surgery = Surgery.create!(
+      patient: patients(:one),
+      hospitalization: @hospitalization,
+      surgery_date: Date.new(2026, 3, 3),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    delete hospitalization_url(@hospitalization)
+
+    assert_equal @hospitalization.id, surgery.reload.hospitalization_id
+  end
+
+  test "a general user update resets admin_status to unconfirmed" do
+    @hospitalization.update!(admin_status: "confirmed")
+    sign_out
+    sign_in_as(users(:member))
+
+    patch hospitalization_url(@hospitalization), params: { hospitalization: {
+      patient_id: @hospitalization.patient_id,
+      admission_date: @hospitalization.admission_date,
+      reason: @hospitalization.reason
+    } }
+
+    assert_redirected_to hospitalization_url(@hospitalization)
+    assert_equal "unconfirmed", @hospitalization.reload.admin_status
+  end
+
+  test "an admin update does not reset admin_status" do
+    @hospitalization.update!(admin_status: "confirmed")
+
+    patch hospitalization_url(@hospitalization), params: { hospitalization: {
+      patient_id: @hospitalization.patient_id,
+      admission_date: @hospitalization.admission_date,
+      reason: @hospitalization.reason
+    } }
+
+    assert_redirected_to hospitalization_url(@hospitalization)
+    assert_equal "confirmed", @hospitalization.reload.admin_status
+  end
+
+  test "a general user cannot set admin_status directly through params" do
+    sign_out
+    sign_in_as(users(:member))
+
+    patch hospitalization_url(@hospitalization), params: { hospitalization: {
+      patient_id: @hospitalization.patient_id,
+      admission_date: @hospitalization.admission_date,
+      reason: @hospitalization.reason,
+      admin_status: "confirmed"
+    } }
+
+    assert_equal "unconfirmed", @hospitalization.reload.admin_status
+  end
+
+  test "admin can confirm a hospitalization" do
+    patch confirm_hospitalization_url(@hospitalization)
+
+    assert_redirected_to hospitalization_url(@hospitalization)
+    assert_equal "confirmed", @hospitalization.reload.admin_status
+  end
+
+  test "a general user cannot confirm a hospitalization" do
+    sign_out
+    sign_in_as(users(:member))
+
+    patch confirm_hospitalization_url(@hospitalization)
+
+    assert_redirected_to root_url
+    assert_equal "unconfirmed", @hospitalization.reload.admin_status
   end
 
   test "show does not issue more queries as more surgeries are linked" do

@@ -19,7 +19,16 @@ Rails.application.routes.draw do
   resources :diagnoses
   resources :surgery_procedures
   resources :surgeries
-  resources :hospitalizations
+  resources :hospitalizations do
+    member do
+      patch :confirm
+      patch :restore
+      post :copy
+    end
+    collection do
+      get :deleted
+    end
+  end
   resources :elective_slot_rules
   resources :holidays
   resources :audit_events, only: %i[ index show ]

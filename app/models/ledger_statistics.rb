@@ -8,7 +8,7 @@ class LedgerStatistics
   end
 
   def current_inpatients_count
-    Hospitalization.in_hospital.count
+    Hospitalization.active.in_hospital.count
   end
 
   def surgeries_count
@@ -84,7 +84,7 @@ class LedgerStatistics
 
   def available_years
     surgery_years = Surgery.where.not(surgery_date: nil).distinct.pluck(Arel.sql("strftime('%Y', surgery_date)"))
-    hospitalization_years = Hospitalization.where.not(admission_date: nil).distinct.pluck(Arel.sql("strftime('%Y', admission_date)"))
+    hospitalization_years = Hospitalization.active.where.not(admission_date: nil).distinct.pluck(Arel.sql("strftime('%Y', admission_date)"))
     (surgery_years + hospitalization_years).compact.map(&:to_i).uniq.sort.reverse
   end
 
@@ -96,9 +96,12 @@ class LedgerStatistics
 
     # Statistics report on what actually happened, so a reservation-stage
     # hospitalization (scheduled_admission_date set, admission_date still
-    # nil) must never be counted here, in any breakdown.
+    # nil) must never be counted here, in any breakdown. Likewise a
+    # logically-deleted (cancelled) hospitalization is not a real admission
+    # any more, regardless of whether admission_date happens to be set --
+    # both conditions are independent and must both apply.
     def hospitalizations_scope
-      scope = Hospitalization.where.not(admission_date: nil)
+      scope = Hospitalization.active.where.not(admission_date: nil)
       @year ? scope.where(admission_date: year_range) : scope
     end
 

@@ -1,6 +1,7 @@
 class HospitalizationsController < ApplicationController
-  before_action :set_hospitalization, only: %i[ show edit update destroy ]
+  before_action :set_hospitalization, only: %i[ show edit update destroy confirm restore copy ]
   before_action :set_form_collections, only: %i[ new edit create update ]
+  before_action :require_admin, only: %i[ confirm restore copy deleted ]
 
   def index
     @diagnoses = Diagnosis.alphabetical
@@ -55,11 +56,35 @@ class HospitalizationsController < ApplicationController
   end
 
   def destroy
-    @hospitalization.destroy!
+    @hospitalization.discard!
 
     respond_to do |format|
-      format.html { redirect_to hospitalizations_path, notice: "Hospitalization was successfully destroyed.", status: :see_other }
+      format.html { redirect_to hospitalizations_path, notice: "Hospitalization was successfully deleted.", status: :see_other }
       format.json { head :no_content }
+    end
+  end
+
+  def confirm
+    @hospitalization.update!(admin_status: "confirmed")
+    redirect_to @hospitalization, notice: "Hospitalization was confirmed."
+  end
+
+  def restore
+    @hospitalization.restore!
+    redirect_to @hospitalization, notice: "Hospitalization was restored."
+  end
+
+  def deleted
+    @hospitalizations = Hospitalization.discarded.includes(:patient).order(updated_at: :desc)
+  end
+
+  def copy
+    @copy = @hospitalization.rebook(scheduled_admission_date: params[:scheduled_admission_date])
+
+    if @copy.persisted?
+      redirect_to edit_hospitalization_path(@copy), notice: "Hospitalization was copied. Fill in the remaining details."
+    else
+      redirect_to @hospitalization, alert: "Could not copy: #{@copy.errors.full_messages.to_sentence}"
     end
   end
 
