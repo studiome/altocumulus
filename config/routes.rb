@@ -6,12 +6,12 @@ Rails.application.routes.draw do
   resource :account, only: %i[ show update ]
 
   namespace :admin do
-    resources :users do
+    resources :users, only: %i[ index new create edit update ] do
       member do
         patch :reset_password
       end
     end
-    resources :announcements
+    resources :announcements, only: %i[ index new create edit update destroy ]
     resources :admin_notes, only: %i[ index create destroy ]
   end
 
