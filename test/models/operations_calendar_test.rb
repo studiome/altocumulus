@@ -49,7 +49,7 @@ class OperationsCalendarTest < ActiveSupport::TestCase
     end
   end
 
-  test "admission_count_for sums scheduled and actual admissions, excluding deleted hospitalizations" do
+  test "admission_count_for excludes discarded hospitalizations" do
     date = Date.current + 5
     create_hospitalization(scheduled_admission_date: date)
     deleted = create_hospitalization(scheduled_admission_date: date)
