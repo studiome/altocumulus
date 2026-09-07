@@ -1,4 +1,18 @@
 Rails.application.routes.draw do
+  get "login" => "sessions#new", as: :login
+  post "login" => "sessions#create"
+  delete "logout" => "sessions#destroy", as: :logout
+
+  resource :account, only: %i[ show update ]
+
+  namespace :admin do
+    resources :users do
+      member do
+        patch :reset_password
+      end
+    end
+  end
+
   resources :patients do
     resources :patient_diagnoses
   end

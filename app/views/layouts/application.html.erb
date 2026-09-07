@@ -45,6 +45,14 @@
               <li><%= link_to "Holidays", holidays_path %></li>
             </ul>
           </li>
+          <% if current_user %>
+            <% if admin? %>
+              <li><%= link_to "Users", admin_users_path %></li>
+            <% end %>
+            <li><%= link_to "Account", account_path %></li>
+            <li class="flex items-center text-sm text-base-content/60 px-2"><%= current_user.name %></li>
+            <li><%= button_to "Sign Out", logout_path, method: :delete, class: "btn btn-ghost btn-sm" %></li>
+          <% end %>
         </ul>
       </div>
     </header>
