@@ -1,11 +1,11 @@
-<% content_for :title, "Elective Slot Rules" %>
+<% content_for :title, t(".title") %>
 
 <div class="w-full">
 
   <div class="flex justify-between items-center mb-8">
     <div>
-      <h1 class="font-bold text-4xl mb-2">Elective Slot Rules</h1>
-      <p class="text-base-content/60">One rule per weekday. Configure how many elective surgery slots repeat each week.</p>
+      <h1 class="font-bold text-4xl mb-2"><%= t(".title") %></h1>
+      <p class="text-base-content/60"><%= t(".description") %></p>
     </div>
   </div>
 
@@ -14,10 +14,10 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200">Day</th>
-            <th class="bg-base-200">Slots</th>
-            <th class="bg-base-200">Slot Duration</th>
-            <th class="bg-base-200 text-right">Actions</th>
+            <th class="bg-base-200"><%= t(".day_header") %></th>
+            <th class="bg-base-200"><%= t(".slots_header") %></th>
+            <th class="bg-base-200"><%= t(".slot_duration_header") %></th>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>
@@ -27,16 +27,16 @@
               <td class="font-semibold"><%= day_name %></td>
               <% if rule %>
                 <td><%= rule.slot_count_display %></td>
-                <td><%= rule.slot_duration_minutes %> min</td>
+                <td><%= rule.slot_duration_minutes %> <%= t("elective_slot_rules.units.minutes") %></td>
                 <td class="text-right flex justify-end gap-2">
-                  <%= link_to "View", rule, class: "btn btn-ghost btn-xs text-primary" %>
-                  <%= link_to "Edit", edit_elective_slot_rule_path(rule), class: "btn btn-ghost btn-xs text-secondary" %>
-                  <%= button_to "Delete", rule, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                  <%= link_to t("common.view"), rule, class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to t("common.edit"), edit_elective_slot_rule_path(rule), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to t("common.delete"), rule, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
                 </td>
               <% else %>
-                <td colspan="2" class="text-base-content/50 italic">Not configured</td>
+                <td colspan="2" class="text-base-content/50 italic"><%= t(".not_configured") %></td>
                 <td class="text-right">
-                  <%= link_to "Add", new_elective_slot_rule_path(day_of_week: day_of_week), class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to t(".add_link"), new_elective_slot_rule_path(day_of_week: day_of_week), class: "btn btn-ghost btn-xs text-primary" %>
                 </td>
               <% end %>
             </tr>

@@ -3,7 +3,7 @@
     <div role="alert" class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       <div>
-        <h3 class="font-bold"><%= pluralize(elective_slot_rule.errors.count, "error") %> prohibited this elective slot rule from being saved:</h3>
+        <h3 class="font-bold"><%= t(".errors_heading", count: elective_slot_rule.errors.count) %></h3>
         <ul class="list-disc ml-6">
           <% elective_slot_rule.errors.each do |error| %>
             <li><%= error.full_message %></li>
@@ -14,20 +14,20 @@
   <% end %>
 
   <div class="app-field">
-    <%= form.label :day_of_week, "Day of Week", class: "app-field-label" %>
-    <%= form.select :day_of_week, ElectiveSlotRule.day_of_week_form_options, { prompt: "Select a day" }, class: "select w-full focus:select-primary" %>
+    <%= form.label :day_of_week, t(".day_of_week_label"), class: "app-field-label" %>
+    <%= form.select :day_of_week, ElectiveSlotRule.day_of_week_form_options, { prompt: t(".day_of_week_prompt") }, class: "select w-full focus:select-primary" %>
   </div>
 
   <div class="app-field">
-    <%= form.label :slot_count, "Number of Slots", class: "app-field-label" %>
-    <%= form.number_field :slot_count, class: "input w-full focus:input-primary", min: 0.5, step: 0.5, placeholder: "e.g. 2.5" %>
-    <p class="app-helper">A fractional value (e.g. 2.5) means the day's last slot is shorter than the rest, not an extra whole slot.</p>
+    <%= form.label :slot_count, t("elective_slot_rules.labels.slot_count"), class: "app-field-label" %>
+    <%= form.number_field :slot_count, class: "input w-full focus:input-primary", min: 0.5, step: 0.5, placeholder: t(".slot_count_placeholder") %>
+    <p class="app-helper"><%= t(".slot_count_helper") %></p>
   </div>
 
   <div class="app-field">
-    <%= form.label :slot_duration_minutes, "Slot Duration (minutes)", class: "app-field-label" %>
-    <%= form.number_field :slot_duration_minutes, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 240" %>
-    <p class="app-helper">The total time available in one slot. A surgery that runs longer is treated as extending its own slot, not consuming another.</p>
+    <%= form.label :slot_duration_minutes, t(".slot_duration_label"), class: "app-field-label" %>
+    <%= form.number_field :slot_duration_minutes, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: t(".slot_duration_placeholder") %>
+    <p class="app-helper"><%= t(".slot_duration_helper") %></p>
   </div>
 
   <div class="pt-4">
