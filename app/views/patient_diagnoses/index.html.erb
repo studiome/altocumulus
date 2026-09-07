@@ -1,4 +1,4 @@
-<% content_for :title, "Patient Diagnoses" %>
+<% content_for :title, t(".title") %>
 
 <div class="max-w-4xl mx-auto w-full">
 
@@ -8,11 +8,11 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
       <% end %>
       <div>
-        <h1 class="font-bold text-4xl">Diagnoses</h1>
+        <h1 class="font-bold text-4xl"><%= t(".heading") %></h1>
         <p class="text-base-content/60"><%= @patient.name %> / <span class="font-mono"><%= @patient.hospital_id %></span></p>
       </div>
     </div>
-    <%= link_to "Add Diagnosis", new_patient_patient_diagnosis_path(@patient), class: "btn btn-primary" %>
+    <%= link_to t(".add_diagnosis_button"), new_patient_patient_diagnosis_path(@patient), class: "btn btn-primary" %>
   </div>
 
   <div class="card bg-base-100 shadow-xl border border-base-200 overflow-hidden">
@@ -20,9 +20,9 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200">Diagnosis</th>
-            <th class="bg-base-200">Diagnosed On</th>
-            <th class="bg-base-200 text-right">Actions</th>
+            <th class="bg-base-200"><%= PatientDiagnosis.human_attribute_name(:diagnosis_id) %></th>
+            <th class="bg-base-200"><%= t("patient_diagnoses.labels.diagnosed_on") %></th>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>
@@ -30,18 +30,18 @@
             <% @patient_diagnoses.each do |patient_diagnosis| %>
               <tr class="row-hover">
                 <td class="font-semibold"><%= patient_diagnosis.display_name %></td>
-                <td><%= patient_diagnosis.diagnosed_on.strftime("%Y-%m-%d") %></td>
+                <td><%= l(patient_diagnosis.diagnosed_on, format: :default) %></td>
                 <td class="text-right flex justify-end gap-2">
-                  <%= link_to "View", patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-primary" %>
-                  <%= link_to "Edit", edit_patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-secondary" %>
-                  <%= button_to "Delete", patient_patient_diagnosis_path(@patient, patient_diagnosis), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                  <%= link_to t("common.view"), patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to t("common.edit"), edit_patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to t("common.delete"), patient_patient_diagnosis_path(@patient, patient_diagnosis), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
                 </td>
               </tr>
             <% end %>
           <% else %>
             <tr>
               <td colspan="3" class="text-center py-10 text-base-content/50 italic">
-                No diagnoses found. Click "Add Diagnosis" to register the first entry.
+                <%= t(".empty") %>
               </td>
             </tr>
           <% end %>

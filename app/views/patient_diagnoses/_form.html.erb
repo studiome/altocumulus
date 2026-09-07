@@ -3,7 +3,7 @@
     <div role="alert" class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       <div>
-        <h3 class="font-bold"><%= pluralize(patient_diagnosis.errors.count, "error") %> prohibited this diagnosis entry from being saved:</h3>
+        <h3 class="font-bold"><%= t(".errors_heading", count: patient_diagnosis.errors.count) %></h3>
         <ul class="list-disc ml-6">
           <% patient_diagnosis.errors.each do |error| %>
             <li><%= error.full_message %></li>
@@ -15,12 +15,12 @@
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div class="app-field">
-      <label class="app-field-label">Patient Name</label>
+      <label class="app-field-label"><%= t("patient_diagnoses.labels.patient_name") %></label>
       <input type="text" value="<%= patient.name %>" class="input w-full" disabled>
     </div>
 
     <div class="app-field">
-      <label class="app-field-label">Patient ID</label>
+      <label class="app-field-label"><%= t("patient_diagnoses.labels.patient_id") %></label>
       <input type="text" value="<%= patient.hospital_id %>" class="input w-full font-mono" disabled>
     </div>
   </div>
@@ -29,31 +29,31 @@
     <div role="alert" class="alert alert-warning" id="patient_diagnosis_no_diagnoses_warning">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
       <div class="flex items-center justify-between w-full gap-4">
-        <span>No diagnosis masters found. Create a diagnosis first before registering this entry.</span>
-        <%= link_to "New Diagnosis", new_diagnosis_path, class: "btn btn-sm btn-outline", data: { turbo_frame: "diagnosis_modal_frame" } %>
+        <span><%= t(".no_diagnoses_warning") %></span>
+        <%= link_to t(".new_diagnosis_link"), new_diagnosis_path, class: "btn btn-sm btn-outline", data: { turbo_frame: "diagnosis_modal_frame" } %>
       </div>
     </div>
   <% end %>
 
   <div class="app-field">
-    <%= form.label :laterality, "Laterality", class: "app-field-label" %>
+    <%= form.label :laterality, PatientDiagnosis.human_attribute_name(:laterality), class: "app-field-label" %>
     <%= form.select :laterality, PatientDiagnosis.laterality_form_options, {}, class: "select w-full focus:select-primary" %>
   </div>
 
   <div class="app-field">
     <div class="flex items-center justify-between gap-3">
-      <%= form.label :diagnosis_id, "Diagnosis", class: "app-field-label" %>
-      <%= link_to "New Diagnosis", new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_modal_frame" } %>
+      <%= form.label :diagnosis_id, PatientDiagnosis.human_attribute_name(:diagnosis_id), class: "app-field-label" %>
+      <%= link_to t(".new_diagnosis_link"), new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_modal_frame" } %>
     </div>
-    <%= form.collection_select :diagnosis_id, diagnoses, :id, :name, { prompt: "Select a diagnosis" }, class: "select w-full focus:select-primary" %>
+    <%= form.collection_select :diagnosis_id, diagnoses, :id, :name, { prompt: t(".select_diagnosis_prompt") }, class: "select w-full focus:select-primary" %>
   </div>
 
   <div class="app-field">
-    <%= form.label :diagnosed_on, "Diagnosed On", class: "app-field-label" %>
+    <%= form.label :diagnosed_on, t("patient_diagnoses.labels.diagnosed_on"), class: "app-field-label" %>
     <%= form.date_field :diagnosed_on, class: "input w-full focus:input-primary" %>
   </div>
 
   <div class="pt-4" id="patient_diagnosis_submit">
-    <%= form.submit "Save Diagnosis Entry", class: "btn btn-primary w-full", disabled: diagnoses.none? %>
+    <%= form.submit t("diagnoses.create.save_entry_submit"), class: "btn btn-primary w-full", disabled: diagnoses.none? %>
   </div>
 <% end %>

@@ -552,3 +552,85 @@ ja:
     units:
       minutes: "分"
       hours: "時間"
+
+  # Stage 3 group 2 (Patients / PatientDiagnoses). See en.yml for the design
+  # notes.
+  patients:
+    index:
+      kicker: "登録"
+      title: "患者"
+      new_button: "新規患者"
+      keyword_label: "キーワード"
+      keyword_placeholder: "氏名または患者ID"
+      empty_no_filter: "患者が登録されていません。「新規患者」から作成してください。"
+      empty_filtered: "検索条件に一致する患者がいません。"
+    show:
+      title: "患者の詳細"
+      badge: "患者記録"
+      full_name_label: "氏名"
+      age_label: "年齢"
+      hospital_identifier_label: "患者ID"
+      diagnoses_divider: "診断"
+      diagnosis_history_title: "診断歴"
+      diagnosis_history_description: "この患者の診断名と診断日を複数登録できます。"
+      diagnosed_on_header: "診断日"
+      no_diagnoses: "診断エントリはまだ登録されていません。"
+      edit_button: "患者を編集"
+      delete_button: "患者を削除"
+    new:
+      title: "新規患者"
+    edit:
+      title: "患者を編集"
+    create:
+      success_notice: "患者を作成しました。"
+    update:
+      success_notice: "患者を更新しました。"
+    destroy:
+      success_notice: "患者を削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの患者を保存できませんでした:"
+      hospital_id_placeholder: "例: H12345"
+      name_label: "患者氏名"
+      name_placeholder: "例: 山田太郎"
+      telephone_placeholder: "例: 03-1234-5678"
+      clinical_info_placeholder: "例: アレルギー、既往歴など"
+    labels:
+      hospital_id: "患者ID"
+      name_kana: "フリガナ"
+      date_of_birth: "生年月日"
+      clinical_info: "臨床情報"
+      add_diagnosis_button: "診断を追加"
+
+  patient_diagnoses:
+    index:
+      title: "患者診断"
+      heading: "診断"
+      add_diagnosis_button: "診断を追加"
+      empty: "診断が登録されていません。「診断を追加」から最初のエントリを登録してください。"
+    show:
+      title: "診断エントリの詳細"
+      badge: "診断記録"
+      diagnosis_name_label: "診断名"
+      edit_button: "診断エントリを編集"
+      delete_button: "診断エントリを削除"
+    new:
+      title: "新規診断エントリ"
+    edit:
+      title: "診断エントリを編集"
+    create:
+      success_notice: "診断エントリを作成しました。"
+    update:
+      success_notice: "診断エントリを更新しました。"
+    destroy:
+      success_notice: "診断エントリを削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの診断エントリを保存できませんでした:"
+      no_diagnoses_warning: "診断名マスタが登録されていません。このエントリを登録する前に診断名を作成してください。"
+      new_diagnosis_link: "新規診断名"
+      select_diagnosis_prompt: "診断名を選択してください"
+    labels:
+      patient_name: "患者氏名"
+      patient_id: "患者ID"
+      diagnosed_on: "診断日"
