@@ -48,6 +48,8 @@
         <thead>
           <tr>
             <th class="bg-base-200">Status</th>
+            <th class="bg-base-200">Reservation Status</th>
+            <th class="bg-base-200">Purpose</th>
             <th class="bg-base-200">Diagnoses</th>
             <th class="bg-base-200">Admission Date</th>
             <th class="bg-base-200">Discharge Date</th>
@@ -69,8 +71,18 @@
                     <%= hospitalization.status_label %>
                   </span>
                 </td>
+                <td><%= Hospitalization::RESERVATION_STATUS_OPTIONS[hospitalization.reservation_status] %></td>
+                <td><%= Hospitalization::PURPOSE_OPTIONS[hospitalization.purpose] %></td>
                 <td><%= hospitalization.diagnosis_names_display %></td>
-                <td class="font-mono font-medium"><%= hospitalization.admission_date&.strftime("%Y-%m-%d") %></td>
+                <td class="font-mono font-medium">
+                  <% if hospitalization.admission_date.present? %>
+                    <%= hospitalization.admission_date.strftime("%Y-%m-%d") %>
+                  <% elsif hospitalization.scheduled_admission_date.present? %>
+                    <%= hospitalization.scheduled_admission_date.strftime("%Y-%m-%d") %> <span class="text-base-content/50 italic">(scheduled)</span>
+                  <% else %>
+                    -
+                  <% end %>
+                </td>
                 <td class="font-mono"><%= hospitalization.discharge_date&.strftime("%Y-%m-%d") || "-" %></td>
                 <td><%= hospitalization.length_of_stay.present? ? "#{hospitalization.length_of_stay} days" : "-" %></td>
                 <td><%= hospitalization.planned_days.present? ? "#{hospitalization.planned_days} days" : "-" %></td>
@@ -94,7 +106,7 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="11" class="text-center py-10 text-base-content/50 italic">
+              <td colspan="13" class="text-center py-10 text-base-content/50 italic">
                 <% if params.values_at(:keyword, :diagnosis_id, :status, :admitted_from, :admitted_to).any?(&:present?) %>
                   No hospitalizations match your search.
                 <% else %>

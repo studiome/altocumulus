@@ -34,6 +34,22 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index orders reservation-only hospitalizations by scheduled_admission_date" do
+    reservation = Hospitalization.create!(
+      patient: patients(:two),
+      scheduled_admission_date: Date.new(2027, 1, 1),
+      reason: "Planned surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    get hospitalizations_url
+    assert_response :success
+
+    body_index = @response.body.index(reservation.reason)
+    other_index = @response.body.index(hospitalizations(:three).reason)
+    assert body_index < other_index, "expected the furthest-out scheduled hospitalization to sort first"
+  end
+
   test "should get new" do
     get new_hospitalization_url
     assert_response :success

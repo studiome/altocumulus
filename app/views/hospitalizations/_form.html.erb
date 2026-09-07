@@ -66,8 +66,25 @@
   </div>
 
   <div class="app-field">
-    <%= form.label :admission_date, "Admission Date", class: "app-field-label" %>
+    <%= form.label :scheduled_admission_date, "Scheduled Admission Date", class: "app-field-label" %>
+    <%= form.date_field :scheduled_admission_date, class: "input w-full focus:input-primary" %>
+    <p class="app-helper">Set this while the admission is still a reservation. Leave undecided if unknown.</p>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :admission_date, "Admission Date (Actual)", class: "app-field-label" %>
     <%= form.date_field :admission_date, class: "input w-full focus:input-primary" %>
+    <p class="app-helper">Either this or the scheduled admission date above must be set.</p>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :reservation_status, "Reservation Status", class: "app-field-label" %>
+    <%= form.select :reservation_status, Hospitalization.reservation_status_form_options, {}, class: "select w-full focus:select-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :purpose, "Purpose", class: "app-field-label" %>
+    <%= form.select :purpose, Hospitalization.purpose_form_options, {}, class: "select w-full focus:select-primary" %>
   </div>
 
   <div class="app-field">
@@ -83,6 +100,41 @@
   <div class="app-field">
     <%= form.label :room_preference, "Preferred Room", class: "app-field-label" %>
     <%= form.text_field :room_preference, class: "input w-full focus:input-primary", placeholder: "e.g. Private room" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :ward, "Ward", class: "app-field-label" %>
+    <%= form.text_field :ward, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :referred_from, "Referred From", class: "app-field-label" %>
+    <%= form.text_field :referred_from, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :adl, "ADL", class: "app-field-label" %>
+    <%= form.text_field :adl, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :reservation_doctor, "Reservation Doctor", class: "app-field-label" %>
+    <%= form.text_field :reservation_doctor, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :attending_doctor, "Attending Doctor", class: "app-field-label" %>
+    <%= form.text_field :attending_doctor, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :submitted_on, "Submitted On", class: "app-field-label" %>
+    <%= form.date_field :submitted_on, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :clinical_comment, "Clinical Comment", class: "app-field-label" %>
+    <%= form.text_area :clinical_comment, class: "textarea w-full focus:textarea-primary", rows: 3 %>
   </div>
 
   <div class="divider">Discharge</div>
