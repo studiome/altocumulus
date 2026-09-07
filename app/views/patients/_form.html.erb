@@ -24,8 +24,28 @@
   </div>
 
   <div class="app-field">
+    <%= form.label :name_kana, "Name (Kana)", class: "app-field-label" %>
+    <%= form.text_field :name_kana, class: "input w-full focus:input-primary", placeholder: "e.g. ジョン ドウ" %>
+  </div>
+
+  <div class="app-field">
     <%= form.label :date_of_birth, "Date of Birth", class: "app-field-label" %>
     <%= form.date_field :date_of_birth, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :sex, "Sex", class: "app-field-label" %>
+    <%= form.select :sex, Patient.sex_form_options, { include_blank: true }, class: "select w-full focus:select-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :telephone, "Telephone", class: "app-field-label" %>
+    <%= form.telephone_field :telephone, class: "input w-full focus:input-primary", placeholder: "e.g. 03-1234-5678" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :clinical_info, "Clinical Info", class: "app-field-label" %>
+    <%= form.text_area :clinical_info, class: "textarea w-full focus:textarea-primary", rows: 3, placeholder: "e.g. allergies, chronic conditions" %>
   </div>
 
   <div class="pt-4">

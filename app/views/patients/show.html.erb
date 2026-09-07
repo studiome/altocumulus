@@ -27,12 +27,32 @@
           <span class="text-lg font-medium"><%= @patient.name %></span>
         </div>
         <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Name (Kana)</span>
+          <span class="text-lg font-medium"><%= @patient.name_kana.presence || "-" %></span>
+        </div>
+        <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Date of Birth</span>
           <span class="text-lg font-medium"><%= @patient.date_of_birth.strftime("%B %d, %Y") if @patient.date_of_birth %></span>
         </div>
         <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Age</span>
+          <span class="text-lg font-medium"><%= @patient.age.present? ? "#{@patient.age}" : "-" %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Sex</span>
+          <span class="text-lg font-medium"><%= Patient::SEX_OPTIONS[@patient.sex] || "-" %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Telephone</span>
+          <span class="text-lg font-medium"><%= @patient.telephone.presence || "-" %></span>
+        </div>
+        <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Hospital Identifier</span>
           <span class="text-lg font-mono font-medium"><%= @patient.hospital_id %></span>
+        </div>
+        <div class="sm:col-span-2">
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Clinical Info</span>
+          <span class="text-lg font-medium"><%= @patient.clinical_info.presence || "-" %></span>
         </div>
       </div>
 
