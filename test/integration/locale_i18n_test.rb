@@ -141,4 +141,64 @@ class LocaleI18nTest < ActionDispatch::IntegrationTest
       assert_includes user.errors[:base], "最後の管理者を削除・降格・無効化することはできません"
     end
   end
+
+  # Stage 3 group 4a: require_login / require_admin live in
+  # ApplicationController and run as a before_action shared by every
+  # controller, so they cannot use lazy `t(".key")` lookup (the resolved
+  # scope would vary with whichever action happened to trigger the
+  # redirect) -- they use fixed `common.*` keys instead.
+  test "require_login flash renders in Japanese for an anonymous visitor" do
+    patch locale_path(locale: "ja"), headers: { "HTTP_REFERER" => login_url }
+
+    get patients_url
+
+    assert_redirected_to login_url
+    follow_redirect!
+    assert_match "続行するにはサインインしてください。", response.body
+  end
+
+  test "require_login flash renders unchanged in English for an anonymous visitor" do
+    get patients_url
+
+    assert_redirected_to login_url
+    follow_redirect!
+    assert_match "Please sign in to continue.", response.body
+  end
+
+  test "require_admin flash renders in Japanese for a non-admin user" do
+    sign_in_as(users(:japanese_member))
+
+    get admin_users_url
+
+    assert_redirected_to root_url
+    follow_redirect!
+    assert_match "この操作を行う権限がありません。", response.body
+  end
+
+  test "require_admin flash renders unchanged in English for a non-admin user" do
+    sign_in_as(users(:member))
+
+    get admin_users_url
+
+    assert_redirected_to root_url
+    follow_redirect!
+    assert_match "You are not authorized to perform this action.", response.body
+  end
+
+  # Stage 3 group 4a: Admin / AuditEvents / Accounts screens.
+  test "no translation missing on group 4a screens rendered in Japanese" do
+    sign_in_as(users(:japanese_admin))
+
+    [
+      admin_users_url,
+      admin_announcements_url,
+      admin_admin_notes_url,
+      audit_events_url,
+      account_url
+    ].each do |url|
+      get url
+      assert_response :success, "expected #{url} to render successfully in ja"
+      assert_no_match(/[Tt]ranslation missing/, response.body, "translation missing while rendering #{url}")
+    end
+  end
 end
