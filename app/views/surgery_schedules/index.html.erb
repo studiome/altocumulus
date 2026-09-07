@@ -1,22 +1,22 @@
-<% content_for :title, "Surgery Schedule" %>
+<% content_for :title, t(".title") %>
 
 <div class="app-page">
 
   <section class="app-page-header">
     <div class="app-page-header-body">
       <div>
-        <p class="app-page-kicker">Operations</p>
-        <h1 class="app-page-title">Surgery Schedule</h1>
+        <p class="app-page-kicker"><%= t(".kicker") %></p>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
         <p class="text-base-content/60 mt-1">
-          Week of <%= @week_start.strftime("%B %d, %Y") %>
+          <%= t(".week_of", date: l(@week_start, format: :long)) %>
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <%= link_to "Prev Week", surgery_schedule_path(week_of: @previous_week), class: "btn btn-sm" %>
-        <%= link_to "This Week", surgery_schedule_path, class: "btn btn-sm btn-ghost" %>
-        <%= link_to "Next Week", surgery_schedule_path(week_of: @next_week), class: "btn btn-sm" %>
-        <%= link_to "Configure slots", elective_slot_rules_path, class: "btn btn-sm btn-outline" %>
-        <%= link_to "Holidays", holidays_path, class: "btn btn-sm btn-outline" %>
+        <%= link_to t(".prev_week_link"), surgery_schedule_path(week_of: @previous_week), class: "btn btn-sm" %>
+        <%= link_to t(".this_week_link"), surgery_schedule_path, class: "btn btn-sm btn-ghost" %>
+        <%= link_to t(".next_week_link"), surgery_schedule_path(week_of: @next_week), class: "btn btn-sm" %>
+        <%= link_to t(".configure_slots_link"), elective_slot_rules_path, class: "btn btn-sm btn-outline" %>
+        <%= link_to t(".holidays_link"), holidays_path, class: "btn btn-sm btn-outline" %>
       </div>
     </div>
   </section>
@@ -27,19 +27,19 @@
       <div class="app-panel">
         <div class="app-panel-body space-y-4">
           <div>
-            <p class="text-xs font-bold uppercase text-base-content/40"><%= date.strftime("%A") %></p>
-            <p class="text-lg font-semibold"><%= date.strftime("%Y-%m-%d") %></p>
+            <p class="text-xs font-bold uppercase text-base-content/40"><%= l(date, format: :weekday) %></p>
+            <p class="text-lg font-semibold"><%= l(date, format: :default) %></p>
             <% if usage.holiday? %>
               <span class="badge badge-secondary badge-sm mt-1"><%= usage.holiday.name %></span>
             <% end %>
             <p class="text-sm text-base-content/60">
               <% if usage.configured? %>
-                <%= usage.used_slots %> / <%= usage.total_slots %> slots in use
-                <span class="text-base-content/40">(<%= usage.used_minutes %> / <%= usage.capacity_minutes %> min)</span>
+                <%= t(".slots_in_use", used: usage.used_slots, total: usage.total_slots) %>
+                <span class="text-base-content/40">(<%= t(".minutes_in_use", used: usage.used_minutes, capacity: usage.capacity_minutes) %>)</span>
               <% elsif usage.holiday? %>
-                No elective slots (holiday)
+                <%= t(".no_slots_holiday") %>
               <% else %>
-                No slots configured
+                <%= t(".no_slots_configured") %>
               <% end %>
             </p>
           </div>
@@ -57,16 +57,16 @@
                 <%# Stacked rather than side by side: the week board gives each
                     day a narrow column, and a horizontal row wraps badly. %>
                 <div>
-                  <p class="text-xs font-bold uppercase text-base-content/40">Slot <%= slot.number %></p>
-                  <p class="font-mono text-xs text-base-content/50 whitespace-nowrap"><%= slot.used_minutes %> / <%= slot.duration_minutes %> min</p>
+                  <p class="text-xs font-bold uppercase text-base-content/40"><%= t(".slot_number_label", number: slot.number) %></p>
+                  <p class="font-mono text-xs text-base-content/50 whitespace-nowrap"><%= t(".slot_minutes_label", used: slot.used_minutes, duration: slot.duration_minutes) %></p>
                 </div>
 
                 <% if slot.overrun? %>
-                  <span class="badge badge-warning badge-sm whitespace-nowrap">+<%= slot.overrun_minutes %> min over</span>
+                  <span class="badge badge-warning badge-sm whitespace-nowrap"><%= t(".overrun_badge", minutes: slot.overrun_minutes) %></span>
                 <% end %>
 
                 <% if slot.empty? %>
-                  <span class="text-base-content/40 italic">Open</span>
+                  <span class="text-base-content/40 italic"><%= t(".slot_open") %></span>
                 <% else %>
                   <div class="space-y-2">
                     <% slot.surgeries.each do |surgery| %>
@@ -82,7 +82,7 @@
 
           <% if usage.unscheduled_surgeries.any? %>
             <div class="space-y-2">
-              <p class="text-xs font-bold uppercase text-error"><%= usage.configured? ? "Not assigned to a slot" : "No slot available" %></p>
+              <p class="text-xs font-bold uppercase text-error"><%= usage.configured? ? t(".not_assigned_to_slot") : t(".no_slot_available") %></p>
               <% usage.unscheduled_surgeries.each do |surgery| %>
                 <div class="rounded-box border border-error/40 bg-error/5 p-3 text-sm">
                   <%= render "slot_surgery", surgery: surgery %>
@@ -91,20 +91,20 @@
             </div>
           <% end %>
 
-          <div class="divider my-1">Emergency</div>
+          <div class="divider my-1"><%= Surgery.scheduling_type_options["emergency"] %></div>
           <div class="space-y-2">
             <% if usage.emergency_surgeries.any? %>
               <% usage.emergency_surgeries.each do |surgery| %>
                 <div class="rounded-box border border-error/40 p-3 text-sm">
                   <div class="flex justify-between items-baseline">
-                    <span class="font-semibold"><%= surgery.patient&.name || "Patient ##{surgery.patient_id}" %></span>
+                    <span class="font-semibold"><%= surgery.patient&.name || t("surgery_schedules.labels.unknown_patient_name", id: surgery.patient_id) %></span>
                     <span class="font-mono text-xs"><%= surgery.start_time_display %></span>
                   </div>
                   <div class="text-base-content/70"><%= surgery.display_procedure_name %></div>
                 </div>
               <% end %>
             <% else %>
-              <p class="text-base-content/40 italic text-sm">None</p>
+              <p class="text-base-content/40 italic text-sm"><%= t(".no_emergency_surgeries") %></p>
             <% end %>
           </div>
         </div>

@@ -7,6 +7,7 @@ ja:
       short: "%m/%d"
       long: "%Y年%m月%d日"
       long_with_weekday: "%Y年%m月%d日(%a)"
+      weekday: "%A"
     day_names:
       - 日曜日
       - 月曜日
@@ -745,3 +746,125 @@ ja:
       unknown_patient: "不明"
       restore: "復元"
       planned_days_value: "%{count}日"
+
+  # Stage 3 group 3b (Surgeries / Surgery Schedule board). See en.yml for
+  # the design notes.
+  surgeries:
+    index:
+      title: "手術"
+      new_button: "新規手術"
+      kicker: "手術"
+      keyword_label: "キーワード"
+      keyword_placeholder: "患者名または患者ID"
+      procedure_label: "術式"
+      type_label: "区分"
+      performed_from_label: "手術日(開始)"
+      performed_to_label: "手術日(終了)"
+      undated_checkbox_label: "未定のみ"
+      all_option: "すべて"
+      diagnosis_header: "診断名"
+      slot_badge: "第%{number}枠"
+      slot_badge_with_total: "第%{number}枠 / %{total}"
+      standalone: "単独"
+      empty_no_filter: "手術記録が登録されていません。「新規手術」から作成してください。"
+      empty_filtered: "検索条件に一致する手術がありません。"
+    show:
+      title: "手術の詳細"
+      date_prefix: "日付"
+      slot_badge: "第%{number}枠"
+      slot_of_total: "第%{number}枠 / 全%{total}枠"
+      standalone: "単独(未連携)"
+      edit_button: "手術を編集"
+      delete_button: "手術を削除"
+    new:
+      title: "新規手術"
+    edit:
+      title: "手術を編集"
+    create:
+      success_notice: "手術記録を作成しました。"
+    update:
+      success_notice: "手術記録を更新しました。"
+    destroy:
+      success_notice: "手術記録を削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの手術を保存できませんでした:"
+      no_patients_warning: "患者が登録されていません。手術を登録する前に患者を作成してください。"
+      new_patient_link: "新規患者"
+      no_procedures_warning: "術式マスタが登録されていません。先に術式を作成するか、新規作成画面を開いてください。"
+      new_procedure_link: "新規術式"
+      select_patient_prompt: "患者を選択してください"
+      related_diagnoses_helper: "この手術に該当する診断名を1つ以上選択してください。"
+      no_diagnoses_for_selected_patient: "選択した患者に登録された診断名がありません。"
+      no_diagnoses_available: "診断名がありません。先に患者の診断名を登録してください。"
+      diagnoses_helper: "選択した患者の診断名のみ保存できます。"
+      surgery_date_helper: "日程が決まるまでは「未定」を選択して日付を空欄にしてください。"
+      scheduling_type_label: "予定区分"
+      start_time_helper: "緊急手術は夜間を含め、いつでも設定できます。"
+      slot_number_label: "予定手術枠"
+      slot_number_placeholder: "例: 1"
+      slot_number_helper: "この手術がその日のどの手術室枠で行われるかを指定します。1つの枠に複数の手術が入ることがあるため、同じ番号を複数の手術で共有できます。予定が決まるまでは空欄のままにしてください。緊急手術では無視されます。"
+      configured_slots_prefix: "曜日ごとの設定枠数:"
+      slot_rules_heading: "予定手術枠ルール"
+      manage_slot_rules_link: "枠ルールを管理"
+      no_slot_rules: "手術枠がまだ設定されていません。"
+      hospitalization_label: "連携する入院"
+      not_linked_option: "連携なし(外来/単独)"
+      procedures_helper: "1つの手術につき最大5件の術式を追加できます。"
+      procedure_row_helper: "該当する術式がない場合は、先に新規作成してください。"
+      add_procedure_button: "術式を追加"
+      duration_label: "手術時間(時間)"
+      duration_placeholder: "例: 1.5"
+      anesthesia_method_label: "麻酔方法"
+      anesthesia_method_placeholder: "例: 全身麻酔"
+      operator_placeholder: "例: 山田太郎"
+      assistant_placeholder: "例: 佐藤花子"
+      operation_order_placeholder: "例: 1"
+    surgery_procedure_selection_fields:
+      procedure_label: "術式"
+      procedure_prompt: "術式を選択してください"
+      remove_button: "削除"
+    surgery_procedure_modal:
+      title: "新規術式"
+      description: "この手術フォームを離れずに術式マスタを作成できます。"
+      loading: "読み込み中..."
+    labels:
+      surgery_date: "手術日"
+      start_time: "開始時刻"
+      anesthesia: "麻酔"
+      duration: "手術時間"
+      duration_value: "%{hours}時間"
+      operator: "執刀医"
+      assistant: "助手"
+      operation_order: "手術順"
+      related_diagnoses: "関連する診断名"
+      procedures: "術式"
+      no_slot_assigned: "枠未割り当て"
+      unknown_patient_name: "患者 #%{id}"
+      unknown_patient: "不明"
+
+  surgery_schedules:
+    index:
+      title: "手術スケジュール"
+      kicker: "手術"
+      week_of: "%{date}の週"
+      prev_week_link: "前週"
+      this_week_link: "今週"
+      next_week_link: "次週"
+      configure_slots_link: "枠を設定"
+      holidays_link: "休日"
+      slots_in_use: "%{used} / %{total}枠を使用中"
+      minutes_in_use: "%{used} / %{capacity}分"
+      no_slots_holiday: "手術枠なし(休日)"
+      no_slots_configured: "手術枠未設定"
+      slot_number_label: "第%{number}枠"
+      slot_minutes_label: "%{used} / %{duration}分"
+      overrun_badge: "+%{minutes}分超過"
+      slot_open: "空き"
+      not_assigned_to_slot: "枠未割り当て"
+      no_slot_available: "利用可能な枠なし"
+      no_emergency_surgeries: "なし"
+    slot_surgery:
+      duration_minutes_value: "%{minutes}分"
+    labels:
+      unknown_patient_name: "患者 #%{id}"

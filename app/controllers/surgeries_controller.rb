@@ -34,7 +34,7 @@ class SurgeriesController < ApplicationController
 
     respond_to do |format|
       if save_surgery { @surgery.save }
-        format.html { redirect_to @surgery, notice: "Surgery was successfully created." }
+        format.html { redirect_to @surgery, notice: t(".success_notice") }
         format.json { render :show, status: :created, location: @surgery }
       else
         build_surgery_procedure_selections if @surgery.surgery_procedure_selections.empty?
@@ -47,7 +47,7 @@ class SurgeriesController < ApplicationController
   def update
     respond_to do |format|
       if save_surgery { @surgery.update(surgery_params) }
-        format.html { redirect_to @surgery, notice: "Surgery was successfully updated.", status: :see_other }
+        format.html { redirect_to @surgery, notice: t(".success_notice"), status: :see_other }
         format.json { render :show, status: :ok, location: @surgery }
       else
         build_surgery_procedure_selections if @surgery.surgery_procedure_selections.empty?
@@ -60,7 +60,7 @@ class SurgeriesController < ApplicationController
   def destroy
     respond_to do |format|
       if @surgery.destroy
-        format.html { redirect_to surgeries_path, notice: "Surgery was successfully destroyed.", status: :see_other }
+        format.html { redirect_to surgeries_path, notice: t(".success_notice"), status: :see_other }
         format.json { head :no_content }
       else
         format.html { redirect_to @surgery, alert: @surgery.errors.full_messages.to_sentence, status: :see_other }

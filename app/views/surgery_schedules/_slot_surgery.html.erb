@@ -3,11 +3,11 @@
     so the over-limit warning belongs to the slot, not to this partial. %>
 <%= link_to surgery, class: "block hover:opacity-80" do %>
   <div class="flex justify-between items-baseline gap-2">
-    <span class="font-semibold"><%= surgery.patient&.name || "Patient ##{surgery.patient_id}" %></span>
+    <span class="font-semibold"><%= surgery.patient&.name || t("surgery_schedules.labels.unknown_patient_name", id: surgery.patient_id) %></span>
     <span class="font-mono text-xs"><%= surgery.start_time_display %></span>
   </div>
   <div class="text-base-content/70"><%= surgery.display_procedure_name %></div>
   <div class="text-base-content/50 text-xs">
-    <%= surgery.duration_minutes ? "#{surgery.duration_minutes} min" : "-" %>
+    <%= surgery.duration_minutes ? t(".duration_minutes_value", minutes: surgery.duration_minutes) : t("common.none") %>
   </div>
 <% end %>

@@ -45,6 +45,10 @@ en:
       # than folding into `long` so `long`'s existing output (no weekday)
       # doesn't change for anything already using it.
       long_with_weekday: "%B %d, %Y (%A)"
+      # Stage 3 group 3b (Surgery Schedule board): the weekday name on its
+      # own, for the week board's per-day column header, which used to
+      # hard-code `date.strftime("%A")`.
+      weekday: "%A"
     day_names:
       - Sunday
       - Monday
@@ -772,3 +776,156 @@ en:
       unknown_patient: "Unknown"
       restore: "Restore"
       planned_days_value: "%{count} days"
+
+  # Stage 3 group 3b (Surgeries / Surgery Schedule board). Follows the
+  # conventions established by groups 1/2/3a above:
+  #
+  #   - `labels:` under `surgeries:` holds attribute-derived text reused
+  #     across more than one action within this resource (index/show/form)
+  #     but that doesn't match `Surgery.human_attribute_name` verbatim (e.g.
+  #     "Surgery Date" vs the default humanize "Surgery date"). Where a
+  #     label's text IS an exact match (Patient, Hospitalization), the view
+  #     calls `Surgery.human_attribute_name` / `SurgeryProcedureSelection.
+  #     human_attribute_name` directly instead of adding a redundant key.
+  #   - The "Elective"/"Emergency" scheduling-type words are never redefined
+  #     here -- every occurrence (the form's radio labels, the schedule
+  #     board's "Emergency" section divider) reuses
+  #     `Surgery.scheduling_type_options` from stage 2 instead.
+  #   - `surgery_schedules.labels.unknown_patient_name` is deliberately a
+  #     separate key from `surgeries.labels.unknown_patient_name` (same
+  #     English text, "Patient #%{id}") rather than a cross-resource
+  #     reference -- each resource namespace stays self-contained, matching
+  #     how e.g. hospitalizations' own `labels.kicker` was never shared with
+  #     patients' index kicker despite both resources happening to reuse a
+  #     word elsewhere.
+  #   - `start_time_display` (Surgery model, stage 2) already renders
+  #     "%H:%M" -- digits only, identical in both locales -- so no new
+  #     `time.formats` key is needed for it; the raw `strftime("%A")` /
+  #     `strftime("%Y-%m-%d")` / `strftime("%B %d, %Y")` calls this group's
+  #     views used to hard-code are replaced with `l()` instead (using the
+  #     existing `default`/`long` formats, plus a new `date.formats.weekday`
+  #     for the schedule board's per-day column header).
+  surgeries:
+    index:
+      title: "Surgeries"
+      new_button: "New Surgery"
+      kicker: "Operations"
+      keyword_label: "Keyword"
+      keyword_placeholder: "Patient name or Hospital ID"
+      procedure_label: "Procedure"
+      type_label: "Type"
+      performed_from_label: "Performed From"
+      performed_to_label: "Performed To"
+      undated_checkbox_label: "Undated only"
+      all_option: "All"
+      diagnosis_header: "Diagnosis"
+      slot_badge: "Slot %{number}"
+      slot_badge_with_total: "Slot %{number} / %{total}"
+      standalone: "Standalone"
+      empty_no_filter: "No surgeries found. Click \"New Surgery\" to get started."
+      empty_filtered: "No surgeries match your search."
+    show:
+      title: "Surgery Details"
+      date_prefix: "Date"
+      slot_badge: "Slot %{number}"
+      slot_of_total: "Slot %{number} of %{total}"
+      standalone: "Standalone (not linked)"
+      edit_button: "Edit Surgery"
+      delete_button: "Delete Surgery"
+    new:
+      title: "New Surgery"
+    edit:
+      title: "Edit Surgery"
+    create:
+      success_notice: "Surgery was successfully created."
+    update:
+      success_notice: "Surgery was successfully updated."
+    destroy:
+      success_notice: "Surgery was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this surgery from being saved:"
+        other: "%{count} errors prohibited this surgery from being saved:"
+      no_patients_warning: "No patients found. Create a patient first to register a surgery."
+      new_patient_link: "New Patient"
+      no_procedures_warning: "No procedure names found. Create a procedure master first, or open the new procedure screen."
+      new_procedure_link: "New Procedure"
+      select_patient_prompt: "Select a patient"
+      related_diagnoses_helper: "Select one or more diagnoses that correspond to this surgery."
+      no_diagnoses_for_selected_patient: "No diagnoses are registered for the selected patient."
+      no_diagnoses_available: "No diagnoses available. Register diagnoses for a patient first."
+      diagnoses_helper: "Only diagnoses belonging to the selected patient can be saved."
+      surgery_date_helper: "Choose Undecided to leave the date blank until it is scheduled."
+      scheduling_type_label: "Scheduling Type"
+      start_time_helper: "Emergency surgeries can be scheduled at any time, including nights."
+      slot_number_label: "Elective Slot"
+      slot_number_placeholder: "e.g. 1"
+      slot_number_helper: "Which of the day's operating room slots this surgery runs in. A slot holds several surgeries, so more than one surgery can share the same number. Leave blank until it is scheduled. Ignored for emergency surgeries."
+      configured_slots_prefix: "Configured slots per weekday:"
+      slot_rules_heading: "Elective Slot Rules"
+      manage_slot_rules_link: "Manage slot rules"
+      no_slot_rules: "No elective slots are configured yet."
+      hospitalization_label: "Linked Hospitalization"
+      not_linked_option: "Not linked (outpatient / standalone)"
+      procedures_helper: "Add up to 5 procedures for one surgery."
+      procedure_row_helper: "If the right procedure is not listed, create a new one first."
+      add_procedure_button: "Add Procedure"
+      duration_label: "Duration (hours)"
+      duration_placeholder: "e.g. 1.5"
+      anesthesia_method_label: "Anesthesia Method"
+      anesthesia_method_placeholder: "e.g. General anesthesia"
+      operator_placeholder: "e.g. Dr. Smith"
+      assistant_placeholder: "e.g. Dr. Lee"
+      operation_order_placeholder: "e.g. 1"
+    surgery_procedure_selection_fields:
+      procedure_label: "Procedure"
+      procedure_prompt: "Select a procedure"
+      remove_button: "Remove"
+    surgery_procedure_modal:
+      title: "New Surgery Procedure"
+      description: "Create a procedure master without leaving this surgery form."
+      loading: "Loading..."
+    # Shared across more than one action within this resource (see design
+    # note above).
+    labels:
+      surgery_date: "Surgery Date"
+      start_time: "Start Time"
+      anesthesia: "Anesthesia"
+      duration: "Duration"
+      duration_value: "%{hours} h"
+      operator: "Operator"
+      assistant: "Assistant"
+      operation_order: "Operation Order"
+      related_diagnoses: "Related Diagnoses"
+      procedures: "Procedures"
+      no_slot_assigned: "No slot assigned"
+      unknown_patient_name: "Patient #%{id}"
+      unknown_patient: "Unknown"
+
+  surgery_schedules:
+    index:
+      title: "Surgery Schedule"
+      kicker: "Operations"
+      week_of: "Week of %{date}"
+      prev_week_link: "Prev Week"
+      this_week_link: "This Week"
+      next_week_link: "Next Week"
+      configure_slots_link: "Configure slots"
+      holidays_link: "Holidays"
+      slots_in_use: "%{used} / %{total} slots in use"
+      minutes_in_use: "%{used} / %{capacity} min"
+      no_slots_holiday: "No elective slots (holiday)"
+      no_slots_configured: "No slots configured"
+      slot_number_label: "Slot %{number}"
+      slot_minutes_label: "%{used} / %{duration} min"
+      overrun_badge: "+%{minutes} min over"
+      slot_open: "Open"
+      not_assigned_to_slot: "Not assigned to a slot"
+      no_slot_available: "No slot available"
+      no_emergency_surgeries: "None"
+    slot_surgery:
+      duration_minutes_value: "%{minutes} min"
+    # Shared between index.html.erb's emergency-surgeries loop and the
+    # _slot_surgery partial it renders alongside.
+    labels:
+      unknown_patient_name: "Patient #%{id}"
