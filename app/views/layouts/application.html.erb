@@ -24,7 +24,7 @@
   </head>
 
   <body class="app-shell flex flex-col">
-    <header class="app-navbar">
+    <header class="app-navbar print:hidden">
       <div class="flex-1 flex items-center gap-1">
         <%# Mobile-only menu: everything flattened into one dropdown so the
             navbar itself never has to lay out every item in a single row
@@ -119,7 +119,7 @@
       <%= yield %>
     </main>
 
-    <footer class="footer footer-center p-4 bg-base-100 text-base-content border-t border-base-200">
+    <footer class="footer footer-center p-4 bg-base-100 text-base-content border-t border-base-200 print:hidden">
     </footer>
   </body>
 </html>

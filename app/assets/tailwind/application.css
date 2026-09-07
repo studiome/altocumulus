@@ -38,7 +38,7 @@
   }
 
   .app-panel {
-    @apply card border border-base-200 bg-base-100 shadow-xl;
+    @apply card border border-base-200 bg-base-100 shadow-xl print:break-inside-avoid print:shadow-none;
   }
 
   .app-panel-body {

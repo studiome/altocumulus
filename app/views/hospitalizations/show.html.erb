@@ -3,13 +3,13 @@
 <div class="max-w-2xl mx-auto w-full">
 
   <div class="mb-8 flex items-center gap-4">
-    <%= link_to hospitalizations_path, class: "btn btn-circle btn-ghost" do %>
+    <%= link_to hospitalizations_path, class: "btn btn-circle btn-ghost print:hidden" do %>
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
     <% end %>
     <h1 class="font-bold text-4xl">Hospitalization Details</h1>
   </div>
 
-  <div class="card bg-base-100 shadow-xl border border-base-200">
+  <div class="card bg-base-100 shadow-xl border border-base-200 print:shadow-none">
     <div class="card-body">
       <div class="flex justify-between items-start mb-6">
         <div>
@@ -139,7 +139,7 @@
                 <span class="font-mono text-sm text-base-content/60"><%= surgery.surgery_date&.strftime("%Y-%m-%d") %></span>
                 <span class="font-medium ml-2"><%= surgery.display_procedure_name %></span>
               </div>
-              <%= link_to "View", surgery, class: "btn btn-ghost btn-xs text-primary" %>
+              <%= link_to "View", surgery, class: "btn btn-ghost btn-xs text-primary print:hidden" %>
             </li>
           <% end %>
         </ul>
@@ -159,7 +159,7 @@
                   <span class="badge badge-outline"><%= audit_event.action %></span>
                   <span class="text-sm"><%= audit_event.user&.name || "-" %></span>
                 </div>
-                <%= link_to "Details", audit_event_path(audit_event), class: "btn btn-ghost btn-xs text-primary" %>
+                <%= link_to "Details", audit_event_path(audit_event), class: "btn btn-ghost btn-xs text-primary print:hidden" %>
               </div>
               <% change_rows = audit_change_rows(audit_event) %>
               <% if change_rows.any? %>
@@ -185,12 +185,12 @@
         <div class="app-empty-state mb-4">No update history recorded for this hospitalization.</div>
       <% end %>
 
-      <%= link_to "View Full Audit Log", audit_events_path(auditable_type: "Hospitalization"), class: "app-inline-link text-sm mb-4 inline-block" %>
+      <%= link_to "View Full Audit Log", audit_events_path(auditable_type: "Hospitalization"), class: "app-inline-link text-sm mb-4 inline-block print:hidden" %>
 
       <% if admin? %>
-        <div class="divider">Admin Actions</div>
+        <div class="divider print:hidden">Admin Actions</div>
 
-        <div class="flex flex-wrap items-center gap-3 mb-4">
+        <div class="flex flex-wrap items-center gap-3 mb-4 print:hidden">
           <% unless @hospitalization.admin_status == "confirmed" %>
             <%= button_to "Confirm", confirm_hospitalization_path(@hospitalization), method: :patch, class: "btn btn-success btn-sm" %>
           <% end %>
@@ -202,7 +202,7 @@
           <%= link_to "View Deleted Hospitalizations", deleted_hospitalizations_path, class: "btn btn-ghost btn-sm" %>
         </div>
 
-        <%= form_with url: copy_hospitalization_path(@hospitalization), method: :post, class: "flex flex-wrap items-end gap-3 mb-4" do |f| %>
+        <%= form_with url: copy_hospitalization_path(@hospitalization), method: :post, class: "flex flex-wrap items-end gap-3 mb-4 print:hidden" do |f| %>
           <div class="app-field">
             <%= f.label :scheduled_admission_date, "Copy to New Scheduled Admission Date", class: "app-field-label" %>
             <%= f.date_field :scheduled_admission_date, class: "input input-sm" %>
@@ -211,7 +211,7 @@
         <% end %>
       <% end %>
 
-      <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">
+      <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200 print:hidden">
         <%= link_to "Edit Hospitalization", edit_hospitalization_path(@hospitalization), class: "btn btn-secondary" %>
         <%= button_to "Delete Hospitalization", @hospitalization, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: "Are you sure?" } %>
       </div>

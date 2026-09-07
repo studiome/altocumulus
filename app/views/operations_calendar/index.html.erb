@@ -12,7 +12,7 @@
           (<%= @calendar.days %> days)
         </p>
       </div>
-      <%= form_with url: operations_calendar_path, method: :get, local: true, class: "flex items-end gap-2 flex-wrap" do |f| %>
+      <%= form_with url: operations_calendar_path, method: :get, local: true, class: "flex items-end gap-2 flex-wrap print:hidden" do |f| %>
         <div class="app-filter-field">
           <label class="app-filter-label">Start</label>
           <%= f.date_field :start, value: @calendar.start_date, class: "input input-sm" %>
@@ -41,8 +41,12 @@
     </div>
   <% end %>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-    <div class="lg:col-span-2 space-y-4">
+  <%# print:block turns the grid into a plain stacked flow so the 50-day
+      list prints at full page width instead of being squeezed into its
+      screen-only 2/3 column, with the summary sidebar printing in full
+      below it rather than being clipped alongside. %>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start print:block">
+    <div class="lg:col-span-2 space-y-4 print:space-y-2">
       <% @calendar.dates.each do |date| %>
         <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar %>
       <% end %>
