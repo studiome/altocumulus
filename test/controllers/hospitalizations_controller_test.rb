@@ -44,6 +44,70 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index filters by status upcoming" do
+    patient = Patient.create!(hospital_id: "H910", name: "Future Patient", date_of_birth: "1980-01-01")
+    Hospitalization.create!(
+      patient: patient,
+      scheduled_admission_date: 30.days.from_now.to_date,
+      reason: "Upcoming filter target",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    get hospitalizations_url, params: { status: "upcoming" }
+
+    assert_response :success
+    assert_match(/Upcoming filter target/, @response.body)
+    assert_no_match(/Community-acquired pneumonia/, @response.body)
+  end
+
+  test "index filters by status waiting" do
+    @hospitalization.update!(reservation_status: "waiting")
+    hospitalizations(:two).update!(reservation_status: "admitted")
+
+    get hospitalizations_url, params: { status: "waiting" }
+
+    assert_response :success
+    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+    assert_no_match(/Post-surgical observation/, @response.body)
+  end
+
+  test "index filters by status unconfirmed" do
+    hospitalizations(:two).update!(admin_status: "confirmed")
+
+    get hospitalizations_url, params: { status: "unconfirmed" }
+
+    assert_response :success
+    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+    assert_no_match(/Post-surgical observation/, @response.body)
+  end
+
+  test "index filters by status recently_updated" do
+    hospitalizations(:two).update_column(:updated_at, 5.days.ago)
+
+    get hospitalizations_url, params: { status: "recently_updated" }
+
+    assert_response :success
+    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+    assert_no_match(/Post-surgical observation/, @response.body)
+  end
+
+  test "index filters by status referred" do
+    @hospitalization.update!(referred_from: "General Clinic")
+
+    get hospitalizations_url, params: { status: "referred" }
+
+    assert_response :success
+    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+    assert_no_match(/Post-surgical observation/, @response.body)
+  end
+
+  test "index shows reservation status, purpose, and admin confirmation state" do
+    get hospitalizations_url
+    assert_response :success
+    assert_match(/Requested|Waiting for Admission|Admission Date Fixed/, @response.body)
+    assert_match(/Unconfirmed|Confirmed/, @response.body)
+  end
+
   test "index orders reservation-only hospitalizations by scheduled_admission_date" do
     reservation = Hospitalization.create!(
       patient: patients(:two),

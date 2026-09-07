@@ -31,7 +31,7 @@
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label">Status</label>
-      <%= f.select :status, [ [ "In Hospital", "in_hospital" ], [ "Discharged", "discharged" ] ], { include_blank: "All", selected: params[:status] }, { class: "select select-sm" } %>
+      <%= f.select :status, Hospitalization.status_filter_form_options, { include_blank: "All", selected: params[:status] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label">Admitted From</label>
@@ -55,6 +55,7 @@
             <th class="bg-base-200">Status</th>
             <th class="bg-base-200">Reservation Status</th>
             <th class="bg-base-200">Purpose</th>
+            <th class="bg-base-200">Admin Status</th>
             <th class="bg-base-200">Diagnoses</th>
             <th class="bg-base-200">Admission Date</th>
             <th class="bg-base-200">Discharge Date</th>
@@ -78,6 +79,11 @@
                 </td>
                 <td><%= Hospitalization::RESERVATION_STATUS_OPTIONS[hospitalization.reservation_status] %></td>
                 <td><%= Hospitalization::PURPOSE_OPTIONS[hospitalization.purpose] %></td>
+                <td>
+                  <span class="badge <%= hospitalization.admin_status == "confirmed" ? "badge-success" : "badge-ghost" %>">
+                    <%= Hospitalization::ADMIN_STATUS_OPTIONS[hospitalization.admin_status] %>
+                  </span>
+                </td>
                 <td><%= hospitalization.diagnosis_names_display %></td>
                 <td class="font-mono font-medium">
                   <% if hospitalization.admission_date.present? %>
@@ -111,7 +117,7 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="13" class="text-center py-10 text-base-content/50 italic">
+              <td colspan="14" class="text-center py-10 text-base-content/50 italic">
                 <% if params.values_at(:keyword, :diagnosis_id, :status, :admitted_from, :admitted_to).any?(&:present?) %>
                   No hospitalizations match your search.
                 <% else %>

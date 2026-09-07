@@ -40,6 +40,24 @@ class Hospitalization < ApplicationRecord
     "confirmed" => "Confirmed"
   }.freeze
 
+  # The index page's single "Status" filter mixes two kinds of condition: the
+  # derived in_hospital/discharged state, and reservation-workflow shortcuts
+  # (upcoming/waiting/unconfirmed/recently_updated/referred). Keeping them as
+  # one list (rather than a second dropdown) matches the existing filter bar
+  # layout that filter_bar_layout_test pins down.
+  STATUS_FILTER_OPTIONS = {
+    "in_hospital" => "In Hospital",
+    "discharged" => "Discharged",
+    "upcoming" => "Upcoming",
+    "waiting" => "Waiting",
+    "unconfirmed" => "Unconfirmed",
+    "recently_updated" => "Recently Updated",
+    "referred" => "Referred"
+  }.freeze
+
+  WAITING_RESERVATION_STATUSES = %w[requested waiting on_hold].freeze
+  RECENTLY_UPDATED_WITHIN = 2.days
+
   belongs_to :patient
   has_many :hospitalization_diagnoses, -> { order(:id) }, dependent: :destroy, inverse_of: :hospitalization
   has_many :diagnoses, through: :hospitalization_diagnoses
@@ -94,6 +112,11 @@ class Hospitalization < ApplicationRecord
   scope :discarded, -> { where.not(deleted_at: nil) }
   scope :discharged, -> { where.not(discharge_date: nil) }
   scope :in_hospital, -> { where(discharge_date: nil).where(admission_date: ..Date.current) }
+  scope :upcoming, -> { where("COALESCE(admission_date, scheduled_admission_date) >= ?", Date.current) }
+  scope :waiting, -> { where(reservation_status: WAITING_RESERVATION_STATUSES) }
+  scope :unconfirmed, -> { where(admin_status: "unconfirmed") }
+  scope :recently_updated, -> { where("updated_at >= ?", RECENTLY_UPDATED_WITHIN.ago) }
+  scope :referred, -> { where.not(referred_from: [ nil, "" ]) }
   # Reservation-stage hospitalizations only carry scheduled_admission_date, so
   # the effective admission date (actual if present, otherwise scheduled) is
   # what a date-range filter or sort should compare against.
@@ -124,6 +147,10 @@ class Hospitalization < ApplicationRecord
     ADMIN_STATUS_OPTIONS.map { |k, v| [ v, k ] }
   end
 
+  def self.status_filter_form_options
+    STATUS_FILTER_OPTIONS.map { |k, v| [ v, k ] }
+  end
+
   def self.filtered(keyword: nil, diagnosis_id: nil, status: nil, admitted_from: nil, admitted_to: nil)
     scope = active
 
@@ -144,6 +171,11 @@ class Hospitalization < ApplicationRecord
     case status
     when "in_hospital" then scope = scope.in_hospital
     when "discharged" then scope = scope.discharged
+    when "upcoming" then scope = scope.upcoming
+    when "waiting" then scope = scope.waiting
+    when "unconfirmed" then scope = scope.unconfirmed
+    when "recently_updated" then scope = scope.recently_updated
+    when "referred" then scope = scope.referred
     end
 
     scope.admitted_between(admitted_from, admitted_to)

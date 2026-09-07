@@ -789,4 +789,90 @@ class HospitalizationTest < ActiveSupport::TestCase
     result = Hospitalization.filtered(keyword: "john", status: "in_hospital")
     assert_equal [ hospitalizations(:three) ], result.to_a
   end
+
+  test "filtered by status upcoming matches only future effective admission dates" do
+    travel_to Date.new(2026, 9, 7) do
+      future = build_hospitalization(reason: "Future reservation", scheduled_admission_date: Date.new(2026, 9, 10))
+      past = build_hospitalization(reason: "Past admission", admission_date: Date.new(2026, 9, 1))
+
+      result = Hospitalization.filtered(status: "upcoming")
+
+      assert_includes result, future
+      assert_not_includes result, past
+    end
+  end
+
+  test "filtered by status waiting matches requested, waiting, or on_hold reservation_status" do
+    waiting = build_hospitalization(reason: "Waiting case", reservation_status: "waiting")
+    on_hold = build_hospitalization(reason: "On hold case", reservation_status: "on_hold")
+    admitted = build_hospitalization(reason: "Already admitted", reservation_status: "admitted")
+
+    result = Hospitalization.filtered(status: "waiting")
+
+    assert_includes result, waiting
+    assert_includes result, on_hold
+    assert_not_includes result, admitted
+  end
+
+  test "filtered by status unconfirmed matches admin_status unconfirmed" do
+    unconfirmed = build_hospitalization(reason: "Needs confirmation")
+    confirmed = build_hospitalization(reason: "Already confirmed")
+    confirmed.update!(admin_status: "confirmed")
+
+    result = Hospitalization.filtered(status: "unconfirmed")
+
+    assert_includes result, unconfirmed
+    assert_not_includes result, confirmed
+  end
+
+  test "filtered by status recently_updated matches records updated within the last 2 days" do
+    travel_to Date.new(2026, 9, 7) do
+      recent = build_hospitalization(reason: "Recently touched")
+
+      stale = build_hospitalization(reason: "Stale record")
+      stale.update_column(:updated_at, 3.days.ago)
+
+      result = Hospitalization.filtered(status: "recently_updated")
+
+      assert_includes result, recent
+      assert_not_includes result, stale
+    end
+  end
+
+  test "filtered by status referred matches records with a referred_from present" do
+    referred = build_hospitalization(reason: "Referred case", referred_from: "General Clinic")
+    not_referred = build_hospitalization(reason: "Self admitted")
+
+    result = Hospitalization.filtered(status: "referred")
+
+    assert_includes result, referred
+    assert_not_includes result, not_referred
+  end
+
+  test "filtered combines a new status filter with a keyword search" do
+    waiting_match = build_hospitalization(reason: "Waiting and searchable", reservation_status: "waiting")
+    waiting_no_match = build_hospitalization(reason: "Waiting but different", reservation_status: "waiting")
+
+    result = Hospitalization.filtered(status: "waiting", keyword: "searchable")
+
+    assert_includes result, waiting_match
+    assert_not_includes result, waiting_no_match
+  end
+
+  private
+
+    # Builds a persisted, non-overlapping hospitalization on its own fresh
+    # patient so filter scenarios never trip the patient-level overlap
+    # validation between test cases (or against the shared fixtures).
+    def build_hospitalization(reason:, **attrs)
+      patient = Patient.create!(hospital_id: "F#{SecureRandom.hex(4)}", name: "Filter Patient", date_of_birth: Date.new(1980, 1, 1))
+      attrs[:scheduled_admission_date] ||= Date.new(2030, 1, 1) unless attrs[:admission_date]
+
+      Hospitalization.create!(
+        patient: patient,
+        reason: reason,
+        hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ],
+        **attrs
+      )
+    end
 end
