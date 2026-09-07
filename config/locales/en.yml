@@ -408,3 +408,32 @@ en:
       name_label: "Diagnosis Name"
       name_placeholder: "e.g. Acute appendicitis"
 
+  surgery_procedures:
+    index:
+      title: "Surgery Procedures"
+      new_button: "New Procedure"
+      empty: "No procedures found. Click \"New Procedure\" to get started."
+    show:
+      title: "Surgery Procedure Details"
+      subtitle: "Procedure Master"
+      edit_button: "Edit Procedure"
+      delete_button: "Delete Procedure"
+    new:
+      title: "New Surgery Procedure"
+      modal_description: "Create a procedure master without leaving this surgery form."
+    edit:
+      title: "Edit Surgery Procedure"
+    create:
+      success_notice: "Surgery procedure was successfully created."
+      added_helper_text: "The new procedure has been added to the surgery form."
+    update:
+      success_notice: "Surgery procedure was successfully updated."
+    destroy:
+      success_notice: "Surgery procedure was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this surgery procedure from being saved:"
+        other: "%{count} errors prohibited this surgery procedure from being saved:"
+      name_label: "Procedure Name"
+      name_placeholder: "e.g. Laparoscopic cholecystectomy"
+

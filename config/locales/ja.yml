@@ -443,3 +443,31 @@ ja:
       name_label: "診断名"
       name_placeholder: "例: 急性虫垂炎"
 
+  surgery_procedures:
+    index:
+      title: "術式"
+      new_button: "新規術式"
+      empty: "術式が登録されていません。「新規術式」から作成してください。"
+    show:
+      title: "術式の詳細"
+      subtitle: "術式マスタ"
+      edit_button: "術式を編集"
+      delete_button: "術式を削除"
+    new:
+      title: "新規術式"
+      modal_description: "この手術フォームを離れずに術式マスタを作成できます。"
+    edit:
+      title: "術式を編集"
+    create:
+      success_notice: "術式を作成しました。"
+      added_helper_text: "新しい術式が手術フォームに追加されました。"
+    update:
+      success_notice: "術式を更新しました。"
+    destroy:
+      success_notice: "術式を削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの術式を保存できませんでした:"
+      name_label: "術式名"
+      name_placeholder: "例: 腹腔鏡下胆嚢摘出術"
+

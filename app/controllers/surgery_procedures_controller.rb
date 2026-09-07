@@ -22,7 +22,7 @@ class SurgeryProceduresController < ApplicationController
       if turbo_frame_request?
         render :create, formats: :turbo_stream
       else
-        redirect_to @surgery_procedure, notice: "Surgery procedure was successfully created."
+        redirect_to @surgery_procedure, notice: t(".success_notice")
       end
     else
       if turbo_frame_request?
@@ -35,7 +35,7 @@ class SurgeryProceduresController < ApplicationController
 
   def update
     if @surgery_procedure.update(surgery_procedure_params)
-      redirect_to @surgery_procedure, notice: "Surgery procedure was successfully updated.", status: :see_other
+      redirect_to @surgery_procedure, notice: t(".success_notice"), status: :see_other
     else
       render :edit, status: :unprocessable_entity
     end
@@ -43,7 +43,7 @@ class SurgeryProceduresController < ApplicationController
 
   def destroy
     if @surgery_procedure.destroy
-      redirect_to surgery_procedures_path, notice: "Surgery procedure was successfully destroyed.", status: :see_other
+      redirect_to surgery_procedures_path, notice: t(".success_notice"), status: :see_other
     else
       redirect_to surgery_procedure_path(@surgery_procedure), alert: @surgery_procedure.errors.full_messages.to_sentence, status: :see_other
     end

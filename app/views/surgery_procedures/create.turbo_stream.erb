@@ -5,9 +5,9 @@
          data-procedure-id="<%= @surgery_procedure.id %>"
          data-procedure-name="<%= @surgery_procedure.name %>">
       <div class="alert alert-success justify-start mb-4">
-        <span>Surgery procedure was successfully created.</span>
+        <span><%= t(".success_notice") %></span>
       </div>
-      <p class="text-sm text-base-content/60">The new procedure has been added to the surgery form.</p>
+      <p class="text-sm text-base-content/60"><%= t(".added_helper_text") %></p>
     </div>
   <% end %>
 <% end %>
