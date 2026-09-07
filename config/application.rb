@@ -38,5 +38,18 @@ module Altocumulus
     # as a "congestion" warning. Display-only: it never blocks a save (see
     # OperationsCalendar). Overridable per-environment via ENV.
     config.x.admission_warning_threshold = (ENV["ADMISSION_WARNING_THRESHOLD"].presence || 5).to_i
+
+    # This app does not use Active Storage attachments/variants anywhere
+    # (no has_one_attached/has_many_attached, no active_storage tables in
+    # db/schema.rb). Active Storage still eagerly requires an image variant
+    # transformer at boot, and as of image_processing 2.x that gem no longer
+    # pulls in ruby-vips as a dependency, so requiring it raises a LoadError
+    # that Rails' active_storage engine only rescues for a couple of specific
+    # message patterns. Disabling the variant processor entirely selects
+    # Active Storage's NullTransformer, which skips that require altogether.
+    # If this app starts handling attachments, add `image_processing` (already
+    # in the Gemfile) and `ruby-vips` as real dependencies, add libvips
+    # installation to .github/workflows/ci.yml, and remove this line.
+    config.active_storage.variant_processor = :disabled
   end
 end
