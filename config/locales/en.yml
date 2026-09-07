@@ -477,3 +477,50 @@ en:
       closed: "Closed"
       note_only: "Note only"
 
+  elective_slot_rules:
+    index:
+      title: "Elective Slot Rules"
+      description: "One rule per weekday. Configure how many elective surgery slots repeat each week."
+      day_header: "Day"
+      slots_header: "Slots"
+      slot_duration_header: "Slot Duration"
+      not_configured: "Not configured"
+      add_link: "Add"
+    show:
+      title: "Elective Slot Rule Details"
+      subtitle: "Slot Master"
+      badge: "Slot Rule"
+      slot_duration_label: "Slot Duration"
+      total_capacity_label: "Total Capacity"
+      fractional_helper: "A fractional value means the last of %{total} slots is shortened."
+      edit_button: "Edit Rule"
+      delete_button: "Delete Rule"
+    new:
+      title: "New Elective Slot Rule"
+    edit:
+      title: "Edit Elective Slot Rule"
+    create:
+      success_notice: "Elective slot rule was successfully created."
+    update:
+      success_notice: "Elective slot rule was successfully updated."
+    destroy:
+      success_notice: "Elective slot rule was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this elective slot rule from being saved:"
+        other: "%{count} errors prohibited this elective slot rule from being saved:"
+      day_of_week_label: "Day of Week"
+      day_of_week_prompt: "Select a day"
+      slot_count_helper: "A fractional value (e.g. 2.5) means the day's last slot is shorter than the rest, not an extra whole slot."
+      slot_count_placeholder: "e.g. 2.5"
+      slot_duration_label: "Slot Duration (minutes)"
+      slot_duration_placeholder: "e.g. 240"
+      slot_duration_helper: "The total time available in one slot. A surgery that runs longer is treated as extending its own slot, not consuming another."
+    # Shared between the form label and the show page (see design note
+    # above `common:`) -- "Number of Slots" is identical in both places.
+    labels:
+      slot_count: "Number of Slots"
+    # Unit abbreviations appended to raw numbers on index/show.
+    units:
+      minutes: "min"
+      hours: "h"

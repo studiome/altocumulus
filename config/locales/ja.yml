@@ -509,3 +509,46 @@ ja:
       closed: "休診"
       note_only: "メモのみ"
 
+  elective_slot_rules:
+    index:
+      title: "手術枠ルール"
+      description: "曜日ごとに1件のルールを設定します。毎週繰り返す手術枠の数を設定してください。"
+      day_header: "曜日"
+      slots_header: "枠数"
+      slot_duration_header: "枠時間"
+      not_configured: "未設定"
+      add_link: "追加"
+    show:
+      title: "手術枠ルールの詳細"
+      subtitle: "手術枠マスタ"
+      badge: "手術枠ルール"
+      slot_duration_label: "枠時間"
+      total_capacity_label: "総枠時間"
+      fractional_helper: "端数がある場合、%{total}枠のうち最後の枠が短くなります。"
+      edit_button: "ルールを編集"
+      delete_button: "ルールを削除"
+    new:
+      title: "新規手術枠ルール"
+    edit:
+      title: "手術枠ルールを編集"
+    create:
+      success_notice: "手術枠ルールを作成しました。"
+    update:
+      success_notice: "手術枠ルールを更新しました。"
+    destroy:
+      success_notice: "手術枠ルールを削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの手術枠ルールを保存できませんでした:"
+      day_of_week_label: "曜日"
+      day_of_week_prompt: "曜日を選択してください"
+      slot_count_helper: "端数(例: 2.5)を指定すると、その日の最後の枠が短縮されます。追加の1枠にはなりません。"
+      slot_count_placeholder: "例: 2.5"
+      slot_duration_label: "枠時間(分)"
+      slot_duration_placeholder: "例: 240"
+      slot_duration_helper: "1枠あたりに利用できる時間です。これを超える手術は自身の枠を延長するものとして扱われ、他の枠を消費しません。"
+    labels:
+      slot_count: "枠数"
+    units:
+      minutes: "分"
+      hours: "時間"
