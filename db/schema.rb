@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_07_090005) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_07_112623) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -201,6 +201,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_090005) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.string "email", null: false
+    t.string "locale", default: "en", null: false
     t.string "name", null: false
     t.string "password_digest", null: false
     t.string "role", default: "user", null: false

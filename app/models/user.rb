@@ -2,12 +2,14 @@ class User < ApplicationRecord
   has_secure_password
 
   ROLES = %w[user admin].freeze
+  LOCALES = %w[en ja].freeze
 
   normalizes :email, with: ->(email) { email.strip.downcase }
 
   validates :email, presence: true, uniqueness: { case_sensitive: false }
   validates :name, presence: true
   validates :role, inclusion: { in: ROLES }
+  validates :locale, inclusion: { in: LOCALES }
   validates :password, length: { minimum: 8 }, if: -> { password.present? }
   validate :cannot_deactivate_or_demote_last_admin, on: :update
 

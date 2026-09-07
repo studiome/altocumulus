@@ -5,13 +5,37 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
+  # enforce_session_idle_timeout must run BEFORE switch_locale: it can
+  # reset_session on an expired session, and switch_locale's locale
+  # resolution reads current_user, which memoizes @current_user from
+  # whatever the session holds at that moment. If switch_locale ran first,
+  # it would memoize the about-to-expire user, and require_login (also
+  # wrapped by switch_locale, so it runs after) would then see that stale
+  # memoized user and skip the redirect even though the session was reset.
+  # switch_locale still wraps require_login and set_current_attributes, so
+  # its redirect-with-flash and every other response render in the
+  # resolved locale, not only a successful one.
   before_action :enforce_session_idle_timeout
+  around_action :switch_locale
   before_action :require_login
   before_action :set_current_attributes
 
   helper_method :current_user, :admin?
 
   private
+
+  # Locale precedence: a signed-in user's saved preference, then whatever
+  # was picked before signing in (or by an anonymous visitor), then the
+  # app default. Scoped with I18n.with_locale (not a bare `I18n.locale =`
+  # assignment) so the change never leaks into another request handled by
+  # the same thread/worker.
+  def switch_locale(&action)
+    I18n.with_locale(resolve_locale, &action)
+  end
+
+  def resolve_locale
+    current_user&.locale || session[:locale] || I18n.default_locale
+  end
 
   def current_user
     return @current_user if defined?(@current_user)

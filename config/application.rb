@@ -22,6 +22,19 @@ module Altocumulus
     # in config/environments, which are processed later.
     #
     config.time_zone = "Tokyo"
+
+    # This app supports Japanese and English UI, with English as the
+    # default (matches Rails' own default, but stated explicitly so the
+    # intent is clear). A user's preferred locale is a separate concern
+    # from the app's time zone above: config.time_zone controls how
+    # datetime columns are interpreted/displayed, not which language
+    # strings render in.
+    config.i18n.available_locales = [ :en, :ja ]
+    config.i18n.default_locale = :en
+    # Fall back to the default locale (English) instead of raising when a
+    # translation is missing in the current locale, e.g. while ja.yml is
+    # still being filled in incrementally across the i18n rollout.
+    config.i18n.fallbacks = true
     # A `time` column (Surgery#start_time) is a wall-clock time of day with no
     # date attached, so it must not be shifted between zones: converting it
     # would reinterpret every already-stored value by the UTC offset. Only
