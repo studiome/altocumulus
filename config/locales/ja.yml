@@ -6,6 +6,7 @@ ja:
       default: "%Y年%m月%d日"
       short: "%m/%d"
       long: "%Y年%m月%d日"
+      long_with_weekday: "%Y年%m月%d日(%a)"
     day_names:
       - 日曜日
       - 月曜日
@@ -390,3 +391,25 @@ ja:
     audit_events:
       "yes": "はい"
       "no": "いいえ"
+
+  # Stage 3 of the i18n rollout (see en.yml for the design notes on the
+  # common: namespace and the lazy-lookup / shared-scope conventions).
+  common:
+    actions: "操作"
+    view: "詳細"
+    edit: "編集"
+    delete: "削除"
+    save: "保存"
+    cancel: "キャンセル"
+    back: "戻る"
+    new: "新規"
+    search: "検索"
+    clear: "クリア"
+    close: "閉じる"
+    show_detail: "詳細を表示"
+    master_data: "マスタデータ"
+    master_record: "マスタ登録"
+    information: "詳細情報"
+    confirm_delete: "本当によろしいですか?"
+    none: "-"
+

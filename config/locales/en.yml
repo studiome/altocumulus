@@ -40,6 +40,11 @@ en:
       default: "%Y-%m-%d"
       short: "%b %d"
       long: "%B %d, %Y"
+      # Stage 3 addition: a single date with its weekday spelled out, for
+      # detail-page headers (e.g. Holiday#show). Kept as its own key rather
+      # than folding into `long` so `long`'s existing output (no weekday)
+      # doesn't change for anything already using it.
+      long_with_weekday: "%B %d, %Y (%A)"
     day_names:
       - Sunday
       - Monday
@@ -317,3 +322,58 @@ en:
     audit_events:
       "yes": "Yes"
       "no": "No"
+
+  # Stage 3 of the i18n rollout: view text. Group 1 (Diagnoses /
+  # SurgeryProcedures / Holidays / ElectiveSlotRules master-data screens)
+  # establishes the conventions later groups follow:
+  #
+  #   - View-local strings use Rails' lazy `t(".key")` lookup, scoped to the
+  #     view's own namespace below (e.g. `diagnoses.index.title`). A
+  #     .turbo_stream.erb sibling of a .html.erb action (e.g.
+  #     diagnoses/new.turbo_stream.erb next to diagnoses/new.html.erb)
+  #     shares that action's scope automatically -- lazy lookup keys off the
+  #     virtual path, not the format -- so one set of keys covers both.
+  #   - Controller flash messages also resolve lazily (`t(".notice")` in
+  #     DiagnosesController#create resolves under `diagnoses.create`), which
+  #     is deliberately the same scope a create.turbo_stream.erb view uses,
+  #     letting a flash notice and an inline turbo-stream success message
+  #     share one `success_notice` key instead of duplicating the string.
+  #   - `common:` (below) holds short action words/labels reused across
+  #     several screens (Edit/Delete/View/Actions/etc). Prefer it over a
+  #     fresh per-view key when the English text would be identical.
+  #   - A string reused across this group's own screens but too specific
+  #     for `common:` (e.g. the "Closed"/"Note only" holiday badges, shown
+  #     on both holidays#index and holidays#show) lives under a shared
+  #     sub-key of that resource's own namespace (e.g.
+  #     `holidays.status_badge.closed`) and is referenced with the full
+  #     path `t("holidays.status_badge.closed")` rather than lazily, since
+  #     it's shared across more than one action's scope.
+  #   - Where a label is already covered by `activerecord.attributes` (e.g.
+  #     a "Name"/"Date"/"Note" table header that matches the model's own
+  #     attribute name verbatim), reuse `Model.human_attribute_name(:attr)`
+  #     instead of adding a redundant translation key -- it already
+  #     localizes per stage 1/2 and stays in sync with the form labels.
+  #   - Dates use `l(date, format: :default)` (compact, e.g. "2026-03-10")
+  #     or `l(date, format: :long_with_weekday)` (a single date spelled out
+  #     with its weekday, e.g. a detail-page header) instead of `strftime`.
+  #     Add new `date.formats` keys following that naming pattern rather
+  #     than hard-coding a new strftime string in a view.
+  common:
+    actions: "Actions"
+    view: "View"
+    edit: "Edit"
+    delete: "Delete"
+    save: "Save"
+    cancel: "Cancel"
+    back: "Back"
+    new: "New"
+    search: "Search"
+    clear: "Clear"
+    close: "Close"
+    show_detail: "Show Detail"
+    master_data: "Master Data"
+    master_record: "Master Record"
+    information: "Information"
+    confirm_delete: "Are you sure?"
+    none: "-"
+
