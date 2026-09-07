@@ -39,6 +39,17 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_nil session[:user_id]
   end
 
+  test "inactive user with correct password gets the same error message as a failed login" do
+    post login_url, params: { session: { email: users(:inactive).email, password: "password" } }
+    assert_response :unprocessable_entity
+    assert_nil session[:user_id]
+    assert_equal "Invalid email or password.", flash[:alert]
+
+    post login_url, params: { session: { email: users(:admin).email, password: "wrong-password" } }
+    assert_response :unprocessable_entity
+    assert_equal "Invalid email or password.", flash[:alert]
+  end
+
   test "records a login access log on success" do
     assert_difference("AccessLog.count", 1) do
       sign_in_as(users(:admin))
@@ -54,6 +65,33 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     end
     log = AccessLog.last
     assert_equal "login_failed", log.event
+  end
+
+  test "records a login_failed access log with no user attribution on wrong password" do
+    assert_difference("AccessLog.count", 1) do
+      post login_url, params: { session: { email: users(:admin).email, password: "wrong-password" } }
+    end
+    log = AccessLog.last
+    assert_equal "login_failed", log.event
+    assert_nil log.user
+  end
+
+  test "records a login_failed access log with no user attribution for an unknown email" do
+    assert_difference("AccessLog.count", 1) do
+      post login_url, params: { session: { email: "nobody@example.com", password: "password" } }
+    end
+    log = AccessLog.last
+    assert_equal "login_failed", log.event
+    assert_nil log.user
+  end
+
+  test "records a login_failed access log with no user attribution for an inactive user" do
+    assert_difference("AccessLog.count", 1) do
+      post login_url, params: { session: { email: users(:inactive).email, password: "password" } }
+    end
+    log = AccessLog.last
+    assert_equal "login_failed", log.event
+    assert_nil log.user
   end
 
   test "logs out and records a logout access log" do
