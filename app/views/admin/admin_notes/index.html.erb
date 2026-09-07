@@ -1,0 +1,65 @@
+<% content_for :title, "Admin Notes" %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker">Administration</p>
+        <h1 class="app-page-title">Admin Notes</h1>
+      </div>
+    </div>
+  </section>
+
+  <div class="app-panel">
+    <div class="app-panel-body">
+      <%= form_with model: @admin_note, url: admin_admin_notes_path, class: "app-form" do |form| %>
+        <% if @admin_note.errors.any? %>
+          <div role="alert" class="alert alert-error mb-4">
+            <ul class="list-disc ml-6">
+              <% @admin_note.errors.each do |error| %>
+                <li><%= error.full_message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="app-field">
+          <%= form.label :body, "New Note", class: "app-field-label" %>
+          <%= form.text_area :body, class: "textarea w-full focus:textarea-primary", rows: 3 %>
+        </div>
+
+        <div class="pt-2">
+          <%= form.submit "Add Note", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200">Note</th>
+            <th class="bg-base-200">By</th>
+            <th class="bg-base-200">Added</th>
+            <th class="bg-base-200 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @admin_notes.each do |note| %>
+            <tr class="row-hover">
+              <td class="whitespace-pre-wrap"><%= note.body %></td>
+              <td><%= note.user&.name || "-" %></td>
+              <td><%= note.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+              <td class="text-right">
+                <%= button_to "Delete", admin_admin_note_path(note), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Delete this note?" } %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

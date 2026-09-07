@@ -11,6 +11,8 @@ Rails.application.routes.draw do
         patch :reset_password
       end
     end
+    resources :announcements
+    resources :admin_notes, only: %i[ index create destroy ]
   end
 
   resources :patients do

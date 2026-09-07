@@ -48,6 +48,8 @@
           <% if current_user %>
             <% if admin? %>
               <li><%= link_to "Users", admin_users_path %></li>
+              <li><%= link_to "Announcements", admin_announcements_path %></li>
+              <li><%= link_to "Admin Notes", admin_admin_notes_path %></li>
             <% end %>
             <li><%= link_to "Account", account_path %></li>
             <li class="flex items-center text-sm text-base-content/60 px-2"><%= current_user.name %></li>

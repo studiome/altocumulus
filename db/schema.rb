@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_07_090003) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_07_090005) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -21,6 +21,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_090003) do
     t.integer "user_id"
     t.index ["created_at"], name: "index_access_logs_on_created_at"
     t.index ["user_id"], name: "index_access_logs_on_user_id"
+  end
+
+  create_table "admin_notes", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id"
+    t.index ["user_id"], name: "index_admin_notes_on_user_id"
+  end
+
+  create_table "announcements", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.boolean "published", default: true, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "audit_events", force: :cascade do |t|
@@ -193,6 +209,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_090003) do
   end
 
   add_foreign_key "access_logs", "users"
+  add_foreign_key "admin_notes", "users"
   add_foreign_key "audit_events", "users"
   add_foreign_key "hospitalization_diagnoses", "diagnoses"
   add_foreign_key "hospitalization_diagnoses", "hospitalizations"
