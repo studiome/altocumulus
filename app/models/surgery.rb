@@ -2,6 +2,7 @@ class Surgery < ApplicationRecord
   include Auditable
 
   SCHEDULING_TYPE_OPTIONS = { "elective" => "Elective", "emergency" => "Emergency" }.freeze
+  SURGERY_DATE_STATUS_OPTIONS = { "scheduled" => "Date Specified", "undecided" => "Undecided" }.freeze
 
   belongs_to :patient
   belongs_to :hospitalization, optional: true
@@ -14,7 +15,6 @@ class Surgery < ApplicationRecord
                                 allow_destroy: true,
                                 reject_if: ->(attributes) { attributes["surgery_procedure_id"].blank? }
 
-  validates :surgery_date, presence: true
   validates :anesthesia_method, presence: true
   validates :duration_hours, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :scheduling_type, presence: true, inclusion: { in: SCHEDULING_TYPE_OPTIONS.keys }
@@ -24,7 +24,9 @@ class Surgery < ApplicationRecord
   validate :no_duplicate_procedure_selections
   validate :hospitalization_must_belong_to_same_patient
   validate :surgery_date_must_fall_within_hospitalization_period
+  validate :valid_surgery_date_status
   validates :slot_number, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+  validates :operation_order, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 
   # Emergency surgeries are intentionally unaffected by the slot rules: no rule
   # lookup, no capacity check, no time-of-day check. They must stay saveable on
@@ -37,12 +39,24 @@ class Surgery < ApplicationRecord
   scope :anesthesia_methods, -> { distinct.order(:anesthesia_method).pluck(:anesthesia_method).compact_blank }
   scope :elective, -> { where(scheduling_type: "elective") }
   scope :emergency, -> { where(scheduling_type: "emergency") }
+  scope :undated, -> { where(surgery_date: nil) }
+  scope :dated, -> { where.not(surgery_date: nil) }
+  # SQL's default null ordering puts NULLs first on an ASC sort, which would
+  # otherwise scatter undated surgeries to the front of a "most recent first"
+  # list. `surgery_date IS NULL` is 0/false for a dated row and 1/true for an
+  # undated one, so ordering by it ascending first always pushes undated rows
+  # to the very end regardless of the direction of the date sort that follows.
+  scope :ordered_by_surgery_date, -> { order(Arel.sql("surgery_date IS NULL"), surgery_date: :desc, created_at: :desc) }
 
   def self.scheduling_type_form_options
     SCHEDULING_TYPE_OPTIONS.map { |k, v| [ v, k ] }
   end
 
-  def self.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil, scheduling_type: nil)
+  def self.surgery_date_status_form_options
+    SURGERY_DATE_STATUS_OPTIONS.map { |k, v| [ v, k ] }
+  end
+
+  def self.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil, scheduling_type: nil, undated: nil)
     scope = all
 
     if keyword.present?
@@ -59,9 +73,12 @@ class Surgery < ApplicationRecord
     end
 
     scope = scope.where(anesthesia_method: anesthesia_method) if anesthesia_method.present?
+    # A NULL surgery_date never satisfies either range comparison, so a
+    # date-range search already excludes undated surgeries with no extra code.
     scope = scope.where(surgery_date: performed_from..) if performed_from.present?
     scope = scope.where(surgery_date: ..performed_to) if performed_to.present?
     scope = scope.where(scheduling_type: scheduling_type) if scheduling_type.present?
+    scope = scope.undated if ActiveModel::Type::Boolean.new.cast(undated)
     scope
   end
 
@@ -107,6 +124,26 @@ class Surgery < ApplicationRecord
 
   def start_time_display
     start_time&.strftime("%H:%M") || "-"
+  end
+
+  def surgery_date_display
+    surgery_date&.strftime("%Y-%m-%d") || "Undated"
+  end
+
+  # Lets a form explicitly choose between a scheduled surgery_date and
+  # "undecided" (see Admission#operation_date_status in alphaledger, the same
+  # technique). The default reads back whatever is actually persisted, so any
+  # code path that never touches this attribute (dup, seeds, console, an
+  # ordinary partial update) sees the value implied by the data rather than
+  # being forced through this choice.
+  attr_writer :surgery_date_status
+
+  def surgery_date_status
+    @surgery_date_status.presence || (persisted? && surgery_date.nil? ? "undecided" : "scheduled")
+  end
+
+  def surgery_date_status_specified?
+    @surgery_date_status.present?
   end
 
   def to_s
@@ -164,5 +201,25 @@ class Surgery < ApplicationRecord
               (hospitalization.discharge_date.blank? || surgery_date <= hospitalization.discharge_date)
 
     errors.add(:surgery_date, "must fall within the linked hospitalization period")
+  end
+
+  # Only checked when surgery_date_status is explicitly assigned (i.e. the
+  # form submitted it), so dup/seeds/console/plain attribute updates that
+  # never set it are unaffected. Never silently clears surgery_date itself --
+  # a contradiction is surfaced as an error for the user to resolve.
+  def valid_surgery_date_status
+    return unless surgery_date_status_specified?
+
+    unless SURGERY_DATE_STATUS_OPTIONS.key?(@surgery_date_status)
+      errors.add(:surgery_date_status, "is not valid")
+      return
+    end
+
+    raw = surgery_date_before_type_cast
+    if @surgery_date_status == "undecided"
+      errors.add(:surgery_date, "must be left blank when marked as undecided") if raw.present?
+    elsif raw.blank?
+      errors.add(:surgery_date, "must be entered, or choose Undecided")
+    end
   end
 end

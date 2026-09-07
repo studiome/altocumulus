@@ -16,10 +16,147 @@ class SurgeryTest < ActiveSupport::TestCase
     assert surgery.valid?
   end
 
-  test "should require surgery_date" do
+  # surgery_date is no longer required outright: a surgery can be "undecided"
+  # (see the surgery_date_status tests below). An update that never touches
+  # surgery_date_status at all (dup, seeds, console, this direct assignment)
+  # must not be blocked by the contradiction check either.
+  test "surgery_date can be left blank without explicitly setting surgery_date_status" do
     surgery = surgeries(:one)
     surgery.surgery_date = nil
+    assert surgery.valid?
+  end
+
+  test "surgery_date_status defaults to scheduled for a new record and undecided once persisted without a date" do
+    assert_equal "scheduled", Surgery.new.surgery_date_status
+
+    persisted = surgeries(:one)
+    assert_equal "scheduled", persisted.surgery_date_status
+
+    persisted.surgery_date = nil
+    assert_equal "undecided", persisted.surgery_date_status
+  end
+
+  test "rejects surgery_date_status scheduled with a blank surgery_date" do
+    surgery = surgeries(:one)
+    surgery.surgery_date = nil
+    surgery.surgery_date_status = "scheduled"
+
     assert_not surgery.valid?
+    assert_includes surgery.errors[:surgery_date], "must be entered, or choose Undecided"
+  end
+
+  test "rejects surgery_date_status undecided with a surgery_date present" do
+    surgery = surgeries(:one)
+    surgery.surgery_date_status = "undecided"
+
+    assert_not surgery.valid?
+    assert_includes surgery.errors[:surgery_date], "must be left blank when marked as undecided"
+  end
+
+  test "accepts surgery_date_status undecided together with a blank surgery_date" do
+    surgery = surgeries(:one)
+    surgery.surgery_date = nil
+    surgery.surgery_date_status = "undecided"
+
+    assert surgery.valid?
+  end
+
+  test "accepts surgery_date_status scheduled together with a present surgery_date" do
+    surgery = surgeries(:one)
+    surgery.surgery_date_status = "scheduled"
+
+    assert surgery.valid?
+  end
+
+  test "rejects an invalid surgery_date_status value" do
+    surgery = surgeries(:one)
+    surgery.surgery_date_status = "someday"
+
+    assert_not surgery.valid?
+    assert_includes surgery.errors[:surgery_date_status], "is not valid"
+  end
+
+  test "does not enforce the surgery_date contradiction check unless surgery_date_status is explicitly assigned" do
+    # dup does not carry over the has_many procedure selections, so the
+    # duplicate is invalid for an unrelated reason; what matters here is that
+    # the surgery_date contradiction check specifically stays silent.
+    duplicate = surgeries(:one).dup
+    duplicate.surgery_date = nil
+
+    duplicate.valid?
+
+    assert_empty duplicate.errors[:surgery_date], "duplicating/updating without touching surgery_date_status must not trigger the contradiction check"
+  end
+
+  test "an undated surgery linked to a hospitalization skips the hospitalization period check" do
+    surgery = Surgery.new(
+      patient: patients(:one),
+      hospitalization: hospitalizations(:one),
+      surgery_date: nil,
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    assert surgery.valid?
+  end
+
+  test "operator_name assistant_name and operation_order can be recorded" do
+    surgery = surgeries(:one)
+    surgery.update!(operator_name: "Dr. Smith", assistant_name: "Dr. Lee", operation_order: 2)
+
+    surgery.reload
+    assert_equal "Dr. Smith", surgery.operator_name
+    assert_equal "Dr. Lee", surgery.assistant_name
+    assert_equal 2, surgery.operation_order
+  end
+
+  test "operation_order must be a positive integer when given" do
+    surgery = surgeries(:one)
+
+    surgery.operation_order = 0
+    assert_not surgery.valid?
+
+    surgery.operation_order = 1.5
+    assert_not surgery.valid?
+
+    surgery.operation_order = nil
+    assert surgery.valid?
+
+    surgery.operation_order = 1
+    assert surgery.valid?
+  end
+
+  test "ordered_by_surgery_date sorts undated surgeries after dated ones" do
+    undated = create_undated_surgery
+
+    ordered = Surgery.where(id: [ surgeries(:one).id, undated.id ]).ordered_by_surgery_date
+
+    assert_equal undated, ordered.last
+  ensure
+    undated&.destroy
+  end
+
+  test "filtered excludes undated surgeries when a performed date range is given" do
+    undated = create_undated_surgery
+
+    result = Surgery.filtered(performed_from: "2026-01-01", performed_to: "2026-12-31")
+
+    assert_not_includes result, undated
+  ensure
+    undated&.destroy
+  end
+
+  test "filtered with undated true returns only undated surgeries" do
+    undated = create_undated_surgery
+
+    result = Surgery.filtered(undated: true)
+
+    assert_equal [ undated ], result.to_a
+  ensure
+    undated&.destroy
   end
 
   test "first procedure_names entry reflects first selection" do
@@ -440,4 +577,18 @@ class SurgeryTest < ActiveSupport::TestCase
       surgeries.each(&:diagnosis_names_display)
     end
   end
+
+  private
+
+    def create_undated_surgery
+      Surgery.create!(
+        patient: patients(:one),
+        surgery_date: nil,
+        anesthesia_method: "General",
+        duration_hours: 1.0,
+        surgery_procedure_selections_attributes: [
+          { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        ]
+      )
+    end
 end

@@ -68,8 +68,17 @@
   </div>
 
   <div class="app-field">
-    <%= form.label :surgery_date, "Surgery Date", class: "app-field-label" %>
-    <%= form.date_field :surgery_date, class: "input w-full focus:input-primary" %>
+    <span class="app-field-label">Surgery Date</span>
+    <div class="flex gap-6 pt-1">
+      <% Surgery::SURGERY_DATE_STATUS_OPTIONS.each do |value, label| %>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <%= form.radio_button :surgery_date_status, value, checked: surgery.surgery_date_status == value, class: "radio radio-primary" %>
+          <%= label %>
+        </label>
+      <% end %>
+    </div>
+    <%= form.date_field :surgery_date, class: "input w-full focus:input-primary mt-2" %>
+    <p class="app-helper">Choose Undecided to leave the date blank until it is scheduled.</p>
   </div>
 
   <div class="app-field">
@@ -163,6 +172,21 @@
   <div class="app-field">
     <%= form.label :anesthesia_method, "Anesthesia Method", class: "app-field-label" %>
     <%= form.text_field :anesthesia_method, class: "input w-full focus:input-primary", placeholder: "e.g. General anesthesia" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :operator_name, "Operator", class: "app-field-label" %>
+    <%= form.text_field :operator_name, class: "input w-full focus:input-primary", placeholder: "e.g. Dr. Smith" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :assistant_name, "Assistant", class: "app-field-label" %>
+    <%= form.text_field :assistant_name, class: "input w-full focus:input-primary", placeholder: "e.g. Dr. Lee" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :operation_order, "Operation Order", class: "app-field-label" %>
+    <%= form.number_field :operation_order, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 1" %>
   </div>
 
   <div class="pt-4">

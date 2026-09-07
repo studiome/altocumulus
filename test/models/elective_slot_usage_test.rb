@@ -276,6 +276,28 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     emergency_surgery&.destroy
   end
 
+  # An undated (surgery_date: nil) surgery must never contaminate any date's
+  # slot usage or warnings, however the date range is queried.
+  test "an undated elective surgery never appears in any date's usage or warnings" do
+    undated = Surgery.create!(
+      patient: patients(:one),
+      surgery_date: nil,
+      scheduling_type: "elective",
+      slot_number: 1,
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+
+    usage = ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY]
+
+    assert_not_includes usage.elective_surgeries, undated
+    assert_not_includes usage.slots.flat_map(&:surgeries), undated
+    assert_not_includes usage.unscheduled_surgeries, undated
+  ensure
+    undated&.destroy
+  end
+
   test "for_dates does not issue more queries as the number of dates grows" do
     one_date_queries = count_queries { ElectiveSlotUsage.for_dates([ TUESDAY ]) }
     full_week_queries = count_queries { ElectiveSlotUsage.for_dates((SUNDAY..(SUNDAY + 6)).to_a) }

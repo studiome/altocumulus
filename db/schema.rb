@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_07_055815) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_07_090000) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -133,9 +133,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_055815) do
 
   create_table "surgeries", force: :cascade do |t|
     t.string "anesthesia_method"
+    t.string "assistant_name"
     t.datetime "created_at", null: false
     t.float "duration_hours"
     t.integer "hospitalization_id"
+    t.integer "operation_order"
+    t.string "operator_name"
     t.integer "patient_id", null: false
     t.string "scheduling_type", default: "elective", null: false
     t.integer "slot_number"

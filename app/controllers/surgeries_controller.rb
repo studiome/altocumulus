@@ -7,7 +7,7 @@ class SurgeriesController < ApplicationController
     @anesthesia_methods = Surgery.anesthesia_methods
     scope = Surgery.includes(:patient, :hospitalization, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure })
                     .filtered(**filter_params)
-                    .order(surgery_date: :desc, created_at: :desc)
+                    .ordered_by_surgery_date
     @pagination = Pagination.new(scope, page: params[:page])
     @surgeries = @pagination.records
     @slot_rules = ElectiveSlotRule.by_day_of_week
@@ -103,14 +103,15 @@ class SurgeriesController < ApplicationController
 
     def surgery_params
       params.expect(surgery: [
-        :surgery_date, :duration_hours, :anesthesia_method, :patient_id, :hospitalization_id,
+        :surgery_date, :surgery_date_status, :duration_hours, :anesthesia_method, :patient_id, :hospitalization_id,
         :scheduling_type, :start_time, :slot_number,
+        :operator_name, :assistant_name, :operation_order,
         { patient_diagnosis_ids: [] },
         { surgery_procedure_selections_attributes: [ [ :id, :surgery_procedure_id, :laterality, :_destroy ] ] }
       ])
     end
 
     def filter_params
-      params.permit(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type).to_h.symbolize_keys
+      params.permit(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type, :undated).to_h.symbolize_keys
     end
 end

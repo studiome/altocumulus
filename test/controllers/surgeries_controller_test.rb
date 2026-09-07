@@ -84,6 +84,78 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Bilateral Cholecystectomy、Left Appendectomy", Surgery.last.display_procedure_name
   end
 
+  test "should create a surgery with an undecided surgery_date" do
+    assert_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        surgery_date: "",
+        surgery_date_status: "undecided",
+        anesthesia_method: "General",
+        duration_hours: 1.0,
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    assert_redirected_to surgery_url(Surgery.last)
+    assert_nil Surgery.last.surgery_date
+  end
+
+  test "rejects a surgery marked scheduled with a blank surgery_date" do
+    assert_no_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        surgery_date: "",
+        surgery_date_status: "scheduled",
+        anesthesia_method: "General",
+        duration_hours: 1.0,
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "should create a surgery with operator_name assistant_name and operation_order" do
+    assert_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        surgery_date: "2026-03-05",
+        operator_name: "Dr. A",
+        assistant_name: "Dr. B",
+        operation_order: 1,
+        anesthesia_method: "General",
+        duration_hours: 1.0,
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    surgery = Surgery.last
+    assert_equal "Dr. A", surgery.operator_name
+    assert_equal "Dr. B", surgery.assistant_name
+    assert_equal 1, surgery.operation_order
+  end
+
+  test "index filters by undated" do
+    Surgery.create!(
+      patient: patients(:one),
+      surgery_date: nil,
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+
+    get surgeries_url, params: { undated: "1" }
+
+    assert_response :success
+    assert_match(/Undated/, @response.body)
+  end
+
   test "should create an emergency surgery on an unconfigured weekday at night" do
     assert_difference("Surgery.count") do
       post surgeries_url, params: { surgery: {

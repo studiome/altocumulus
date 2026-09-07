@@ -458,6 +458,26 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_includes hospitalization.errors[:scheduled_admission_date], "must include all linked surgeries within the hospitalization period"
   end
 
+  test "linked_surgeries_must_remain_within_period ignores an undated linked surgery" do
+    hospitalization = hospitalizations(:one)
+    Surgery.create!(
+      patient: patients(:one),
+      hospitalization: hospitalization,
+      surgery_date: nil,
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    # Would fail with "must include all linked surgeries within the
+    # hospitalization period" if the undated surgery were counted.
+    hospitalization.discharge_date = Date.new(2026, 3, 2)
+
+    assert hospitalization.valid?
+  end
+
   test "rejects reassigning the patient while a surgery is linked" do
     hospitalization = hospitalizations(:one)
     Surgery.create!(
