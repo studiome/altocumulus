@@ -4,9 +4,33 @@ require "test_helper"
 # persistence, the pre-login session fallback, rejecting unknown locale
 # values, and making sure a request's locale never bleeds into the next one.
 # ja.yml's actual translated content (ActiveRecord names/errors, nav text) is
-# exercised here too, since that is the only user-visible surface this stage
-# of the i18n rollout touches -- most view text is still English pending the
-# later stage that wraps it in `t()`.
+# exercised here too, along with a broad "no translation missing" sweep
+# across the app's main screens and detail/new/edit pages.
+#
+# Final i18n audit note: a handful of screens are deliberately NOT
+# duplicated here because a dedicated per-resource file already gives them
+# the same "no translation missing" coverage (Japanese-rendered + English-
+# unchanged + flash messages), which is the pattern later groups moved to
+# rather than growing this one file further:
+#   - the login screen (Sessions#new)              -> sessions_i18n_test.rb
+#   - audit event show (built dynamically, since
+#     test/fixtures/audit_events.yml doesn't exist) -> audit_events_i18n_test.rb
+#   - diagnoses/surgery_procedures/holidays/
+#     elective_slot_rules new/edit/show             -> master_data_i18n_test.rb
+#   - admin users/announcements/admin_notes
+#     index/new/edit (using the japanese_admin
+#     fixture)                                      -> admin_i18n_test.rb
+#   - patients index/show/new/edit,
+#     patient_diagnoses, dashboard, searches         -> patients_i18n_test.rb /
+#                                                        patient_diagnoses_i18n_test.rb /
+#                                                        dashboard_i18n_test.rb /
+#                                                        searches_i18n_test.rb
+#     (plus the sweep below, which already hits their index/show/new/edit
+#     URLs directly)
+# Every GET-rendering route in config/routes.rb resolves to at least one
+# "no translation missing" assertion somewhere across test/integration/ --
+# verified by cross-referencing every named route against the url helpers
+# used in this directory's test files.
 class LocaleI18nTest < ActionDispatch::IntegrationTest
   setup { sign_out }
 
