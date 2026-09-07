@@ -1,6 +1,4 @@
 class ElectiveSlotRule < ApplicationRecord
-  DAY_NAMES = Date::DAYNAMES
-
   validates :day_of_week, presence: true, uniqueness: true, inclusion: { in: 0..6 }
   validates :slot_count, presence: true, numericality: { greater_than: 0 }
   validates :slot_duration_minutes, presence: true, numericality: { only_integer: true, greater_than: 0 }
@@ -11,12 +9,19 @@ class ElectiveSlotRule < ApplicationRecord
     ordered.index_by(&:day_of_week)
   end
 
+  # Localized weekday names, e.g. via the date.day_names keys the i18n
+  # foundation already defines in both locale files -- always the current
+  # I18n.locale's names, so this is a method, not a memoized/frozen constant.
+  def self.day_names
+    I18n.t("date.day_names")
+  end
+
   def self.day_of_week_form_options
-    DAY_NAMES.each_with_index.map { |name, index| [ name, index ] }
+    day_names.each_with_index.map { |name, index| [ name, index ] }
   end
 
   def day_name
-    DAY_NAMES[day_of_week]
+    self.class.day_names[day_of_week]
   end
 
   def slot_duration_hours
@@ -60,7 +65,7 @@ class ElectiveSlotRule < ApplicationRecord
   end
 
   def to_s
-    "#{day_name} - #{slot_count_display} slots x #{slot_duration_minutes} min"
+    I18n.t("models.elective_slot_rule.to_s", day: day_name, count: slot_count_display, minutes: slot_duration_minutes)
   end
 
   private

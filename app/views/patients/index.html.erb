@@ -1,28 +1,28 @@
-<% content_for :title, "Patients" %>
+<% content_for :title, t(".title") %>
 
 <div class="app-page">
 
   <section class="app-page-header">
     <div class="app-page-header-body">
       <div>
-        <p class="app-page-kicker">Registry</p>
-        <h1 class="app-page-title">Patients</h1>
+        <p class="app-page-kicker"><%= t(".kicker") %></p>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
       <%= link_to new_patient_path, class: "btn btn-primary" do %>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        New Patient
+        <%= t(".new_button") %>
       <% end %>
     </div>
   </section>
 
   <%= form_with url: patients_path, method: :get, local: true, class: "app-filter-bar" do |f| %>
     <div class="app-filter-field">
-      <label class="app-filter-label">Keyword</label>
-      <%= f.text_field :keyword, value: params[:keyword], placeholder: "Name or Hospital ID", class: "input input-sm" %>
+      <label class="app-filter-label"><%= t(".keyword_label") %></label>
+      <%= f.text_field :keyword, value: params[:keyword], placeholder: t(".keyword_placeholder"), class: "input input-sm" %>
     </div>
-    <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
+    <%= f.submit t("common.search"), class: "btn btn-primary btn-sm" %>
     <% if params[:keyword].present? %>
-      <%= link_to "Clear", patients_path, class: "btn btn-ghost btn-sm" %>
+      <%= link_to t("common.clear"), patients_path, class: "btn btn-ghost btn-sm" %>
     <% end %>
   <% end %>
 
@@ -31,10 +31,10 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200">Hospital ID</th>
-            <th class="bg-base-200">Name</th>
-            <th class="bg-base-200">Date of Birth</th>
-            <th class="bg-base-200 text-right">Actions</th>
+            <th class="bg-base-200"><%= t("patients.labels.hospital_id") %></th>
+            <th class="bg-base-200"><%= Patient.human_attribute_name(:name) %></th>
+            <th class="bg-base-200"><%= t("patients.labels.date_of_birth") %></th>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>
@@ -43,12 +43,12 @@
               <tr class="row-hover">
                 <td class="font-mono font-medium"><%= patient.hospital_id %></td>
                 <td class="font-semibold"><%= patient.name %></td>
-                <td><%= patient.date_of_birth.strftime("%Y-%m-%d") if patient.date_of_birth %></td>
+                <td><%= l(patient.date_of_birth, format: :default) if patient.date_of_birth %></td>
                 <td class="text-right flex justify-end gap-2">
-                  <%= link_to "Add Diagnosis", new_patient_patient_diagnosis_path(patient), class: "btn btn-ghost btn-xs text-accent" %>
-                  <%= link_to "View", patient, class: "btn btn-ghost btn-xs text-primary" %>
-                  <%= link_to "Edit", edit_patient_path(patient), class: "btn btn-ghost btn-xs text-secondary" %>
-                  <%= button_to "Delete", patient, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                  <%= link_to t("patients.labels.add_diagnosis_button"), new_patient_patient_diagnosis_path(patient), class: "btn btn-ghost btn-xs text-accent" %>
+                  <%= link_to t("common.view"), patient, class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to t("common.edit"), edit_patient_path(patient), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to t("common.delete"), patient, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
                 </td>
               </tr>
             <% end %>
@@ -56,9 +56,9 @@
             <tr>
               <td colspan="4" class="py-10 text-center text-base-content/50 italic">
                 <% if params[:keyword].present? %>
-                  No patients match your search.
+                  <%= t(".empty_filtered") %>
                 <% else %>
-                  No patients found. Click "New Patient" to get started.
+                  <%= t(".empty_no_filter") %>
                 <% end %>
               </td>
             </tr>

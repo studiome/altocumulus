@@ -46,6 +46,22 @@ class UserTest < ActiveSupport::TestCase
     assert_includes user.errors[:role], "is not included in the list"
   end
 
+  test "defaults locale to en" do
+    user = User.create!(email: "default-locale@example.com", name: "Default Locale", password: "password")
+    assert_equal "en", user.locale
+  end
+
+  test "locale must be en or ja" do
+    user = User.new(email: "locale@example.com", name: "Locale", password: "password", locale: "de")
+    assert_not user.valid?
+    assert_includes user.errors[:locale], "is not included in the list"
+  end
+
+  test "accepts ja as a locale" do
+    user = User.new(email: "ja-locale@example.com", name: "JA Locale", password: "password", locale: "ja")
+    assert user.valid?
+  end
+
   test "admin? reflects role" do
     assert @admin.admin?
     assert_not @member.admin?

@@ -3,6 +3,8 @@ Rails.application.routes.draw do
   post "login" => "sessions#create"
   delete "logout" => "sessions#destroy", as: :logout
 
+  patch "locale" => "locales#update", as: :locale
+
   resource :account, only: %i[ show update ]
 
   namespace :admin do

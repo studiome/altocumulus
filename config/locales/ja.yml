@@ -1,0 +1,1103 @@
+ja:
+  hello: "こんにちは"
+
+  date:
+    formats:
+      default: "%Y年%m月%d日"
+      short: "%m/%d"
+      long: "%Y年%m月%d日"
+      long_with_weekday: "%Y年%m月%d日(%a)"
+      weekday: "%A"
+    day_names:
+      - 日曜日
+      - 月曜日
+      - 火曜日
+      - 水曜日
+      - 木曜日
+      - 金曜日
+      - 土曜日
+    abbr_day_names:
+      - 日
+      - 月
+      - 火
+      - 水
+      - 木
+      - 金
+      - 土
+    month_names:
+      - ~
+      - 1月
+      - 2月
+      - 3月
+      - 4月
+      - 5月
+      - 6月
+      - 7月
+      - 8月
+      - 9月
+      - 10月
+      - 11月
+      - 12月
+    abbr_month_names:
+      - ~
+      - 1月
+      - 2月
+      - 3月
+      - 4月
+      - 5月
+      - 6月
+      - 7月
+      - 8月
+      - 9月
+      - 10月
+      - 11月
+      - 12月
+    order:
+      - :year
+      - :month
+      - :day
+
+  time:
+    formats:
+      default: "%Y年%m月%d日(%a) %H時%M分%S秒"
+      short: "%y/%m/%d %H:%M"
+      long: "%Y年%m月%d日(%a) %H時%M分%S秒"
+      timestamp: "%Y年%m月%d日 %H:%M:%S"
+      short_timestamp: "%Y年%m月%d日 %H:%M"
+    am: "午前"
+    pm: "午後"
+
+  nav:
+    app_name: "Altocumulus"
+    open_menu: "メニューを開く"
+    calendar: "カレンダー"
+    patients: "患者"
+    surgeries: "手術"
+    hospitalizations: "入院"
+    search: "検索"
+    reports: "レポート"
+    dashboard: "ダッシュボード"
+    schedule: "スケジュール"
+    audit_log: "監査ログ"
+    masters: "マスタ"
+    diagnoses: "診断名"
+    procedures: "術式"
+    slot_rules: "手術枠ルール"
+    holidays: "休日"
+    admin: "管理"
+    users: "利用者"
+    announcements: "お知らせ"
+    admin_notes: "管理者メモ"
+    account: "アカウント"
+    sign_out: "サインアウト"
+
+  locale:
+    switch_label: "言語"
+    en: "English"
+    ja: "日本語"
+
+  # Standard ActiveModel/ActiveRecord validation messages (mirrors en.yml's
+  # errors: block structure). This app doesn't bundle the rails-i18n gem, so
+  # these are hand-written to match the wording of `validates` calls actually
+  # used across app/models (presence, uniqueness, inclusion, numericality,
+  # length, confirmation).
+  errors:
+    format: "%{attribute}%{message}"
+    messages:
+      accepted: "を受諾してください"
+      blank: "を入力してください"
+      confirmation: "が%{attribute}と一致しません"
+      empty: "を入力してください"
+      equal_to: "は%{count}にしてください"
+      even: "は偶数にしてください"
+      exclusion: "は予約されています"
+      greater_than: "は%{count}より大きい値にしてください"
+      greater_than_or_equal_to: "は%{count}以上の値にしてください"
+      inclusion: "は一覧にありません"
+      invalid: "は不正な値です"
+      less_than: "は%{count}より小さい値にしてください"
+      less_than_or_equal_to: "は%{count}以下の値にしてください"
+      not_a_number: "は数値で入力してください"
+      not_an_integer: "は整数で入力してください"
+      odd: "は奇数にしてください"
+      other_than: "は%{count}以外の値にしてください"
+      present: "は入力しないでください"
+      required: "を入力してください"
+      too_long: "は%{count}文字以内で入力してください"
+      too_short: "は%{count}文字以上で入力してください"
+      wrong_length: "は%{count}文字で入力してください"
+
+  # `Array#to_sentence` (used by several controllers on
+  # `errors.full_messages.to_sentence` for a destroy/copy failure alert) asks
+  # I18n for these three connector keys before falling back to its own
+  # English defaults (", " / " and " / ", and "). Without a ja override here,
+  # a multi-error Japanese flash was joined with those English connectors
+  # even though every other word in the sentence was Japanese. Not defined in
+  # en.yml since English already gets exactly this text from to_sentence's
+  # own built-in defaults.
+  support:
+    array:
+      words_connector: "、"
+      two_words_connector: "と"
+      last_word_connector: "、"
+
+  activerecord:
+    models:
+      access_log: "アクセスログ"
+      admin_note: "管理者メモ"
+      announcement: "お知らせ"
+      audit_event: "監査イベント"
+      diagnosis: "診断名"
+      elective_slot_rule: "手術枠ルール"
+      holiday: "休日"
+      hospitalization: "入院"
+      hospitalization_diagnosis: "入院診断"
+      patient: "患者"
+      patient_diagnosis: "患者診断"
+      surgery: "手術"
+      surgery_diagnosis_link: "手術診断リンク"
+      surgery_procedure: "術式"
+      surgery_procedure_selection: "手術術式選択"
+      user: "利用者"
+
+    attributes:
+      access_log:
+        event: "イベント"
+        ip_address: "IPアドレス"
+        last_url: "最終URL"
+        user_agent: "ユーザーエージェント"
+        user_id: "利用者"
+      admin_note:
+        body: "本文"
+        user_id: "作成者"
+      announcement:
+        title: "タイトル"
+        body: "本文"
+        published: "公開"
+      audit_event:
+        action: "操作"
+        auditable_id: "対象ID"
+        auditable_type: "対象種別"
+        change_data: "変更内容"
+        ip_address: "IPアドレス"
+        record_label: "対象"
+        user_id: "操作者"
+      diagnosis:
+        name: "病名"
+      elective_slot_rule:
+        day_of_week: "曜日"
+        slot_count: "枠数"
+        slot_duration_minutes: "枠時間(分)"
+      holiday:
+        date: "日付"
+        holiday: "休日"
+        name: "名称"
+        note: "備考"
+      hospitalization:
+        adl: "ADL"
+        admin_status: "確認ステータス"
+        admission_date: "入院日"
+        attending_doctor: "主治医"
+        clinical_comment: "臨床コメント"
+        deleted_at: "削除日時"
+        discharge_date: "退院日"
+        discharge_destination: "退院先"
+        outcome: "転帰"
+        patient_age_snapshot: "患者年齢(記録時点)"
+        patient_id: "患者"
+        patient_name_snapshot: "患者氏名(記録時点)"
+        patient_sex_snapshot: "患者性別(記録時点)"
+        planned_days: "予定入院日数"
+        purpose: "入院目的"
+        reason: "入院理由"
+        referred_from: "紹介元"
+        reservation_doctor: "予約医師"
+        reservation_status: "予約ステータス"
+        room_preference: "病室希望"
+        scheduled_admission_date: "入院予定日"
+        submitted_on: "提出日"
+        ward: "病棟"
+      hospitalization_diagnosis:
+        diagnosis_id: "診断名"
+        hospitalization_id: "入院"
+      patient:
+        clinical_info: "臨床情報"
+        date_of_birth: "生年月日"
+        hospital_id: "患者ID"
+        name: "氏名"
+        name_kana: "フリガナ"
+        sex: "性別"
+        telephone: "電話番号"
+      patient_diagnosis:
+        diagnosed_on: "診断日"
+        diagnosis_id: "診断名"
+        laterality: "左右"
+        patient_id: "患者"
+      surgery:
+        anesthesia_method: "麻酔方法"
+        assistant_name: "助手"
+        duration_hours: "手術時間(時間)"
+        hospitalization_id: "入院"
+        operation_order: "手術順"
+        operator_name: "執刀医"
+        patient_id: "患者"
+        scheduling_type: "予定区分"
+        slot_number: "枠番号"
+        start_time: "開始時刻"
+        surgery_date: "手術日"
+      surgery_diagnosis_link:
+        patient_diagnosis_id: "患者診断"
+        surgery_id: "手術"
+      surgery_procedure:
+        name: "術式名"
+      surgery_procedure_selection:
+        laterality: "左右"
+        surgery_id: "手術"
+        surgery_procedure_id: "術式"
+      user:
+        active: "有効"
+        current_password: "現在のパスワード"
+        email: "メールアドレス"
+        locale: "表示言語"
+        name: "氏名"
+        password: "パスワード"
+        password_confirmation: "パスワード(確認)"
+        role: "権限"
+
+    errors:
+      format: "%{attribute}%{message}"
+      messages:
+        taken: "はすでに存在します"
+        record_invalid: "バリデーションに失敗しました: %{errors}"
+        restrict_dependent_destroy:
+          has_one: "%{record}が存在しているため削除できません"
+          has_many: "%{record}が存在しているため削除できません"
+        incorrect: "が正しくありません"
+        not_a_valid_date: "は正しい日付ではありません"
+        requires_discharge_date: "は退院日と併せて設定してください"
+        must_include_linked_surgeries_within_period: "は紐づく手術をすべて入院期間内に含めてください"
+        overlaps_another_hospitalization: "が同じ患者の他の入院期間と重複しています"
+
+      models:
+        holiday:
+          attributes:
+            base:
+              must_have_name_or_note: "名称または備考を入力してください"
+        user:
+          attributes:
+            base:
+              cannot_remove_last_admin: "最後の管理者を削除・降格・無効化することはできません"
+        hospitalization:
+          attributes:
+            hospitalization_diagnoses:
+              must_include_at_least_one_diagnosis: "を1件以上入力してください"
+              no_duplicate_diagnoses: "に重複を含めることはできません"
+              cannot_swap_diagnoses_between_rows: "は既存の行同士で診断名を入れ替えることができません。まず一方の行を別の診断名に変更してください"
+            discharge_date:
+              must_be_on_or_after_admission_date: "は入院日以降の日付にしてください"
+            admission_date:
+              or_scheduled_admission_date_required: "または入院予定日のいずれかを入力してください"
+            patient_id:
+              must_match_patient_of_linked_surgeries: "は紐づくすべての手術の患者と一致させてください"
+        surgery:
+          attributes:
+            patient_diagnoses:
+              must_all_belong_to_selected_patient: "はすべて選択した患者のものにしてください"
+            surgery_procedure_selections:
+              must_include_at_least_one_procedure: "を1件以上入力してください"
+              too_many_procedure_selections: "は5件以下にしてください"
+              no_duplicate_procedure_selections: "に重複を含めることはできません"
+              cannot_swap_procedures_between_rows: "は既存の行同士で術式を入れ替えることができません。まず一方の行を別の術式に変更してください"
+            hospitalization:
+              must_belong_to_same_patient_as_surgery: "は手術と同じ患者のものにしてください"
+            surgery_date:
+              must_fall_within_hospitalization_period: "は紐づく入院期間内の日付にしてください"
+              must_be_blank_when_undecided: "は「未定」を選択している場合は空欄にしてください"
+              must_be_entered_or_undecided: "を入力するか「未定」を選択してください"
+            surgery_date_status:
+              not_valid: "は正しくありません"
+
+  # Stage 2 of the i18n rollout (see en.yml for the design notes). DB columns
+  # keep their English keys; only these looked-up labels are localized.
+  models:
+    hospitalization:
+      outcome_options:
+        recovered: "治癒"
+        improved: "軽快"
+        unchanged: "不変"
+        worsened: "増悪"
+        transferred: "転院"
+        died: "死亡"
+      discharge_destination_options:
+        home: "自宅"
+        hospital: "他院"
+        facility: "施設"
+        death: "死亡"
+        other: "その他"
+      reservation_status_options:
+        requested: "依頼"
+        waiting: "入院待ち"
+        date_fixed: "入院日確定"
+        surgery_date_fixed: "手術日確定"
+        admitted: "入院済み"
+        admitted_other_dept: "入院済み(他科)"
+        on_hold: "保留"
+        discharged: "退院済み"
+      purpose_options:
+        surgery: "手術"
+        examination: "検査・処置"
+        chemotherapy: "化学療法"
+      admin_status_options:
+        unconfirmed: "未確認"
+        confirmed: "確認済み"
+      status_filter_options:
+        in_hospital: "入院中"
+        discharged: "退院済み"
+        upcoming: "入院予定"
+        waiting: "入院待ち"
+        unconfirmed: "未確認"
+        recently_updated: "最近更新"
+        referred: "紹介あり"
+      status_label:
+        discharged: "退院済み"
+        in_hospital: "入院中"
+        scheduled: "入院予定"
+      to_s:
+        date_not_set: "日付未定"
+        in_hospital: "入院中"
+    surgery:
+      scheduling_type_options:
+        elective: "予定"
+        emergency: "緊急"
+      surgery_date_status_options:
+        scheduled: "日付指定"
+        undecided: "未定"
+      surgery_date_display_undated: "未定"
+      to_s_date_not_set: "日付未定"
+    patient:
+      sex_options:
+        male: "男性"
+        female: "女性"
+        other: "その他"
+    lateralizable:
+      laterality_options:
+        right: "右"
+        left: "左"
+        bilateral: "両側"
+        none: "なし"
+    elective_slot_rule:
+      to_s: "%{day} - %{count}枠 x %{minutes}分"
+    elective_slot_usage:
+      warnings:
+        holiday: "%{holiday_name}は休日のため、利用できる手術枠がありません。"
+        not_configured: "%{day}には手術枠が設定されていません。"
+        unscheduled:
+          other: "%{count}件の予定手術が利用可能な枠に割り当てられていません。"
+        overrun:
+          single: "第%{number}枠は上限%{limit}分を%{overrun}分超過しています。"
+          same_limit: "枠%{numbers}は上限%{limit}分を超過しています。"
+          item: "第%{number}枠は上限%{limit}分を超過しています。"
+    user:
+      role_options:
+        user: "利用者"
+        admin: "管理者"
+    audit_event:
+      # AUDITABLE_TYPES itself (Patient/Surgery/Hospitalization) is not
+      # listed here -- it reuses activerecord.models.* via
+      # `AuditEvent.auditable_type_options` (see app/models/audit_event.rb)
+      # rather than duplicating those same three model names under a new key.
+      action_options:
+        create: "作成"
+        update: "更新"
+        destroy: "削除"
+
+  # `helpers.submit` is intentionally defined ONLY here, not in en.yml (see
+  # the note above en.yml's own `helpers:` block -- Rails' English default
+  # template ("Create %{model}"/"Update %{model}") already matches this
+  # app's English rendering byte-for-byte, so redefining it in English would
+  # only risk future drift). Without a Japanese override, a bare
+  # `form.submit` (no explicit label -- all 9 of this app's plain
+  # create/update forms) falls back to that same English template with
+  # `model` interpolated as the Japanese model name, mixing the two
+  # languages (e.g. "Create 患者"). `%{model}` here is already the localized
+  # name (`Model.model_name.human`, e.g. "患者"), matching activerecord.models
+  # above.
+  helpers:
+    submit:
+      create: "%{model}を作成"
+      update: "%{model}を更新"
+    hospitalizations:
+      length_of_stay:
+        days:
+          other: "%{count}日"
+        ongoing: "入院%{count}日目(継続中)"
+        unknown: "-"
+    audit_events:
+      "yes": "はい"
+      "no": "いいえ"
+      not_found: "(見つかりません)"
+
+  # Stage 3 of the i18n rollout (see en.yml for the design notes on the
+  # common: namespace and the lazy-lookup / shared-scope conventions).
+  common:
+    actions: "操作"
+    view: "詳細"
+    edit: "編集"
+    delete: "削除"
+    save: "保存"
+    cancel: "キャンセル"
+    back: "戻る"
+    new: "新規"
+    search: "検索"
+    clear: "クリア"
+    close: "閉じる"
+    show_detail: "詳細を表示"
+    master_data: "マスタデータ"
+    master_record: "マスタ登録"
+    information: "詳細情報"
+    confirm_delete: "本当によろしいですか?"
+    none: "-"
+    please_sign_in: "続行するにはサインインしてください。"
+    not_authorized: "この操作を行う権限がありません。"
+    field_header: "項目"
+    before_header: "変更前"
+    after_header: "変更後"
+    list_separator: "、"
+
+  diagnoses:
+    index:
+      title: "診断名"
+      new_button: "新規診断名"
+      empty: "診断名が登録されていません。「新規診断名」から作成してください。"
+    show:
+      title: "診断名の詳細"
+      subtitle: "診断名マスタ"
+      edit_button: "診断名を編集"
+      delete_button: "診断名を削除"
+    new:
+      title: "新規診断名"
+      modal_description: "この診断名入力フォームを離れずに診断名マスタを作成できます。"
+    edit:
+      title: "診断名を編集"
+    create:
+      success_notice: "診断名を作成しました。"
+      added_helper_text: "新しい診断名が診断名入力フォームに追加されました。"
+      select_diagnosis_prompt: "診断名を選択してください"
+      save_entry_submit: "診断エントリを保存"
+    update:
+      success_notice: "診断名を更新しました。"
+    destroy:
+      success_notice: "診断名を削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの診断名を保存できませんでした:"
+      name_label: "診断名"
+      name_placeholder: "例: 急性虫垂炎"
+
+  surgery_procedures:
+    index:
+      title: "術式"
+      new_button: "新規術式"
+      empty: "術式が登録されていません。「新規術式」から作成してください。"
+    show:
+      title: "術式の詳細"
+      subtitle: "術式マスタ"
+      edit_button: "術式を編集"
+      delete_button: "術式を削除"
+    new:
+      title: "新規術式"
+      modal_description: "この手術フォームを離れずに術式マスタを作成できます。"
+    edit:
+      title: "術式を編集"
+    create:
+      success_notice: "術式を作成しました。"
+      added_helper_text: "新しい術式が手術フォームに追加されました。"
+    update:
+      success_notice: "術式を更新しました。"
+    destroy:
+      success_notice: "術式を削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの術式を保存できませんでした:"
+      name_label: "術式名"
+      name_placeholder: "例: 腹腔鏡下胆嚢摘出術"
+
+  holidays:
+    index:
+      title: "休日"
+      new_button: "新規休日"
+      year_filter_label: "年"
+      all_years_option: "すべて"
+      type_header: "種別"
+      empty_no_filter: "休日が登録されていません。「新規休日」から作成してください。"
+      empty_filtered: "条件に一致する休日がありません。"
+    show:
+      title: "休日の詳細"
+      subtitle: "休日マスタ"
+      unnamed: "(名称未設定)"
+      edit_button: "休日を編集"
+      delete_button: "休日を削除"
+    new:
+      title: "新規休日"
+    edit:
+      title: "休日を編集"
+    create:
+      success_notice: "休日を作成しました。"
+    update:
+      success_notice: "休日を更新しました。"
+    destroy:
+      success_notice: "休日を削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの休日を保存できませんでした:"
+      closed_checkbox_label: "休診日(手術枠を停止する)"
+      closed_helper: "チェックを外すとメモのみの日として扱われます。カレンダーには表示されますが、手術枠は開いたままになります。"
+      name_label: "休日名"
+      name_placeholder: "例: 春分の日"
+      name_helper: "休診日の場合は必須です。メモのみの日の場合は任意です。"
+      note_placeholder: "例: 午前中に避難訓練"
+    status_badge:
+      closed: "休診"
+      note_only: "メモのみ"
+
+  elective_slot_rules:
+    index:
+      title: "手術枠ルール"
+      description: "曜日ごとに1件のルールを設定します。毎週繰り返す手術枠の数を設定してください。"
+      day_header: "曜日"
+      slots_header: "枠数"
+      slot_duration_header: "枠時間"
+      not_configured: "未設定"
+      add_link: "追加"
+    show:
+      title: "手術枠ルールの詳細"
+      subtitle: "手術枠マスタ"
+      badge: "手術枠ルール"
+      slot_duration_label: "枠時間"
+      total_capacity_label: "総枠時間"
+      fractional_helper: "端数がある場合、%{total}枠のうち最後の枠が短くなります。"
+      edit_button: "ルールを編集"
+      delete_button: "ルールを削除"
+    new:
+      title: "新規手術枠ルール"
+    edit:
+      title: "手術枠ルールを編集"
+    create:
+      success_notice: "手術枠ルールを作成しました。"
+    update:
+      success_notice: "手術枠ルールを更新しました。"
+    destroy:
+      success_notice: "手術枠ルールを削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの手術枠ルールを保存できませんでした:"
+      day_of_week_label: "曜日"
+      day_of_week_prompt: "曜日を選択してください"
+      slot_count_helper: "端数(例: 2.5)を指定すると、その日の最後の枠が短縮されます。追加の1枠にはなりません。"
+      slot_count_placeholder: "例: 2.5"
+      slot_duration_label: "枠時間(分)"
+      slot_duration_placeholder: "例: 240"
+      slot_duration_helper: "1枠あたりに利用できる時間です。これを超える手術は自身の枠を延長するものとして扱われ、他の枠を消費しません。"
+    labels:
+      slot_count: "枠数"
+    units:
+      minutes: "分"
+      hours: "時間"
+
+  # Stage 3 group 2 (Patients / PatientDiagnoses). See en.yml for the design
+  # notes.
+  patients:
+    index:
+      kicker: "登録"
+      title: "患者"
+      new_button: "新規患者"
+      keyword_label: "キーワード"
+      keyword_placeholder: "氏名または患者ID"
+      empty_no_filter: "患者が登録されていません。「新規患者」から作成してください。"
+      empty_filtered: "検索条件に一致する患者がいません。"
+    show:
+      title: "患者の詳細"
+      badge: "患者記録"
+      full_name_label: "氏名"
+      age_label: "年齢"
+      hospital_identifier_label: "患者ID"
+      diagnoses_divider: "診断"
+      diagnosis_history_title: "診断歴"
+      diagnosis_history_description: "この患者の診断名と診断日を複数登録できます。"
+      diagnosed_on_header: "診断日"
+      no_diagnoses: "診断エントリはまだ登録されていません。"
+      edit_button: "患者を編集"
+      delete_button: "患者を削除"
+    new:
+      title: "新規患者"
+    edit:
+      title: "患者を編集"
+    create:
+      success_notice: "患者を作成しました。"
+    update:
+      success_notice: "患者を更新しました。"
+    destroy:
+      success_notice: "患者を削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの患者を保存できませんでした:"
+      hospital_id_placeholder: "例: H12345"
+      name_label: "患者氏名"
+      name_placeholder: "例: 山田太郎"
+      name_kana_placeholder: "例: ヤマダ タロウ"
+      telephone_placeholder: "例: 03-1234-5678"
+      clinical_info_placeholder: "例: アレルギー、既往歴など"
+    labels:
+      hospital_id: "患者ID"
+      name_kana: "フリガナ"
+      date_of_birth: "生年月日"
+      clinical_info: "臨床情報"
+      add_diagnosis_button: "診断を追加"
+
+  patient_diagnoses:
+    index:
+      title: "患者診断"
+      heading: "診断"
+      add_diagnosis_button: "診断を追加"
+      empty: "診断が登録されていません。「診断を追加」から最初のエントリを登録してください。"
+    show:
+      title: "診断エントリの詳細"
+      badge: "診断記録"
+      diagnosis_name_label: "診断名"
+      edit_button: "診断エントリを編集"
+      delete_button: "診断エントリを削除"
+    new:
+      title: "新規診断エントリ"
+    edit:
+      title: "診断エントリを編集"
+    create:
+      success_notice: "診断エントリを作成しました。"
+    update:
+      success_notice: "診断エントリを更新しました。"
+    destroy:
+      success_notice: "診断エントリを削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの診断エントリを保存できませんでした:"
+      no_diagnoses_warning: "診断名マスタが登録されていません。このエントリを登録する前に診断名を作成してください。"
+      new_diagnosis_link: "新規診断名"
+      select_diagnosis_prompt: "診断名を選択してください"
+    labels:
+      patient_name: "患者氏名"
+      patient_id: "患者ID"
+      diagnosed_on: "診断日"
+
+  # Stage 3 group 3a (Hospitalizations). See en.yml for the design notes.
+  hospitalizations:
+    index:
+      title: "入院"
+      deleted_link: "削除済み"
+      new_button: "新規入院"
+      keyword_label: "キーワード"
+      keyword_placeholder: "患者名または入院理由"
+      diagnosis_label: "診断名"
+      status_filter_label: "ステータス"
+      admitted_from_label: "入院日(開始)"
+      admitted_to_label: "入院日(終了)"
+      all_option: "すべて"
+      admin_status_header: "確認ステータス"
+      planned_days_header: "予定日数"
+      patient_name_header: "患者氏名"
+      scheduled_suffix: "(予定)"
+      empty_no_filter: "入院記録が登録されていません。「新規入院」から作成してください。"
+      empty_filtered: "検索条件に一致する入院記録がありません。"
+    show:
+      title: "入院の詳細"
+      admission_date_prefix: "入院日"
+      deleted_badge: "削除済み"
+      planned_length_of_stay_label: "入院予定日数"
+      surgeries_divider: "この入院中の手術"
+      no_surgeries: "この入院に紐づく手術はありません。"
+      update_history_divider: "更新履歴"
+      no_update_history: "この入院の更新履歴はまだありません。"
+      audit_event_details_link: "詳細"
+      view_full_audit_log_link: "監査ログをすべて見る"
+      admin_actions_divider: "管理者操作"
+      confirm_button: "確認"
+      view_deleted_link: "削除済み入院一覧を見る"
+      copy_date_label: "コピー先の入院予定日"
+      copy_submit: "コピー(再予約)"
+      edit_button: "入院記録を編集"
+      delete_button: "入院記録を削除"
+    new:
+      title: "新規入院"
+    edit:
+      title: "入院を編集"
+    deleted:
+      title: "削除済み入院一覧"
+      back_link: "入院一覧に戻る"
+      deleted_at_header: "削除日時"
+      empty: "削除済みの入院記録はありません。"
+    create:
+      success_notice: "入院記録を作成しました。"
+    update:
+      success_notice: "入院記録を更新しました。"
+    destroy:
+      success_notice: "入院記録を削除しました。"
+    confirm:
+      success_notice: "入院を確認済みにしました。"
+    restore:
+      success_notice: "入院記録を復元しました。"
+    copy:
+      success_notice: "入院記録をコピーしました。残りの項目を入力してください。"
+      failure_alert: "コピーできませんでした: %{errors}"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの入院記録を保存できませんでした:"
+      no_patients_warning: "患者が登録されていません。入院記録を登録する前に患者を作成してください。"
+      new_patient_link: "新規患者"
+      no_diagnoses_warning: "診断名マスタが登録されていません。先に診断名を作成してください。"
+      new_diagnosis_link: "新規診断名"
+      patient_schedule_heading: "患者・予定"
+      select_patient_prompt: "患者を選択してください"
+      scheduled_admission_date_helper: "予約段階の間はこちらを設定してください。未定の場合は空欄のままで構いません。"
+      admission_date_helper: "この項目か、上記の入院予定日のいずれかを設定してください。"
+      planned_days_label: "入院予定日数"
+      planned_days_placeholder: "例: 5"
+      admission_surgery_heading: "入院・手術情報"
+      diagnoses_helper: "この入院に対する診断名を1つ以上追加してください。"
+      diagnosis_row_helper: "該当する診断名がない場合は、先に新規作成してください。"
+      add_diagnosis_button: "診断を追加"
+      room_preference_placeholder: "例: 個室"
+      comments_heading: "コメント"
+    hospitalization_diagnosis_fields:
+      select_diagnosis_prompt: "診断名を選択してください"
+      remove_button: "削除"
+    labels:
+      kicker: "入退院"
+      diagnoses_header: "診断名"
+      admission_date_header: "入院日"
+      discharge_date: "退院日"
+      length_of_stay: "入院日数"
+      preferred_room: "希望病室"
+      patient_id: "患者ID"
+      reservation_status: "予約ステータス"
+      scheduled_admission_date: "入院予定日"
+      admission_date_actual: "入院日(実績)"
+      reason_for_admission: "入院理由"
+      referred_from: "紹介元"
+      adl: "ADL"
+      reservation_doctor: "予約医師"
+      attending_doctor: "主治医"
+      submitted_on: "提出日"
+      clinical_comment: "臨床コメント"
+      discharge_destination: "退院先"
+      diagnoses_at_admission: "入院時の診断名"
+      unknown_patient_name: "患者 #%{id}"
+      unknown_patient: "不明"
+      restore: "復元"
+      planned_days_value: "%{count}日"
+
+  # Stage 3 group 3b (Surgeries / Surgery Schedule board). See en.yml for
+  # the design notes.
+  surgeries:
+    index:
+      title: "手術"
+      new_button: "新規手術"
+      kicker: "手術"
+      keyword_label: "キーワード"
+      keyword_placeholder: "患者名または患者ID"
+      procedure_label: "術式"
+      type_label: "区分"
+      performed_from_label: "手術日(開始)"
+      performed_to_label: "手術日(終了)"
+      undated_checkbox_label: "未定のみ"
+      all_option: "すべて"
+      diagnosis_header: "診断名"
+      slot_badge: "第%{number}枠"
+      slot_badge_with_total: "第%{number}枠 / %{total}"
+      standalone: "単独"
+      empty_no_filter: "手術記録が登録されていません。「新規手術」から作成してください。"
+      empty_filtered: "検索条件に一致する手術がありません。"
+    show:
+      title: "手術の詳細"
+      date_prefix: "日付"
+      slot_badge: "第%{number}枠"
+      slot_of_total: "第%{number}枠 / 全%{total}枠"
+      standalone: "単独(未連携)"
+      edit_button: "手術を編集"
+      delete_button: "手術を削除"
+    new:
+      title: "新規手術"
+    edit:
+      title: "手術を編集"
+    create:
+      success_notice: "手術記録を作成しました。"
+    update:
+      success_notice: "手術記録を更新しました。"
+    destroy:
+      success_notice: "手術記録を削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの手術を保存できませんでした:"
+      no_patients_warning: "患者が登録されていません。手術を登録する前に患者を作成してください。"
+      new_patient_link: "新規患者"
+      no_procedures_warning: "術式マスタが登録されていません。先に術式を作成するか、新規作成画面を開いてください。"
+      new_procedure_link: "新規術式"
+      select_patient_prompt: "患者を選択してください"
+      related_diagnoses_helper: "この手術に該当する診断名を1つ以上選択してください。"
+      no_diagnoses_for_selected_patient: "選択した患者に登録された診断名がありません。"
+      no_diagnoses_available: "診断名がありません。先に患者の診断名を登録してください。"
+      diagnoses_helper: "選択した患者の診断名のみ保存できます。"
+      surgery_date_helper: "日程が決まるまでは「未定」を選択して日付を空欄にしてください。"
+      scheduling_type_label: "予定区分"
+      start_time_helper: "緊急手術は夜間を含め、いつでも設定できます。"
+      slot_number_label: "予定手術枠"
+      slot_number_placeholder: "例: 1"
+      slot_number_helper: "この手術がその日のどの手術室枠で行われるかを指定します。1つの枠に複数の手術が入ることがあるため、同じ番号を複数の手術で共有できます。予定が決まるまでは空欄のままにしてください。緊急手術では無視されます。"
+      configured_slots_prefix: "曜日ごとの設定枠数:"
+      slot_rules_heading: "予定手術枠ルール"
+      manage_slot_rules_link: "枠ルールを管理"
+      no_slot_rules: "手術枠がまだ設定されていません。"
+      hospitalization_label: "連携する入院"
+      not_linked_option: "連携なし(外来/単独)"
+      procedures_helper: "1つの手術につき最大5件の術式を追加できます。"
+      procedure_row_helper: "該当する術式がない場合は、先に新規作成してください。"
+      add_procedure_button: "術式を追加"
+      duration_label: "手術時間(時間)"
+      duration_placeholder: "例: 1.5"
+      anesthesia_method_label: "麻酔方法"
+      anesthesia_method_placeholder: "例: 全身麻酔"
+      operator_placeholder: "例: 山田太郎"
+      assistant_placeholder: "例: 佐藤花子"
+      operation_order_placeholder: "例: 1"
+    surgery_procedure_selection_fields:
+      procedure_label: "術式"
+      procedure_prompt: "術式を選択してください"
+      remove_button: "削除"
+    surgery_procedure_modal:
+      title: "新規術式"
+      description: "この手術フォームを離れずに術式マスタを作成できます。"
+      loading: "読み込み中..."
+    labels:
+      surgery_date: "手術日"
+      start_time: "開始時刻"
+      anesthesia: "麻酔"
+      duration: "手術時間"
+      duration_value: "%{hours}時間"
+      operator: "執刀医"
+      assistant: "助手"
+      operation_order: "手術順"
+      related_diagnoses: "関連する診断名"
+      procedures: "術式"
+      no_slot_assigned: "枠未割り当て"
+      unknown_patient_name: "患者 #%{id}"
+      unknown_patient: "不明"
+
+  surgery_schedules:
+    index:
+      title: "手術スケジュール"
+      kicker: "手術"
+      week_of: "%{date}の週"
+      prev_week_link: "前週"
+      this_week_link: "今週"
+      next_week_link: "次週"
+      configure_slots_link: "枠を設定"
+      holidays_link: "休日"
+      slots_in_use: "%{used} / %{total}枠を使用中"
+      minutes_in_use: "%{used} / %{capacity}分"
+      no_slots_holiday: "手術枠なし(休日)"
+      no_slots_configured: "手術枠未設定"
+      slot_number_label: "第%{number}枠"
+      slot_minutes_label: "%{used} / %{duration}分"
+      overrun_badge: "+%{minutes}分超過"
+      slot_open: "空き"
+      not_assigned_to_slot: "枠未割り当て"
+      no_slot_available: "利用可能な枠なし"
+      no_emergency_surgeries: "なし"
+    slot_surgery:
+      duration_minutes_value: "%{minutes}分"
+    labels:
+      unknown_patient_name: "患者 #%{id}"
+
+  # Stage 3 group 4a: Admin (Users / Announcements / AdminNotes), AuditEvents,
+  # Accounts, Sessions, and the app-wide shared partials. See en.yml for the
+  # design notes.
+  admin:
+    kicker: "管理"
+    users:
+      index:
+        title: "利用者"
+        new_button: "新規利用者"
+        status_header: "ステータス"
+        active_status: "有効"
+        inactive_status: "無効"
+        reset_password_button: "パスワードをリセット"
+        reset_password_confirm: "この利用者のパスワードをリセットしますか?"
+      new:
+        title: "新規利用者"
+      edit:
+        title: "利用者を編集"
+      form:
+        errors_heading:
+          other: "%{count}件のエラーによりこの利用者を保存できませんでした:"
+      create:
+        success_notice: "利用者を作成しました。"
+      update:
+        success_notice: "利用者を更新しました。"
+      reset_password:
+        success_notice: "パスワードをリセットしました。仮パスワード: %{password}"
+    announcements:
+      index:
+        title: "お知らせ"
+        new_button: "新規お知らせ"
+        status_header: "ステータス"
+        updated_header: "更新日"
+        published_status: "公開済み"
+        draft_status: "下書き"
+        delete_confirm: "このお知らせを削除しますか?"
+      new:
+        title: "新規お知らせ"
+      edit:
+        title: "お知らせを編集"
+      form:
+        errors_heading:
+          other: "%{count}件のエラーによりこのお知らせを保存できませんでした:"
+        published_helper: "公開されたお知らせのみ、運用カレンダーに表示されます。"
+      create:
+        success_notice: "お知らせを作成しました。"
+      update:
+        success_notice: "お知らせを更新しました。"
+      destroy:
+        success_notice: "お知らせを削除しました。"
+    admin_notes:
+      index:
+        title: "管理者メモ"
+        new_note_label: "新しいメモ"
+        add_note_submit: "メモを追加"
+        note_header: "メモ"
+        by_header: "作成者"
+        added_header: "登録日時"
+        delete_confirm: "このメモを削除しますか?"
+      create:
+        success_notice: "メモを追加しました。"
+      destroy:
+        success_notice: "メモを削除しました。"
+
+  audit_events:
+    labels:
+      time: "日時"
+      record_type: "対象種別"
+      operator: "操作者"
+    index:
+      title: "監査ログ"
+      kicker: "アクティビティ"
+      all_option: "すべて"
+      record_header: "対象"
+      details_link: "詳細"
+      empty: "監査イベントが見つかりません。"
+    show:
+      title: "監査イベント"
+      kicker: "監査ログ"
+      record_id_label: "レコードID"
+      ip_address_label: "IPアドレス"
+      no_changes: "属性の変更は記録されていません。"
+
+  accounts:
+    show:
+      title: "アカウント"
+      change_password_divider: "パスワードの変更"
+      password_helper: "現在のパスワードのままにする場合は、これらの項目を空欄にしてください。"
+      current_password_label: "現在のパスワード"
+      new_password_label: "新しいパスワード"
+      confirm_new_password_label: "新しいパスワード(確認)"
+      save_changes_submit: "変更を保存"
+      errors_heading:
+        other: "%{count}件のエラーによりこのアカウントを保存できませんでした:"
+    update:
+      success_notice: "アカウントを更新しました。"
+
+  sessions:
+    new:
+      title: "サインイン"
+      submit_button: "サインイン"
+    create:
+      success_notice: "サインインしました。"
+      invalid_credentials_alert: "メールアドレスまたはパスワードが正しくありません。"
+    destroy:
+      success_notice: "サインアウトしました。"
+
+  shared:
+    pagination:
+      prev: "前へ"
+      next: "次へ"
+      page_of: "%{page} / %{total} ページ"
+    diagnosis_modal:
+      loading: "読み込み中..."
+
+  # Stage 3 group 4b. See en.yml for the design notes.
+  operations_calendar:
+    index:
+      title: "運用カレンダー"
+      kicker: "手術"
+      days_count:
+        other: "%{count}日"
+      start_label: "開始"
+      days_label: "日数"
+      apply_submit: "適用"
+      today_link: "今日"
+      undated_surgeries_heading: "日程未定の手術"
+      outside_regular_days_heading: "通常の手術日以外の手術"
+      alert: "指定された日付範囲が正しくありません。既定の範囲を表示します。"
+    day:
+      closed_badge: "休診: %{name}"
+      note_badge: "メモ"
+      congestion_badge: "混雑"
+      admissions_label: "入院数:"
+      slots_summary: "%{used} / %{total}枠"
+      minutes_summary: "(%{used} / %{capacity}分)"
+      no_slots_holiday: "手術枠なし(休日)"
+      no_slots_configured: "手術枠未設定"
+      no_surgeries: "手術の予定はありません"
+    summary_list:
+      undated: "日程未定"
+    labels:
+      unknown_patient_name: "患者 #%{id}"
+      empty_list: "なし"
+
+  dashboard:
+    index:
+      title: "ダッシュボード"
+      kicker: "概要"
+      year_label: "年"
+      all_time_option: "全期間"
+      view_submit: "表示"
+      total_patients_stat: "総患者数"
+      current_inpatients_stat: "現在の入院患者数"
+      surgeries_stat: "手術件数"
+      hospitalizations_stat: "入院件数"
+      average_length_of_stay_stat: "平均入院日数"
+      average_length_of_stay_value: "%{days}日"
+      monthly_surgeries_heading: "月別手術件数"
+      monthly_hospitalizations_heading: "月別入院件数"
+      top_procedures_heading: "上位術式"
+      top_diagnoses_heading: "入院時の上位診断名"
+      anesthesia_breakdown_heading: "麻酔方法別内訳"
+      scheduling_type_breakdown_heading: "予定区分別内訳"
+      outcome_breakdown_heading: "転帰別内訳"
+      no_data: "データがありません"
+
+  searches:
+    index:
+      title: "検索"
+      kicker: "横断検索"
+      keyword_label: "キーワード"
+      keyword_placeholder: "患者名、患者ID、入院理由など..."
+      empty_state: "上のキーワード欄に入力すると、患者・入院・手術を横断して検索できます。"
+      patients_heading: "患者"
+      hospitalizations_heading: "入院"
+      surgeries_heading: "手術"
+      see_all_patients: "患者の一覧をすべて見る"
+      see_all_hospitalizations: "入院の一覧をすべて見る"
+      see_all_surgeries: "手術の一覧をすべて見る"
+      no_matching_patients: "一致する患者がいません。"
+      no_matching_hospitalizations: "一致する入院がありません。"
+      no_matching_surgeries: "一致する手術がありません。"
+      no_reason: "(理由未登録)"
+      undated: "未定"
+      unknown_patient_name: "患者 #%{id}"

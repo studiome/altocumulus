@@ -20,7 +20,7 @@ class ElectiveSlotRulesController < ApplicationController
     @elective_slot_rule = ElectiveSlotRule.new(elective_slot_rule_params)
 
     if @elective_slot_rule.save
-      redirect_to @elective_slot_rule, notice: "Elective slot rule was successfully created."
+      redirect_to @elective_slot_rule, notice: t(".success_notice")
     else
       render :new, status: :unprocessable_entity
     end
@@ -28,7 +28,7 @@ class ElectiveSlotRulesController < ApplicationController
 
   def update
     if @elective_slot_rule.update(elective_slot_rule_params)
-      redirect_to @elective_slot_rule, notice: "Elective slot rule was successfully updated.", status: :see_other
+      redirect_to @elective_slot_rule, notice: t(".success_notice"), status: :see_other
     else
       render :edit, status: :unprocessable_entity
     end
@@ -36,7 +36,7 @@ class ElectiveSlotRulesController < ApplicationController
 
   def destroy
     if @elective_slot_rule.destroy
-      redirect_to elective_slot_rules_path, notice: "Elective slot rule was successfully destroyed.", status: :see_other
+      redirect_to elective_slot_rules_path, notice: t(".success_notice"), status: :see_other
     else
       redirect_to @elective_slot_rule, alert: @elective_slot_rule.errors.full_messages.to_sentence, status: :see_other
     end

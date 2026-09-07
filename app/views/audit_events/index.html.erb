@@ -1,31 +1,31 @@
-<% content_for :title, "Audit Log" %>
+<% content_for :title, t(".title") %>
 
 <div class="app-page">
   <section class="app-page-header">
     <div class="app-page-header-body">
       <div>
-        <p class="app-page-kicker">Activity</p>
-        <h1 class="app-page-title">Audit Log</h1>
+        <p class="app-page-kicker"><%= t(".kicker") %></p>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
     </div>
   </section>
 
   <%= form_with url: audit_events_path, method: :get, local: true, class: "app-filter-bar" do |f| %>
     <div class="app-filter-field">
-      <label class="app-filter-label">Record type</label>
-      <%= f.select :auditable_type, AuditEvent::AUDITABLE_TYPES, { include_blank: "All", selected: params[:auditable_type] }, { class: "select select-sm" } %>
+      <label class="app-filter-label"><%= t("audit_events.labels.record_type") %></label>
+      <%= f.select :auditable_type, AuditEvent.auditable_type_form_options, { include_blank: t(".all_option"), selected: params[:auditable_type] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Action</label>
-      <%= f.select :audit_action, AuditEvent::ACTIONS, { include_blank: "All", selected: params[:audit_action] }, { class: "select select-sm" } %>
+      <label class="app-filter-label"><%= AuditEvent.human_attribute_name(:action) %></label>
+      <%= f.select :audit_action, AuditEvent.action_form_options, { include_blank: t(".all_option"), selected: params[:audit_action] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Operator</label>
-      <%= f.select :user_id, @operators.map { |user| [ user.name, user.id ] }, { include_blank: "All", selected: params[:user_id] }, { class: "select select-sm" } %>
+      <label class="app-filter-label"><%= t("audit_events.labels.operator") %></label>
+      <%= f.select :user_id, @operators.map { |user| [ user.name, user.id ] }, { include_blank: t(".all_option"), selected: params[:user_id] }, { class: "select select-sm" } %>
     </div>
-    <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
+    <%= f.submit t("common.search"), class: "btn btn-primary btn-sm" %>
     <% if params.values_at(:auditable_type, :audit_action, :user_id).any?(&:present?) %>
-      <%= link_to "Clear", audit_events_path, class: "btn btn-ghost btn-sm" %>
+      <%= link_to t("common.clear"), audit_events_path, class: "btn btn-ghost btn-sm" %>
     <% end %>
   <% end %>
 
@@ -34,28 +34,28 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200">Time</th>
-            <th class="bg-base-200">Record type</th>
-            <th class="bg-base-200">Action</th>
-            <th class="bg-base-200">Record</th>
-            <th class="bg-base-200">Operator</th>
-            <th class="bg-base-200 text-right">Details</th>
+            <th class="bg-base-200"><%= t("audit_events.labels.time") %></th>
+            <th class="bg-base-200"><%= t("audit_events.labels.record_type") %></th>
+            <th class="bg-base-200"><%= AuditEvent.human_attribute_name(:action) %></th>
+            <th class="bg-base-200"><%= t(".record_header") %></th>
+            <th class="bg-base-200"><%= t("audit_events.labels.operator") %></th>
+            <th class="bg-base-200 text-right"><%= t(".details_link") %></th>
           </tr>
         </thead>
         <tbody>
           <% if @audit_events.any? %>
             <% @audit_events.each do |audit_event| %>
               <tr class="row-hover">
-                <td class="font-mono"><%= audit_event.created_at.strftime("%Y-%m-%d %H:%M:%S") %></td>
-                <td><%= audit_event.auditable_type %></td>
-                <td><span class="badge badge-outline"><%= audit_event.action %></span></td>
+                <td class="font-mono"><%= l(audit_event.created_at, format: :timestamp) %></td>
+                <td><%= audit_event.auditable_type_label %></td>
+                <td><span class="badge badge-outline"><%= audit_event.action_label %></span></td>
                 <td class="font-semibold"><%= audit_event.record_label %></td>
-                <td><%= audit_event.user&.name || "-" %></td>
-                <td class="text-right"><%= link_to "View", audit_event, class: "btn btn-ghost btn-xs text-primary" %></td>
+                <td><%= audit_event.user&.name || t("common.none") %></td>
+                <td class="text-right"><%= link_to t("common.view"), audit_event, class: "btn btn-ghost btn-xs text-primary" %></td>
               </tr>
             <% end %>
           <% else %>
-            <tr><td colspan="6" class="text-center py-10 text-base-content/50 italic">No audit events found.</td></tr>
+            <tr><td colspan="6" class="text-center py-10 text-base-content/50 italic"><%= t(".empty") %></td></tr>
           <% end %>
         </tbody>
       </table>

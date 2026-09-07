@@ -1,4 +1,4 @@
-<% content_for :title, "Surgery Details" %>
+<% content_for :title, t(".title") %>
 
 <div class="max-w-2xl mx-auto w-full">
 
@@ -6,7 +6,7 @@
     <%= link_to surgeries_path, class: "btn btn-circle btn-ghost" do %>
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
     <% end %>
-    <h1 class="font-bold text-4xl">Surgery Details</h1>
+    <h1 class="font-bold text-4xl"><%= t(".title") %></h1>
   </div>
 
   <div class="card bg-base-100 shadow-xl border border-base-200">
@@ -15,7 +15,7 @@
         <div>
           <h2 class="card-title text-3xl mb-1 text-primary"><%= @surgery.display_procedure_name %></h2>
           <p class="text-base-content/60 font-mono">
-            Date: <%= @surgery.surgery_date_display %>
+            <%= t(".date_prefix") %>: <%= @surgery.surgery_date_display %>
           </p>
         </div>
         <div class="flex flex-col items-end gap-2">
@@ -23,9 +23,15 @@
           <% if @surgery.elective? %>
             <% slot_rule = @slot_rules[@surgery.surgery_date&.wday] %>
             <% if @surgery.slot_number %>
-              <span class="badge badge-ghost">Slot <%= @surgery.slot_number %><% if slot_rule %> of <%= slot_rule.total_slots %><% end %></span>
+              <span class="badge badge-ghost">
+                <% if slot_rule %>
+                  <%= t(".slot_of_total", number: @surgery.slot_number, total: slot_rule.total_slots) %>
+                <% else %>
+                  <%= t(".slot_badge", number: @surgery.slot_number) %>
+                <% end %>
+              </span>
             <% else %>
-              <span class="badge badge-warning">No slot assigned</span>
+              <span class="badge badge-warning"><%= t("surgeries.labels.no_slot_assigned") %></span>
             <% end %>
           <% end %>
           <% if @holiday&.holiday? %>
@@ -34,77 +40,76 @@
         </div>
       </div>
 
-      <div class="divider">Information</div>
+      <div class="divider"><%= t("common.information") %></div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Surgery Date</span>
-          <span class="text-lg font-medium"><%= @surgery.surgery_date&.strftime("%B %d, %Y") || "Undated" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.surgery_date") %></span>
+          <span class="text-lg font-medium"><%= @surgery.surgery_date ? l(@surgery.surgery_date, format: :long) : t("models.surgery.surgery_date_display_undated") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Duration</span>
-          <span class="text-lg font-medium"><%= @surgery.duration_hours.present? ? "#{@surgery.duration_hours} h" : "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.duration") %></span>
+          <span class="text-lg font-medium"><%= @surgery.duration_hours.present? ? t("surgeries.labels.duration_value", hours: @surgery.duration_hours) : t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Start Time</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.start_time") %></span>
           <span class="text-lg font-medium font-mono"><%= @surgery.start_time_display %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Anesthesia</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.anesthesia") %></span>
           <span class="text-lg font-medium"><%= @surgery.anesthesia_method %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Operator</span>
-          <span class="text-lg font-medium"><%= @surgery.operator_name.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.operator") %></span>
+          <span class="text-lg font-medium"><%= @surgery.operator_name.presence || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Assistant</span>
-          <span class="text-lg font-medium"><%= @surgery.assistant_name.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.assistant") %></span>
+          <span class="text-lg font-medium"><%= @surgery.assistant_name.presence || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Operation Order</span>
-          <span class="text-lg font-medium"><%= @surgery.operation_order || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.operation_order") %></span>
+          <span class="text-lg font-medium"><%= @surgery.operation_order || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Related Diagnoses</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.related_diagnoses") %></span>
           <span class="text-lg font-medium"><%= @surgery.diagnosis_names_display %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Procedures</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.procedures") %></span>
           <span class="text-lg font-medium"><%= @surgery.procedure_names_display %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Laterality</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= SurgeryProcedureSelection.human_attribute_name(:laterality) %></span>
           <span class="text-lg font-medium"><%= @surgery.laterality_names_display %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Hospitalization</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Surgery.human_attribute_name(:hospitalization_id) %></span>
           <% if @surgery.hospitalization %>
             <span class="text-lg font-medium">
               <%= link_to @surgery.hospitalization.to_s, @surgery.hospitalization, class: "link link-primary" %>
             </span>
           <% else %>
-            <span class="text-lg font-medium text-base-content/50 italic">Standalone (not linked)</span>
+            <span class="text-lg font-medium text-base-content/50 italic"><%= t(".standalone") %></span>
           <% end %>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Patient</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Surgery.human_attribute_name(:patient_id) %></span>
           <% if @surgery.patient %>
             <span class="text-lg font-medium">
-              <%= link_to @surgery.patient.name.presence || "Patient ##{@surgery.patient_id}", @surgery.patient, class: "link link-primary" %>
+              <%= link_to @surgery.patient.name.presence || t("surgeries.labels.unknown_patient_name", id: @surgery.patient_id), @surgery.patient, class: "link link-primary" %>
             </span>
             <span class="text-base-content/60 font-mono block"><%= @surgery.patient.hospital_id %></span>
           <% else %>
-            <span class="text-lg font-medium text-base-content/50 italic">Unknown</span>
+            <span class="text-lg font-medium text-base-content/50 italic"><%= t("surgeries.labels.unknown_patient") %></span>
           <% end %>
         </div>
       </div>
 
       <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">
-        <%= link_to "Edit Surgery", edit_surgery_path(@surgery), class: "btn btn-secondary" %>
-        <%= button_to "Delete Surgery", @surgery, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: "Are you sure?" } %>
+        <%= link_to t(".edit_button"), edit_surgery_path(@surgery), class: "btn btn-secondary" %>
+        <%= button_to t(".delete_button"), @surgery, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: t("common.confirm_delete") } %>
       </div>
     </div>
   </div>
 </div>
-

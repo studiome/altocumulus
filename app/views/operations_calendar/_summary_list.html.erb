@@ -12,13 +12,13 @@
       <ul class="space-y-1 text-sm">
         <% records.each do |record| %>
           <li class="flex items-center justify-between gap-2">
-            <%= link_to record.patient&.name || "Patient ##{record.patient_id}", hospitalization_path(record), class: "app-inline-link truncate" %>
-            <span class="text-base-content/50 whitespace-nowrap"><%= record.effective_admission_date&.strftime("%Y-%m-%d") || "Undated" %></span>
+            <%= link_to record.patient&.name || t("operations_calendar.labels.unknown_patient_name", id: record.patient_id), hospitalization_path(record), class: "app-inline-link truncate" %>
+            <span class="text-base-content/50 whitespace-nowrap"><%= record.effective_admission_date ? l(record.effective_admission_date, format: :default) : t(".undated") %></span>
           </li>
         <% end %>
       </ul>
     <% else %>
-      <p class="text-base-content/40 italic text-sm">None</p>
+      <p class="text-base-content/40 italic text-sm"><%= t("operations_calendar.labels.empty_list") %></p>
     <% end %>
   </div>
 </div>

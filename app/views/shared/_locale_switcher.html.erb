@@ -1,0 +1,12 @@
+<%# Two small forms (one per available locale) rather than a single form
+    with a select, so the switch happens in one click/tap and works
+    identically for a signed-in user (persisted to users.locale) or an
+    anonymous visitor (stored in the session) -- see LocalesController. %>
+<% I18n.available_locales.each do |available_locale| %>
+  <li>
+    <%= button_to t("locale.#{available_locale}"),
+                  locale_path(locale: available_locale),
+                  method: :patch,
+                  class: "#{"font-bold" if I18n.locale == available_locale}" %>
+  </li>
+<% end %>

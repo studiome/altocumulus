@@ -1,16 +1,16 @@
-<% content_for :title, "Users" %>
+<% content_for :title, t(".title") %>
 
 <div class="app-page">
 
   <section class="app-page-header">
     <div class="app-page-header-body">
       <div>
-        <p class="app-page-kicker">Administration</p>
-        <h1 class="app-page-title">Users</h1>
+        <p class="app-page-kicker"><%= t("admin.kicker") %></p>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
       <%= link_to new_admin_user_path, class: "btn btn-primary" do %>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        New User
+        <%= t(".new_button") %>
       <% end %>
     </div>
   </section>
@@ -20,11 +20,11 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200">Name</th>
-            <th class="bg-base-200">Email</th>
-            <th class="bg-base-200">Role</th>
-            <th class="bg-base-200">Status</th>
-            <th class="bg-base-200 text-right">Actions</th>
+            <th class="bg-base-200"><%= User.human_attribute_name(:name) %></th>
+            <th class="bg-base-200"><%= User.human_attribute_name(:email) %></th>
+            <th class="bg-base-200"><%= User.human_attribute_name(:role) %></th>
+            <th class="bg-base-200"><%= t(".status_header") %></th>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>
@@ -32,11 +32,11 @@
             <tr class="row-hover">
               <td class="font-semibold"><%= user.name %></td>
               <td><%= user.email %></td>
-              <td><span class="badge <%= user.admin? ? "badge-primary" : "badge-ghost" %>"><%= user.role %></span></td>
-              <td><span class="badge <%= user.active? ? "badge-success" : "badge-error" %>"><%= user.active? ? "Active" : "Inactive" %></span></td>
+              <td><span class="badge <%= user.admin? ? "badge-primary" : "badge-ghost" %>"><%= user.role_label %></span></td>
+              <td><span class="badge <%= user.active? ? "badge-success" : "badge-error" %>"><%= user.active? ? t(".active_status") : t(".inactive_status") %></span></td>
               <td class="text-right flex justify-end gap-2">
-                <%= link_to "Edit", edit_admin_user_path(user), class: "btn btn-ghost btn-xs text-secondary" %>
-                <%= button_to "Reset Password", reset_password_admin_user_path(user), method: :patch, class: "btn btn-ghost btn-xs text-warning", data: { turbo_confirm: "Reset this user's password?" } %>
+                <%= link_to t("common.edit"), edit_admin_user_path(user), class: "btn btn-ghost btn-xs text-secondary" %>
+                <%= button_to t(".reset_password_button"), reset_password_admin_user_path(user), method: :patch, class: "btn btn-ghost btn-xs text-warning", data: { turbo_confirm: t(".reset_password_confirm") } %>
               </td>
             </tr>
           <% end %>

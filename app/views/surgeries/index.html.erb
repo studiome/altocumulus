@@ -1,55 +1,55 @@
-<% content_for :title, "Surgeries" %>
+<% content_for :title, t(".title") %>
 
 <div class="app-page">
 
   <section class="app-page-header">
     <div class="app-page-header-body">
       <div>
-        <p class="app-page-kicker">Operations</p>
-        <h1 class="app-page-title">Surgeries</h1>
+        <p class="app-page-kicker"><%= t(".kicker") %></p>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
       <%= link_to new_surgery_path, class: "btn btn-primary" do %>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        New Surgery
+        <%= t(".new_button") %>
       <% end %>
     </div>
   </section>
 
   <%= form_with url: surgeries_path, method: :get, local: true, class: "app-filter-bar" do |f| %>
     <div class="app-filter-field">
-      <label class="app-filter-label">Keyword</label>
-      <%= f.text_field :keyword, value: params[:keyword], placeholder: "Patient name or Hospital ID", class: "input input-sm" %>
+      <label class="app-filter-label"><%= t(".keyword_label") %></label>
+      <%= f.text_field :keyword, value: params[:keyword], placeholder: t(".keyword_placeholder"), class: "input input-sm" %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Procedure</label>
-      <%= f.select :surgery_procedure_id, @surgery_procedures.map { |p| [ p.name, p.id ] }, { include_blank: "All", selected: params[:surgery_procedure_id] }, { class: "select select-sm" } %>
+      <label class="app-filter-label"><%= t(".procedure_label") %></label>
+      <%= f.select :surgery_procedure_id, @surgery_procedures.map { |p| [ p.name, p.id ] }, { include_blank: t(".all_option"), selected: params[:surgery_procedure_id] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Anesthesia</label>
-      <%= f.select :anesthesia_method, @anesthesia_methods, { include_blank: "All", selected: params[:anesthesia_method] }, { class: "select select-sm" } %>
+      <label class="app-filter-label"><%= t("surgeries.labels.anesthesia") %></label>
+      <%= f.select :anesthesia_method, @anesthesia_methods, { include_blank: t(".all_option"), selected: params[:anesthesia_method] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Type</label>
-      <%= f.select :scheduling_type, Surgery.scheduling_type_form_options, { include_blank: "All", selected: params[:scheduling_type] }, { class: "select select-sm" } %>
+      <label class="app-filter-label"><%= t(".type_label") %></label>
+      <%= f.select :scheduling_type, Surgery.scheduling_type_form_options, { include_blank: t(".all_option"), selected: params[:scheduling_type] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Performed From</label>
+      <label class="app-filter-label"><%= t(".performed_from_label") %></label>
       <%= f.date_field :performed_from, value: params[:performed_from], class: "input input-sm" %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Performed To</label>
+      <label class="app-filter-label"><%= t(".performed_to_label") %></label>
       <%= f.date_field :performed_to, value: params[:performed_to], class: "input input-sm" %>
     </div>
     <div class="app-filter-field">
-      <label class="app-filter-label">Undated</label>
+      <label class="app-filter-label"><%= t("models.surgery.surgery_date_display_undated") %></label>
       <label class="label cursor-pointer justify-start gap-2 py-0">
         <%= f.check_box :undated, { checked: ActiveModel::Type::Boolean.new.cast(params[:undated]), class: "checkbox checkbox-sm" }, "1", "0" %>
-        <span class="text-sm">Undated only</span>
+        <span class="text-sm"><%= t(".undated_checkbox_label") %></span>
       </label>
     </div>
-    <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
+    <%= f.submit t("common.search"), class: "btn btn-primary btn-sm" %>
     <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type, :undated).any?(&:present?) %>
-      <%= link_to "Clear", surgeries_path, class: "btn btn-ghost btn-sm" %>
+      <%= link_to t("common.clear"), surgeries_path, class: "btn btn-ghost btn-sm" %>
     <% end %>
   <% end %>
 
@@ -58,16 +58,16 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200">Surgery Date</th>
-            <th class="bg-base-200">Type</th>
-            <th class="bg-base-200">Start Time</th>
-            <th class="bg-base-200">Diagnosis</th>
-            <th class="bg-base-200">Procedures</th>
-            <th class="bg-base-200">Duration</th>
-            <th class="bg-base-200">Anesthesia</th>
-            <th class="bg-base-200">Patient</th>
-            <th class="bg-base-200">Hospitalization</th>
-            <th class="bg-base-200 text-right">Actions</th>
+            <th class="bg-base-200"><%= t("surgeries.labels.surgery_date") %></th>
+            <th class="bg-base-200"><%= t(".type_label") %></th>
+            <th class="bg-base-200"><%= t("surgeries.labels.start_time") %></th>
+            <th class="bg-base-200"><%= t(".diagnosis_header") %></th>
+            <th class="bg-base-200"><%= t("surgeries.labels.procedures") %></th>
+            <th class="bg-base-200"><%= t("surgeries.labels.duration") %></th>
+            <th class="bg-base-200"><%= t("surgeries.labels.anesthesia") %></th>
+            <th class="bg-base-200"><%= Surgery.human_attribute_name(:patient_id) %></th>
+            <th class="bg-base-200"><%= Surgery.human_attribute_name(:hospitalization_id) %></th>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>
@@ -77,9 +77,9 @@
               <tr class="row-hover">
                 <td class="font-mono font-medium">
                   <% if surgery.surgery_date %>
-                    <%= surgery.surgery_date.strftime("%Y-%m-%d") %>
+                    <%= l(surgery.surgery_date, format: :default) %>
                   <% else %>
-                    <span class="badge badge-ghost badge-sm">Undated</span>
+                    <span class="badge badge-ghost badge-sm"><%= t("models.surgery.surgery_date_display_undated") %></span>
                   <% end %>
                 </td>
                 <td>
@@ -91,33 +91,39 @@
                   <div class="font-semibold leading-snug"><%= surgery.display_procedure_name %></div>
                   <% if surgery.elective? %>
                     <% if surgery.slot_number %>
-                      <span class="badge badge-ghost badge-sm mt-1">Slot <%= surgery.slot_number %><% if slot_rule %> / <%= slot_rule.total_slots %><% end %></span>
+                      <span class="badge badge-ghost badge-sm mt-1">
+                        <% if slot_rule %>
+                          <%= t(".slot_badge_with_total", number: surgery.slot_number, total: slot_rule.total_slots) %>
+                        <% else %>
+                          <%= t(".slot_badge", number: surgery.slot_number) %>
+                        <% end %>
+                      </span>
                     <% else %>
-                      <span class="badge badge-warning badge-sm mt-1">No slot assigned</span>
+                      <span class="badge badge-warning badge-sm mt-1"><%= t("surgeries.labels.no_slot_assigned") %></span>
                     <% end %>
                   <% end %>
                 </td>
-                <td><%= surgery.duration_hours.present? ? "#{surgery.duration_hours} h" : "-" %></td>
+                <td><%= surgery.duration_hours.present? ? t("surgeries.labels.duration_value", hours: surgery.duration_hours) : t("common.none") %></td>
                 <td><%= surgery.anesthesia_method %></td>
                 <td>
                   <% if surgery.patient %>
-                    <%= link_to surgery.patient.name.presence || "Patient ##{surgery.patient_id}", surgery.patient, class: "link link-primary" %>
+                    <%= link_to surgery.patient.name.presence || t("surgeries.labels.unknown_patient_name", id: surgery.patient_id), surgery.patient, class: "link link-primary" %>
                     <span class="text-base-content/50 text-sm font-mono ml-2"><%= surgery.patient.hospital_id %></span>
                   <% else %>
-                    <span class="text-base-content/50 italic">Unknown</span>
+                    <span class="text-base-content/50 italic"><%= t("surgeries.labels.unknown_patient") %></span>
                   <% end %>
                 </td>
                 <td>
                   <% if surgery.hospitalization %>
-                    <%= link_to surgery.hospitalization.admission_date&.strftime("%Y-%m-%d"), surgery.hospitalization, class: "link link-primary" %>
+                    <%= link_to(surgery.hospitalization.admission_date ? l(surgery.hospitalization.admission_date, format: :default) : nil, surgery.hospitalization, class: "link link-primary") %>
                   <% else %>
-                    <span class="text-base-content/50 italic">Standalone</span>
+                    <span class="text-base-content/50 italic"><%= t(".standalone") %></span>
                   <% end %>
                 </td>
                 <td class="text-right flex justify-end gap-2">
-                  <%= link_to "View", surgery, class: "btn btn-ghost btn-xs text-primary" %>
-                  <%= link_to "Edit", edit_surgery_path(surgery), class: "btn btn-ghost btn-xs text-secondary" %>
-                  <%= button_to "Delete", surgery, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                  <%= link_to t("common.view"), surgery, class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= link_to t("common.edit"), edit_surgery_path(surgery), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to t("common.delete"), surgery, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
                 </td>
               </tr>
             <% end %>
@@ -125,9 +131,9 @@
             <tr>
               <td colspan="10" class="text-center py-10 text-base-content/50 italic">
                 <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type, :undated).any?(&:present?) %>
-                  No surgeries match your search.
+                  <%= t(".empty_filtered") %>
                 <% else %>
-                  No surgeries found. Click "New Surgery" to get started.
+                  <%= t(".empty_no_filter") %>
                 <% end %>
               </td>
             </tr>

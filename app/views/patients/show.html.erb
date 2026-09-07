@@ -1,4 +1,4 @@
-<% content_for :title, "Patient Details" %>
+<% content_for :title, t(".title") %>
 
 <div class="max-w-2xl mx-auto w-full">
 
@@ -6,7 +6,7 @@
     <%= link_to patients_path, class: "btn btn-circle btn-ghost" do %>
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
     <% end %>
-    <h1 class="font-bold text-4xl">Patient Details</h1>
+    <h1 class="font-bold text-4xl"><%= t(".title") %></h1>
   </div>
 
   <div class="card bg-base-100 shadow-xl border border-base-200">
@@ -14,57 +14,57 @@
       <div class="flex justify-between items-start mb-6">
         <div>
           <h2 class="card-title text-3xl mb-1 text-primary"><%= @patient.name %></h2>
-          <p class="text-base-content/60 font-mono">Hospital ID: <%= @patient.hospital_id %></p>
+          <p class="text-base-content/60 font-mono"><%= t("patients.labels.hospital_id") %>: <%= @patient.hospital_id %></p>
         </div>
-        <div class="badge badge-outline badge-lg p-4">Patient Record</div>
+        <div class="badge badge-outline badge-lg p-4"><%= t(".badge") %></div>
       </div>
 
-      <div class="divider">Information</div>
+      <div class="divider"><%= t("common.information") %></div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Full Name</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t(".full_name_label") %></span>
           <span class="text-lg font-medium"><%= @patient.name %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Name (Kana)</span>
-          <span class="text-lg font-medium"><%= @patient.name_kana.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("patients.labels.name_kana") %></span>
+          <span class="text-lg font-medium"><%= @patient.name_kana.presence || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Date of Birth</span>
-          <span class="text-lg font-medium"><%= @patient.date_of_birth.strftime("%B %d, %Y") if @patient.date_of_birth %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("patients.labels.date_of_birth") %></span>
+          <span class="text-lg font-medium"><%= l(@patient.date_of_birth, format: :long) if @patient.date_of_birth %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Age</span>
-          <span class="text-lg font-medium"><%= @patient.age.present? ? "#{@patient.age}" : "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t(".age_label") %></span>
+          <span class="text-lg font-medium"><%= @patient.age.present? ? "#{@patient.age}" : t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Sex</span>
-          <span class="text-lg font-medium"><%= Patient::SEX_OPTIONS[@patient.sex] || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Patient.human_attribute_name(:sex) %></span>
+          <span class="text-lg font-medium"><%= Patient.sex_options[@patient.sex] || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Telephone</span>
-          <span class="text-lg font-medium"><%= @patient.telephone.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Patient.human_attribute_name(:telephone) %></span>
+          <span class="text-lg font-medium"><%= @patient.telephone.presence || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Hospital Identifier</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t(".hospital_identifier_label") %></span>
           <span class="text-lg font-mono font-medium"><%= @patient.hospital_id %></span>
         </div>
         <div class="sm:col-span-2">
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Clinical Info</span>
-          <span class="text-lg font-medium"><%= @patient.clinical_info.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("patients.labels.clinical_info") %></span>
+          <span class="text-lg font-medium"><%= @patient.clinical_info.presence || t("common.none") %></span>
         </div>
       </div>
 
-      <div class="divider">Diagnoses</div>
+      <div class="divider"><%= t(".diagnoses_divider") %></div>
 
       <div class="space-y-4 mb-8">
         <div class="flex items-center justify-between gap-4">
           <div>
-            <h3 class="text-xl font-semibold">Diagnosis History</h3>
-            <p class="text-sm text-base-content/60">Register multiple diagnosis names and diagnosis dates for this patient.</p>
+            <h3 class="text-xl font-semibold"><%= t(".diagnosis_history_title") %></h3>
+            <p class="text-sm text-base-content/60"><%= t(".diagnosis_history_description") %></p>
           </div>
-          <%= link_to "Add Diagnosis", new_patient_patient_diagnosis_path(@patient), class: "btn btn-primary btn-sm" %>
+          <%= link_to t("patients.labels.add_diagnosis_button"), new_patient_patient_diagnosis_path(@patient), class: "btn btn-primary btn-sm" %>
         </div>
 
         <% if @patient_diagnoses.any? %>
@@ -72,20 +72,20 @@
             <table class="table table-zebra w-full">
               <thead>
                 <tr>
-                  <th>Diagnosis</th>
-                  <th>Diagnosed On</th>
-                  <th class="text-right">Actions</th>
+                  <th><%= PatientDiagnosis.human_attribute_name(:diagnosis_id) %></th>
+                  <th><%= t(".diagnosed_on_header") %></th>
+                  <th class="text-right"><%= t("common.actions") %></th>
                 </tr>
               </thead>
               <tbody>
                 <% @patient_diagnoses.each do |patient_diagnosis| %>
                   <tr>
                     <td class="font-semibold"><%= patient_diagnosis.display_name %></td>
-                    <td><%= patient_diagnosis.diagnosed_on.strftime("%Y-%m-%d") %></td>
+                    <td><%= l(patient_diagnosis.diagnosed_on, format: :default) %></td>
                     <td class="text-right flex justify-end gap-2">
-                      <%= link_to "View", patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-primary" %>
-                      <%= link_to "Edit", edit_patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-secondary" %>
-                      <%= button_to "Delete", patient_patient_diagnosis_path(@patient, patient_diagnosis), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Are you sure?" } %>
+                      <%= link_to t("common.view"), patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-primary" %>
+                      <%= link_to t("common.edit"), edit_patient_patient_diagnosis_path(@patient, patient_diagnosis), class: "btn btn-ghost btn-xs text-secondary" %>
+                      <%= button_to t("common.delete"), patient_patient_diagnosis_path(@patient, patient_diagnosis), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
                     </td>
                   </tr>
                 <% end %>
@@ -94,14 +94,14 @@
           </div>
         <% else %>
           <div class="rounded-2xl border border-dashed border-base-300 p-6 text-base-content/60">
-            No diagnosis entries have been registered yet.
+            <%= t(".no_diagnoses") %>
           </div>
         <% end %>
       </div>
 
       <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">
-        <%= link_to "Edit Patient", edit_patient_path(@patient), class: "btn btn-secondary" %>
-        <%= button_to "Delete Patient", @patient, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: "Are you sure?" } %>
+        <%= link_to t(".edit_button"), edit_patient_path(@patient), class: "btn btn-secondary" %>
+        <%= button_to t(".delete_button"), @patient, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: t("common.confirm_delete") } %>
       </div>
     </div>
   </div>

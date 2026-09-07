@@ -1,49 +1,49 @@
-<% content_for :title, "Dashboard" %>
+<% content_for :title, t(".title") %>
 
 <div class="app-page">
 
   <section class="app-page-header">
     <div class="app-page-header-body">
       <div>
-        <p class="app-page-kicker">Overview</p>
-        <h1 class="app-page-title">Dashboard</h1>
+        <p class="app-page-kicker"><%= t(".kicker") %></p>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
       <%= form_with url: dashboard_path, method: :get, local: true, class: "flex items-end gap-2" do |f| %>
         <div class="app-filter-field">
-          <label class="app-filter-label">Year</label>
-          <%= f.select :year, @available_years, { include_blank: "All time", selected: @selected_year }, { class: "select select-sm" } %>
+          <label class="app-filter-label"><%= t(".year_label") %></label>
+          <%= f.select :year, @available_years, { include_blank: t(".all_time_option"), selected: @selected_year }, { class: "select select-sm" } %>
         </div>
-        <%= f.submit "View", class: "btn btn-primary btn-sm" %>
+        <%= f.submit t(".view_submit"), class: "btn btn-primary btn-sm" %>
       <% end %>
     </div>
   </section>
 
   <div class="stats stats-vertical sm:stats-horizontal shadow app-panel w-full">
     <div class="stat">
-      <div class="stat-title">Total Patients</div>
+      <div class="stat-title"><%= t(".total_patients_stat") %></div>
       <div class="stat-value"><%= @statistics.total_patients %></div>
     </div>
     <div class="stat">
-      <div class="stat-title">Current Inpatients</div>
+      <div class="stat-title"><%= t(".current_inpatients_stat") %></div>
       <div class="stat-value"><%= @statistics.current_inpatients_count %></div>
     </div>
     <div class="stat">
-      <div class="stat-title">Surgeries</div>
+      <div class="stat-title"><%= t(".surgeries_stat") %></div>
       <div class="stat-value"><%= @statistics.surgeries_count %></div>
     </div>
     <div class="stat">
-      <div class="stat-title">Hospitalizations</div>
+      <div class="stat-title"><%= t(".hospitalizations_stat") %></div>
       <div class="stat-value"><%= @statistics.hospitalizations_count %></div>
     </div>
     <div class="stat">
-      <div class="stat-title">Avg. Length of Stay</div>
-      <div class="stat-value"><%= @statistics.average_length_of_stay ? "#{@statistics.average_length_of_stay} days" : "-" %></div>
+      <div class="stat-title"><%= t(".average_length_of_stay_stat") %></div>
+      <div class="stat-value"><%= @statistics.average_length_of_stay ? t(".average_length_of_stay_value", days: @statistics.average_length_of_stay) : t("common.none") %></div>
     </div>
   </div>
 
   <div class="app-panel">
     <div class="app-panel-body">
-      <h2 class="font-bold text-lg mb-4">Monthly Surgeries</h2>
+      <h2 class="font-bold text-lg mb-4"><%= t(".monthly_surgeries_heading") %></h2>
       <% monthly_surgeries = @statistics.monthly_surgery_counts %>
       <% max_surgeries = [ monthly_surgeries.values.max, 1 ].max %>
       <div class="flex items-end gap-2 h-40">
@@ -60,7 +60,7 @@
 
   <div class="app-panel">
     <div class="app-panel-body">
-      <h2 class="font-bold text-lg mb-4">Monthly Hospitalizations</h2>
+      <h2 class="font-bold text-lg mb-4"><%= t(".monthly_hospitalizations_heading") %></h2>
       <% monthly_hospitalizations = @statistics.monthly_hospitalization_counts %>
       <% max_hospitalizations = [ monthly_hospitalizations.values.max, 1 ].max %>
       <div class="flex items-end gap-2 h-40">
@@ -78,7 +78,7 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="app-panel">
       <div class="app-panel-body">
-        <h2 class="font-bold text-lg mb-4">Top Procedures</h2>
+        <h2 class="font-bold text-lg mb-4"><%= t(".top_procedures_heading") %></h2>
         <% top_procedures = @statistics.top_procedures %>
         <% max_procedure_count = top_procedures.map(&:last).max || 1 %>
         <% if top_procedures.any? %>
@@ -91,14 +91,14 @@
             <% end %>
           </div>
         <% else %>
-          <p class="text-base-content/50 italic">No data</p>
+          <p class="text-base-content/50 italic"><%= t(".no_data") %></p>
         <% end %>
       </div>
     </div>
 
     <div class="app-panel">
       <div class="app-panel-body">
-        <h2 class="font-bold text-lg mb-4">Top Diagnoses at Admission</h2>
+        <h2 class="font-bold text-lg mb-4"><%= t(".top_diagnoses_heading") %></h2>
         <% top_diagnoses = @statistics.top_diagnoses %>
         <% max_diagnosis_count = top_diagnoses.map(&:last).max || 1 %>
         <% if top_diagnoses.any? %>
@@ -111,14 +111,14 @@
             <% end %>
           </div>
         <% else %>
-          <p class="text-base-content/50 italic">No data</p>
+          <p class="text-base-content/50 italic"><%= t(".no_data") %></p>
         <% end %>
       </div>
     </div>
 
     <div class="app-panel">
       <div class="app-panel-body">
-        <h2 class="font-bold text-lg mb-4">Anesthesia Method Breakdown</h2>
+        <h2 class="font-bold text-lg mb-4"><%= t(".anesthesia_breakdown_heading") %></h2>
         <% anesthesia_breakdown = @statistics.anesthesia_breakdown %>
         <% max_anesthesia_count = anesthesia_breakdown.map(&:last).max || 1 %>
         <% if anesthesia_breakdown.any? %>
@@ -131,14 +131,14 @@
             <% end %>
           </div>
         <% else %>
-          <p class="text-base-content/50 italic">No data</p>
+          <p class="text-base-content/50 italic"><%= t(".no_data") %></p>
         <% end %>
       </div>
     </div>
 
     <div class="app-panel">
       <div class="app-panel-body">
-        <h2 class="font-bold text-lg mb-4">Scheduling Type Breakdown</h2>
+        <h2 class="font-bold text-lg mb-4"><%= t(".scheduling_type_breakdown_heading") %></h2>
         <% scheduling_type_breakdown = @statistics.scheduling_type_breakdown %>
         <% max_scheduling_type_count = scheduling_type_breakdown.map(&:last).max || 1 %>
         <% if scheduling_type_breakdown.any? %>
@@ -151,14 +151,14 @@
             <% end %>
           </div>
         <% else %>
-          <p class="text-base-content/50 italic">No data</p>
+          <p class="text-base-content/50 italic"><%= t(".no_data") %></p>
         <% end %>
       </div>
     </div>
 
     <div class="app-panel">
       <div class="app-panel-body">
-        <h2 class="font-bold text-lg mb-4">Outcome Breakdown</h2>
+        <h2 class="font-bold text-lg mb-4"><%= t(".outcome_breakdown_heading") %></h2>
         <% outcome_breakdown = @statistics.outcome_breakdown %>
         <% max_outcome_count = outcome_breakdown.map(&:last).max || 1 %>
         <% if outcome_breakdown.any? %>
@@ -171,7 +171,7 @@
             <% end %>
           </div>
         <% else %>
-          <p class="text-base-content/50 italic">No data</p>
+          <p class="text-base-content/50 italic"><%= t(".no_data") %></p>
         <% end %>
       </div>
     </div>

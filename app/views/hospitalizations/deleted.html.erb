@@ -1,14 +1,14 @@
-<% content_for :title, "Deleted Hospitalizations" %>
+<% content_for :title, t(".title") %>
 
 <div class="app-page">
 
   <section class="app-page-header">
     <div class="app-page-header-body">
       <div>
-        <p class="app-page-kicker">Admissions</p>
-        <h1 class="app-page-title">Deleted Hospitalizations</h1>
+        <p class="app-page-kicker"><%= t("hospitalizations.labels.kicker") %></p>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
-      <%= link_to "Back to Hospitalizations", hospitalizations_path, class: "btn btn-ghost" %>
+      <%= link_to t(".back_link"), hospitalizations_path, class: "btn btn-ghost" %>
     </div>
   </section>
 
@@ -17,44 +17,44 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200">Reservation Status</th>
-            <th class="bg-base-200">Purpose</th>
-            <th class="bg-base-200">Diagnoses</th>
-            <th class="bg-base-200">Admission Date</th>
-            <th class="bg-base-200">Reason</th>
-            <th class="bg-base-200">Patient ID</th>
-            <th class="bg-base-200">Patient</th>
-            <th class="bg-base-200">Deleted At</th>
-            <th class="bg-base-200 text-right">Actions</th>
+            <th class="bg-base-200"><%= t("hospitalizations.labels.reservation_status") %></th>
+            <th class="bg-base-200"><%= Hospitalization.human_attribute_name(:purpose) %></th>
+            <th class="bg-base-200"><%= t("hospitalizations.labels.diagnoses_header") %></th>
+            <th class="bg-base-200"><%= t("hospitalizations.labels.admission_date_header") %></th>
+            <th class="bg-base-200"><%= Hospitalization.human_attribute_name(:reason) %></th>
+            <th class="bg-base-200"><%= t("hospitalizations.labels.patient_id") %></th>
+            <th class="bg-base-200"><%= Hospitalization.human_attribute_name(:patient_id) %></th>
+            <th class="bg-base-200"><%= t(".deleted_at_header") %></th>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>
           <% if @hospitalizations.any? %>
             <% @hospitalizations.each do |hospitalization| %>
               <tr class="row-hover">
-                <td><%= Hospitalization::RESERVATION_STATUS_OPTIONS[hospitalization.reservation_status] %></td>
-                <td><%= Hospitalization::PURPOSE_OPTIONS[hospitalization.purpose] %></td>
+                <td><%= Hospitalization.reservation_status_options[hospitalization.reservation_status] %></td>
+                <td><%= Hospitalization.purpose_options[hospitalization.purpose] %></td>
                 <td><%= hospitalization.diagnosis_names_display %></td>
-                <td class="font-mono"><%= hospitalization.effective_admission_date&.strftime("%Y-%m-%d") || "-" %></td>
+                <td class="font-mono"><%= hospitalization.effective_admission_date ? l(hospitalization.effective_admission_date, format: :default) : "-" %></td>
                 <td><%= hospitalization.reason %></td>
                 <td class="font-mono"><%= hospitalization.patient_id %></td>
                 <td>
                   <% if hospitalization.patient %>
-                    <%= link_to hospitalization.patient.name.presence || "Patient ##{hospitalization.patient_id}", hospitalization.patient, class: "link link-primary" %>
+                    <%= link_to hospitalization.patient.name.presence || t("hospitalizations.labels.unknown_patient_name", id: hospitalization.patient_id), hospitalization.patient, class: "link link-primary" %>
                   <% else %>
-                    <span class="text-base-content/50 italic">Unknown</span>
+                    <span class="text-base-content/50 italic"><%= t("hospitalizations.labels.unknown_patient") %></span>
                   <% end %>
                 </td>
-                <td class="font-mono"><%= hospitalization.deleted_at&.strftime("%Y-%m-%d %H:%M") %></td>
+                <td class="font-mono"><%= hospitalization.deleted_at && l(hospitalization.deleted_at, format: :short_timestamp) %></td>
                 <td class="text-right flex justify-end gap-2">
-                  <%= link_to "View", hospitalization, class: "btn btn-ghost btn-xs text-primary" %>
-                  <%= button_to "Restore", restore_hospitalization_path(hospitalization), method: :patch, class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= link_to t("common.view"), hospitalization, class: "btn btn-ghost btn-xs text-primary" %>
+                  <%= button_to t("hospitalizations.labels.restore"), restore_hospitalization_path(hospitalization), method: :patch, class: "btn btn-ghost btn-xs text-secondary" %>
                 </td>
               </tr>
             <% end %>
           <% else %>
             <tr>
-              <td colspan="9" class="text-center py-10 text-base-content/50 italic">No deleted hospitalizations.</td>
+              <td colspan="9" class="text-center py-10 text-base-content/50 italic"><%= t(".empty") %></td>
             </tr>
           <% end %>
         </tbody>

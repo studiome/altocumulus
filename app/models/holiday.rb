@@ -34,6 +34,6 @@ class Holiday < ApplicationRecord
       return if holiday?
       return if name.present? || note.present?
 
-      errors.add(:base, "must have a name or a note")
+      errors.add(:base, :must_have_name_or_note)
     end
 end

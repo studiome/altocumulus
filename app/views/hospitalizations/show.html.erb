@@ -1,4 +1,4 @@
-<% content_for :title, "Hospitalization Details" %>
+<% content_for :title, t(".title") %>
 
 <div class="max-w-2xl mx-auto w-full">
 
@@ -6,7 +6,7 @@
     <%= link_to hospitalizations_path, class: "btn btn-circle btn-ghost print:hidden" do %>
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
     <% end %>
-    <h1 class="font-bold text-4xl">Hospitalization Details</h1>
+    <h1 class="font-bold text-4xl"><%= t(".title") %></h1>
   </div>
 
   <div class="card bg-base-100 shadow-xl border border-base-200 print:shadow-none">
@@ -16,138 +16,138 @@
           <h2 class="card-title text-3xl mb-1 text-primary"><%= @hospitalization.reason %></h2>
           <p class="text-base-content/60 font-mono">
             <% if @hospitalization.admission_date.present? %>
-              Admission Date: <%= @hospitalization.admission_date.strftime("%Y-%m-%d") %>
+              <%= t(".admission_date_prefix") %>: <%= l(@hospitalization.admission_date, format: :default) %>
             <% elsif @hospitalization.scheduled_admission_date.present? %>
-              Scheduled Admission Date: <%= @hospitalization.scheduled_admission_date.strftime("%Y-%m-%d") %>
+              <%= t("hospitalizations.labels.scheduled_admission_date") %>: <%= l(@hospitalization.scheduled_admission_date, format: :default) %>
             <% end %>
           </p>
         </div>
         <div class="flex flex-col items-end gap-2">
           <div class="badge <%= @hospitalization.in_hospital? ? "badge-warning" : "badge-outline" %> badge-lg p-4"><%= @hospitalization.status_label %></div>
           <div class="badge <%= @hospitalization.admin_status == "confirmed" ? "badge-success" : "badge-ghost" %>">
-            <%= Hospitalization::ADMIN_STATUS_OPTIONS[@hospitalization.admin_status] %>
+            <%= Hospitalization.admin_status_options[@hospitalization.admin_status] %>
           </div>
           <% if @hospitalization.deleted? %>
-            <div class="badge badge-error">Deleted</div>
+            <div class="badge badge-error"><%= t(".deleted_badge") %></div>
           <% end %>
         </div>
       </div>
 
-      <div class="divider">Information</div>
+      <div class="divider"><%= t("common.information") %></div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Diagnoses at Admission</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.diagnoses_at_admission") %></span>
           <span class="text-lg font-medium"><%= @hospitalization.diagnosis_names_display %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Scheduled Admission Date</span>
-          <span class="text-lg font-medium"><%= @hospitalization.scheduled_admission_date&.strftime("%B %d, %Y") || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.scheduled_admission_date") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.scheduled_admission_date ? l(@hospitalization.scheduled_admission_date, format: :long) : "-" %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Admission Date (Actual)</span>
-          <span class="text-lg font-medium"><%= @hospitalization.admission_date&.strftime("%B %d, %Y") || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.admission_date_actual") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.admission_date ? l(@hospitalization.admission_date, format: :long) : "-" %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Reservation Status</span>
-          <span class="text-lg font-medium"><%= Hospitalization::RESERVATION_STATUS_OPTIONS[@hospitalization.reservation_status] %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.reservation_status") %></span>
+          <span class="text-lg font-medium"><%= Hospitalization.reservation_status_options[@hospitalization.reservation_status] %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Purpose</span>
-          <span class="text-lg font-medium"><%= Hospitalization::PURPOSE_OPTIONS[@hospitalization.purpose] %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:purpose) %></span>
+          <span class="text-lg font-medium"><%= Hospitalization.purpose_options[@hospitalization.purpose] %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Planned Length of Stay</span>
-          <span class="text-lg font-medium"><%= @hospitalization.planned_days.present? ? "#{@hospitalization.planned_days} days" : "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t(".planned_length_of_stay_label") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.planned_days.present? ? t("hospitalizations.labels.planned_days_value", count: @hospitalization.planned_days) : "-" %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Reason for Admission</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.reason_for_admission") %></span>
           <span class="text-lg font-medium"><%= @hospitalization.reason %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Preferred Room</span>
-          <span class="text-lg font-medium"><%= @hospitalization.room_preference.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.preferred_room") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.room_preference.presence || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Ward</span>
-          <span class="text-lg font-medium"><%= @hospitalization.ward.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:ward) %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.ward.presence || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Referred From</span>
-          <span class="text-lg font-medium"><%= @hospitalization.referred_from.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.referred_from") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.referred_from.presence || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">ADL</span>
-          <span class="text-lg font-medium"><%= @hospitalization.adl.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.adl") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.adl.presence || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Reservation Doctor</span>
-          <span class="text-lg font-medium"><%= @hospitalization.reservation_doctor.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.reservation_doctor") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.reservation_doctor.presence || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Attending Doctor</span>
-          <span class="text-lg font-medium"><%= @hospitalization.attending_doctor.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.attending_doctor") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.attending_doctor.presence || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Submitted On</span>
-          <span class="text-lg font-medium"><%= @hospitalization.submitted_on&.strftime("%B %d, %Y") || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.submitted_on") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.submitted_on ? l(@hospitalization.submitted_on, format: :long) : "-" %></span>
         </div>
         <div class="sm:col-span-2">
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Clinical Comment</span>
-          <span class="text-lg font-medium"><%= @hospitalization.clinical_comment.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.clinical_comment") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.clinical_comment.presence || t("common.none") %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Discharge Date</span>
-          <span class="text-lg font-medium"><%= @hospitalization.discharge_date&.strftime("%B %d, %Y") || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.discharge_date") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.discharge_date ? l(@hospitalization.discharge_date, format: :long) : "-" %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Outcome</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:outcome) %></span>
           <span class="text-lg font-medium"><%= @hospitalization.outcome_label %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Discharge Destination</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.discharge_destination") %></span>
           <span class="text-lg font-medium"><%= @hospitalization.discharge_destination_label %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Length of Stay</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.length_of_stay") %></span>
           <span class="text-lg font-medium"><%= length_of_stay_display(@hospitalization) %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Patient ID</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.patient_id") %></span>
           <span class="text-lg font-medium font-mono"><%= @hospitalization.patient_id %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Patient</span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:patient_id) %></span>
           <% if @hospitalization.patient %>
             <span class="text-lg font-medium">
-              <%= link_to @hospitalization.patient.name.presence || "Patient ##{@hospitalization.patient_id}", @hospitalization.patient, class: "link link-primary" %>
+              <%= link_to @hospitalization.patient.name.presence || t("hospitalizations.labels.unknown_patient_name", id: @hospitalization.patient_id), @hospitalization.patient, class: "link link-primary" %>
             </span>
             <span class="text-base-content/60 font-mono block"><%= @hospitalization.patient.hospital_id %></span>
           <% else %>
-            <span class="text-lg font-medium text-base-content/50 italic">Unknown</span>
+            <span class="text-lg font-medium text-base-content/50 italic"><%= t("hospitalizations.labels.unknown_patient") %></span>
           <% end %>
         </div>
       </div>
 
-      <div class="divider">Surgeries During This Hospitalization</div>
+      <div class="divider"><%= t(".surgeries_divider") %></div>
 
       <% if @surgeries.any? %>
         <ul class="space-y-2 mb-4">
           <% @surgeries.each do |surgery| %>
             <li class="flex items-center justify-between rounded-box border border-base-200 px-4 py-3">
               <div>
-                <span class="font-mono text-sm text-base-content/60"><%= surgery.surgery_date&.strftime("%Y-%m-%d") %></span>
+                <span class="font-mono text-sm text-base-content/60"><%= surgery.surgery_date && l(surgery.surgery_date, format: :default) %></span>
                 <span class="font-medium ml-2"><%= surgery.display_procedure_name %></span>
               </div>
-              <%= link_to "View", surgery, class: "btn btn-ghost btn-xs text-primary print:hidden" %>
+              <%= link_to t("common.view"), surgery, class: "btn btn-ghost btn-xs text-primary print:hidden" %>
             </li>
           <% end %>
         </ul>
       <% else %>
-        <div class="app-empty-state mb-4">No surgeries are linked to this hospitalization.</div>
+        <div class="app-empty-state mb-4"><%= t(".no_surgeries") %></div>
       <% end %>
 
-      <div class="divider">Update History</div>
+      <div class="divider"><%= t(".update_history_divider") %></div>
 
       <% if @audit_events.any? %>
         <ul class="space-y-3 mb-4">
@@ -155,17 +155,17 @@
             <li class="rounded-box border border-base-200 px-4 py-3">
               <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <div class="flex items-center gap-2">
-                  <span class="font-mono text-sm text-base-content/60"><%= audit_event.created_at.strftime("%Y-%m-%d %H:%M:%S") %></span>
-                  <span class="badge badge-outline"><%= audit_event.action %></span>
-                  <span class="text-sm"><%= audit_event.user&.name || "-" %></span>
+                  <span class="font-mono text-sm text-base-content/60"><%= l(audit_event.created_at, format: :timestamp) %></span>
+                  <span class="badge badge-outline"><%= audit_event.action_label %></span>
+                  <span class="text-sm"><%= audit_event.user&.name || t("common.none") %></span>
                 </div>
-                <%= link_to "Details", audit_event_path(audit_event), class: "btn btn-ghost btn-xs text-primary print:hidden" %>
+                <%= link_to t(".audit_event_details_link"), audit_event_path(audit_event), class: "btn btn-ghost btn-xs text-primary print:hidden" %>
               </div>
               <% change_rows = audit_change_rows(audit_event) %>
               <% if change_rows.any? %>
                 <div class="overflow-x-auto">
                   <table class="table table-sm w-full">
-                    <thead><tr><th>Field</th><th>Before</th><th>After</th></tr></thead>
+                    <thead><tr><th><%= t("common.field_header") %></th><th><%= t("common.before_header") %></th><th><%= t("common.after_header") %></th></tr></thead>
                     <tbody>
                       <% change_rows.each do |row| %>
                         <tr>
@@ -182,38 +182,38 @@
           <% end %>
         </ul>
       <% else %>
-        <div class="app-empty-state mb-4">No update history recorded for this hospitalization.</div>
+        <div class="app-empty-state mb-4"><%= t(".no_update_history") %></div>
       <% end %>
 
-      <%= link_to "View Full Audit Log", audit_events_path(auditable_type: "Hospitalization"), class: "app-inline-link text-sm mb-4 inline-block print:hidden" %>
+      <%= link_to t(".view_full_audit_log_link"), audit_events_path(auditable_type: "Hospitalization"), class: "app-inline-link text-sm mb-4 inline-block print:hidden" %>
 
       <% if admin? %>
-        <div class="divider print:hidden">Admin Actions</div>
+        <div class="divider print:hidden"><%= t(".admin_actions_divider") %></div>
 
         <div class="flex flex-wrap items-center gap-3 mb-4 print:hidden">
           <% unless @hospitalization.admin_status == "confirmed" %>
-            <%= button_to "Confirm", confirm_hospitalization_path(@hospitalization), method: :patch, class: "btn btn-success btn-sm" %>
+            <%= button_to t(".confirm_button"), confirm_hospitalization_path(@hospitalization), method: :patch, class: "btn btn-success btn-sm" %>
           <% end %>
 
           <% if @hospitalization.deleted? %>
-            <%= button_to "Restore", restore_hospitalization_path(@hospitalization), method: :patch, class: "btn btn-warning btn-sm" %>
+            <%= button_to t("hospitalizations.labels.restore"), restore_hospitalization_path(@hospitalization), method: :patch, class: "btn btn-warning btn-sm" %>
           <% end %>
 
-          <%= link_to "View Deleted Hospitalizations", deleted_hospitalizations_path, class: "btn btn-ghost btn-sm" %>
+          <%= link_to t(".view_deleted_link"), deleted_hospitalizations_path, class: "btn btn-ghost btn-sm" %>
         </div>
 
         <%= form_with url: copy_hospitalization_path(@hospitalization), method: :post, class: "flex flex-wrap items-end gap-3 mb-4 print:hidden" do |f| %>
           <div class="app-field">
-            <%= f.label :scheduled_admission_date, "Copy to New Scheduled Admission Date", class: "app-field-label" %>
+            <%= f.label :scheduled_admission_date, t(".copy_date_label"), class: "app-field-label" %>
             <%= f.date_field :scheduled_admission_date, class: "input input-sm" %>
           </div>
-          <%= f.submit "Copy (Rebook)", class: "btn btn-outline btn-sm" %>
+          <%= f.submit t(".copy_submit"), class: "btn btn-outline btn-sm" %>
         <% end %>
       <% end %>
 
       <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200 print:hidden">
-        <%= link_to "Edit Hospitalization", edit_hospitalization_path(@hospitalization), class: "btn btn-secondary" %>
-        <%= button_to "Delete Hospitalization", @hospitalization, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: "Are you sure?" } %>
+        <%= link_to t(".edit_button"), edit_hospitalization_path(@hospitalization), class: "btn btn-secondary" %>
+        <%= button_to t(".delete_button"), @hospitalization, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: t("common.confirm_delete") } %>
       </div>
     </div>
   </div>

@@ -1,8 +1,11 @@
 class Surgery < ApplicationRecord
   include Auditable
 
-  SCHEDULING_TYPE_OPTIONS = { "elective" => "Elective", "emergency" => "Emergency" }.freeze
-  SURGERY_DATE_STATUS_OPTIONS = { "scheduled" => "Date Specified", "undecided" => "Undecided" }.freeze
+  # Only the valid DB keys live here -- labels come from
+  # config/locales/*.yml (models.surgery.*_options), see Hospitalization for
+  # the same pattern.
+  SCHEDULING_TYPE_KEYS = %w[elective emergency].freeze
+  SURGERY_DATE_STATUS_KEYS = %w[scheduled undecided].freeze
 
   belongs_to :patient
   belongs_to :hospitalization, optional: true
@@ -17,7 +20,7 @@ class Surgery < ApplicationRecord
 
   validates :anesthesia_method, presence: true
   validates :duration_hours, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :scheduling_type, presence: true, inclusion: { in: SCHEDULING_TYPE_OPTIONS.keys }
+  validates :scheduling_type, presence: true, inclusion: { in: SCHEDULING_TYPE_KEYS }
   validate :patient_diagnoses_must_belong_to_patient
   validate :must_have_at_least_one_procedure_selection
   validate :no_more_than_five_procedure_selections
@@ -48,12 +51,20 @@ class Surgery < ApplicationRecord
   # to the very end regardless of the direction of the date sort that follows.
   scope :ordered_by_surgery_date, -> { order(Arel.sql("surgery_date IS NULL"), surgery_date: :desc, created_at: :desc) }
 
+  def self.scheduling_type_options
+    SCHEDULING_TYPE_KEYS.index_with { |key| I18n.t("models.surgery.scheduling_type_options.#{key}") }
+  end
+
+  def self.surgery_date_status_options
+    SURGERY_DATE_STATUS_KEYS.index_with { |key| I18n.t("models.surgery.surgery_date_status_options.#{key}") }
+  end
+
   def self.scheduling_type_form_options
-    SCHEDULING_TYPE_OPTIONS.map { |k, v| [ v, k ] }
+    scheduling_type_options.map { |k, v| [ v, k ] }
   end
 
   def self.surgery_date_status_form_options
-    SURGERY_DATE_STATUS_OPTIONS.map { |k, v| [ v, k ] }
+    surgery_date_status_options.map { |k, v| [ v, k ] }
   end
 
   def self.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil, scheduling_type: nil, undated: nil)
@@ -87,19 +98,19 @@ class Surgery < ApplicationRecord
   end
 
   def procedure_names_display
-    procedure_names.join("、").presence || "-"
+    procedure_names.join(I18n.t("common.list_separator")).presence || "-"
   end
 
   def laterality_names_display
-    active_surgery_procedure_selections.map(&:laterality_label).join("、").presence || "-"
+    active_surgery_procedure_selections.map(&:laterality_label).join(I18n.t("common.list_separator")).presence || "-"
   end
 
   def diagnosis_names_display
-    patient_diagnoses.map(&:display_name).join("、").presence || "-"
+    patient_diagnoses.map(&:display_name).join(I18n.t("common.list_separator")).presence || "-"
   end
 
   def procedure_display_names
-    active_surgery_procedure_selections.map(&:display_name).join("、").presence
+    active_surgery_procedure_selections.map(&:display_name).join(I18n.t("common.list_separator")).presence
   end
 
   def procedure_names
@@ -119,7 +130,7 @@ class Surgery < ApplicationRecord
   end
 
   def scheduling_type_label
-    SCHEDULING_TYPE_OPTIONS[scheduling_type] || scheduling_type
+    self.class.scheduling_type_options[scheduling_type] || scheduling_type
   end
 
   def start_time_display
@@ -127,7 +138,7 @@ class Surgery < ApplicationRecord
   end
 
   def surgery_date_display
-    surgery_date&.strftime("%Y-%m-%d") || "Undated"
+    surgery_date ? I18n.l(surgery_date, format: :default) : I18n.t("models.surgery.surgery_date_display_undated")
   end
 
   # Lets a form explicitly choose between a scheduled surgery_date and
@@ -147,7 +158,7 @@ class Surgery < ApplicationRecord
   end
 
   def to_s
-    "#{surgery_date || 'Date not set'} - #{patient}"
+    "#{surgery_date || I18n.t('models.surgery.to_s_date_not_set')} - #{patient}"
   end
 
   def duration_minutes
@@ -166,32 +177,32 @@ class Surgery < ApplicationRecord
     return if patient_diagnoses.empty? || patient_id.blank?
     return if patient_diagnoses.all? { |pd| pd.patient_id == patient_id }
 
-    errors.add(:patient_diagnoses, "must all belong to the selected patient")
+    errors.add(:patient_diagnoses, :must_all_belong_to_selected_patient)
   end
 
   def must_have_at_least_one_procedure_selection
     return if procedure_names.any?
 
-    errors.add(:surgery_procedure_selections, "must include at least one procedure")
+    errors.add(:surgery_procedure_selections, :must_include_at_least_one_procedure)
   end
 
   def no_more_than_five_procedure_selections
     return if procedure_names.size <= 5
 
-    errors.add(:surgery_procedure_selections, "must be five or fewer")
+    errors.add(:surgery_procedure_selections, :too_many_procedure_selections)
   end
 
   def no_duplicate_procedure_selections
     return if procedure_names.uniq.size == procedure_names.size
 
-    errors.add(:surgery_procedure_selections, "must not include duplicate procedures")
+    errors.add(:surgery_procedure_selections, :no_duplicate_procedure_selections)
   end
 
   def hospitalization_must_belong_to_same_patient
     return if hospitalization.blank? || patient_id.blank?
     return if hospitalization.patient_id == patient_id
 
-    errors.add(:hospitalization, "must belong to the same patient as the surgery")
+    errors.add(:hospitalization, :must_belong_to_same_patient_as_surgery)
   end
 
   def surgery_date_must_fall_within_hospitalization_period
@@ -200,7 +211,7 @@ class Surgery < ApplicationRecord
     return if surgery_date >= hospitalization.effective_admission_date &&
               (hospitalization.discharge_date.blank? || surgery_date <= hospitalization.discharge_date)
 
-    errors.add(:surgery_date, "must fall within the linked hospitalization period")
+    errors.add(:surgery_date, :must_fall_within_hospitalization_period)
   end
 
   # Only checked when surgery_date_status is explicitly assigned (i.e. the
@@ -210,16 +221,16 @@ class Surgery < ApplicationRecord
   def valid_surgery_date_status
     return unless surgery_date_status_specified?
 
-    unless SURGERY_DATE_STATUS_OPTIONS.key?(@surgery_date_status)
-      errors.add(:surgery_date_status, "is not valid")
+    unless SURGERY_DATE_STATUS_KEYS.include?(@surgery_date_status)
+      errors.add(:surgery_date_status, :not_valid)
       return
     end
 
     raw = surgery_date_before_type_cast
     if @surgery_date_status == "undecided"
-      errors.add(:surgery_date, "must be left blank when marked as undecided") if raw.present?
+      errors.add(:surgery_date, :must_be_blank_when_undecided) if raw.present?
     elsif raw.blank?
-      errors.add(:surgery_date, "must be entered, or choose Undecided")
+      errors.add(:surgery_date, :must_be_entered_or_undecided)
     end
   end
 end

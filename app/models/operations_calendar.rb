@@ -109,12 +109,12 @@ class OperationsCalendar
     # distinct workload to call out separately (today: Examination/Procedure
     # and Chemotherapy). Reading the default off the column itself, rather
     # than naming "surgery" here, means adding a new purpose to
-    # Hospitalization::PURPOSE_OPTIONS is the only change needed to add it to
+    # Hospitalization::PURPOSE_KEYS is the only change needed to add it to
     # this breakdown too.
     def build_purpose_groups
       default_purpose = Hospitalization.column_defaults["purpose"]
 
-      Hospitalization::PURPOSE_OPTIONS.keys.excluding(default_purpose).index_with do |purpose|
+      Hospitalization::PURPOSE_KEYS.excluding(default_purpose).index_with do |purpose|
         Hospitalization.active.where(purpose: purpose).includes(:patient)
       end
     end

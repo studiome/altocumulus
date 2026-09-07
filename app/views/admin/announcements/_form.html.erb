@@ -3,7 +3,7 @@
     <div role="alert" class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       <div>
-        <h3 class="font-bold"><%= pluralize(announcement.errors.count, "error") %> prohibited this announcement from being saved:</h3>
+        <h3 class="font-bold"><%= t(".errors_heading", count: announcement.errors.count) %></h3>
         <ul class="list-disc ml-6">
           <% announcement.errors.each do |error| %>
             <li><%= error.full_message %></li>
@@ -26,9 +26,9 @@
   <div class="app-field">
     <label class="app-field-label flex items-center gap-2">
       <%= form.check_box :published, class: "checkbox" %>
-      Published
+      <%= Announcement.human_attribute_name(:published) %>
     </label>
-    <p class="app-helper">Only published announcements are visible on the operations calendar.</p>
+    <p class="app-helper"><%= t(".published_helper") %></p>
   </div>
 
   <div class="pt-4">

@@ -18,7 +18,7 @@ class PatientDiagnosis < ApplicationRecord
   def display_name
     return diagnosis_name if laterality == "none"
 
-    prefix = Lateralizable::LATERALITY_OPTIONS[laterality] || ""
+    prefix = Lateralizable.laterality_options[laterality] || ""
     [ prefix, diagnosis_name ].reject(&:blank?).join(" ")
   end
 

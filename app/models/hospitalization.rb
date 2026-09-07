@@ -1,59 +1,26 @@
 class Hospitalization < ApplicationRecord
   include Auditable
 
-  OUTCOME_OPTIONS = {
-    "recovered" => "Recovered",
-    "improved" => "Improved",
-    "unchanged" => "Unchanged",
-    "worsened" => "Worsened",
-    "transferred" => "Transferred",
-    "died" => "Died"
-  }.freeze
-
-  DISCHARGE_DESTINATION_OPTIONS = {
-    "home" => "Home",
-    "hospital" => "Another Hospital",
-    "facility" => "Nursing Facility",
-    "death" => "Death",
-    "other" => "Other"
-  }.freeze
-
-  RESERVATION_STATUS_OPTIONS = {
-    "requested" => "Requested",
-    "waiting" => "Waiting for Admission",
-    "date_fixed" => "Admission Date Fixed",
-    "surgery_date_fixed" => "Surgery Date Fixed",
-    "admitted" => "Admitted",
-    "admitted_other_dept" => "Admitted (Other Dept.)",
-    "on_hold" => "On Hold",
-    "discharged" => "Discharged"
-  }.freeze
-
-  PURPOSE_OPTIONS = {
-    "surgery" => "Surgery",
-    "examination" => "Examination / Procedure",
-    "chemotherapy" => "Chemotherapy"
-  }.freeze
-
-  ADMIN_STATUS_OPTIONS = {
-    "unconfirmed" => "Unconfirmed",
-    "confirmed" => "Confirmed"
-  }.freeze
+  # Only the valid DB keys live here now -- labels are looked up from
+  # config/locales/*.yml (models.hospitalization.*_options) so they render in
+  # the current locale. Adding a new option only ever means: add the key here
+  # and add its label to both locale files.
+  OUTCOME_KEYS = %w[recovered improved unchanged worsened transferred died].freeze
+  DISCHARGE_DESTINATION_KEYS = %w[home hospital facility death other].freeze
+  RESERVATION_STATUS_KEYS = %w[
+    requested waiting date_fixed surgery_date_fixed admitted admitted_other_dept on_hold discharged
+  ].freeze
+  PURPOSE_KEYS = %w[surgery examination chemotherapy].freeze
+  ADMIN_STATUS_KEYS = %w[unconfirmed confirmed].freeze
 
   # The index page's single "Status" filter mixes two kinds of condition: the
   # derived in_hospital/discharged state, and reservation-workflow shortcuts
   # (upcoming/waiting/unconfirmed/recently_updated/referred). Keeping them as
   # one list (rather than a second dropdown) matches the existing filter bar
   # layout that filter_bar_layout_test pins down.
-  STATUS_FILTER_OPTIONS = {
-    "in_hospital" => "In Hospital",
-    "discharged" => "Discharged",
-    "upcoming" => "Upcoming",
-    "waiting" => "Waiting",
-    "unconfirmed" => "Unconfirmed",
-    "recently_updated" => "Recently Updated",
-    "referred" => "Referred"
-  }.freeze
+  STATUS_FILTER_KEYS = %w[
+    in_hospital discharged upcoming waiting unconfirmed recently_updated referred
+  ].freeze
 
   WAITING_RESERVATION_STATUSES = %w[requested waiting on_hold].freeze
   RECENTLY_UPDATED_WITHIN = 2.days
@@ -71,11 +38,11 @@ class Hospitalization < ApplicationRecord
 
   validates :reason, presence: true
   validates :planned_days, numericality: { greater_than: 0, only_integer: true }, allow_nil: true
-  validates :outcome, inclusion: { in: OUTCOME_OPTIONS.keys }, allow_blank: true
-  validates :discharge_destination, inclusion: { in: DISCHARGE_DESTINATION_OPTIONS.keys }, allow_blank: true
-  validates :reservation_status, inclusion: { in: RESERVATION_STATUS_OPTIONS.keys }
-  validates :purpose, inclusion: { in: PURPOSE_OPTIONS.keys }
-  validates :admin_status, inclusion: { in: ADMIN_STATUS_OPTIONS.keys }
+  validates :outcome, inclusion: { in: OUTCOME_KEYS }, allow_blank: true
+  validates :discharge_destination, inclusion: { in: DISCHARGE_DESTINATION_KEYS }, allow_blank: true
+  validates :reservation_status, inclusion: { in: RESERVATION_STATUS_KEYS }
+  validates :purpose, inclusion: { in: PURPOSE_KEYS }
+  validates :admin_status, inclusion: { in: ADMIN_STATUS_KEYS }
   validate :valid_date_values
   validate :admission_date_or_scheduled_admission_date_required
   validate :must_have_at_least_one_diagnosis
@@ -127,28 +94,57 @@ class Hospitalization < ApplicationRecord
     scope
   }
 
+  # Each *_options method returns a key => localized-label Hash, built fresh
+  # from the current I18n.locale on every call (never memoized/frozen, since
+  # the label must follow the request's locale). The matching *_form_options
+  # method's own [label, key] shape is unchanged from before the i18n
+  # conversion, so existing view/form call sites keep working as-is.
+  def self.outcome_options
+    OUTCOME_KEYS.index_with { |key| I18n.t("models.hospitalization.outcome_options.#{key}") }
+  end
+
+  def self.discharge_destination_options
+    DISCHARGE_DESTINATION_KEYS.index_with { |key| I18n.t("models.hospitalization.discharge_destination_options.#{key}") }
+  end
+
+  def self.reservation_status_options
+    RESERVATION_STATUS_KEYS.index_with { |key| I18n.t("models.hospitalization.reservation_status_options.#{key}") }
+  end
+
+  def self.purpose_options
+    PURPOSE_KEYS.index_with { |key| I18n.t("models.hospitalization.purpose_options.#{key}") }
+  end
+
+  def self.admin_status_options
+    ADMIN_STATUS_KEYS.index_with { |key| I18n.t("models.hospitalization.admin_status_options.#{key}") }
+  end
+
+  def self.status_filter_options
+    STATUS_FILTER_KEYS.index_with { |key| I18n.t("models.hospitalization.status_filter_options.#{key}") }
+  end
+
   def self.outcome_form_options
-    OUTCOME_OPTIONS.map { |k, v| [ v, k ] }
+    outcome_options.map { |k, v| [ v, k ] }
   end
 
   def self.discharge_destination_form_options
-    DISCHARGE_DESTINATION_OPTIONS.map { |k, v| [ v, k ] }
+    discharge_destination_options.map { |k, v| [ v, k ] }
   end
 
   def self.reservation_status_form_options
-    RESERVATION_STATUS_OPTIONS.map { |k, v| [ v, k ] }
+    reservation_status_options.map { |k, v| [ v, k ] }
   end
 
   def self.purpose_form_options
-    PURPOSE_OPTIONS.map { |k, v| [ v, k ] }
+    purpose_options.map { |k, v| [ v, k ] }
   end
 
   def self.admin_status_form_options
-    ADMIN_STATUS_OPTIONS.map { |k, v| [ v, k ] }
+    admin_status_options.map { |k, v| [ v, k ] }
   end
 
   def self.status_filter_form_options
-    STATUS_FILTER_OPTIONS.map { |k, v| [ v, k ] }
+    status_filter_options.map { |k, v| [ v, k ] }
   end
 
   def self.filtered(keyword: nil, diagnosis_id: nil, status: nil, admitted_from: nil, admitted_to: nil)
@@ -182,7 +178,7 @@ class Hospitalization < ApplicationRecord
   end
 
   def diagnosis_names_display
-    active_hospitalization_diagnoses.filter_map(&:diagnosis_name).join("、").presence || "-"
+    active_hospitalization_diagnoses.filter_map(&:diagnosis_name).join(I18n.t("common.list_separator")).presence || "-"
   end
 
   def active_hospitalization_diagnoses
@@ -236,22 +232,24 @@ class Hospitalization < ApplicationRecord
   # checked in, are they discharged) and is intentionally independent from
   # reservation_status, which is a separate, user-selected field.
   def status_label
-    return "Discharged" if discharged?
-    return "In Hospital" if in_hospital?
+    return I18n.t("models.hospitalization.status_label.discharged") if discharged?
+    return I18n.t("models.hospitalization.status_label.in_hospital") if in_hospital?
 
-    "Scheduled"
+    I18n.t("models.hospitalization.status_label.scheduled")
   end
 
   def outcome_label
-    OUTCOME_OPTIONS[outcome] || "-"
+    self.class.outcome_options[outcome] || "-"
   end
 
   def discharge_destination_label
-    DISCHARGE_DESTINATION_OPTIONS[discharge_destination] || "-"
+    self.class.discharge_destination_options[discharge_destination] || "-"
   end
 
   def to_s
-    "#{patient} (#{effective_admission_date || 'date not set'} - #{discharge_date || 'in hospital'})"
+    date_not_set = I18n.t("models.hospitalization.to_s.date_not_set")
+    in_hospital = I18n.t("models.hospitalization.to_s.in_hospital")
+    "#{patient} (#{effective_admission_date || date_not_set} - #{discharge_date || in_hospital})"
   end
 
   # Builds (and saves) a fresh "requested" reservation from this one, for the
@@ -313,43 +311,43 @@ class Hospitalization < ApplicationRecord
     def must_have_at_least_one_diagnosis
       return if diagnosis_ids_in_use.any?
 
-      errors.add(:hospitalization_diagnoses, "must include at least one diagnosis")
+      errors.add(:hospitalization_diagnoses, :must_include_at_least_one_diagnosis)
     end
 
     def no_duplicate_diagnoses
       ids = diagnosis_ids_in_use
       return if ids.uniq.size == ids.size
 
-      errors.add(:hospitalization_diagnoses, "must not include duplicate diagnoses")
+      errors.add(:hospitalization_diagnoses, :no_duplicate_diagnoses)
     end
 
     def discharge_date_on_or_after_admission_date
       return if discharge_date.blank? || admission_date.blank?
       return if discharge_date >= admission_date
 
-      errors.add(:discharge_date, "must be on or after the admission date")
+      errors.add(:discharge_date, :must_be_on_or_after_admission_date)
     end
 
     def outcome_required_when_discharged
       return if discharge_date.blank?
       return if outcome.present?
 
-      errors.add(:outcome, "can't be blank")
+      errors.add(:outcome, :blank)
     end
 
     def discharge_fields_require_discharge_date
       return if discharge_date.present?
 
-      errors.add(:outcome, "can only be set together with a discharge date") if outcome.present?
+      errors.add(:outcome, :requires_discharge_date) if outcome.present?
       if discharge_destination.present?
-        errors.add(:discharge_destination, "can only be set together with a discharge date")
+        errors.add(:discharge_destination, :requires_discharge_date)
       end
     end
 
     def admission_date_or_scheduled_admission_date_required
       return if admission_date.present? || scheduled_admission_date.present?
 
-      errors.add(:admission_date, "or a scheduled admission date must be present")
+      errors.add(:admission_date, :or_scheduled_admission_date_required)
     end
 
     # scheduled_admission_date, admission_date, and discharge_date all mean
@@ -360,7 +358,7 @@ class Hospitalization < ApplicationRecord
     def valid_date_values
       %i[scheduled_admission_date admission_date discharge_date].each do |field|
         raw = public_send("#{field}_before_type_cast")
-        errors.add(field, "is not a valid date") if raw.present? && public_send(field).nil?
+        errors.add(field, :not_a_valid_date) if raw.present? && public_send(field).nil?
       end
     end
 
@@ -381,7 +379,7 @@ class Hospitalization < ApplicationRecord
         start_date: effective_admission_date, end_date: discharge_date
       ).exists?
 
-      errors.add(effective_admission_date_field, "overlaps another hospitalization for this patient") if conflict
+      errors.add(effective_admission_date_field, :overlaps_another_hospitalization) if conflict
     end
 
     def linked_surgeries_must_remain_within_period
@@ -391,11 +389,11 @@ class Hospitalization < ApplicationRecord
       return if dates.empty?
 
       if dates.any? { |date| date < effective_admission_date }
-        errors.add(effective_admission_date_field, "must include all linked surgeries within the hospitalization period")
+        errors.add(effective_admission_date_field, :must_include_linked_surgeries_within_period)
       end
 
       if discharge_date.present? && dates.any? { |date| date > discharge_date }
-        errors.add(:discharge_date, "must include all linked surgeries within the hospitalization period")
+        errors.add(:discharge_date, :must_include_linked_surgeries_within_period)
       end
     end
 
@@ -403,7 +401,7 @@ class Hospitalization < ApplicationRecord
       return if patient_id.blank?
       return if linked_surgeries.all? { |surgery| surgery.patient_id == patient_id }
 
-      errors.add(:patient_id, "must match the patient of every linked surgery")
+      errors.add(:patient_id, :must_match_patient_of_linked_surgeries)
     end
 
     def reset_linked_surgeries_memo

@@ -22,7 +22,7 @@ class PatientDiagnosesController < ApplicationController
 
     respond_to do |format|
       if @patient_diagnosis.save
-        format.html { redirect_to patient_path(@patient), notice: "Diagnosis entry was successfully created." }
+        format.html { redirect_to patient_path(@patient), notice: t(".success_notice") }
         format.json { render :show, status: :created, location: [ @patient, @patient_diagnosis ] }
       else
         format.html { render :new, status: :unprocessable_entity }
@@ -34,7 +34,7 @@ class PatientDiagnosesController < ApplicationController
   def update
     respond_to do |format|
       if @patient_diagnosis.update(patient_diagnosis_params)
-        format.html { redirect_to patient_patient_diagnosis_path(@patient, @patient_diagnosis), notice: "Diagnosis entry was successfully updated.", status: :see_other }
+        format.html { redirect_to patient_patient_diagnosis_path(@patient, @patient_diagnosis), notice: t(".success_notice"), status: :see_other }
         format.json { render :show, status: :ok, location: [ @patient, @patient_diagnosis ] }
       else
         format.html { render :edit, status: :unprocessable_entity }
@@ -46,7 +46,7 @@ class PatientDiagnosesController < ApplicationController
   def destroy
     respond_to do |format|
       if @patient_diagnosis.destroy
-        format.html { redirect_to patient_path(@patient), notice: "Diagnosis entry was successfully deleted.", status: :see_other }
+        format.html { redirect_to patient_path(@patient), notice: t(".success_notice"), status: :see_other }
         format.json { head :no_content }
       else
         format.html { redirect_to patient_patient_diagnosis_path(@patient, @patient_diagnosis), alert: @patient_diagnosis.errors.full_messages.to_sentence, status: :see_other }

@@ -22,7 +22,7 @@ class HolidaysController < ApplicationController
     @holiday = Holiday.new(holiday_params)
 
     if @holiday.save
-      redirect_to @holiday, notice: "Holiday was successfully created."
+      redirect_to @holiday, notice: t(".success_notice")
     else
       render :new, status: :unprocessable_entity
     end
@@ -30,7 +30,7 @@ class HolidaysController < ApplicationController
 
   def update
     if @holiday.update(holiday_params)
-      redirect_to @holiday, notice: "Holiday was successfully updated.", status: :see_other
+      redirect_to @holiday, notice: t(".success_notice"), status: :see_other
     else
       render :edit, status: :unprocessable_entity
     end
@@ -38,7 +38,7 @@ class HolidaysController < ApplicationController
 
   def destroy
     if @holiday.destroy
-      redirect_to holidays_path, notice: "Holiday was successfully destroyed.", status: :see_other
+      redirect_to holidays_path, notice: t(".success_notice"), status: :see_other
     else
       redirect_to @holiday, alert: @holiday.errors.full_messages.to_sentence, status: :see_other
     end

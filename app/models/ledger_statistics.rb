@@ -70,7 +70,7 @@ class LedgerStatistics
       .group(:scheduling_type)
       .order(Arel.sql("COUNT(*) DESC"))
       .count
-      .map { |scheduling_type, count| [ Surgery::SCHEDULING_TYPE_OPTIONS[scheduling_type] || scheduling_type, count ] }
+      .map { |scheduling_type, count| [ Surgery.scheduling_type_options[scheduling_type] || scheduling_type, count ] }
   end
 
   def outcome_breakdown
@@ -79,7 +79,7 @@ class LedgerStatistics
       .group(:outcome)
       .order(Arel.sql("COUNT(*) DESC"))
       .count
-      .map { |outcome, count| [ Hospitalization::OUTCOME_OPTIONS[outcome] || outcome, count ] }
+      .map { |outcome, count| [ Hospitalization.outcome_options[outcome] || outcome, count ] }
   end
 
   def available_years

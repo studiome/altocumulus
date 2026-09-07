@@ -3,7 +3,7 @@
     <div role="alert" class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       <div>
-        <h3 class="font-bold"><%= pluralize(user.errors.count, "error") %> prohibited this user from being saved:</h3>
+        <h3 class="font-bold"><%= t(".errors_heading", count: user.errors.count) %></h3>
         <ul class="list-disc ml-6">
           <% user.errors.each do |error| %>
             <li><%= error.full_message %></li>
@@ -37,13 +37,13 @@
 
   <div class="app-field">
     <%= form.label :role, class: "app-field-label" %>
-    <%= form.select :role, User::ROLES, {}, class: "select w-full" %>
+    <%= form.select :role, User.role_form_options, {}, class: "select w-full" %>
   </div>
 
   <div class="app-field">
     <label class="app-field-label flex items-center gap-2">
       <%= form.check_box :active, class: "checkbox" %>
-      Active
+      <%= User.human_attribute_name(:active) %>
     </label>
   </div>
 

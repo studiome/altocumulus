@@ -18,3 +18,19 @@ inactive:
   password_digest: <%= BCrypt::Password.create("password") %>
   role: user
   active: false
+
+japanese_member:
+  email: ja-member@example.com
+  name: Japanese Member
+  password_digest: <%= BCrypt::Password.create("password") %>
+  role: user
+  active: true
+  locale: ja
+
+japanese_admin:
+  email: ja-admin@example.com
+  name: Japanese Admin
+  password_digest: <%= BCrypt::Password.create("password") %>
+  role: admin
+  active: true
+  locale: ja

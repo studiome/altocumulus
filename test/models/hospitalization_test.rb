@@ -92,8 +92,8 @@ class HospitalizationTest < ActiveSupport::TestCase
   end
 
   test "reservation_status_form_options and purpose_form_options mirror the option constants" do
-    assert_equal Hospitalization::RESERVATION_STATUS_OPTIONS.map { |k, v| [ v, k ] }, Hospitalization.reservation_status_form_options
-    assert_equal Hospitalization::PURPOSE_OPTIONS.map { |k, v| [ v, k ] }, Hospitalization.purpose_form_options
+    assert_equal Hospitalization.reservation_status_options.map { |k, v| [ v, k ] }, Hospitalization.reservation_status_form_options
+    assert_equal Hospitalization.purpose_options.map { |k, v| [ v, k ] }, Hospitalization.purpose_form_options
   end
 
   test "admin_status defaults to unconfirmed" do
@@ -110,7 +110,7 @@ class HospitalizationTest < ActiveSupport::TestCase
   end
 
   test "admin_status_form_options mirrors the option constant" do
-    assert_equal Hospitalization::ADMIN_STATUS_OPTIONS.map { |k, v| [ v, k ] }, Hospitalization.admin_status_form_options
+    assert_equal Hospitalization.admin_status_options.map { |k, v| [ v, k ] }, Hospitalization.admin_status_form_options
   end
 
   test "saving as a non-admin user resets admin_status to unconfirmed" do
@@ -220,13 +220,34 @@ class HospitalizationTest < ActiveSupport::TestCase
       ]
     )
 
-    assert_equal "Pneumonia、Hypertension", hospitalization.diagnosis_names_display
+    assert_equal "Pneumonia, Hypertension", hospitalization.diagnosis_names_display
   end
 
   test "diagnosis_names_display returns dash when no diagnoses" do
     hospitalization = Hospitalization.new(patient: patients(:one))
 
     assert_equal "-", hospitalization.diagnosis_names_display
+  end
+
+  # diagnosis_names_display used to hard-code "、" (the Japanese ideographic
+  # comma) as its join separator regardless of the active locale, so an
+  # English-locale screen rendered e.g. "Pneumonia、Hypertension" -- Japanese
+  # punctuation leaking into English UI. It now joins with the locale-aware
+  # `common.list_separator` (", " in English, "、" in Japanese).
+  test "diagnosis_names_display uses the Japanese list separator in the Japanese locale" do
+    hospitalization = Hospitalization.new(
+      patient: patients(:one),
+      admission_date: Date.new(2026, 4, 1),
+      reason: "Fever",
+      hospitalization_diagnoses_attributes: [
+        { diagnosis_id: diagnoses(:pneumonia).id },
+        { diagnosis_id: diagnoses(:hypertension).id }
+      ]
+    )
+
+    I18n.with_locale(:ja) do
+      assert_equal "Pneumonia、Hypertension", hospitalization.diagnosis_names_display
+    end
   end
 
   test "outcome must be one of the allowed options" do

@@ -43,7 +43,7 @@ class HospitalizationsController < ApplicationController
 
     respond_to do |format|
       if save_hospitalization { @hospitalization.save }
-        format.html { redirect_to @hospitalization, notice: "Hospitalization was successfully created." }
+        format.html { redirect_to @hospitalization, notice: t(".success_notice") }
         format.json { render :show, status: :created, location: @hospitalization }
       else
         build_hospitalization_diagnoses if @hospitalization.hospitalization_diagnoses.empty?
@@ -56,7 +56,7 @@ class HospitalizationsController < ApplicationController
   def update
     respond_to do |format|
       if save_hospitalization { @hospitalization.update(hospitalization_params) }
-        format.html { redirect_to @hospitalization, notice: "Hospitalization was successfully updated.", status: :see_other }
+        format.html { redirect_to @hospitalization, notice: t(".success_notice"), status: :see_other }
         format.json { render :show, status: :ok, location: @hospitalization }
       else
         build_hospitalization_diagnoses if @hospitalization.hospitalization_diagnoses.empty?
@@ -70,19 +70,19 @@ class HospitalizationsController < ApplicationController
     @hospitalization.discard!
 
     respond_to do |format|
-      format.html { redirect_to hospitalizations_path, notice: "Hospitalization was successfully deleted.", status: :see_other }
+      format.html { redirect_to hospitalizations_path, notice: t(".success_notice"), status: :see_other }
       format.json { head :no_content }
     end
   end
 
   def confirm
     @hospitalization.update!(admin_status: "confirmed")
-    redirect_to @hospitalization, notice: "Hospitalization was confirmed."
+    redirect_to @hospitalization, notice: t(".success_notice")
   end
 
   def restore
     @hospitalization.restore!
-    redirect_to @hospitalization, notice: "Hospitalization was restored."
+    redirect_to @hospitalization, notice: t(".success_notice")
   end
 
   def deleted
@@ -95,9 +95,9 @@ class HospitalizationsController < ApplicationController
     @copy = @hospitalization.rebook(scheduled_admission_date: params[:scheduled_admission_date])
 
     if @copy.persisted?
-      redirect_to edit_hospitalization_path(@copy), notice: "Hospitalization was copied. Fill in the remaining details."
+      redirect_to edit_hospitalization_path(@copy), notice: t(".success_notice")
     else
-      redirect_to @hospitalization, alert: "Could not copy: #{@copy.errors.full_messages.to_sentence}"
+      redirect_to @hospitalization, alert: t(".failure_alert", errors: @copy.errors.full_messages.to_sentence)
     end
   end
 
@@ -119,7 +119,7 @@ class HospitalizationsController < ApplicationController
       yield
     rescue ActiveRecord::RecordNotUnique => e
       if e.message.include?("hospitalization_diagnoses")
-        @hospitalization.errors.add(:hospitalization_diagnoses, "cannot swap diagnoses between existing rows in one save; change one row to a different diagnosis first")
+        @hospitalization.errors.add(:hospitalization_diagnoses, :cannot_swap_diagnoses_between_rows)
         false
       else
         raise e

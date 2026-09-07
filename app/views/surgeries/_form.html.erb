@@ -3,7 +3,7 @@
     <div role="alert" class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       <div>
-        <h3 class="font-bold"><%= pluralize(surgery.errors.count, "error") %> prohibited this surgery from being saved:</h3>
+        <h3 class="font-bold"><%= t(".errors_heading", count: surgery.errors.count) %></h3>
         <ul class="list-disc ml-6">
           <% surgery.errors.each do |error| %>
             <li><%= error.full_message %></li>
@@ -17,8 +17,8 @@
     <div role="alert" class="alert alert-warning">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
       <div class="flex items-center justify-between w-full gap-4">
-        <span>No patients found. Create a patient first to register a surgery.</span>
-        <%= link_to "New Patient", new_patient_path, class: "btn btn-sm btn-outline" %>
+        <span><%= t(".no_patients_warning") %></span>
+        <%= link_to t(".new_patient_link"), new_patient_path, class: "btn btn-sm btn-outline" %>
       </div>
     </div>
   <% end %>
@@ -27,21 +27,21 @@
     <div role="alert" class="alert alert-warning">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
       <div class="flex items-center justify-between w-full gap-4">
-        <span>No procedure names found. Create a procedure master first, or open the new procedure screen.</span>
-        <%= link_to "New Procedure", new_surgery_procedure_path, class: "btn btn-sm btn-outline", data: { turbo_frame: "surgery_procedure_modal_frame" } %>
+        <span><%= t(".no_procedures_warning") %></span>
+        <%= link_to t(".new_procedure_link"), new_surgery_procedure_path, class: "btn btn-sm btn-outline", data: { turbo_frame: "surgery_procedure_modal_frame" } %>
       </div>
     </div>
   <% end %>
 
   <div class="app-field">
-    <%= form.label :patient_id, "Patient", class: "app-field-label" %>
-    <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: "Select a patient" }, class: "select w-full focus:select-primary", data: { surgery_diagnosis_link_filter_target: "patientSelect", action: "change->surgery-diagnosis-link-filter#filter" } %>
+    <%= form.label :patient_id, Surgery.human_attribute_name(:patient_id), class: "app-field-label" %>
+    <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: t(".select_patient_prompt") }, class: "select w-full focus:select-primary", data: { surgery_diagnosis_link_filter_target: "patientSelect", action: "change->surgery-diagnosis-link-filter#filter" } %>
   </div>
 
   <div class="space-y-3">
     <div>
-      <%= form.label :patient_diagnosis_ids, "Related Diagnoses", class: "app-field-label" %>
-      <p class="app-helper">Select one or more diagnoses that correspond to this surgery.</p>
+      <%= form.label :patient_diagnosis_ids, t("surgeries.labels.related_diagnoses"), class: "app-field-label" %>
+      <p class="app-helper"><%= t(".related_diagnoses_helper") %></p>
     </div>
 
     <%= hidden_field_tag "surgery[patient_diagnosis_ids][]", "" %>
@@ -50,27 +50,27 @@
         <% patient_diagnoses.each do |entry| %>
           <label class="label cursor-pointer justify-start gap-3 rounded-xl border border-base-200 px-4 py-3 has-checked:border-primary has-checked:bg-primary/5" data-surgery-diagnosis-link-filter-target="diagnosisOption" data-patient-id="<%= entry.patient_id %>">
             <%= check_box_tag "surgery[patient_diagnosis_ids][]", entry.id, surgery.patient_diagnosis_ids.include?(entry.id), class: "checkbox checkbox-primary" %>
-            <span><%= "#{entry.patient.hospital_id} - #{entry.patient.name} / #{entry.display_name} (#{entry.diagnosed_on.strftime("%Y-%m-%d")})" %></span>
+            <span><%= "#{entry.patient.hospital_id} - #{entry.patient.name} / #{entry.display_name} (#{l(entry.diagnosed_on, format: :default)})" %></span>
           </label>
         <% end %>
 
         <div class="app-empty-state hidden" data-surgery-diagnosis-link-filter-target="emptyState">
-          No diagnoses are registered for the selected patient.
+          <%= t(".no_diagnoses_for_selected_patient") %>
         </div>
       </div>
     <% else %>
       <div class="app-empty-state">
-        No diagnoses available. Register diagnoses for a patient first.
+        <%= t(".no_diagnoses_available") %>
       </div>
     <% end %>
 
-    <p class="app-helper">Only diagnoses belonging to the selected patient can be saved.</p>
+    <p class="app-helper"><%= t(".diagnoses_helper") %></p>
   </div>
 
   <div class="app-field">
-    <span class="app-field-label">Surgery Date</span>
+    <span class="app-field-label"><%= t("surgeries.labels.surgery_date") %></span>
     <div class="flex gap-6 pt-1">
-      <% Surgery::SURGERY_DATE_STATUS_OPTIONS.each do |value, label| %>
+      <% Surgery.surgery_date_status_options.each do |value, label| %>
         <label class="flex items-center gap-2 cursor-pointer">
           <%= form.radio_button :surgery_date_status, value, checked: surgery.surgery_date_status == value, class: "radio radio-primary" %>
           <%= label %>
@@ -78,39 +78,37 @@
       <% end %>
     </div>
     <%= form.date_field :surgery_date, class: "input w-full focus:input-primary mt-2" %>
-    <p class="app-helper">Choose Undecided to leave the date blank until it is scheduled.</p>
+    <p class="app-helper"><%= t(".surgery_date_helper") %></p>
   </div>
 
   <div class="app-field">
-    <span class="app-field-label">Scheduling Type</span>
+    <span class="app-field-label"><%= t(".scheduling_type_label") %></span>
     <div class="flex gap-6 pt-1">
       <label class="flex items-center gap-2 cursor-pointer">
         <%= form.radio_button :scheduling_type, "elective", class: "radio radio-primary" %>
-        Elective
+        <%= Surgery.scheduling_type_options["elective"] %>
       </label>
       <label class="flex items-center gap-2 cursor-pointer">
         <%= form.radio_button :scheduling_type, "emergency", class: "radio radio-primary" %>
-        Emergency
+        <%= Surgery.scheduling_type_options["emergency"] %>
       </label>
     </div>
   </div>
 
   <div class="app-field">
-    <%= form.label :start_time, "Start Time", class: "app-field-label" %>
+    <%= form.label :start_time, t("surgeries.labels.start_time"), class: "app-field-label" %>
     <%= form.time_field :start_time, class: "input w-full focus:input-primary" %>
-    <p class="app-helper">Emergency surgeries can be scheduled at any time, including nights.</p>
+    <p class="app-helper"><%= t(".start_time_helper") %></p>
   </div>
 
   <div class="app-field">
-    <%= form.label :slot_number, "Elective Slot", class: "app-field-label" %>
-    <%= form.number_field :slot_number, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 1" %>
+    <%= form.label :slot_number, t(".slot_number_label"), class: "app-field-label" %>
+    <%= form.number_field :slot_number, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: t(".slot_number_placeholder") %>
     <p class="app-helper">
-      Which of the day's operating room slots this surgery runs in. A slot holds several
-      surgeries, so more than one surgery can share the same number. Leave blank until it is
-      scheduled. Ignored for emergency surgeries.
+      <%= t(".slot_number_helper") %>
       <% if @elective_slot_rules.present? %>
         <br>
-        Configured slots per weekday:
+        <%= t(".configured_slots_prefix") %>
         <%= @elective_slot_rules.map { |rule| "#{rule.day_name}: #{rule.total_slots}" }.join(", ") %>.
       <% end %>
     </p>
@@ -118,8 +116,8 @@
 
   <div class="rounded-box border border-base-200 bg-base-100 p-4 space-y-2">
     <div class="flex items-center justify-between gap-3">
-      <span class="text-sm font-semibold">Elective Slot Rules</span>
-      <%= link_to "Manage slot rules", elective_slot_rules_path, class: "app-inline-link text-sm" %>
+      <span class="text-sm font-semibold"><%= t(".slot_rules_heading") %></span>
+      <%= link_to t(".manage_slot_rules_link"), elective_slot_rules_path, class: "app-inline-link text-sm" %>
     </div>
     <% if elective_slot_rules.any? %>
       <ul class="text-sm text-base-content/60 space-y-1">
@@ -128,22 +126,22 @@
         <% end %>
       </ul>
     <% else %>
-      <p class="app-helper">No elective slots are configured yet.</p>
+      <p class="app-helper"><%= t(".no_slot_rules") %></p>
     <% end %>
   </div>
 
   <div class="app-field">
-    <%= form.label :hospitalization_id, "Linked Hospitalization", class: "app-field-label" %>
-    <%= form.collection_select :hospitalization_id, hospitalizations, :id, :to_s, { include_blank: "Not linked (outpatient / standalone)" }, class: "select w-full focus:select-primary" %>
+    <%= form.label :hospitalization_id, t(".hospitalization_label"), class: "app-field-label" %>
+    <%= form.collection_select :hospitalization_id, hospitalizations, :id, :to_s, { include_blank: t(".not_linked_option") }, class: "select w-full focus:select-primary" %>
   </div>
 
   <div class="space-y-4" data-controller="surgery-procedure-fields" data-surgery-procedure-fields-max-items-value="5" data-action="procedure:created@window->surgery-procedure-fields#addProcedureOption">
     <div class="flex items-center justify-between gap-3">
       <div>
-        <span class="app-field-label">Procedures</span>
-        <p class="app-helper">Add up to 5 procedures for one surgery.</p>
+        <span class="app-field-label"><%= t("surgeries.labels.procedures") %></span>
+        <p class="app-helper"><%= t(".procedures_helper") %></p>
       </div>
-      <%= link_to "New Procedure", new_surgery_procedure_path, class: "app-inline-link text-sm", data: { turbo_frame: "surgery_procedure_modal_frame" } %>
+      <%= link_to t(".new_procedure_link"), new_surgery_procedure_path, class: "app-inline-link text-sm", data: { turbo_frame: "surgery_procedure_modal_frame" } %>
     </div>
 
     <div class="space-y-3" data-surgery-procedure-fields-target="list">
@@ -159,34 +157,34 @@
     </template>
 
     <div class="flex items-center justify-between gap-3">
-      <span class="app-helper">If the right procedure is not listed, create a new one first.</span>
-      <button type="button" class="btn btn-outline btn-sm" data-surgery-procedure-fields-target="addButton" data-action="surgery-procedure-fields#add">Add Procedure</button>
+      <span class="app-helper"><%= t(".procedure_row_helper") %></span>
+      <button type="button" class="btn btn-outline btn-sm" data-surgery-procedure-fields-target="addButton" data-action="surgery-procedure-fields#add"><%= t(".add_procedure_button") %></button>
     </div>
   </div>
 
   <div class="app-field">
-    <%= form.label :duration_hours, "Duration (hours)", class: "app-field-label" %>
-    <%= form.number_field :duration_hours, class: "input w-full focus:input-primary", min: 0, step: :any, placeholder: "e.g. 1.5" %>
+    <%= form.label :duration_hours, t(".duration_label"), class: "app-field-label" %>
+    <%= form.number_field :duration_hours, class: "input w-full focus:input-primary", min: 0, step: :any, placeholder: t(".duration_placeholder") %>
   </div>
 
   <div class="app-field">
-    <%= form.label :anesthesia_method, "Anesthesia Method", class: "app-field-label" %>
-    <%= form.text_field :anesthesia_method, class: "input w-full focus:input-primary", placeholder: "e.g. General anesthesia" %>
+    <%= form.label :anesthesia_method, t(".anesthesia_method_label"), class: "app-field-label" %>
+    <%= form.text_field :anesthesia_method, class: "input w-full focus:input-primary", placeholder: t(".anesthesia_method_placeholder") %>
   </div>
 
   <div class="app-field">
-    <%= form.label :operator_name, "Operator", class: "app-field-label" %>
-    <%= form.text_field :operator_name, class: "input w-full focus:input-primary", placeholder: "e.g. Dr. Smith" %>
+    <%= form.label :operator_name, t("surgeries.labels.operator"), class: "app-field-label" %>
+    <%= form.text_field :operator_name, class: "input w-full focus:input-primary", placeholder: t(".operator_placeholder") %>
   </div>
 
   <div class="app-field">
-    <%= form.label :assistant_name, "Assistant", class: "app-field-label" %>
-    <%= form.text_field :assistant_name, class: "input w-full focus:input-primary", placeholder: "e.g. Dr. Lee" %>
+    <%= form.label :assistant_name, t("surgeries.labels.assistant"), class: "app-field-label" %>
+    <%= form.text_field :assistant_name, class: "input w-full focus:input-primary", placeholder: t(".assistant_placeholder") %>
   </div>
 
   <div class="app-field">
-    <%= form.label :operation_order, "Operation Order", class: "app-field-label" %>
-    <%= form.number_field :operation_order, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 1" %>
+    <%= form.label :operation_order, t("surgeries.labels.operation_order"), class: "app-field-label" %>
+    <%= form.number_field :operation_order, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: t(".operation_order_placeholder") %>
   </div>
 
   <div class="pt-4">

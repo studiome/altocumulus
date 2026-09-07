@@ -1,12 +1,12 @@
-<% content_for :title, "Admin Notes" %>
+<% content_for :title, t(".title") %>
 
 <div class="app-page">
 
   <section class="app-page-header">
     <div class="app-page-header-body">
       <div>
-        <p class="app-page-kicker">Administration</p>
-        <h1 class="app-page-title">Admin Notes</h1>
+        <p class="app-page-kicker"><%= t("admin.kicker") %></p>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
     </div>
   </section>
@@ -25,12 +25,12 @@
         <% end %>
 
         <div class="app-field">
-          <%= form.label :body, "New Note", class: "app-field-label" %>
+          <%= form.label :body, t(".new_note_label"), class: "app-field-label" %>
           <%= form.text_area :body, class: "textarea w-full focus:textarea-primary", rows: 3 %>
         </div>
 
         <div class="pt-2">
-          <%= form.submit "Add Note", class: "btn btn-primary" %>
+          <%= form.submit t(".add_note_submit"), class: "btn btn-primary" %>
         </div>
       <% end %>
     </div>
@@ -41,20 +41,20 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200">Note</th>
-            <th class="bg-base-200">By</th>
-            <th class="bg-base-200">Added</th>
-            <th class="bg-base-200 text-right">Actions</th>
+            <th class="bg-base-200"><%= t(".note_header") %></th>
+            <th class="bg-base-200"><%= t(".by_header") %></th>
+            <th class="bg-base-200"><%= t(".added_header") %></th>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>
           <% @admin_notes.each do |note| %>
             <tr class="row-hover">
               <td class="whitespace-pre-wrap"><%= note.body %></td>
-              <td><%= note.user&.name || "-" %></td>
-              <td><%= note.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+              <td><%= note.user&.name || t("common.none") %></td>
+              <td><%= l(note.created_at, format: :short_timestamp) %></td>
               <td class="text-right">
-                <%= button_to "Delete", admin_admin_note_path(note), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Delete this note?" } %>
+                <%= button_to t("common.delete"), admin_admin_note_path(note), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t(".delete_confirm") } %>
               </td>
             </tr>
           <% end %>

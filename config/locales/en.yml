@@ -29,3 +29,1221 @@
 
 en:
   hello: "Hello world"
+
+  # These date/time keys mirror Rails' own built-in English defaults, spelled
+  # out explicitly so this file has the same structure as ja.yml. No view in
+  # the app calls `l()`/`I18n.l` yet (they format dates with `strftime`
+  # directly), so this is groundwork for a later stage rather than something
+  # that changes current rendering.
+  date:
+    formats:
+      default: "%Y-%m-%d"
+      short: "%b %d"
+      long: "%B %d, %Y"
+      # Stage 3 addition: a single date with its weekday spelled out, for
+      # detail-page headers (e.g. Holiday#show). Kept as its own key rather
+      # than folding into `long` so `long`'s existing output (no weekday)
+      # doesn't change for anything already using it.
+      long_with_weekday: "%B %d, %Y (%A)"
+      # Stage 3 group 3b (Surgery Schedule board): the weekday name on its
+      # own, for the week board's per-day column header, which used to
+      # hard-code `date.strftime("%A")`.
+      weekday: "%A"
+    day_names:
+      - Sunday
+      - Monday
+      - Tuesday
+      - Wednesday
+      - Thursday
+      - Friday
+      - Saturday
+    abbr_day_names:
+      - Sun
+      - Mon
+      - Tue
+      - Wed
+      - Thu
+      - Fri
+      - Sat
+    month_names:
+      - ~
+      - January
+      - February
+      - March
+      - April
+      - May
+      - June
+      - July
+      - August
+      - September
+      - October
+      - November
+      - December
+    abbr_month_names:
+      - ~
+      - Jan
+      - Feb
+      - Mar
+      - Apr
+      - May
+      - Jun
+      - Jul
+      - Aug
+      - Sep
+      - Oct
+      - Nov
+      - Dec
+    order:
+      - :year
+      - :month
+      - :day
+
+  time:
+    formats:
+      default: "%a, %d %b %Y %H:%M:%S %z"
+      short: "%d %b %H:%M"
+      long: "%B %d, %Y %H:%M"
+      # Stage 3 group 3a (Hospitalizations) additions: a full timestamp (used
+      # for the show page's own update-history rows) and a shorter one with
+      # no seconds (used for the deleted list's "Deleted At" column) -- both
+      # replace a raw `strftime` call that used to hard-code this pattern.
+      timestamp: "%Y-%m-%d %H:%M:%S"
+      short_timestamp: "%Y-%m-%d %H:%M"
+    am: "am"
+    pm: "pm"
+
+  nav:
+    app_name: "Altocumulus"
+    open_menu: "Open menu"
+    calendar: "Calendar"
+    patients: "Patients"
+    surgeries: "Surgeries"
+    hospitalizations: "Hospitalizations"
+    search: "Search"
+    reports: "Reports"
+    dashboard: "Dashboard"
+    schedule: "Schedule"
+    audit_log: "Audit Log"
+    masters: "Masters"
+    diagnoses: "Diagnoses"
+    procedures: "Procedures"
+    slot_rules: "Slot Rules"
+    holidays: "Holidays"
+    admin: "Admin"
+    users: "Users"
+    announcements: "Announcements"
+    admin_notes: "Admin Notes"
+    account: "Account"
+    sign_out: "Sign Out"
+
+  locale:
+    switch_label: "Language"
+    en: "English"
+    ja: "日本語"
+
+  # Standard ActiveModel/ActiveRecord validation messages, spelled out so
+  # ja.yml has the same structure. These match Rails' own built-in English
+  # defaults byte-for-byte, so defining them here does not change anything
+  # that already renders in English -- it is what lets ja.yml override them
+  # for the Japanese locale.
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      accepted: "must be accepted"
+      blank: "can't be blank"
+      confirmation: "doesn't match %{attribute}"
+      empty: "can't be empty"
+      equal_to: "must be equal to %{count}"
+      even: "must be even"
+      exclusion: "is reserved"
+      greater_than: "must be greater than %{count}"
+      greater_than_or_equal_to: "must be greater than or equal to %{count}"
+      inclusion: "is not included in the list"
+      invalid: "is invalid"
+      less_than: "must be less than %{count}"
+      less_than_or_equal_to: "must be less than or equal to %{count}"
+      not_a_number: "is not a number"
+      not_an_integer: "must be an integer"
+      odd: "must be odd"
+      other_than: "must be other than %{count}"
+      present: "must be blank"
+      required: "must exist"
+      too_long: "is too long (maximum is %{count} characters)"
+      too_short: "is too short (minimum is %{count} characters)"
+      wrong_length: "is the wrong length (should be %{count} characters)"
+
+  # activerecord.models / activerecord.attributes are intentionally NOT
+  # overridden for English: Rails' own automatic humanize (e.g.
+  # "date_of_birth" -> "Date of birth") is already what every existing view
+  # and test renders/asserts today, and it is used directly by
+  # AuditEventsHelper (human_attribute_name / model_name.human) for the
+  # audit-log diff table. Explicitly redefining these in English risks
+  # silently drifting from Rails' own capitalization rules in ways nothing
+  # here would catch (it already broke one audit-log test with "Date of
+  # Birth" vs the expected "Date of birth" -- reverted). ja.yml defines the
+  # full set for Japanese; English keeps relying on the humanize default.
+  activerecord:
+    errors:
+      format: "%{attribute} %{message}"
+      messages:
+        taken: "has already been taken"
+        record_invalid: "Validation failed: %{errors}"
+        restrict_dependent_destroy:
+          has_one: "Cannot delete record because a dependent %{record} exists"
+          has_many: "Cannot delete record because dependent %{record} exist"
+        incorrect: "is incorrect"
+        not_a_valid_date: "is not a valid date"
+        requires_discharge_date: "can only be set together with a discharge date"
+        must_include_linked_surgeries_within_period: "must include all linked surgeries within the hospitalization period"
+        overlaps_another_hospitalization: "overlaps another hospitalization for this patient"
+
+      models:
+        holiday:
+          attributes:
+            base:
+              must_have_name_or_note: "must have a name or a note"
+        user:
+          attributes:
+            base:
+              cannot_remove_last_admin: "Cannot remove the last active admin"
+        hospitalization:
+          attributes:
+            hospitalization_diagnoses:
+              must_include_at_least_one_diagnosis: "must include at least one diagnosis"
+              no_duplicate_diagnoses: "must not include duplicate diagnoses"
+              cannot_swap_diagnoses_between_rows: "cannot swap diagnoses between existing rows in one save; change one row to a different diagnosis first"
+            discharge_date:
+              must_be_on_or_after_admission_date: "must be on or after the admission date"
+            admission_date:
+              or_scheduled_admission_date_required: "or a scheduled admission date must be present"
+            patient_id:
+              must_match_patient_of_linked_surgeries: "must match the patient of every linked surgery"
+        surgery:
+          attributes:
+            patient_diagnoses:
+              must_all_belong_to_selected_patient: "must all belong to the selected patient"
+            surgery_procedure_selections:
+              must_include_at_least_one_procedure: "must include at least one procedure"
+              too_many_procedure_selections: "must be five or fewer"
+              no_duplicate_procedure_selections: "must not include duplicate procedures"
+              cannot_swap_procedures_between_rows: "cannot swap procedures between existing rows in one save; change one row to a different procedure first"
+            hospitalization:
+              must_belong_to_same_patient_as_surgery: "must belong to the same patient as the surgery"
+            surgery_date:
+              must_fall_within_hospitalization_period: "must fall within the linked hospitalization period"
+              must_be_blank_when_undecided: "must be left blank when marked as undecided"
+              must_be_entered_or_undecided: "must be entered, or choose Undecided"
+            surgery_date_status:
+              not_valid: "is not valid"
+
+  # Stage 2 of the i18n rollout: display strings built by models and helpers
+  # (option-constant labels, derived status text, warning/summary messages).
+  # DB columns keep their English keys forever -- only these looked-up labels
+  # are localized. English values here must stay byte-identical to what the
+  # constants/strings used to hard-code, since existing tests assert them.
+  models:
+    hospitalization:
+      outcome_options:
+        recovered: "Recovered"
+        improved: "Improved"
+        unchanged: "Unchanged"
+        worsened: "Worsened"
+        transferred: "Transferred"
+        died: "Died"
+      discharge_destination_options:
+        home: "Home"
+        hospital: "Another Hospital"
+        facility: "Nursing Facility"
+        death: "Death"
+        other: "Other"
+      reservation_status_options:
+        requested: "Requested"
+        waiting: "Waiting for Admission"
+        date_fixed: "Admission Date Fixed"
+        surgery_date_fixed: "Surgery Date Fixed"
+        admitted: "Admitted"
+        admitted_other_dept: "Admitted (Other Dept.)"
+        on_hold: "On Hold"
+        discharged: "Discharged"
+      purpose_options:
+        surgery: "Surgery"
+        examination: "Examination / Procedure"
+        chemotherapy: "Chemotherapy"
+      admin_status_options:
+        unconfirmed: "Unconfirmed"
+        confirmed: "Confirmed"
+      status_filter_options:
+        in_hospital: "In Hospital"
+        discharged: "Discharged"
+        upcoming: "Upcoming"
+        waiting: "Waiting"
+        unconfirmed: "Unconfirmed"
+        recently_updated: "Recently Updated"
+        referred: "Referred"
+      status_label:
+        discharged: "Discharged"
+        in_hospital: "In Hospital"
+        scheduled: "Scheduled"
+      to_s:
+        date_not_set: "date not set"
+        in_hospital: "in hospital"
+    surgery:
+      scheduling_type_options:
+        elective: "Elective"
+        emergency: "Emergency"
+      surgery_date_status_options:
+        scheduled: "Date Specified"
+        undecided: "Undecided"
+      surgery_date_display_undated: "Undated"
+      to_s_date_not_set: "Date not set"
+    patient:
+      sex_options:
+        male: "Male"
+        female: "Female"
+        other: "Other"
+    lateralizable:
+      laterality_options:
+        right: "Right"
+        left: "Left"
+        bilateral: "Bilateral"
+        none: "None"
+    elective_slot_rule:
+      to_s: "%{day} - %{count} slots x %{minutes} min"
+    elective_slot_usage:
+      warnings:
+        holiday: "%{holiday_name} is a holiday: no elective slots are available."
+        not_configured: "No elective slots are configured for %{day}."
+        unscheduled:
+          one: "1 elective surgery is not assigned to an available slot."
+          other: "%{count} elective surgeries are not assigned to an available slot."
+        overrun:
+          single: "Slot %{number} is booked %{overrun} min past its %{limit} min limit."
+          same_limit: "Slots %{numbers} are booked past their %{limit} min limit."
+          item: "Slot %{number} is booked past its %{limit} min limit."
+    user:
+      role_options:
+        user: "User"
+        admin: "Admin"
+    audit_event:
+      # AUDITABLE_TYPES itself (Patient/Surgery/Hospitalization) is not
+      # listed here -- it reuses activerecord.models.* via
+      # `AuditEvent.auditable_type_options` (see app/models/audit_event.rb),
+      # which for English is just Rails' own humanize default and already
+      # matches the raw value this used to render directly.
+      action_options:
+        create: "Create"
+        update: "Update"
+        destroy: "Delete"
+
+  # `helpers.submit` is deliberately NOT defined here -- Rails' own English
+  # default template for a bare `form.submit` ("Create %{model}" /
+  # "Update %{model}") already matches this app's English rendering
+  # byte-for-byte, so redefining it risks silently drifting from Rails' own
+  # wording in a way nothing here would catch. ja.yml defines it explicitly
+  # instead, since Japanese has no such built-in default and was rendering
+  # as a mix of the two languages (e.g. "Create 患者") without it.
+  helpers:
+    hospitalizations:
+      length_of_stay:
+        days:
+          one: "%{count} day"
+          other: "%{count} days"
+        ongoing: "Day %{count} (ongoing)"
+        unknown: "-"
+    audit_events:
+      "yes": "Yes"
+      "no": "No"
+      not_found: "(not found)"
+
+  # Stage 3 of the i18n rollout: view text. Group 1 (Diagnoses /
+  # SurgeryProcedures / Holidays / ElectiveSlotRules master-data screens)
+  # establishes the conventions later groups follow:
+  #
+  #   - View-local strings use Rails' lazy `t(".key")` lookup, scoped to the
+  #     view's own namespace below (e.g. `diagnoses.index.title`). A
+  #     .turbo_stream.erb sibling of a .html.erb action (e.g.
+  #     diagnoses/new.turbo_stream.erb next to diagnoses/new.html.erb)
+  #     shares that action's scope automatically -- lazy lookup keys off the
+  #     virtual path, not the format -- so one set of keys covers both.
+  #   - Controller flash messages also resolve lazily (`t(".notice")` in
+  #     DiagnosesController#create resolves under `diagnoses.create`), which
+  #     is deliberately the same scope a create.turbo_stream.erb view uses,
+  #     letting a flash notice and an inline turbo-stream success message
+  #     share one `success_notice` key instead of duplicating the string.
+  #   - `common:` (below) holds short action words/labels reused across
+  #     several screens (Edit/Delete/View/Actions/etc). Prefer it over a
+  #     fresh per-view key when the English text would be identical.
+  #   - A string reused across this group's own screens but too specific
+  #     for `common:` (e.g. the "Closed"/"Note only" holiday badges, shown
+  #     on both holidays#index and holidays#show) lives under a shared
+  #     sub-key of that resource's own namespace (e.g.
+  #     `holidays.status_badge.closed`) and is referenced with the full
+  #     path `t("holidays.status_badge.closed")` rather than lazily, since
+  #     it's shared across more than one action's scope.
+  #   - Where a label is already covered by `activerecord.attributes` (e.g.
+  #     a "Name"/"Date"/"Note" table header that matches the model's own
+  #     attribute name verbatim), reuse `Model.human_attribute_name(:attr)`
+  #     instead of adding a redundant translation key -- it already
+  #     localizes per stage 1/2 and stays in sync with the form labels.
+  #   - Dates use `l(date, format: :default)` (compact, e.g. "2026-03-10")
+  #     or `l(date, format: :long_with_weekday)` (a single date spelled out
+  #     with its weekday, e.g. a detail-page header) instead of `strftime`.
+  #     Add new `date.formats` keys following that naming pattern rather
+  #     than hard-coding a new strftime string in a view.
+  common:
+    actions: "Actions"
+    view: "View"
+    edit: "Edit"
+    delete: "Delete"
+    save: "Save"
+    cancel: "Cancel"
+    back: "Back"
+    new: "New"
+    search: "Search"
+    clear: "Clear"
+    close: "Close"
+    show_detail: "Show Detail"
+    master_data: "Master Data"
+    master_record: "Master Record"
+    information: "Information"
+    confirm_delete: "Are you sure?"
+    none: "-"
+    # Stage 3 group 4a additions: require_login / require_admin live in
+    # ApplicationController and run as a before_action shared by every
+    # controller, so they cannot use lazy `t(".key")` lookup (the resolved
+    # scope would vary with whichever controller/action happened to trigger
+    # the redirect) -- fixed keys here instead.
+    please_sign_in: "Please sign in to continue."
+    not_authorized: "You are not authorized to perform this action."
+    # The Field/Before/After update-history table headers used to be
+    # duplicated as hospitalizations.show-scoped keys (group 3a couldn't
+    # touch audit_events/show.html.erb, which renders the identical table
+    # structure) -- group 4a, which owns that file, consolidated both call
+    # sites onto these shared keys instead. See hospitalizations/show.html.erb
+    # and audit_events/show.html.erb.
+    field_header: "Field"
+    before_header: "Before"
+    after_header: "After"
+    # Used by Hospitalization#diagnosis_names_display and Surgery's
+    # procedure_names_display / laterality_names_display / diagnosis_names_display
+    # / procedure_display_names to join a plain list of names for display
+    # (not a natural-language sentence, so `support.array`'s to_sentence
+    # connectors -- which add "and" -- don't apply here). These used to
+    # hard-code "、" (the Japanese ideographic comma) regardless of locale,
+    # so an English screen showing more than one diagnosis/procedure name
+    # rendered Japanese punctuation (e.g. "Pneumonia、Hypertension").
+    list_separator: ", "
+
+  diagnoses:
+    index:
+      title: "Diagnoses"
+      new_button: "New Diagnosis"
+      empty: "No diagnoses found. Click \"New Diagnosis\" to get started."
+    show:
+      title: "Diagnosis Details"
+      subtitle: "Diagnosis Master"
+      edit_button: "Edit Diagnosis"
+      delete_button: "Delete Diagnosis"
+    new:
+      title: "New Diagnosis"
+      modal_description: "Create a diagnosis master without leaving this diagnosis entry form."
+    edit:
+      title: "Edit Diagnosis"
+    create:
+      success_notice: "Diagnosis was successfully created."
+      added_helper_text: "The new diagnosis has been added to the diagnosis entry form."
+      select_diagnosis_prompt: "Select a diagnosis"
+      save_entry_submit: "Save Diagnosis Entry"
+    update:
+      success_notice: "Diagnosis was successfully updated."
+    destroy:
+      success_notice: "Diagnosis was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this diagnosis from being saved:"
+        other: "%{count} errors prohibited this diagnosis from being saved:"
+      name_label: "Diagnosis Name"
+      name_placeholder: "e.g. Acute appendicitis"
+
+  surgery_procedures:
+    index:
+      title: "Surgery Procedures"
+      new_button: "New Procedure"
+      empty: "No procedures found. Click \"New Procedure\" to get started."
+    show:
+      title: "Surgery Procedure Details"
+      subtitle: "Procedure Master"
+      edit_button: "Edit Procedure"
+      delete_button: "Delete Procedure"
+    new:
+      title: "New Surgery Procedure"
+      modal_description: "Create a procedure master without leaving this surgery form."
+    edit:
+      title: "Edit Surgery Procedure"
+    create:
+      success_notice: "Surgery procedure was successfully created."
+      added_helper_text: "The new procedure has been added to the surgery form."
+    update:
+      success_notice: "Surgery procedure was successfully updated."
+    destroy:
+      success_notice: "Surgery procedure was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this surgery procedure from being saved:"
+        other: "%{count} errors prohibited this surgery procedure from being saved:"
+      name_label: "Procedure Name"
+      name_placeholder: "e.g. Laparoscopic cholecystectomy"
+
+  holidays:
+    index:
+      title: "Holidays"
+      new_button: "New Holiday"
+      year_filter_label: "Year"
+      all_years_option: "All"
+      type_header: "Type"
+      empty_no_filter: "No holidays found. Click \"New Holiday\" to get started."
+      empty_filtered: "No holidays match your search."
+    show:
+      title: "Holiday Details"
+      subtitle: "Holiday Master"
+      unnamed: "(no name)"
+      edit_button: "Edit Holiday"
+      delete_button: "Delete Holiday"
+    new:
+      title: "New Holiday"
+    edit:
+      title: "Edit Holiday"
+    create:
+      success_notice: "Holiday was successfully created."
+    update:
+      success_notice: "Holiday was successfully updated."
+    destroy:
+      success_notice: "Holiday was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this holiday from being saved:"
+        other: "%{count} errors prohibited this holiday from being saved:"
+      closed_checkbox_label: "Closed day (stops elective slots)"
+      closed_helper: "Uncheck to leave this as a note-only day: it is shown on the calendar but elective slots stay open."
+      name_label: "Holiday Name"
+      name_placeholder: "e.g. Vernal Equinox Day"
+      name_helper: "Required for a closed day. Optional for a note-only day."
+      note_placeholder: "e.g. Fire drill in the morning"
+    # Shared across index and show (see the design note above `common:`).
+    status_badge:
+      closed: "Closed"
+      note_only: "Note only"
+
+  elective_slot_rules:
+    index:
+      title: "Elective Slot Rules"
+      description: "One rule per weekday. Configure how many elective surgery slots repeat each week."
+      day_header: "Day"
+      slots_header: "Slots"
+      slot_duration_header: "Slot Duration"
+      not_configured: "Not configured"
+      add_link: "Add"
+    show:
+      title: "Elective Slot Rule Details"
+      subtitle: "Slot Master"
+      badge: "Slot Rule"
+      slot_duration_label: "Slot Duration"
+      total_capacity_label: "Total Capacity"
+      fractional_helper: "A fractional value means the last of %{total} slots is shortened."
+      edit_button: "Edit Rule"
+      delete_button: "Delete Rule"
+    new:
+      title: "New Elective Slot Rule"
+    edit:
+      title: "Edit Elective Slot Rule"
+    create:
+      success_notice: "Elective slot rule was successfully created."
+    update:
+      success_notice: "Elective slot rule was successfully updated."
+    destroy:
+      success_notice: "Elective slot rule was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this elective slot rule from being saved:"
+        other: "%{count} errors prohibited this elective slot rule from being saved:"
+      day_of_week_label: "Day of Week"
+      day_of_week_prompt: "Select a day"
+      slot_count_helper: "A fractional value (e.g. 2.5) means the day's last slot is shorter than the rest, not an extra whole slot."
+      slot_count_placeholder: "e.g. 2.5"
+      slot_duration_label: "Slot Duration (minutes)"
+      slot_duration_placeholder: "e.g. 240"
+      slot_duration_helper: "The total time available in one slot. A surgery that runs longer is treated as extending its own slot, not consuming another."
+    # Shared between the form label and the show page (see design note
+    # above `common:`) -- "Number of Slots" is identical in both places.
+    labels:
+      slot_count: "Number of Slots"
+    # Unit abbreviations appended to raw numbers on index/show.
+    units:
+      minutes: "min"
+      hours: "h"
+
+  # Stage 3 group 2 (Patients / PatientDiagnoses). Follows the conventions
+  # established by group 1 above: lazy `t(".key")` per view, a `labels:`
+  # sub-key for a string reused across more than one action within the same
+  # resource (e.g. "Hospital ID" on the index table header, the form field,
+  # and the show page), and `Model.human_attribute_name` instead of a new
+  # key wherever the label already matches Rails' own humanize output
+  # (e.g. "Sex", "Telephone", "Name", "Laterality", "Diagnosis"). Deliberately
+  # NOT shared across the patients/patient_diagnoses resource boundary (e.g.
+  # "Add Diagnosis", "Diagnosed On" each get their own key per resource)
+  # even though the English text is identical in both -- mirrors group 1's
+  # own choice to keep "Select a diagnosis" independent across resources
+  # rather than couple two different domain contexts to one key.
+  patients:
+    index:
+      kicker: "Registry"
+      title: "Patients"
+      new_button: "New Patient"
+      keyword_label: "Keyword"
+      keyword_placeholder: "Name or Hospital ID"
+      empty_no_filter: "No patients found. Click \"New Patient\" to get started."
+      empty_filtered: "No patients match your search."
+    show:
+      title: "Patient Details"
+      badge: "Patient Record"
+      full_name_label: "Full Name"
+      age_label: "Age"
+      hospital_identifier_label: "Hospital Identifier"
+      diagnoses_divider: "Diagnoses"
+      diagnosis_history_title: "Diagnosis History"
+      diagnosis_history_description: "Register multiple diagnosis names and diagnosis dates for this patient."
+      diagnosed_on_header: "Diagnosed On"
+      no_diagnoses: "No diagnosis entries have been registered yet."
+      edit_button: "Edit Patient"
+      delete_button: "Delete Patient"
+    new:
+      title: "New Patient"
+    edit:
+      title: "Edit Patient"
+    create:
+      success_notice: "Patient was successfully created."
+    update:
+      success_notice: "Patient was successfully updated."
+    destroy:
+      success_notice: "Patient was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this patient from being saved:"
+        other: "%{count} errors prohibited this patient from being saved:"
+      hospital_id_placeholder: "e.g. H12345"
+      name_label: "Patient Name"
+      name_placeholder: "e.g. John Doe"
+      # Left as a hard-coded Japanese string when group 2 externalized the
+      # rest of this form -- byte-identical to that original value.
+      name_kana_placeholder: "e.g. ジョン ドウ"
+      telephone_placeholder: "e.g. 03-1234-5678"
+      clinical_info_placeholder: "e.g. allergies, chronic conditions"
+    # Shared across the index table header, the form field label, and the
+    # show page (see design note above).
+    labels:
+      hospital_id: "Hospital ID"
+      name_kana: "Name (Kana)"
+      date_of_birth: "Date of Birth"
+      clinical_info: "Clinical Info"
+      add_diagnosis_button: "Add Diagnosis"
+
+  patient_diagnoses:
+    index:
+      title: "Patient Diagnoses"
+      heading: "Diagnoses"
+      add_diagnosis_button: "Add Diagnosis"
+      empty: "No diagnoses found. Click \"Add Diagnosis\" to register the first entry."
+    show:
+      title: "Diagnosis Entry Details"
+      badge: "Diagnosis Record"
+      diagnosis_name_label: "Diagnosis Name"
+      edit_button: "Edit Diagnosis Entry"
+      delete_button: "Delete Diagnosis Entry"
+    new:
+      title: "New Diagnosis Entry"
+    edit:
+      title: "Edit Diagnosis Entry"
+    create:
+      success_notice: "Diagnosis entry was successfully created."
+    update:
+      success_notice: "Diagnosis entry was successfully updated."
+    destroy:
+      success_notice: "Diagnosis entry was successfully deleted."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this diagnosis entry from being saved:"
+        other: "%{count} errors prohibited this diagnosis entry from being saved:"
+      no_diagnoses_warning: "No diagnosis masters found. Create a diagnosis first before registering this entry."
+      new_diagnosis_link: "New Diagnosis"
+      select_diagnosis_prompt: "Select a diagnosis"
+    # Shared between the (disabled) form fields and the show page.
+    labels:
+      patient_name: "Patient Name"
+      patient_id: "Patient ID"
+      diagnosed_on: "Diagnosed On"
+
+  # Stage 3 group 3a (Hospitalizations). Follows the conventions established
+  # by groups 1/2 above. This is the app's most complex screen group (a
+  # 3-section form, a nested diagnosis-row sub-form, an inline update-history
+  # table, and a deleted list), so a few extra notes:
+  #
+  #   - `labels:` here holds every attribute-derived label whose text is
+  #     reused across more than one action (index/show/deleted/form) but
+  #     does not match `Hospitalization.human_attribute_name` verbatim (e.g.
+  #     "Reservation Status" vs the default humanize "Reservation status").
+  #     Where a label's text is reused but IS an exact match to
+  #     human_attribute_name (Purpose, Ward, Outcome, Reason, Patient), the
+  #     view calls `Hospitalization.human_attribute_name` directly instead of
+  #     adding a redundant key here -- same rule groups 1/2 used.
+  #   - A label used in only one action (e.g. show's own "Planned Length of
+  #     Stay", the form's "Planned Length of Stay (Days)", index's plain
+  #     "Planned Days" column) is intentionally 3 separate keys, one per
+  #     action's own scope, rather than a shared `labels:` key -- the English
+  #     text genuinely differs between the three screens.
+  #   - `hospitalization_diagnosis_fields:` covers the nested diagnosis-row
+  #     partial (`_hospitalization_diagnosis_fields.html.erb`), which is
+  #     rendered twice from `_form.html.erb` (the persisted-rows loop and the
+  #     `<template>` used to clone new rows) but keeps its own scope the same
+  #     way `_form.html.erb` keeps `form:` -- Rails' lazy lookup keys off the
+  #     partial's own virtual path.
+  #   - The show page's own inline change-history table ("Field"/"Before"/
+  #     "After" headers, "Update History" divider) is a separate, pre-existing
+  #     copy of markup that also appears in `audit_events/show.html.erb` (a
+  #     different group's file at the time this group ran). The "Update
+  #     History" divider stayed hospitalizations-show-scoped (its own text,
+  #     not shared with audit_events/show), but the "Field"/"Before"/"After"
+  #     headers -- identical in both places -- were later consolidated by
+  #     group 4a (which owns audit_events/show.html.erb) onto shared
+  #     `common.field_header` / `common.before_header` / `common.after_header`
+  #     keys; both view files reference those now instead of keeping separate
+  #     copies. `AuditEventsHelper` itself (the label/before/after *cell
+  #     values*, as opposed to these column headers) was already localized in
+  #     stage 2 and is reused as-is.
+  #   - New `time.formats` keys (`timestamp`, `short_timestamp`) replace two
+  #     raw `strftime` patterns this group's views used to hard-code.
+  hospitalizations:
+    index:
+      title: "Hospitalizations"
+      deleted_link: "Deleted"
+      new_button: "New Hospitalization"
+      keyword_label: "Keyword"
+      keyword_placeholder: "Patient or reason"
+      diagnosis_label: "Diagnosis"
+      status_filter_label: "Status"
+      admitted_from_label: "Admitted From"
+      admitted_to_label: "Admitted To"
+      all_option: "All"
+      admin_status_header: "Admin Status"
+      planned_days_header: "Planned Days"
+      patient_name_header: "Patient Name"
+      scheduled_suffix: "(scheduled)"
+      empty_no_filter: "No hospitalizations found. Click \"New Hospitalization\" to get started."
+      empty_filtered: "No hospitalizations match your search."
+    show:
+      title: "Hospitalization Details"
+      admission_date_prefix: "Admission Date"
+      deleted_badge: "Deleted"
+      planned_length_of_stay_label: "Planned Length of Stay"
+      surgeries_divider: "Surgeries During This Hospitalization"
+      no_surgeries: "No surgeries are linked to this hospitalization."
+      update_history_divider: "Update History"
+      no_update_history: "No update history recorded for this hospitalization."
+      audit_event_details_link: "Details"
+      view_full_audit_log_link: "View Full Audit Log"
+      admin_actions_divider: "Admin Actions"
+      confirm_button: "Confirm"
+      view_deleted_link: "View Deleted Hospitalizations"
+      copy_date_label: "Copy to New Scheduled Admission Date"
+      copy_submit: "Copy (Rebook)"
+      edit_button: "Edit Hospitalization"
+      delete_button: "Delete Hospitalization"
+    new:
+      title: "New Hospitalization"
+    edit:
+      title: "Edit Hospitalization"
+    deleted:
+      title: "Deleted Hospitalizations"
+      back_link: "Back to Hospitalizations"
+      deleted_at_header: "Deleted At"
+      empty: "No deleted hospitalizations."
+    create:
+      success_notice: "Hospitalization was successfully created."
+    update:
+      success_notice: "Hospitalization was successfully updated."
+    destroy:
+      success_notice: "Hospitalization was successfully deleted."
+    confirm:
+      success_notice: "Hospitalization was confirmed."
+    restore:
+      success_notice: "Hospitalization was restored."
+    copy:
+      success_notice: "Hospitalization was copied. Fill in the remaining details."
+      failure_alert: "Could not copy: %{errors}"
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this hospitalization from being saved:"
+        other: "%{count} errors prohibited this hospitalization from being saved:"
+      no_patients_warning: "No patients found. Create a patient first to register a hospitalization."
+      new_patient_link: "New Patient"
+      no_diagnoses_warning: "No diagnosis names found. Create a diagnosis master first."
+      new_diagnosis_link: "New Diagnosis"
+      patient_schedule_heading: "Patient & Schedule"
+      select_patient_prompt: "Select a patient"
+      scheduled_admission_date_helper: "Set this while the admission is still a reservation. Leave undecided if unknown."
+      admission_date_helper: "Either this or the scheduled admission date above must be set."
+      planned_days_label: "Planned Length of Stay (Days)"
+      planned_days_placeholder: "e.g. 5"
+      admission_surgery_heading: "Admission & Surgery Details"
+      diagnoses_helper: "Add one or more diagnosis names for this hospitalization."
+      diagnosis_row_helper: "If the right diagnosis is not listed, create a new one first."
+      add_diagnosis_button: "Add Diagnosis"
+      room_preference_placeholder: "e.g. Private room"
+      comments_heading: "Comments"
+    hospitalization_diagnosis_fields:
+      select_diagnosis_prompt: "Select a diagnosis"
+      remove_button: "Remove"
+    # Shared across more than one action within this resource (see design
+    # note above).
+    labels:
+      kicker: "Admissions"
+      diagnoses_header: "Diagnoses"
+      admission_date_header: "Admission Date"
+      discharge_date: "Discharge Date"
+      length_of_stay: "Length of Stay"
+      preferred_room: "Preferred Room"
+      patient_id: "Patient ID"
+      reservation_status: "Reservation Status"
+      scheduled_admission_date: "Scheduled Admission Date"
+      admission_date_actual: "Admission Date (Actual)"
+      reason_for_admission: "Reason for Admission"
+      referred_from: "Referred From"
+      adl: "ADL"
+      reservation_doctor: "Reservation Doctor"
+      attending_doctor: "Attending Doctor"
+      submitted_on: "Submitted On"
+      clinical_comment: "Clinical Comment"
+      discharge_destination: "Discharge Destination"
+      diagnoses_at_admission: "Diagnoses at Admission"
+      unknown_patient_name: "Patient #%{id}"
+      unknown_patient: "Unknown"
+      restore: "Restore"
+      planned_days_value: "%{count} days"
+
+  # Stage 3 group 3b (Surgeries / Surgery Schedule board). Follows the
+  # conventions established by groups 1/2/3a above:
+  #
+  #   - `labels:` under `surgeries:` holds attribute-derived text reused
+  #     across more than one action within this resource (index/show/form)
+  #     but that doesn't match `Surgery.human_attribute_name` verbatim (e.g.
+  #     "Surgery Date" vs the default humanize "Surgery date"). Where a
+  #     label's text IS an exact match (Patient, Hospitalization), the view
+  #     calls `Surgery.human_attribute_name` / `SurgeryProcedureSelection.
+  #     human_attribute_name` directly instead of adding a redundant key.
+  #   - The "Elective"/"Emergency" scheduling-type words are never redefined
+  #     here -- every occurrence (the form's radio labels, the schedule
+  #     board's "Emergency" section divider) reuses
+  #     `Surgery.scheduling_type_options` from stage 2 instead.
+  #   - `surgery_schedules.labels.unknown_patient_name` is deliberately a
+  #     separate key from `surgeries.labels.unknown_patient_name` (same
+  #     English text, "Patient #%{id}") rather than a cross-resource
+  #     reference -- each resource namespace stays self-contained, matching
+  #     how e.g. hospitalizations' own `labels.kicker` was never shared with
+  #     patients' index kicker despite both resources happening to reuse a
+  #     word elsewhere.
+  #   - `start_time_display` (Surgery model, stage 2) already renders
+  #     "%H:%M" -- digits only, identical in both locales -- so no new
+  #     `time.formats` key is needed for it; the raw `strftime("%A")` /
+  #     `strftime("%Y-%m-%d")` / `strftime("%B %d, %Y")` calls this group's
+  #     views used to hard-code are replaced with `l()` instead (using the
+  #     existing `default`/`long` formats, plus a new `date.formats.weekday`
+  #     for the schedule board's per-day column header).
+  surgeries:
+    index:
+      title: "Surgeries"
+      new_button: "New Surgery"
+      kicker: "Operations"
+      keyword_label: "Keyword"
+      keyword_placeholder: "Patient name or Hospital ID"
+      procedure_label: "Procedure"
+      type_label: "Type"
+      performed_from_label: "Performed From"
+      performed_to_label: "Performed To"
+      undated_checkbox_label: "Undated only"
+      all_option: "All"
+      diagnosis_header: "Diagnosis"
+      slot_badge: "Slot %{number}"
+      slot_badge_with_total: "Slot %{number} / %{total}"
+      standalone: "Standalone"
+      empty_no_filter: "No surgeries found. Click \"New Surgery\" to get started."
+      empty_filtered: "No surgeries match your search."
+    show:
+      title: "Surgery Details"
+      date_prefix: "Date"
+      slot_badge: "Slot %{number}"
+      slot_of_total: "Slot %{number} of %{total}"
+      standalone: "Standalone (not linked)"
+      edit_button: "Edit Surgery"
+      delete_button: "Delete Surgery"
+    new:
+      title: "New Surgery"
+    edit:
+      title: "Edit Surgery"
+    create:
+      success_notice: "Surgery was successfully created."
+    update:
+      success_notice: "Surgery was successfully updated."
+    destroy:
+      success_notice: "Surgery was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this surgery from being saved:"
+        other: "%{count} errors prohibited this surgery from being saved:"
+      no_patients_warning: "No patients found. Create a patient first to register a surgery."
+      new_patient_link: "New Patient"
+      no_procedures_warning: "No procedure names found. Create a procedure master first, or open the new procedure screen."
+      new_procedure_link: "New Procedure"
+      select_patient_prompt: "Select a patient"
+      related_diagnoses_helper: "Select one or more diagnoses that correspond to this surgery."
+      no_diagnoses_for_selected_patient: "No diagnoses are registered for the selected patient."
+      no_diagnoses_available: "No diagnoses available. Register diagnoses for a patient first."
+      diagnoses_helper: "Only diagnoses belonging to the selected patient can be saved."
+      surgery_date_helper: "Choose Undecided to leave the date blank until it is scheduled."
+      scheduling_type_label: "Scheduling Type"
+      start_time_helper: "Emergency surgeries can be scheduled at any time, including nights."
+      slot_number_label: "Elective Slot"
+      slot_number_placeholder: "e.g. 1"
+      slot_number_helper: "Which of the day's operating room slots this surgery runs in. A slot holds several surgeries, so more than one surgery can share the same number. Leave blank until it is scheduled. Ignored for emergency surgeries."
+      configured_slots_prefix: "Configured slots per weekday:"
+      slot_rules_heading: "Elective Slot Rules"
+      manage_slot_rules_link: "Manage slot rules"
+      no_slot_rules: "No elective slots are configured yet."
+      hospitalization_label: "Linked Hospitalization"
+      not_linked_option: "Not linked (outpatient / standalone)"
+      procedures_helper: "Add up to 5 procedures for one surgery."
+      procedure_row_helper: "If the right procedure is not listed, create a new one first."
+      add_procedure_button: "Add Procedure"
+      duration_label: "Duration (hours)"
+      duration_placeholder: "e.g. 1.5"
+      anesthesia_method_label: "Anesthesia Method"
+      anesthesia_method_placeholder: "e.g. General anesthesia"
+      operator_placeholder: "e.g. Dr. Smith"
+      assistant_placeholder: "e.g. Dr. Lee"
+      operation_order_placeholder: "e.g. 1"
+    surgery_procedure_selection_fields:
+      procedure_label: "Procedure"
+      procedure_prompt: "Select a procedure"
+      remove_button: "Remove"
+    surgery_procedure_modal:
+      title: "New Surgery Procedure"
+      description: "Create a procedure master without leaving this surgery form."
+      loading: "Loading..."
+    # Shared across more than one action within this resource (see design
+    # note above).
+    labels:
+      surgery_date: "Surgery Date"
+      start_time: "Start Time"
+      anesthesia: "Anesthesia"
+      duration: "Duration"
+      duration_value: "%{hours} h"
+      operator: "Operator"
+      assistant: "Assistant"
+      operation_order: "Operation Order"
+      related_diagnoses: "Related Diagnoses"
+      procedures: "Procedures"
+      no_slot_assigned: "No slot assigned"
+      unknown_patient_name: "Patient #%{id}"
+      unknown_patient: "Unknown"
+
+  surgery_schedules:
+    index:
+      title: "Surgery Schedule"
+      kicker: "Operations"
+      week_of: "Week of %{date}"
+      prev_week_link: "Prev Week"
+      this_week_link: "This Week"
+      next_week_link: "Next Week"
+      configure_slots_link: "Configure slots"
+      holidays_link: "Holidays"
+      slots_in_use: "%{used} / %{total} slots in use"
+      minutes_in_use: "%{used} / %{capacity} min"
+      no_slots_holiday: "No elective slots (holiday)"
+      no_slots_configured: "No slots configured"
+      slot_number_label: "Slot %{number}"
+      slot_minutes_label: "%{used} / %{duration} min"
+      overrun_badge: "+%{minutes} min over"
+      slot_open: "Open"
+      not_assigned_to_slot: "Not assigned to a slot"
+      no_slot_available: "No slot available"
+      no_emergency_surgeries: "None"
+    slot_surgery:
+      duration_minutes_value: "%{minutes} min"
+    # Shared between index.html.erb's emergency-surgeries loop and the
+    # _slot_surgery partial it renders alongside.
+    labels:
+      unknown_patient_name: "Patient #%{id}"
+
+  # Stage 3 group 4a: Admin (Users / Announcements / AdminNotes), AuditEvents,
+  # Accounts, Sessions, and the app-wide shared partials (_pagination,
+  # _diagnosis_modal). Follows the conventions established by groups 1-3b:
+  #
+  #   - Top-level `admin:` mirrors the `Admin::` controller/view module, with
+  #     one sub-key per sub-resource (`users:`, `announcements:`,
+  #     `admin_notes:`) matching each view's own virtual path
+  #     (`admin/users/index` -> `admin.users.index`), so lazy `t(".key")`
+  #     resolves the same way it does for every other group's views.
+  #     `admin.kicker` ("Administration") is the one string shared *across*
+  #     those three sub-resources' index pages -- kept as a direct child of
+  #     `admin:` rather than duplicated three times, since (unlike `common:`)
+  #     it is specific to this module's own page headers.
+  #   - Attribute labels that match `User`/`Announcement`
+  #     `human_attribute_name` verbatim (Name, Email, Role, Title, Published)
+  #     call that directly instead of adding a redundant key, same rule
+  #     earlier groups used. Ones that don't match (e.g. the "Status" column
+  #     header, which isn't itself an attribute name) get their own key.
+  #   - `sessions.new.title` doubles as the h1 heading, the browser tab
+  #     title, and (via `sessions.new.submit_button`, kept as a *separate*
+  #     key despite the identical English text) is available if the submit
+  #     label and page title ever need to diverge later.
+  #   - Login form's email/password labels reuse `User.human_attribute_name`
+  #     directly: `form_with scope: :session` isn't backed by a real model,
+  #     so Rails' automatic label translation has no `User` attribute
+  #     metadata to draw on and would otherwise stay stuck on the raw
+  #     humanized attribute name in every locale. Since the fields really are
+  #     a User's email/password, reusing that model's own translations avoids
+  #     a duplicate pair of keys with the identical text.
+  #   - `shared.pagination.*` and `shared.diagnosis_modal.*` are keyed off
+  #     their partials' own virtual paths (`shared/_pagination.html.erb`,
+  #     `shared/_diagnosis_modal.html.erb`), same as any other partial.
+  #     `_diagnosis_modal.html.erb`'s static title/description (shown before
+  #     the turbo-frame it wraps replaces them with the real
+  #     `diagnoses/new.html.erb` content) reuse `diagnoses.new.title` /
+  #     `diagnoses.new.modal_description` and `common.close` rather than
+  #     duplicating that group 1 text -- it is genuinely the same modal, just
+  #     its pre-turbo-frame-load fallback markup.
+  admin:
+    kicker: "Administration"
+    users:
+      index:
+        title: "Users"
+        new_button: "New User"
+        status_header: "Status"
+        active_status: "Active"
+        inactive_status: "Inactive"
+        reset_password_button: "Reset Password"
+        reset_password_confirm: "Reset this user's password?"
+      new:
+        title: "New User"
+      edit:
+        title: "Edit User"
+      form:
+        errors_heading:
+          one: "%{count} error prohibited this user from being saved:"
+          other: "%{count} errors prohibited this user from being saved:"
+      create:
+        success_notice: "User was successfully created."
+      update:
+        success_notice: "User was successfully updated."
+      reset_password:
+        success_notice: "Password was reset. Temporary password: %{password}"
+    announcements:
+      index:
+        title: "Announcements"
+        new_button: "New Announcement"
+        status_header: "Status"
+        updated_header: "Updated"
+        published_status: "Published"
+        draft_status: "Draft"
+        delete_confirm: "Delete this announcement?"
+      new:
+        title: "New Announcement"
+      edit:
+        title: "Edit Announcement"
+      form:
+        errors_heading:
+          one: "%{count} error prohibited this announcement from being saved:"
+          other: "%{count} errors prohibited this announcement from being saved:"
+        published_helper: "Only published announcements are visible on the operations calendar."
+      create:
+        success_notice: "Announcement was successfully created."
+      update:
+        success_notice: "Announcement was successfully updated."
+      destroy:
+        success_notice: "Announcement was successfully deleted."
+    admin_notes:
+      index:
+        title: "Admin Notes"
+        new_note_label: "New Note"
+        add_note_submit: "Add Note"
+        note_header: "Note"
+        by_header: "By"
+        added_header: "Added"
+        delete_confirm: "Delete this note?"
+      create:
+        success_notice: "Note was successfully added."
+      destroy:
+        success_notice: "Note was successfully deleted."
+
+  audit_events:
+    # Shared between index's filter-form labels/table headers and show's
+    # own detail list (see design note above `common:`).
+    labels:
+      time: "Time"
+      record_type: "Record type"
+      operator: "Operator"
+    index:
+      title: "Audit Log"
+      kicker: "Activity"
+      all_option: "All"
+      record_header: "Record"
+      details_link: "Details"
+      empty: "No audit events found."
+    show:
+      title: "Audit Event"
+      kicker: "Audit Log"
+      record_id_label: "Record ID"
+      ip_address_label: "IP Address"
+      no_changes: "No attribute changes recorded."
+
+  accounts:
+    show:
+      title: "My Account"
+      change_password_divider: "Change Password"
+      password_helper: "Leave these blank to keep your current password."
+      current_password_label: "Current Password"
+      new_password_label: "New Password"
+      confirm_new_password_label: "Confirm New Password"
+      save_changes_submit: "Save Changes"
+      errors_heading:
+        one: "%{count} error prohibited this account from being saved:"
+        other: "%{count} errors prohibited this account from being saved:"
+    update:
+      success_notice: "Account was successfully updated."
+
+  sessions:
+    new:
+      title: "Sign In"
+      submit_button: "Sign In"
+    create:
+      success_notice: "Signed in successfully."
+      invalid_credentials_alert: "Invalid email or password."
+    destroy:
+      success_notice: "Signed out."
+
+  shared:
+    pagination:
+      prev: "Prev"
+      next: "Next"
+      page_of: "Page %{page} of %{total}"
+    diagnosis_modal:
+      loading: "Loading..."
+
+  # Stage 3 group 4b: Operations Calendar, Dashboard, and cross-Search
+  # screens, plus the layout's <title> fallback and the one leftover
+  # hard-coded placeholder in patients/_form.html.erb that group 2 missed.
+  # Follows the conventions established by groups 1-4a:
+  #
+  #   - `operations_calendar.index.kicker` and `.labels.unknown_patient_name`
+  #     are independent keys from `surgeries.index.kicker` /
+  #     `surgeries.labels.unknown_patient_name` despite carrying the same
+  #     English text and (for the kicker) the same Japanese translation --
+  #     same "no cross-resource sharing" rule earlier groups followed. The
+  #     summary-list headings (Waiting/Upcoming/Unconfirmed/Recently Updated/
+  #     Referred) are the one deliberate exception: they call
+  #     `Hospitalization.status_filter_options` directly (stage 2), the same
+  #     way the purpose-group headings already did, rather than adding a
+  #     second, redundant translation of the same status word.
+  #   - `operations_calendar.labels.unknown_patient_name` /
+  #     `.empty_list` are shared across `index` and the `_summary_list`
+  #     partial's own scope (two different lazy-lookup scopes rendering the
+  #     identical text), referenced with the full path from both, mirroring
+  #     `common.field_header`'s promotion in group 4a.
+  #   - The "Emergency" badge in `_day.html.erb` reuses
+  #     `Surgery.scheduling_type_options["emergency"]` (stage 2) rather than
+  #     a new key, same as the Surgery Schedule board in group 3b.
+  #   - `dashboard.index.view_submit` is deliberately its own key rather than
+  #     `common.view`: this button applies the year filter, and `common.view`
+  #     already means "view/show detail" (Japanese "詳細"), which reads wrong
+  #     on a filter-apply button.
+  #   - `dashboard.index.average_length_of_stay_value` interpolates
+  #     `%{days}` (not `%{count}`) because the value can be fractional
+  #     (an average) -- Rails' one/other pluralization is keyed off integer
+  #     `count` and would round or mis-select the plural form for a value
+  #     like 4.5.
+  #   - The layout's `<title>` fallback (shown only if a page never calls
+  #     `content_for :title`) now reuses `nav.app_name` instead of a second
+  #     hard-coded "Altocumulus" -- it is the app's own name either way, and
+  #     every current page already sets its own title so this never renders
+  #     in practice today.
+  operations_calendar:
+    index:
+      title: "Operations Calendar"
+      kicker: "Operations"
+      days_count:
+        one: "%{count} day"
+        other: "%{count} days"
+      start_label: "Start"
+      days_label: "Days"
+      apply_submit: "Apply"
+      today_link: "Today"
+      undated_surgeries_heading: "Undated Surgeries"
+      outside_regular_days_heading: "Outside Regular Surgery Days"
+      alert: "The requested date range was invalid. Showing the default range instead."
+    day:
+      closed_badge: "Closed: %{name}"
+      note_badge: "Note"
+      congestion_badge: "Congestion"
+      admissions_label: "Admissions:"
+      slots_summary: "%{used} / %{total} slots"
+      minutes_summary: "(%{used} / %{capacity} min)"
+      no_slots_holiday: "No elective slots (holiday)"
+      no_slots_configured: "No slots configured"
+      no_surgeries: "No surgeries scheduled"
+    summary_list:
+      undated: "Undated"
+    # Shared across `index` and the `_summary_list` partial (see design note
+    # above `shared:`).
+    labels:
+      unknown_patient_name: "Patient #%{id}"
+      empty_list: "None"
+
+  dashboard:
+    index:
+      title: "Dashboard"
+      kicker: "Overview"
+      year_label: "Year"
+      all_time_option: "All time"
+      view_submit: "View"
+      total_patients_stat: "Total Patients"
+      current_inpatients_stat: "Current Inpatients"
+      surgeries_stat: "Surgeries"
+      hospitalizations_stat: "Hospitalizations"
+      average_length_of_stay_stat: "Avg. Length of Stay"
+      average_length_of_stay_value: "%{days} days"
+      monthly_surgeries_heading: "Monthly Surgeries"
+      monthly_hospitalizations_heading: "Monthly Hospitalizations"
+      top_procedures_heading: "Top Procedures"
+      top_diagnoses_heading: "Top Diagnoses at Admission"
+      anesthesia_breakdown_heading: "Anesthesia Method Breakdown"
+      scheduling_type_breakdown_heading: "Scheduling Type Breakdown"
+      outcome_breakdown_heading: "Outcome Breakdown"
+      no_data: "No data"
+
+  searches:
+    index:
+      title: "Search"
+      kicker: "Cross-Search"
+      keyword_label: "Keyword"
+      keyword_placeholder: "Patient name, hospital ID, reason..."
+      empty_state: "Enter a keyword above to search across patients, hospitalizations, and surgeries."
+      patients_heading: "Patients"
+      hospitalizations_heading: "Hospitalizations"
+      surgeries_heading: "Surgeries"
+      see_all_patients: "See all in Patients"
+      see_all_hospitalizations: "See all in Hospitalizations"
+      see_all_surgeries: "See all in Surgeries"
+      no_matching_patients: "No matching patients."
+      no_matching_hospitalizations: "No matching hospitalizations."
+      no_matching_surgeries: "No matching surgeries."
+      no_reason: "(no reason)"
+      undated: "Undated"
+      unknown_patient_name: "Patient #%{id}"

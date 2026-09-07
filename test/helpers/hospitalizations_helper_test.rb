@@ -16,4 +16,16 @@ class HospitalizationsHelperTest < ActionView::TestCase
   test "shows a dash for a reservation that has not been admitted yet" do
     assert_equal "-", length_of_stay_display(hospitalizations(:four))
   end
+
+  test "renders in Japanese under the ja locale, for all three states" do
+    I18n.with_locale(:ja) do
+      assert_equal "6日", length_of_stay_display(hospitalizations(:one))
+
+      travel_to Date.new(2026, 6, 4) do
+        assert_equal "入院4日目(継続中)", length_of_stay_display(hospitalizations(:three))
+      end
+
+      assert_equal "-", length_of_stay_display(hospitalizations(:four))
+    end
+  end
 end

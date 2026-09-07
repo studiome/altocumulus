@@ -3,7 +3,7 @@
     <div role="alert" class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       <div>
-        <h3 class="font-bold"><%= pluralize(patient.errors.count, "error") %> prohibited this patient from being saved:</h3>
+        <h3 class="font-bold"><%= t(".errors_heading", count: patient.errors.count) %></h3>
         <ul class="list-disc ml-6">
           <% patient.errors.each do |error| %>
             <li><%= error.full_message %></li>
@@ -14,38 +14,38 @@
   <% end %>
 
   <div class="app-field">
-    <%= form.label :hospital_id, "Hospital ID", class: "app-field-label" %>
-    <%= form.text_field :hospital_id, class: "input w-full focus:input-primary", placeholder: "e.g. H12345" %>
+    <%= form.label :hospital_id, t("patients.labels.hospital_id"), class: "app-field-label" %>
+    <%= form.text_field :hospital_id, class: "input w-full focus:input-primary", placeholder: t(".hospital_id_placeholder") %>
   </div>
 
   <div class="app-field">
-    <%= form.label :name, "Patient Name", class: "app-field-label" %>
-    <%= form.text_field :name, class: "input w-full focus:input-primary", placeholder: "e.g. John Doe" %>
+    <%= form.label :name, t(".name_label"), class: "app-field-label" %>
+    <%= form.text_field :name, class: "input w-full focus:input-primary", placeholder: t(".name_placeholder") %>
   </div>
 
   <div class="app-field">
-    <%= form.label :name_kana, "Name (Kana)", class: "app-field-label" %>
-    <%= form.text_field :name_kana, class: "input w-full focus:input-primary", placeholder: "e.g. ジョン ドウ" %>
+    <%= form.label :name_kana, t("patients.labels.name_kana"), class: "app-field-label" %>
+    <%= form.text_field :name_kana, class: "input w-full focus:input-primary", placeholder: t(".name_kana_placeholder") %>
   </div>
 
   <div class="app-field">
-    <%= form.label :date_of_birth, "Date of Birth", class: "app-field-label" %>
+    <%= form.label :date_of_birth, t("patients.labels.date_of_birth"), class: "app-field-label" %>
     <%= form.date_field :date_of_birth, class: "input w-full focus:input-primary" %>
   </div>
 
   <div class="app-field">
-    <%= form.label :sex, "Sex", class: "app-field-label" %>
+    <%= form.label :sex, Patient.human_attribute_name(:sex), class: "app-field-label" %>
     <%= form.select :sex, Patient.sex_form_options, { include_blank: true }, class: "select w-full focus:select-primary" %>
   </div>
 
   <div class="app-field">
-    <%= form.label :telephone, "Telephone", class: "app-field-label" %>
-    <%= form.telephone_field :telephone, class: "input w-full focus:input-primary", placeholder: "e.g. 03-1234-5678" %>
+    <%= form.label :telephone, Patient.human_attribute_name(:telephone), class: "app-field-label" %>
+    <%= form.telephone_field :telephone, class: "input w-full focus:input-primary", placeholder: t(".telephone_placeholder") %>
   </div>
 
   <div class="app-field">
-    <%= form.label :clinical_info, "Clinical Info", class: "app-field-label" %>
-    <%= form.text_area :clinical_info, class: "textarea w-full focus:textarea-primary", rows: 3, placeholder: "e.g. allergies, chronic conditions" %>
+    <%= form.label :clinical_info, t("patients.labels.clinical_info"), class: "app-field-label" %>
+    <%= form.text_area :clinical_info, class: "textarea w-full focus:textarea-primary", rows: 3, placeholder: t(".clinical_info_placeholder") %>
   </div>
 
   <div class="pt-4">

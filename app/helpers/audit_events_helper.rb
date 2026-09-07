@@ -41,8 +41,8 @@ module AuditEventsHelper
     end
 
     def audit_change_value(model_class, attribute, value)
-      return "-" if value.nil? || value == ""
-      return value ? "Yes" : "No" if value == true || value == false
+      return I18n.t("common.none") if value.nil? || value == ""
+      return audit_boolean_label(value) if value == true || value == false
 
       column_type = model_class&.columns_hash&.[](attribute.to_s)&.type
 
@@ -54,20 +54,24 @@ module AuditEventsHelper
       when :time
         audit_format_time(value)
       when :boolean
-        value ? "Yes" : "No"
+        audit_boolean_label(value)
       else
         attribute.to_s.end_with?("_id") ? audit_resolve_foreign_key(attribute, value) : value.to_s
       end
     end
 
+    def audit_boolean_label(value)
+      value ? I18n.t("helpers.audit_events.yes") : I18n.t("helpers.audit_events.no")
+    end
+
     def audit_format_date(value)
-      Date.parse(value.to_s).strftime("%Y-%m-%d")
+      I18n.l(Date.parse(value.to_s), format: :default)
     rescue ArgumentError, TypeError
       value.to_s
     end
 
     def audit_format_datetime(value)
-      Time.zone.parse(value.to_s).strftime("%Y-%m-%d %H:%M:%S")
+      I18n.l(Time.zone.parse(value.to_s), format: :timestamp)
     rescue ArgumentError, TypeError
       value.to_s
     end
@@ -88,6 +92,6 @@ module AuditEventsHelper
       return value.to_s unless klass && klass < ActiveRecord::Base
 
       record = klass.find_by(id: value)
-      record ? record.to_s : "##{value} (not found)"
+      record ? record.to_s : "##{value} #{I18n.t("helpers.audit_events.not_found")}"
     end
 end
