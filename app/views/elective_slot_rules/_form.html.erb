@@ -20,7 +20,8 @@
 
   <div class="app-field">
     <%= form.label :slot_count, "Number of Slots", class: "app-field-label" %>
-    <%= form.number_field :slot_count, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 3" %>
+    <%= form.number_field :slot_count, class: "input w-full focus:input-primary", min: 0.5, step: 0.5, placeholder: "e.g. 2.5" %>
+    <p class="app-helper">A fractional value (e.g. 2.5) means the day's last slot is shorter than the rest, not an extra whole slot.</p>
   </div>
 
   <div class="app-field">

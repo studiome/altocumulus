@@ -91,7 +91,7 @@
                   <div class="font-semibold leading-snug"><%= surgery.display_procedure_name %></div>
                   <% if surgery.elective? %>
                     <% if surgery.slot_number %>
-                      <span class="badge badge-ghost badge-sm mt-1">Slot <%= surgery.slot_number %><% if slot_rule %> / <%= slot_rule.slot_count %><% end %></span>
+                      <span class="badge badge-ghost badge-sm mt-1">Slot <%= surgery.slot_number %><% if slot_rule %> / <%= slot_rule.total_slots %><% end %></span>
                     <% else %>
                       <span class="badge badge-warning badge-sm mt-1">No slot assigned</span>
                     <% end %>

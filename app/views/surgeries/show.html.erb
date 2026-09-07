@@ -23,7 +23,7 @@
           <% if @surgery.elective? %>
             <% slot_rule = @slot_rules[@surgery.surgery_date&.wday] %>
             <% if @surgery.slot_number %>
-              <span class="badge badge-ghost">Slot <%= @surgery.slot_number %><% if slot_rule %> of <%= slot_rule.slot_count %><% end %></span>
+              <span class="badge badge-ghost">Slot <%= @surgery.slot_number %><% if slot_rule %> of <%= slot_rule.total_slots %><% end %></span>
             <% else %>
               <span class="badge badge-warning">No slot assigned</span>
             <% end %>

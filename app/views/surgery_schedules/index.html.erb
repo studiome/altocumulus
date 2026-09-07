@@ -34,7 +34,7 @@
             <% end %>
             <p class="text-sm text-base-content/60">
               <% if usage.configured? %>
-                <%= usage.used_slots %> / <%= usage.slot_count %> slots in use
+                <%= usage.used_slots %> / <%= usage.total_slots %> slots in use
                 <span class="text-base-content/40">(<%= usage.used_minutes %> / <%= usage.capacity_minutes %> min)</span>
               <% elsif usage.holiday? %>
                 No elective slots (holiday)

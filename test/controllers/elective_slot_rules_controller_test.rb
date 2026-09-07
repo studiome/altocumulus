@@ -63,6 +63,29 @@ class ElectiveSlotRulesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 90, @elective_slot_rule.slot_duration_minutes
   end
 
+  test "create accepts a fractional slot_count and displays it without a trailing .0" do
+    post elective_slot_rules_url, params: { elective_slot_rule: { day_of_week: 4, slot_count: 2.5, slot_duration_minutes: 240 } }
+    rule = ElectiveSlotRule.last
+
+    get elective_slot_rule_url(rule)
+    assert_response :success
+    assert_match(/2\.5/, @response.body)
+  end
+
+  test "show displays a whole slot_count without a trailing .0" do
+    get elective_slot_rule_url(@elective_slot_rule) # tuesday fixture: slot_count 3
+    assert_response :success
+    assert_select ".card-body" do
+      assert_no_match(/3\.0/, @response.body)
+    end
+  end
+
+  test "index displays a whole slot_count without a trailing .0" do
+    get elective_slot_rules_url
+    assert_response :success
+    assert_no_match(/3\.0/, @response.body)
+  end
+
   test "should destroy elective_slot_rule" do
     assert_difference("ElectiveSlotRule.count", -1) do
       delete elective_slot_rule_url(@elective_slot_rule)

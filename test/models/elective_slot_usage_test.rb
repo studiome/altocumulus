@@ -84,6 +84,79 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_not slot.overrun?
   end
 
+  # A fractional slot_count (e.g. the legacy "2.5 rooms") means the day's
+  # last slot is shorter than the rest, not that there is an extra whole
+  # slot. total_slots must be used everywhere a slot count drives a Range,
+  # since Ruby silently floors a fractional Range endpoint.
+  test "a fractional slot_count produces one short slot at the end, not a dropped one" do
+    rule = ElectiveSlotRule.new(day_of_week: 4, slot_count: 2.5, slot_duration_minutes: 240)
+    usage = ElectiveSlotUsage.new(date: Date.new(2026, 3, 5), rule: rule, elective_surgeries: [], emergency_surgeries: [])
+
+    assert_equal 3, usage.total_slots
+    assert_equal [ 1, 2, 3 ], usage.slots.map(&:number)
+    assert_equal [ 240, 240, 120 ], usage.slots.map(&:duration_minutes)
+  end
+
+  test "a fractional slot's overrun is judged against its own shortened duration" do
+    rule = ElectiveSlotRule.new(day_of_week: 4, slot_count: 2.5, slot_duration_minutes: 240)
+    short_slot_surgery = Surgery.new(scheduling_type: "elective", slot_number: 3, duration_hours: 3.0) # 180 min, over a 120 min slot
+
+    usage = ElectiveSlotUsage.new(
+      date: Date.new(2026, 3, 5),
+      rule: rule,
+      elective_surgeries: [ short_slot_surgery ],
+      emergency_surgeries: []
+    )
+
+    last_slot = usage.slots.last
+    assert_equal 120, last_slot.duration_minutes
+    assert last_slot.overrun?
+    assert_equal 60, last_slot.overrun_minutes
+    assert_includes usage.warnings, "Slot 3 is booked 60 min past its 120 min limit."
+  end
+
+  test "a surgery pointing past a fractional day's total_slots is unscheduled" do
+    rule = ElectiveSlotRule.new(day_of_week: 4, slot_count: 2.5, slot_duration_minutes: 240)
+    out_of_range = Surgery.new(scheduling_type: "elective", slot_number: 4, duration_hours: 1.0)
+
+    usage = ElectiveSlotUsage.new(date: Date.new(2026, 3, 5), rule: rule, elective_surgeries: [ out_of_range ], emergency_surgeries: [])
+
+    assert_equal [ out_of_range ], usage.unscheduled_surgeries
+  end
+
+  test "remaining_slots for a fractional slot_count is based on total_slots" do
+    rule = ElectiveSlotRule.new(day_of_week: 4, slot_count: 2.5, slot_duration_minutes: 240)
+    filled = Surgery.new(scheduling_type: "elective", slot_number: 1, duration_hours: 1.0)
+
+    usage = ElectiveSlotUsage.new(date: Date.new(2026, 3, 5), rule: rule, elective_surgeries: [ filled ], emergency_surgeries: [])
+
+    assert_equal 1, usage.used_slots
+    assert_equal 2, usage.remaining_slots
+  end
+
+  test "overrun_warning reports each slot's own limit when a fractional slot_count mixes durations" do
+    rule = ElectiveSlotRule.new(day_of_week: 4, slot_count: 2.5, slot_duration_minutes: 240)
+    slot2_over = Surgery.new(scheduling_type: "elective", slot_number: 2, duration_hours: 5.0)   # 300 min, over the 240 min slot
+    slot3_over = Surgery.new(scheduling_type: "elective", slot_number: 3, duration_hours: 3.0)   # 180 min, over the 120 min slot
+
+    usage = ElectiveSlotUsage.new(
+      date: Date.new(2026, 3, 5),
+      rule: rule,
+      elective_surgeries: [ slot2_over, slot3_over ],
+      emergency_surgeries: []
+    )
+
+    assert_includes usage.warnings, "Slot 2 is booked past its 240 min limit. Slot 3 is booked past its 120 min limit."
+  end
+
+  test "an integer slot_count behaves exactly as before (no regression)" do
+    usage = ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY]
+
+    assert_equal 3, usage.total_slots
+    assert_equal usage.total_slots, usage.slots.size
+    assert_equal [ 240, 240, 240 ], usage.slots.map(&:duration_minutes)
+  end
+
   test "used_slots counts slots holding at least one surgery, not surgeries" do
     usage = ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY]
 

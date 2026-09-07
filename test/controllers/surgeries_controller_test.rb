@@ -47,9 +47,28 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/No slot assigned/, @response.body) # surgeries(:six)
   end
 
+  test "index shows the day's whole number of slots (total_slots), not the raw fractional slot_count" do
+    ElectiveSlotRule.find_by(day_of_week: surgeries(:three).surgery_date.wday).update!(slot_count: 2.5, slot_duration_minutes: 240)
+
+    get surgeries_url
+    assert_response :success
+    assert_match(%r{Slot 1 / 3}, @response.body)
+    assert_no_match(/2\.5/, @response.body)
+  end
+
   test "should get new" do
     get new_surgery_url
     assert_response :success
+  end
+
+  test "new shows the day's whole number of slots (total_slots) in the configured-slots hint" do
+    ElectiveSlotRule.find_by(day_of_week: 2).update!(slot_count: 2.5, slot_duration_minutes: 240)
+
+    get new_surgery_url
+
+    assert_response :success
+    assert_match(/Tuesday: 3/, @response.body)
+    assert_no_match(/Tuesday: 2\.5/, @response.body)
   end
 
   test "new excludes discarded hospitalizations from the linked hospitalization dropdown" do
@@ -272,6 +291,17 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     get surgery_url(@surgery)
     assert_response :success
     assert_no_match(/Vernal Equinox Day/, @response.body)
+  end
+
+  test "show displays the day's whole number of slots (total_slots), not the raw fractional slot_count" do
+    surgery = surgeries(:three) # Tuesday, slot_number 1
+    ElectiveSlotRule.find_by(day_of_week: surgery.surgery_date.wday).update!(slot_count: 2.5, slot_duration_minutes: 240)
+
+    get surgery_url(surgery)
+
+    assert_response :success
+    assert_match(%r{Slot 1 of 3}, @response.body)
+    assert_no_match(/2\.5/, @response.body)
   end
 
   test "should get edit" do

@@ -91,22 +91,32 @@ class ElectiveSlotUsage
     effective_rule&.slot_count || 0
   end
 
+  # The number of slots the day actually has. A fractional slot_count (e.g.
+  # 2.5) still means 3 physical slots, the last one just shorter - always use
+  # this for anything that counts or iterates slots, never slot_count itself
+  # (a Range built from a fractional endpoint silently floors it in Ruby,
+  # dropping the short last slot).
+  def total_slots
+    effective_rule&.total_slots || 0
+  end
+
   def slot_duration_minutes
     effective_rule&.slot_duration_minutes
   end
 
   def capacity_minutes
-    effective_rule&.total_minutes || 0
+    effective_rule&.total_minutes&.round || 0
   end
 
   def slots
     @slots ||= begin
       by_number = elective_surgeries.group_by(&:slot_number)
-      (1..slot_count).map do |number|
+      durations = effective_rule&.slot_durations || []
+      (1..total_slots).map do |number|
         Slot.new(
           number: number,
           surgeries: by_number[number] || [],
-          duration_minutes: slot_duration_minutes
+          duration_minutes: durations[number - 1]
         )
       end
     end
@@ -115,7 +125,7 @@ class ElectiveSlotUsage
   # Elective surgeries that have no slot to sit in: either no slot number yet,
   # or one pointing past the slots the day actually has.
   def unscheduled_surgeries
-    @unscheduled_surgeries ||= elective_surgeries.reject { |surgery| (1..slot_count).cover?(surgery.slot_number) }
+    @unscheduled_surgeries ||= elective_surgeries.reject { |surgery| (1..total_slots).cover?(surgery.slot_number) }
   end
 
   def used_slots
@@ -123,7 +133,7 @@ class ElectiveSlotUsage
   end
 
   def remaining_slots
-    [ slot_count - used_slots, 0 ].max
+    [ total_slots - used_slots, 0 ].max
   end
 
   def used_minutes
@@ -171,13 +181,22 @@ class ElectiveSlotUsage
       end
     end
 
+    # A fractional slot_count can give slots different durations (the last
+    # one shortened), so a single overrun slot always states its own limit,
+    # and several overrunning slots only share one combined sentence when
+    # their limits actually match.
     def overrun_warning
       if overrunning_slots.one?
         slot = overrunning_slots.first
-        "Slot #{slot.number} is booked #{slot.overrun_minutes} min past its #{slot_duration_minutes} min limit."
+        "Slot #{slot.number} is booked #{slot.overrun_minutes} min past its #{slot.duration_minutes} min limit."
       else
-        numbers = overrunning_slots.map(&:number).join(", ")
-        "Slots #{numbers} are booked past their #{slot_duration_minutes} min limit."
+        durations = overrunning_slots.map(&:duration_minutes).uniq
+        if durations.one?
+          numbers = overrunning_slots.map(&:number).join(", ")
+          "Slots #{numbers} are booked past their #{durations.first} min limit."
+        else
+          overrunning_slots.map { |slot| "Slot #{slot.number} is booked past its #{slot.duration_minutes} min limit." }.join(" ")
+        end
       end
     end
 end

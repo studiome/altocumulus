@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_07_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_07_090001) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -49,7 +49,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_090000) do
   create_table "elective_slot_rules", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "day_of_week", null: false
-    t.integer "slot_count", null: false
+    t.decimal "slot_count", precision: 4, scale: 1
     t.integer "slot_duration_minutes", null: false
     t.datetime "updated_at", null: false
     t.index ["day_of_week"], name: "index_elective_slot_rules_on_day_of_week", unique: true
