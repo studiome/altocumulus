@@ -1,31 +1,31 @@
-<% content_for :title, "Audit Event" %>
+<% content_for :title, t(".title") %>
 
 <div class="app-page">
   <section class="app-page-header">
     <div class="app-page-header-body">
       <div>
-        <p class="app-page-kicker">Audit Log</p>
+        <p class="app-page-kicker"><%= t(".kicker") %></p>
         <h1 class="app-page-title"><%= @audit_event.record_label %></h1>
       </div>
-      <%= link_to "Back", audit_events_path, class: "btn btn-ghost" %>
+      <%= link_to t("common.back"), audit_events_path, class: "btn btn-ghost" %>
     </div>
   </section>
 
   <div class="app-panel p-6">
     <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div><dt class="text-sm text-base-content/60">Time</dt><dd class="font-medium"><%= @audit_event.created_at.strftime("%Y-%m-%d %H:%M:%S") %></dd></div>
-      <div><dt class="text-sm text-base-content/60">Record type</dt><dd class="font-medium"><%= @audit_event.auditable_type %></dd></div>
-      <div><dt class="text-sm text-base-content/60">Record ID</dt><dd class="font-mono"><%= @audit_event.auditable_id %></dd></div>
-      <div><dt class="text-sm text-base-content/60">Action</dt><dd><span class="badge badge-outline"><%= @audit_event.action %></span></dd></div>
-      <div><dt class="text-sm text-base-content/60">Operator</dt><dd class="font-medium"><%= @audit_event.user&.name || "-" %></dd></div>
-      <div><dt class="text-sm text-base-content/60">IP Address</dt><dd class="font-mono"><%= @audit_event.ip_address || "-" %></dd></div>
+      <div><dt class="text-sm text-base-content/60"><%= t("audit_events.labels.time") %></dt><dd class="font-medium"><%= l(@audit_event.created_at, format: :timestamp) %></dd></div>
+      <div><dt class="text-sm text-base-content/60"><%= t("audit_events.labels.record_type") %></dt><dd class="font-medium"><%= @audit_event.auditable_type %></dd></div>
+      <div><dt class="text-sm text-base-content/60"><%= t(".record_id_label") %></dt><dd class="font-mono"><%= @audit_event.auditable_id %></dd></div>
+      <div><dt class="text-sm text-base-content/60"><%= AuditEvent.human_attribute_name(:action) %></dt><dd><span class="badge badge-outline"><%= @audit_event.action %></span></dd></div>
+      <div><dt class="text-sm text-base-content/60"><%= t("audit_events.labels.operator") %></dt><dd class="font-medium"><%= @audit_event.user&.name || t("common.none") %></dd></div>
+      <div><dt class="text-sm text-base-content/60"><%= t(".ip_address_label") %></dt><dd class="font-mono"><%= @audit_event.ip_address || t("common.none") %></dd></div>
     </dl>
   </div>
 
   <div class="app-panel overflow-hidden">
     <div class="overflow-x-auto">
       <table class="table table-zebra w-full">
-        <thead><tr><th class="bg-base-200">Field</th><th class="bg-base-200">Before</th><th class="bg-base-200">After</th></tr></thead>
+        <thead><tr><th class="bg-base-200"><%= t("common.field_header") %></th><th class="bg-base-200"><%= t("common.before_header") %></th><th class="bg-base-200"><%= t("common.after_header") %></th></tr></thead>
         <tbody>
           <% change_rows = audit_change_rows(@audit_event) %>
           <% if change_rows.any? %>
@@ -37,7 +37,7 @@
               </tr>
             <% end %>
           <% else %>
-            <tr><td colspan="3" class="text-center py-10 text-base-content/50 italic">No attribute changes recorded.</td></tr>
+            <tr><td colspan="3" class="text-center py-10 text-base-content/50 italic"><%= t(".no_changes") %></td></tr>
           <% end %>
         </tbody>
       </table>
