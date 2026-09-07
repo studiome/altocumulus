@@ -13,3 +13,7 @@ two_updated_diagnosis:
 three_appendicitis:
   hospitalization: three
   diagnosis: appendicitis
+
+four_fracture:
+  hospitalization: four
+  diagnosis: fracture

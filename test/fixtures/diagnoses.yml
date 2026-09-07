@@ -12,3 +12,10 @@ updated_diagnosis:
 
 hypertension:
   name: "Hypertension"
+
+# Kept deliberately unlinked from any patient/hospitalization fixture so
+# diagnoses_controller_test.rb's destroy test has a diagnosis it can actually
+# delete (every other diagnosis fixture is now in use, including :fracture
+# since hospitalization_diagnoses.yml's `four_fracture` linked it).
+asthma:
+  name: "Asthma"

@@ -2,7 +2,7 @@ require "test_helper"
 
 class PatientTest < ActiveSupport::TestCase
   test "should be valid" do
-    patient = Patient.new(hospital_id: "H003", name: "Alice Brown", date_of_birth: "1975-10-20")
+    patient = Patient.new(hospital_id: "H004", name: "Alice Brown", date_of_birth: "1975-10-20")
     assert patient.valid?
   end
 

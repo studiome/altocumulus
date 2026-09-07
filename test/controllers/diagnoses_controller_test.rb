@@ -84,7 +84,7 @@ class DiagnosesControllerTest < ActionDispatch::IntegrationTest
 
   test "should destroy diagnosis" do
     assert_difference("Diagnosis.count", -1) do
-      delete diagnosis_url(diagnoses(:fracture))
+      delete diagnosis_url(diagnoses(:asthma))
     end
 
     assert_redirected_to diagnoses_url

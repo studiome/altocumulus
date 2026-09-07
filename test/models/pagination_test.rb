@@ -68,16 +68,18 @@ class PaginationTest < ActiveSupport::TestCase
   end
 
   test "first_page? last_page? previous_page next_page" do
+    last_page = Patient.count
+
     pagination = Pagination.new(Patient.order(:hospital_id), page: 1, per_page: 1)
     assert pagination.first_page?
     refute pagination.last_page?
     assert_nil pagination.previous_page
     assert_equal 2, pagination.next_page
 
-    pagination = Pagination.new(Patient.order(:hospital_id), page: 2, per_page: 1)
+    pagination = Pagination.new(Patient.order(:hospital_id), page: last_page, per_page: 1)
     refute pagination.first_page?
     assert pagination.last_page?
-    assert_equal 1, pagination.previous_page
+    assert_equal last_page - 1, pagination.previous_page
     assert_nil pagination.next_page
   end
 

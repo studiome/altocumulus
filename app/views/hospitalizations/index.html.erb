@@ -59,7 +59,7 @@
             <th class="bg-base-200">Diagnoses</th>
             <th class="bg-base-200">Admission Date</th>
             <th class="bg-base-200">Discharge Date</th>
-            <th class="bg-base-200">LOS</th>
+            <th class="bg-base-200">Length of Stay</th>
             <th class="bg-base-200">Planned Days</th>
             <th class="bg-base-200">Reason</th>
             <th class="bg-base-200">Preferred Room</th>
@@ -95,7 +95,7 @@
                   <% end %>
                 </td>
                 <td class="font-mono"><%= hospitalization.discharge_date&.strftime("%Y-%m-%d") || "-" %></td>
-                <td><%= hospitalization.length_of_stay.present? ? "#{hospitalization.length_of_stay} days" : "-" %></td>
+                <td class="whitespace-nowrap"><%= length_of_stay_display(hospitalization) %></td>
                 <td><%= hospitalization.planned_days.present? ? "#{hospitalization.planned_days} days" : "-" %></td>
                 <td><%= hospitalization.reason %></td>
                 <td><%= hospitalization.room_preference.presence || "-" %></td>

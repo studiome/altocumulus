@@ -9,4 +9,5 @@ json.diagnosis_names hospitalization.hospitalization_diagnoses.map(&:diagnosis_n
 json.effective_admission_date hospitalization.effective_admission_date
 json.status_label hospitalization.status_label
 json.length_of_stay hospitalization.length_of_stay
+json.days_since_admission hospitalization.days_since_admission
 json.url hospitalization_url(hospitalization, format: :json)

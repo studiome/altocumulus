@@ -108,6 +108,38 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Unconfirmed|Confirmed/, @response.body)
   end
 
+  test "index spells out Length of Stay instead of the LOS abbreviation" do
+    get hospitalizations_url
+    assert_response :success
+
+    headers = Nokogiri::HTML(@response.body).css("thead th").map { |th| th.text.strip }
+    assert_includes headers, "Length of Stay"
+    assert_not_includes headers, "LOS"
+  end
+
+  test "index shows the finalized length of stay for a discharged hospitalization" do
+    get hospitalizations_url
+    assert_response :success
+
+    assert_equal "6 days", length_of_stay_cell_for(@response.body, hospitalizations(:one).reason)
+  end
+
+  test "index shows the running day count for a hospitalization still admitted" do
+    travel_to Date.new(2026, 6, 4) do
+      get hospitalizations_url
+      assert_response :success
+
+      assert_equal "Day 4 (ongoing)", length_of_stay_cell_for(@response.body, hospitalizations(:three).reason)
+    end
+  end
+
+  test "index shows a dash for a reservation that has not been admitted yet" do
+    get hospitalizations_url
+    assert_response :success
+
+    assert_equal "-", length_of_stay_cell_for(@response.body, hospitalizations(:four).reason)
+  end
+
   test "index orders reservation-only hospitalizations by scheduled_admission_date" do
     reservation = Hospitalization.create!(
       patient: patients(:two),
@@ -180,6 +212,29 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   test "should show hospitalization" do
     get hospitalization_url(@hospitalization)
     assert_response :success
+  end
+
+  test "show displays the finalized length of stay for a discharged hospitalization" do
+    get hospitalization_url(@hospitalization)
+    assert_response :success
+
+    assert_equal "6 days", length_of_stay_field(@response.body)
+  end
+
+  test "show displays the running day count for a hospitalization still admitted" do
+    travel_to Date.new(2026, 6, 4) do
+      get hospitalization_url(hospitalizations(:three))
+      assert_response :success
+
+      assert_equal "Day 4 (ongoing)", length_of_stay_field(@response.body)
+    end
+  end
+
+  test "show displays a dash for a reservation that has not been admitted yet" do
+    get hospitalization_url(hospitalizations(:four))
+    assert_response :success
+
+    assert_equal "-", length_of_stay_field(@response.body)
   end
 
   test "should get edit" do
@@ -603,6 +658,27 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+    # Reads the Length of Stay column from the index table for the row whose
+    # Reason cell matches `reason`. Looks up the column by the header's text
+    # rather than a hardcoded position, so reordering the table's columns
+    # doesn't silently break this helper.
+    def length_of_stay_cell_for(html, reason)
+      doc = Nokogiri::HTML(html)
+      headers = doc.css("table thead th").map { |th| th.text.strip }
+      column_index = headers.index("Length of Stay")
+
+      row = doc.css("table tbody tr").find { |tr| tr.css("td").any? { |td| td.text.strip == reason } }
+      row.css("td")[column_index].text.strip
+    end
+
+    # Reads the Length of Stay value from the show page's field grid, found
+    # by its label text rather than a hardcoded position in the markup.
+    def length_of_stay_field(html)
+      doc = Nokogiri::HTML(html)
+      label = doc.css("span").find { |span| span.text.strip == "Length of Stay" }
+      label.parent.css("span:last-child").text.strip
+    end
 
     def count_sql_queries
       count = 0
