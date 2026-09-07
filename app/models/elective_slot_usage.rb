@@ -159,9 +159,11 @@ class ElectiveSlotUsage
     messages = []
 
     if holiday? && elective_surgeries.any?
-      messages << "#{holiday.name} is a holiday: no elective slots are available."
+      messages << I18n.t("models.elective_slot_usage.warnings.holiday", holiday_name: holiday.name)
     elsif !configured? && elective_surgeries.any?
-      messages << "No elective slots are configured for #{date.strftime('%A')}."
+      # I18n.l (not Date#strftime directly) so %A resolves through the
+      # current locale's date.day_names rather than always English.
+      messages << I18n.t("models.elective_slot_usage.warnings.not_configured", day: I18n.l(date, format: "%A"))
     end
 
     # On a holiday, or a weekday with no slot rule configured at all, the
@@ -177,11 +179,7 @@ class ElectiveSlotUsage
   private
 
     def unscheduled_warning
-      if over_capacity_count == 1
-        "1 elective surgery is not assigned to an available slot."
-      else
-        "#{over_capacity_count} elective surgeries are not assigned to an available slot."
-      end
+      I18n.t("models.elective_slot_usage.warnings.unscheduled", count: over_capacity_count)
     end
 
     # A fractional slot_count can give slots different durations (the last
@@ -191,14 +189,17 @@ class ElectiveSlotUsage
     def overrun_warning
       if overrunning_slots.one?
         slot = overrunning_slots.first
-        "Slot #{slot.number} is booked #{slot.overrun_minutes} min past its #{slot.duration_minutes} min limit."
+        I18n.t("models.elective_slot_usage.warnings.overrun.single",
+               number: slot.number, overrun: slot.overrun_minutes, limit: slot.duration_minutes)
       else
         durations = overrunning_slots.map(&:duration_minutes).uniq
         if durations.one?
           numbers = overrunning_slots.map(&:number).join(", ")
-          "Slots #{numbers} are booked past their #{durations.first} min limit."
+          I18n.t("models.elective_slot_usage.warnings.overrun.same_limit", numbers: numbers, limit: durations.first)
         else
-          overrunning_slots.map { |slot| "Slot #{slot.number} is booked past its #{slot.duration_minutes} min limit." }.join(" ")
+          overrunning_slots.map { |slot|
+            I18n.t("models.elective_slot_usage.warnings.overrun.item", number: slot.number, limit: slot.duration_minutes)
+          }.join(" ")
         end
       end
     end

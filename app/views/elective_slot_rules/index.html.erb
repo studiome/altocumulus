@@ -21,7 +21,7 @@
           </tr>
         </thead>
         <tbody>
-          <% ElectiveSlotRule::DAY_NAMES.each_with_index do |day_name, day_of_week| %>
+          <% ElectiveSlotRule.day_names.each_with_index do |day_name, day_of_week| %>
             <% rule = @elective_slot_rules[day_of_week] %>
             <tr class="row-hover">
               <td class="font-semibold"><%= day_name %></td>
