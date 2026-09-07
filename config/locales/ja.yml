@@ -601,6 +601,7 @@ ja:
       hospital_id_placeholder: "例: H12345"
       name_label: "患者氏名"
       name_placeholder: "例: 山田太郎"
+      name_kana_placeholder: "例: ヤマダ タロウ"
       telephone_placeholder: "例: 03-1234-5678"
       clinical_info_placeholder: "例: アレルギー、既往歴など"
     labels:
@@ -985,3 +986,75 @@ ja:
       page_of: "%{page} / %{total} ページ"
     diagnosis_modal:
       loading: "読み込み中..."
+
+  # Stage 3 group 4b. See en.yml for the design notes.
+  operations_calendar:
+    index:
+      title: "運用カレンダー"
+      kicker: "手術"
+      days_count:
+        other: "%{count}日"
+      start_label: "開始"
+      days_label: "日数"
+      apply_submit: "適用"
+      today_link: "今日"
+      undated_surgeries_heading: "日程未定の手術"
+      outside_regular_days_heading: "通常の手術日以外の手術"
+      alert: "指定された日付範囲が正しくありません。既定の範囲を表示します。"
+    day:
+      closed_badge: "休診: %{name}"
+      note_badge: "メモ"
+      congestion_badge: "混雑"
+      admissions_label: "入院数:"
+      slots_summary: "%{used} / %{total}枠"
+      minutes_summary: "(%{used} / %{capacity}分)"
+      no_slots_holiday: "手術枠なし(休日)"
+      no_slots_configured: "手術枠未設定"
+      no_surgeries: "手術の予定はありません"
+    summary_list:
+      undated: "日程未定"
+    labels:
+      unknown_patient_name: "患者 #%{id}"
+      empty_list: "なし"
+
+  dashboard:
+    index:
+      title: "ダッシュボード"
+      kicker: "概要"
+      year_label: "年"
+      all_time_option: "全期間"
+      view_submit: "表示"
+      total_patients_stat: "総患者数"
+      current_inpatients_stat: "現在の入院患者数"
+      surgeries_stat: "手術件数"
+      hospitalizations_stat: "入院件数"
+      average_length_of_stay_stat: "平均入院日数"
+      average_length_of_stay_value: "%{days}日"
+      monthly_surgeries_heading: "月別手術件数"
+      monthly_hospitalizations_heading: "月別入院件数"
+      top_procedures_heading: "上位術式"
+      top_diagnoses_heading: "入院時の上位診断名"
+      anesthesia_breakdown_heading: "麻酔方法別内訳"
+      scheduling_type_breakdown_heading: "予定区分別内訳"
+      outcome_breakdown_heading: "転帰別内訳"
+      no_data: "データがありません"
+
+  searches:
+    index:
+      title: "検索"
+      kicker: "横断検索"
+      keyword_label: "キーワード"
+      keyword_placeholder: "患者名、患者ID、入院理由など..."
+      empty_state: "上のキーワード欄に入力すると、患者・入院・手術を横断して検索できます。"
+      patients_heading: "患者"
+      hospitalizations_heading: "入院"
+      surgeries_heading: "手術"
+      see_all_patients: "患者の一覧をすべて見る"
+      see_all_hospitalizations: "入院の一覧をすべて見る"
+      see_all_surgeries: "手術の一覧をすべて見る"
+      no_matching_patients: "一致する患者がいません。"
+      no_matching_hospitalizations: "一致する入院がありません。"
+      no_matching_surgeries: "一致する手術がありません。"
+      no_reason: "(理由未登録)"
+      undated: "未定"
+      unknown_patient_name: "患者 #%{id}"

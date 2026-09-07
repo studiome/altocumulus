@@ -602,6 +602,9 @@ en:
       hospital_id_placeholder: "e.g. H12345"
       name_label: "Patient Name"
       name_placeholder: "e.g. John Doe"
+      # Left as a hard-coded Japanese string when group 2 externalized the
+      # rest of this form -- byte-identical to that original value.
+      name_kana_placeholder: "e.g. ジョン ドウ"
       telephone_placeholder: "e.g. 03-1234-5678"
       clinical_info_placeholder: "e.g. allergies, chronic conditions"
     # Shared across the index table header, the form field label, and the
@@ -1102,3 +1105,114 @@ en:
       page_of: "Page %{page} of %{total}"
     diagnosis_modal:
       loading: "Loading..."
+
+  # Stage 3 group 4b: Operations Calendar, Dashboard, and cross-Search
+  # screens, plus the layout's <title> fallback and the one leftover
+  # hard-coded placeholder in patients/_form.html.erb that group 2 missed.
+  # Follows the conventions established by groups 1-4a:
+  #
+  #   - `operations_calendar.index.kicker` and `.labels.unknown_patient_name`
+  #     are independent keys from `surgeries.index.kicker` /
+  #     `surgeries.labels.unknown_patient_name` despite carrying the same
+  #     English text and (for the kicker) the same Japanese translation --
+  #     same "no cross-resource sharing" rule earlier groups followed. The
+  #     summary-list headings (Waiting/Upcoming/Unconfirmed/Recently Updated/
+  #     Referred) are the one deliberate exception: they call
+  #     `Hospitalization.status_filter_options` directly (stage 2), the same
+  #     way the purpose-group headings already did, rather than adding a
+  #     second, redundant translation of the same status word.
+  #   - `operations_calendar.labels.unknown_patient_name` /
+  #     `.empty_list` are shared across `index` and the `_summary_list`
+  #     partial's own scope (two different lazy-lookup scopes rendering the
+  #     identical text), referenced with the full path from both, mirroring
+  #     `common.field_header`'s promotion in group 4a.
+  #   - The "Emergency" badge in `_day.html.erb` reuses
+  #     `Surgery.scheduling_type_options["emergency"]` (stage 2) rather than
+  #     a new key, same as the Surgery Schedule board in group 3b.
+  #   - `dashboard.index.view_submit` is deliberately its own key rather than
+  #     `common.view`: this button applies the year filter, and `common.view`
+  #     already means "view/show detail" (Japanese "詳細"), which reads wrong
+  #     on a filter-apply button.
+  #   - `dashboard.index.average_length_of_stay_value` interpolates
+  #     `%{days}` (not `%{count}`) because the value can be fractional
+  #     (an average) -- Rails' one/other pluralization is keyed off integer
+  #     `count` and would round or mis-select the plural form for a value
+  #     like 4.5.
+  #   - The layout's `<title>` fallback (shown only if a page never calls
+  #     `content_for :title`) now reuses `nav.app_name` instead of a second
+  #     hard-coded "Altocumulus" -- it is the app's own name either way, and
+  #     every current page already sets its own title so this never renders
+  #     in practice today.
+  operations_calendar:
+    index:
+      title: "Operations Calendar"
+      kicker: "Operations"
+      days_count:
+        one: "%{count} day"
+        other: "%{count} days"
+      start_label: "Start"
+      days_label: "Days"
+      apply_submit: "Apply"
+      today_link: "Today"
+      undated_surgeries_heading: "Undated Surgeries"
+      outside_regular_days_heading: "Outside Regular Surgery Days"
+      alert: "The requested date range was invalid. Showing the default range instead."
+    day:
+      closed_badge: "Closed: %{name}"
+      note_badge: "Note"
+      congestion_badge: "Congestion"
+      admissions_label: "Admissions:"
+      slots_summary: "%{used} / %{total} slots"
+      minutes_summary: "(%{used} / %{capacity} min)"
+      no_slots_holiday: "No elective slots (holiday)"
+      no_slots_configured: "No slots configured"
+      no_surgeries: "No surgeries scheduled"
+    summary_list:
+      undated: "Undated"
+    # Shared across `index` and the `_summary_list` partial (see design note
+    # above `shared:`).
+    labels:
+      unknown_patient_name: "Patient #%{id}"
+      empty_list: "None"
+
+  dashboard:
+    index:
+      title: "Dashboard"
+      kicker: "Overview"
+      year_label: "Year"
+      all_time_option: "All time"
+      view_submit: "View"
+      total_patients_stat: "Total Patients"
+      current_inpatients_stat: "Current Inpatients"
+      surgeries_stat: "Surgeries"
+      hospitalizations_stat: "Hospitalizations"
+      average_length_of_stay_stat: "Avg. Length of Stay"
+      average_length_of_stay_value: "%{days} days"
+      monthly_surgeries_heading: "Monthly Surgeries"
+      monthly_hospitalizations_heading: "Monthly Hospitalizations"
+      top_procedures_heading: "Top Procedures"
+      top_diagnoses_heading: "Top Diagnoses at Admission"
+      anesthesia_breakdown_heading: "Anesthesia Method Breakdown"
+      scheduling_type_breakdown_heading: "Scheduling Type Breakdown"
+      outcome_breakdown_heading: "Outcome Breakdown"
+      no_data: "No data"
+
+  searches:
+    index:
+      title: "Search"
+      kicker: "Cross-Search"
+      keyword_label: "Keyword"
+      keyword_placeholder: "Patient name, hospital ID, reason..."
+      empty_state: "Enter a keyword above to search across patients, hospitalizations, and surgeries."
+      patients_heading: "Patients"
+      hospitalizations_heading: "Hospitalizations"
+      surgeries_heading: "Surgeries"
+      see_all_patients: "See all in Patients"
+      see_all_hospitalizations: "See all in Hospitalizations"
+      see_all_surgeries: "See all in Surgeries"
+      no_matching_patients: "No matching patients."
+      no_matching_hospitalizations: "No matching hospitalizations."
+      no_matching_surgeries: "No matching surgeries."
+      no_reason: "(no reason)"
+      undated: "Undated"
+      unknown_patient_name: "Patient #%{id}"
