@@ -56,6 +56,7 @@ class LocaleI18nTest < ActionDispatch::IntegrationTest
 
     [
       root_url,
+      operations_calendar_url,
       patients_url,
       surgeries_url,
       hospitalizations_url,

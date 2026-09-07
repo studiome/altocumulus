@@ -90,6 +90,28 @@ class PatientsI18nTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "患者を編集"
   end
 
+  # Stage 3 group 4b: the name-kana field's placeholder was left as a
+  # hard-coded Japanese string when group 2 externalized the rest of this
+  # form (the name field right above it already used `t(".name_placeholder")`).
+  # The English value must stay byte-identical to that hard-coded string.
+  test "new form's name-kana placeholder is unchanged in English" do
+    sign_in_as(users(:member))
+
+    get new_patient_url
+
+    assert_response :success
+    assert_select "input[name=?][placeholder=?]", "patient[name_kana]", "e.g. ジョン ドウ"
+  end
+
+  test "new form's name-kana placeholder renders its own value in Japanese" do
+    sign_in_as(users(:japanese_member))
+
+    get new_patient_url
+
+    assert_response :success
+    assert_select "input[name=?][placeholder=?]", "patient[name_kana]", "例: ヤマダ タロウ"
+  end
+
   test "create flash notice renders in Japanese" do
     sign_in_as(users(:japanese_member))
 
