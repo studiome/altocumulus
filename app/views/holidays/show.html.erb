@@ -1,4 +1,4 @@
-<% content_for :title, "Holiday Details" %>
+<% content_for :title, t(".title") %>
 
 <div class="max-w-2xl mx-auto w-full">
 
@@ -6,46 +6,46 @@
     <%= link_to holidays_path, class: "btn btn-circle btn-ghost" do %>
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
     <% end %>
-    <h1 class="font-bold text-4xl">Holiday Details</h1>
+    <h1 class="font-bold text-4xl"><%= t(".title") %></h1>
   </div>
 
   <div class="card bg-base-100 shadow-xl border border-base-200">
     <div class="card-body">
       <div class="flex justify-between items-start mb-6">
         <div>
-          <h2 class="card-title text-3xl mb-1 text-primary"><%= @holiday.name.presence || "(no name)" %></h2>
-          <p class="text-base-content/60 font-mono">Holiday Master</p>
+          <h2 class="card-title text-3xl mb-1 text-primary"><%= @holiday.name.presence || t(".unnamed") %></h2>
+          <p class="text-base-content/60 font-mono"><%= t(".subtitle") %></p>
         </div>
         <div class="flex flex-col items-end gap-2">
-          <div class="badge badge-secondary badge-lg p-4"><%= @holiday.date&.strftime("%Y-%m-%d") %></div>
+          <div class="badge badge-secondary badge-lg p-4"><%= @holiday.date && l(@holiday.date, format: :default) %></div>
           <% if @holiday.holiday? %>
-            <span class="badge badge-secondary">Closed</span>
+            <span class="badge badge-secondary"><%= t("holidays.status_badge.closed") %></span>
           <% else %>
-            <span class="badge badge-ghost">Note only</span>
+            <span class="badge badge-ghost"><%= t("holidays.status_badge.note_only") %></span>
           <% end %>
         </div>
       </div>
 
-      <div class="divider">Information</div>
+      <div class="divider"><%= t("common.information") %></div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Date</span>
-          <span class="text-lg font-medium"><%= @holiday.date&.strftime("%B %d, %Y (%A)") %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Holiday.human_attribute_name(:date) %></span>
+          <span class="text-lg font-medium"><%= @holiday.date && l(@holiday.date, format: :long_with_weekday) %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Name</span>
-          <span class="text-lg font-medium"><%= @holiday.name.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Holiday.human_attribute_name(:name) %></span>
+          <span class="text-lg font-medium"><%= @holiday.name.presence || t("common.none") %></span>
         </div>
         <div class="sm:col-span-2">
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Note</span>
-          <span class="text-lg font-medium whitespace-pre-line"><%= @holiday.note.presence || "-" %></span>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Holiday.human_attribute_name(:note) %></span>
+          <span class="text-lg font-medium whitespace-pre-line"><%= @holiday.note.presence || t("common.none") %></span>
         </div>
       </div>
 
       <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">
-        <%= link_to "Edit Holiday", edit_holiday_path(@holiday), class: "btn btn-secondary" %>
-        <%= button_to "Delete Holiday", @holiday, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: "Are you sure?" } %>
+        <%= link_to t(".edit_button"), edit_holiday_path(@holiday), class: "btn btn-secondary" %>
+        <%= button_to t(".delete_button"), @holiday, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: t("common.confirm_delete") } %>
       </div>
     </div>
   </div>

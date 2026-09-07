@@ -437,3 +437,43 @@ en:
       name_label: "Procedure Name"
       name_placeholder: "e.g. Laparoscopic cholecystectomy"
 
+  holidays:
+    index:
+      title: "Holidays"
+      new_button: "New Holiday"
+      year_filter_label: "Year"
+      all_years_option: "All"
+      type_header: "Type"
+      empty_no_filter: "No holidays found. Click \"New Holiday\" to get started."
+      empty_filtered: "No holidays match your search."
+    show:
+      title: "Holiday Details"
+      subtitle: "Holiday Master"
+      unnamed: "(no name)"
+      edit_button: "Edit Holiday"
+      delete_button: "Delete Holiday"
+    new:
+      title: "New Holiday"
+    edit:
+      title: "Edit Holiday"
+    create:
+      success_notice: "Holiday was successfully created."
+    update:
+      success_notice: "Holiday was successfully updated."
+    destroy:
+      success_notice: "Holiday was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this holiday from being saved:"
+        other: "%{count} errors prohibited this holiday from being saved:"
+      closed_checkbox_label: "Closed day (stops elective slots)"
+      closed_helper: "Uncheck to leave this as a note-only day: it is shown on the calendar but elective slots stay open."
+      name_label: "Holiday Name"
+      name_placeholder: "e.g. Vernal Equinox Day"
+      name_helper: "Required for a closed day. Optional for a note-only day."
+      note_placeholder: "e.g. Fire drill in the morning"
+    # Shared across index and show (see the design note above `common:`).
+    status_badge:
+      closed: "Closed"
+      note_only: "Note only"
+

@@ -471,3 +471,41 @@ ja:
       name_label: "術式名"
       name_placeholder: "例: 腹腔鏡下胆嚢摘出術"
 
+  holidays:
+    index:
+      title: "休日"
+      new_button: "新規休日"
+      year_filter_label: "年"
+      all_years_option: "すべて"
+      type_header: "種別"
+      empty_no_filter: "休日が登録されていません。「新規休日」から作成してください。"
+      empty_filtered: "条件に一致する休日がありません。"
+    show:
+      title: "休日の詳細"
+      subtitle: "休日マスタ"
+      unnamed: "(名称未設定)"
+      edit_button: "休日を編集"
+      delete_button: "休日を削除"
+    new:
+      title: "新規休日"
+    edit:
+      title: "休日を編集"
+    create:
+      success_notice: "休日を作成しました。"
+    update:
+      success_notice: "休日を更新しました。"
+    destroy:
+      success_notice: "休日を削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーによりこの休日を保存できませんでした:"
+      closed_checkbox_label: "休診日(手術枠を停止する)"
+      closed_helper: "チェックを外すとメモのみの日として扱われます。カレンダーには表示されますが、手術枠は開いたままになります。"
+      name_label: "休日名"
+      name_placeholder: "例: 春分の日"
+      name_helper: "休診日の場合は必須です。メモのみの日の場合は任意です。"
+      note_placeholder: "例: 午前中に避難訓練"
+    status_badge:
+      closed: "休診"
+      note_only: "メモのみ"
+

@@ -3,7 +3,7 @@
     <div role="alert" class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       <div>
-        <h3 class="font-bold"><%= pluralize(holiday.errors.count, "error") %> prohibited this holiday from being saved:</h3>
+        <h3 class="font-bold"><%= t(".errors_heading", count: holiday.errors.count) %></h3>
         <ul class="list-disc ml-6">
           <% holiday.errors.each do |error| %>
             <li><%= error.full_message %></li>
@@ -21,20 +21,20 @@
   <div class="app-field">
     <label class="label cursor-pointer justify-start gap-2 py-0">
       <%= form.check_box :holiday, class: "checkbox checkbox-primary" %>
-      <span class="app-field-label mb-0">Closed day (stops elective slots)</span>
+      <span class="app-field-label mb-0"><%= t(".closed_checkbox_label") %></span>
     </label>
-    <p class="app-helper">Uncheck to leave this as a note-only day: it is shown on the calendar but elective slots stay open.</p>
+    <p class="app-helper"><%= t(".closed_helper") %></p>
   </div>
 
   <div class="app-field">
-    <%= form.label :name, "Holiday Name", class: "app-field-label" %>
-    <%= form.text_field :name, class: "input w-full focus:input-primary", placeholder: "e.g. Vernal Equinox Day" %>
-    <p class="app-helper">Required for a closed day. Optional for a note-only day.</p>
+    <%= form.label :name, t(".name_label"), class: "app-field-label" %>
+    <%= form.text_field :name, class: "input w-full focus:input-primary", placeholder: t(".name_placeholder") %>
+    <p class="app-helper"><%= t(".name_helper") %></p>
   </div>
 
   <div class="app-field">
     <%= form.label :note, class: "app-field-label" %>
-    <%= form.text_area :note, class: "textarea w-full focus:textarea-primary", rows: 3, placeholder: "e.g. Fire drill in the morning" %>
+    <%= form.text_area :note, class: "textarea w-full focus:textarea-primary", rows: 3, placeholder: t(".note_placeholder") %>
   </div>
 
   <div class="pt-4">
