@@ -24,7 +24,10 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Number of Slots</span>
-          <span class="text-lg font-medium"><%= @elective_slot_rule.slot_count %></span>
+          <span class="text-lg font-medium"><%= @elective_slot_rule.slot_count_display %></span>
+          <% if @elective_slot_rule.total_slots.to_s != @elective_slot_rule.slot_count_display %>
+            <p class="app-helper">A fractional value means the last of <%= @elective_slot_rule.total_slots %> slots is shortened.</p>
+          <% end %>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Slot Duration</span>
@@ -32,7 +35,7 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Total Capacity</span>
-          <span class="text-lg font-medium"><%= @elective_slot_rule.total_minutes %> min</span>
+          <span class="text-lg font-medium"><%= @elective_slot_rule.total_minutes_display %> min</span>
         </div>
       </div>
 

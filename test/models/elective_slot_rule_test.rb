@@ -24,7 +24,7 @@ class ElectiveSlotRuleTest < ActiveSupport::TestCase
     assert_includes rule.errors[:day_of_week], "has already been taken"
   end
 
-  test "slot_count must be a positive integer" do
+  test "slot_count must be greater than zero" do
     rule = elective_slot_rules(:tuesday)
 
     rule.slot_count = 0
@@ -32,9 +32,16 @@ class ElectiveSlotRuleTest < ActiveSupport::TestCase
 
     rule.slot_count = -1
     assert_not rule.valid?
+  end
 
-    rule.slot_count = 1.5
-    assert_not rule.valid?
+  # A fractional slot_count means the day's last slot is shorter than the
+  # rest, e.g. 2.5 slots x 240 min = two full 240 min slots plus one 120 min
+  # slot. This is how the legacy "2.5 rooms" schedules are represented
+  # without hardcoding weekday-specific values anywhere.
+  test "slot_count accepts fractional values representing a short last slot" do
+    rule = elective_slot_rules(:tuesday)
+    rule.slot_count = 2.5
+    assert rule.valid?
   end
 
   test "slot_duration_minutes must be a positive integer" do
@@ -81,7 +88,49 @@ class ElectiveSlotRuleTest < ActiveSupport::TestCase
     assert_equal 720, elective_slot_rules(:tuesday).total_minutes
   end
 
+  test "total_minutes keeps the fractional slot_count uncollapsed" do
+    rule = ElectiveSlotRule.new(day_of_week: 0, slot_count: 2.5, slot_duration_minutes: 240)
+    assert_equal 600, rule.total_minutes
+  end
+
+  test "total_slots rounds a fractional slot_count up to the whole number of slots" do
+    assert_equal 3, elective_slot_rules(:tuesday).total_slots
+
+    rule = ElectiveSlotRule.new(day_of_week: 0, slot_count: 2.5, slot_duration_minutes: 240)
+    assert_equal 3, rule.total_slots
+  end
+
+  test "total_slots for a whole slot_count equals slot_count itself" do
+    rule = ElectiveSlotRule.new(day_of_week: 0, slot_count: 3, slot_duration_minutes: 240)
+    assert_equal 3, rule.total_slots
+  end
+
+  # The heart of decision #3: the fractional remainder means the last slot of
+  # the day is shorter, not that there is a whole extra slot.
+  test "slot_durations gives every slot's own length, with only the last one shortened" do
+    rule = ElectiveSlotRule.new(day_of_week: 0, slot_count: 2.5, slot_duration_minutes: 240)
+    assert_equal [ 240, 240, 120 ], rule.slot_durations
+  end
+
+  test "slot_durations for a whole slot_count is uniform" do
+    assert_equal [ 240, 240, 240 ], elective_slot_rules(:tuesday).slot_durations
+  end
+
+  test "slot_count_display shows a whole slot_count without a trailing .0" do
+    assert_equal "3", elective_slot_rules(:tuesday).slot_count_display
+  end
+
+  test "slot_count_display shows a fractional slot_count as entered" do
+    rule = ElectiveSlotRule.new(day_of_week: 0, slot_count: 2.5, slot_duration_minutes: 240)
+    assert_equal "2.5", rule.slot_count_display
+  end
+
   test "to_s summarizes the rule" do
     assert_equal "Tuesday - 3 slots x 240 min", elective_slot_rules(:tuesday).to_s
+  end
+
+  test "to_s shows a fractional slot_count without a trailing .0 artifact" do
+    rule = ElectiveSlotRule.new(day_of_week: 1, slot_count: 2.5, slot_duration_minutes: 240)
+    assert_equal "Monday - 2.5 slots x 240 min", rule.to_s
   end
 end

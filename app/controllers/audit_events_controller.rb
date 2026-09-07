@@ -1,8 +1,9 @@
 class AuditEventsController < ApplicationController
   def index
-    scope = AuditEvent.filtered(**filter_params).recent_first
+    scope = AuditEvent.filtered(**filter_params).recent_first.includes(:user)
     @pagination = Pagination.new(scope, page: params[:page])
     @audit_events = @pagination.records
+    @operators = User.order(:name)
   end
 
   def show
@@ -15,7 +16,7 @@ class AuditEventsController < ApplicationController
     # routing action ("index"), and leaking it into query_parameters makes the
     # pagination links generate a URL for a non-existent audit_events#create.
     def filter_params
-      permitted = params.permit(:auditable_type, :audit_action)
-      { auditable_type: permitted[:auditable_type], action: permitted[:audit_action] }
+      permitted = params.permit(:auditable_type, :audit_action, :user_id)
+      { auditable_type: permitted[:auditable_type], action: permitted[:audit_action], user_id: permitted[:user_id] }
     end
 end

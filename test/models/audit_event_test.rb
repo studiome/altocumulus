@@ -45,6 +45,54 @@ class AuditEventTest < ActiveSupport::TestCase
     assert_equal "2026-03-01 - H001 - John Doe", event.record_label
   end
 
+  test "records the current user and ip address on create update and destroy" do
+    admin = users(:admin)
+    Current.user = admin
+    Current.ip_address = "203.0.113.5"
+
+    patient = Patient.create!(hospital_id: "H-OPERATOR", name: "Operator Patient", date_of_birth: Date.new(1990, 1, 1))
+    created = AuditEvent.find_by!(auditable_type: "Patient", auditable_id: patient.id, action: "create")
+    assert_equal admin, created.user
+    assert_equal "203.0.113.5", created.ip_address
+
+    patient.update!(name: "Operator Patient Updated")
+    updated = AuditEvent.find_by!(auditable_type: "Patient", auditable_id: patient.id, action: "update")
+    assert_equal admin, updated.user
+    assert_equal "203.0.113.5", updated.ip_address
+
+    patient.destroy!
+    destroyed = AuditEvent.find_by!(auditable_type: "Patient", auditable_id: patient.id, action: "destroy")
+    assert_equal admin, destroyed.user
+    assert_equal "203.0.113.5", destroyed.ip_address
+  ensure
+    Current.reset
+  end
+
+  test "records associated changes with the current user" do
+    Current.user = users(:admin)
+
+    surgery = surgeries(:two)
+    selection = surgery.surgery_procedure_selections.create!(
+      surgery_procedure: surgery_procedures(:appendectomy), laterality: "right"
+    )
+
+    event = latest_associated_event(surgery)
+    assert_equal users(:admin), event.user
+    assert_not_nil selection
+  ensure
+    Current.reset
+  end
+
+  test "records no operator when Current.user is not set (seed, console, background jobs)" do
+    Current.reset
+
+    patient = Patient.create!(hospital_id: "H-NOUSER", name: "No User Patient", date_of_birth: Date.new(1990, 1, 1))
+
+    event = AuditEvent.find_by!(auditable_type: "Patient", auditable_id: patient.id, action: "create")
+    assert_nil event.user_id
+    assert_nil event.user
+  end
+
   test "does not record update when only timestamps change" do
     patient = patients(:one)
 

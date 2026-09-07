@@ -19,8 +19,12 @@
       <label class="app-filter-label">Action</label>
       <%= f.select :audit_action, AuditEvent::ACTIONS, { include_blank: "All", selected: params[:audit_action] }, { class: "select select-sm" } %>
     </div>
+    <div class="app-filter-field">
+      <label class="app-filter-label">Operator</label>
+      <%= f.select :user_id, @operators.map { |user| [ user.name, user.id ] }, { include_blank: "All", selected: params[:user_id] }, { class: "select select-sm" } %>
+    </div>
     <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
-    <% if params[:auditable_type].present? || params[:audit_action].present? %>
+    <% if params.values_at(:auditable_type, :audit_action, :user_id).any?(&:present?) %>
       <%= link_to "Clear", audit_events_path, class: "btn btn-ghost btn-sm" %>
     <% end %>
   <% end %>
@@ -34,6 +38,7 @@
             <th class="bg-base-200">Record type</th>
             <th class="bg-base-200">Action</th>
             <th class="bg-base-200">Record</th>
+            <th class="bg-base-200">Operator</th>
             <th class="bg-base-200 text-right">Details</th>
           </tr>
         </thead>
@@ -45,11 +50,12 @@
                 <td><%= audit_event.auditable_type %></td>
                 <td><span class="badge badge-outline"><%= audit_event.action %></span></td>
                 <td class="font-semibold"><%= audit_event.record_label %></td>
+                <td><%= audit_event.user&.name || "-" %></td>
                 <td class="text-right"><%= link_to "View", audit_event, class: "btn btn-ghost btn-xs text-primary" %></td>
               </tr>
             <% end %>
           <% else %>
-            <tr><td colspan="5" class="text-center py-10 text-base-content/50 italic">No audit events found.</td></tr>
+            <tr><td colspan="6" class="text-center py-10 text-base-content/50 italic">No audit events found.</td></tr>
           <% end %>
         </tbody>
       </table>

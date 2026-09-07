@@ -1,0 +1,53 @@
+<%= form_with(model: user, url: user.new_record? ? admin_users_path : admin_user_path(user), class: "app-form") do |form| %>
+  <% if user.errors.any? %>
+    <div role="alert" class="alert alert-error mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <h3 class="font-bold"><%= pluralize(user.errors.count, "error") %> prohibited this user from being saved:</h3>
+        <ul class="list-disc ml-6">
+          <% user.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="app-field">
+    <%= form.label :name, class: "app-field-label" %>
+    <%= form.text_field :name, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :email, class: "app-field-label" %>
+    <%= form.email_field :email, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <% if user.new_record? %>
+    <div class="app-field">
+      <%= form.label :password, class: "app-field-label" %>
+      <%= form.password_field :password, class: "input w-full focus:input-primary", autocomplete: "new-password" %>
+    </div>
+
+    <div class="app-field">
+      <%= form.label :password_confirmation, class: "app-field-label" %>
+      <%= form.password_field :password_confirmation, class: "input w-full focus:input-primary", autocomplete: "new-password" %>
+    </div>
+  <% end %>
+
+  <div class="app-field">
+    <%= form.label :role, class: "app-field-label" %>
+    <%= form.select :role, User::ROLES, {}, class: "select w-full" %>
+  </div>
+
+  <div class="app-field">
+    <label class="app-field-label flex items-center gap-2">
+      <%= form.check_box :active, class: "checkbox" %>
+      Active
+    </label>
+  </div>
+
+  <div class="pt-4">
+    <%= form.submit class: "btn btn-primary w-full" %>
+  </div>
+<% end %>

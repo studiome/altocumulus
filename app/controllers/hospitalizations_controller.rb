@@ -1,12 +1,18 @@
 class HospitalizationsController < ApplicationController
-  before_action :set_hospitalization, only: %i[ show edit update destroy ]
+  # A hospitalization can accumulate many audit events over its lifetime; the
+  # detail page only needs enough of the recent trail to be useful, with a
+  # link out to the full audit log for anything older.
+  RECENT_AUDIT_EVENTS_LIMIT = 10
+
+  before_action :set_hospitalization, only: %i[ show edit update destroy confirm restore copy ]
   before_action :set_form_collections, only: %i[ new edit create update ]
+  before_action :require_admin, only: %i[ confirm restore copy deleted ]
 
   def index
     @diagnoses = Diagnosis.alphabetical
     scope = Hospitalization.includes(:patient, hospitalization_diagnoses: :diagnosis)
                             .filtered(**filter_params)
-                            .order(admission_date: :desc, created_at: :desc)
+                            .order(Arel.sql("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date) DESC"), created_at: :desc)
     @pagination = Pagination.new(scope, page: params[:page])
     @hospitalizations = @pagination.records
   end
@@ -15,10 +21,16 @@ class HospitalizationsController < ApplicationController
     @surgeries = @hospitalization.surgeries
                                  .includes(surgery_procedure_selections: :surgery_procedure)
                                  .order(surgery_date: :asc)
+    @audit_events = AuditEvent.where(auditable_type: "Hospitalization", auditable_id: @hospitalization.id)
+                               .includes(:user)
+                               .recent_first
+                               .limit(RECENT_AUDIT_EVENTS_LIMIT)
   end
 
   def new
-    @hospitalization = Hospitalization.new(patient_id: params[:patient_id])
+    @hospitalization = Hospitalization.new(
+      patient_id: params[:patient_id], scheduled_admission_date: params[:scheduled_admission_date]
+    )
     build_hospitalization_diagnoses
   end
 
@@ -55,11 +67,37 @@ class HospitalizationsController < ApplicationController
   end
 
   def destroy
-    @hospitalization.destroy!
+    @hospitalization.discard!
 
     respond_to do |format|
-      format.html { redirect_to hospitalizations_path, notice: "Hospitalization was successfully destroyed.", status: :see_other }
+      format.html { redirect_to hospitalizations_path, notice: "Hospitalization was successfully deleted.", status: :see_other }
       format.json { head :no_content }
+    end
+  end
+
+  def confirm
+    @hospitalization.update!(admin_status: "confirmed")
+    redirect_to @hospitalization, notice: "Hospitalization was confirmed."
+  end
+
+  def restore
+    @hospitalization.restore!
+    redirect_to @hospitalization, notice: "Hospitalization was restored."
+  end
+
+  def deleted
+    scope = Hospitalization.discarded.includes(:patient, hospitalization_diagnoses: :diagnosis).order(updated_at: :desc)
+    @pagination = Pagination.new(scope, page: params[:page])
+    @hospitalizations = @pagination.records
+  end
+
+  def copy
+    @copy = @hospitalization.rebook(scheduled_admission_date: params[:scheduled_admission_date])
+
+    if @copy.persisted?
+      redirect_to edit_hospitalization_path(@copy), notice: "Hospitalization was copied. Fill in the remaining details."
+    else
+      redirect_to @hospitalization, alert: "Could not copy: #{@copy.errors.full_messages.to_sentence}"
     end
   end
 
@@ -94,7 +132,9 @@ class HospitalizationsController < ApplicationController
 
     def hospitalization_params
       params.expect(hospitalization: [
-        :patient_id, :admission_date, :planned_days, :reason, :room_preference,
+        :patient_id, :admission_date, :scheduled_admission_date, :reservation_status, :purpose,
+        :planned_days, :reason, :room_preference, :ward, :referred_from, :adl,
+        :reservation_doctor, :attending_doctor, :submitted_on, :clinical_comment,
         :discharge_date, :outcome, :discharge_destination,
         { hospitalization_diagnoses_attributes: [ [ :id, :diagnosis_id, :_destroy ] ] }
       ])

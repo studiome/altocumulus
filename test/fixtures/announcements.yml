@@ -1,0 +1,9 @@
+published_one:
+  title: "Winter schedule notice"
+  body: "Elective surgery slots are reduced during the year-end closure."
+  published: true
+
+draft_one:
+  title: "Draft: new ward opening"
+  body: "Not ready to announce yet."
+  published: false

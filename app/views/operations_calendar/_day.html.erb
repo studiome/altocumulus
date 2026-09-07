@@ -1,0 +1,66 @@
+<%# One day row of the operations calendar. `oc-day` is a structural hook
+    used only by tests to count the rendered range, not for styling. %>
+<div class="app-panel oc-day">
+  <div class="app-panel-body space-y-3">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase text-base-content/40"><%= date.strftime("%A") %></p>
+        <%= link_to date.strftime("%Y-%m-%d"), new_hospitalization_path(scheduled_admission_date: date), class: "text-lg font-semibold app-inline-link" %>
+        <div class="flex flex-wrap gap-1 mt-1">
+          <% if usage.holiday? %>
+            <span class="badge badge-secondary badge-sm">Closed: <%= usage.holiday.name %></span>
+          <% elsif usage.holiday&.note.present? %>
+            <span class="badge badge-ghost badge-sm">Note</span>
+          <% end %>
+          <% if calendar.admission_warning?(date) %>
+            <span class="badge badge-warning badge-sm">Congestion</span>
+          <% end %>
+        </div>
+        <% if usage.holiday&.note.present? %>
+          <p class="text-sm text-base-content/60 italic mt-1"><%= usage.holiday.note %></p>
+        <% end %>
+      </div>
+
+      <div class="text-sm text-right space-y-1">
+        <div>
+          Admissions:
+          <span class="font-mono <%= "text-warning font-bold" if calendar.admission_warning?(date) %>">
+            <%= calendar.admission_count_for(date) %>
+          </span>
+        </div>
+        <div class="text-base-content/60">
+          <% if usage.configured? %>
+            <%= usage.used_slots %> / <%= usage.total_slots %> slots
+            (<%= usage.used_minutes %> / <%= usage.capacity_minutes %> min)
+          <% elsif usage.holiday? %>
+            No elective slots (holiday)
+          <% else %>
+            No slots configured
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <% usage.warnings.each do |warning| %>
+      <div role="alert" class="alert alert-warning py-1.5 text-xs"><span><%= warning %></span></div>
+    <% end %>
+
+    <% if usage.elective_surgeries.any? || usage.emergency_surgeries.any? %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <% usage.elective_surgeries.each do |surgery| %>
+          <div class="rounded border border-base-200 bg-base-100 p-2 text-sm">
+            <%= render "surgery_schedules/slot_surgery", surgery: surgery %>
+          </div>
+        <% end %>
+        <% usage.emergency_surgeries.each do |surgery| %>
+          <div class="rounded border border-error/40 bg-error/5 p-2 text-sm">
+            <span class="badge badge-error badge-xs mb-1">Emergency</span>
+            <%= render "surgery_schedules/slot_surgery", surgery: surgery %>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-base-content/40 italic text-sm">No surgeries scheduled</p>
+    <% end %>
+  </div>
+</div>

@@ -32,7 +32,9 @@
         <thead>
           <tr>
             <th class="bg-base-200">Date</th>
+            <th class="bg-base-200">Type</th>
             <th class="bg-base-200">Name</th>
+            <th class="bg-base-200">Note</th>
             <th class="bg-base-200 text-right">Actions</th>
           </tr>
         </thead>
@@ -41,7 +43,15 @@
             <% @holidays.each do |holiday| %>
               <tr class="row-hover">
                 <td class="font-mono font-medium"><%= holiday.date&.strftime("%Y-%m-%d") %></td>
+                <td>
+                  <% if holiday.holiday? %>
+                    <span class="badge badge-secondary badge-sm">Closed</span>
+                  <% else %>
+                    <span class="badge badge-ghost badge-sm">Note only</span>
+                  <% end %>
+                </td>
                 <td class="font-semibold"><%= holiday.name %></td>
+                <td class="text-base-content/60 max-w-xs truncate"><%= holiday.note %></td>
                 <td class="text-right flex justify-end gap-2">
                   <%= link_to "View", holiday, class: "btn btn-ghost btn-xs text-primary" %>
                   <%= link_to "Edit", edit_holiday_path(holiday), class: "btn btn-ghost btn-xs text-secondary" %>
@@ -51,7 +61,7 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="3" class="text-center py-10 text-base-content/50 italic">
+              <td colspan="5" class="text-center py-10 text-base-content/50 italic">
                 <% if params[:year].present? %>
                   No holidays match your search.
                 <% else %>

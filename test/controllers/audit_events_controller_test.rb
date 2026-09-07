@@ -73,6 +73,105 @@ class AuditEventsControllerTest < ActionDispatch::IntegrationTest
     assert_match patients(:one).name, response.body
   end
 
+  test "index displays the operator name" do
+    AuditEvent.create!(
+      auditable_type: "Patient", auditable_id: patients(:one).id, action: "update",
+      record_label: "Attributed edit", user: users(:admin)
+    )
+
+    get audit_events_url
+
+    assert_response :success
+    assert_match users(:admin).name, response.body
+  end
+
+  test "index filters by operator" do
+    AuditEvent.create!(
+      auditable_type: "Patient", auditable_id: patients(:one).id, action: "update",
+      record_label: "Admin edit", user: users(:admin)
+    )
+    AuditEvent.create!(
+      auditable_type: "Patient", auditable_id: patients(:one).id, action: "update",
+      record_label: "Member edit", user: users(:member)
+    )
+
+    get audit_events_url, params: { user_id: users(:member).id }
+
+    assert_response :success
+    assert_match "Member edit", response.body
+    assert_no_match "Admin edit", response.body
+  end
+
+  test "show renders change data as a human readable table without raw json" do
+    event = AuditEvent.create!(
+      auditable_type: "Patient",
+      auditable_id: patients(:one).id,
+      action: "update",
+      record_label: patients(:one).to_s,
+      change_data: { "date_of_birth" => [ "1990-01-01", "1991-02-03" ] }
+    )
+
+    get audit_event_url(event)
+
+    assert_response :success
+    assert_match "Date of birth", response.body
+    assert_match "1990-01-01", response.body
+    assert_match "1991-02-03", response.body
+    assert_no_match(/\{&quot;date_of_birth|\{"date_of_birth"/, response.body)
+  end
+
+  test "show resolves foreign key values to their referenced record's label" do
+    hospitalization = hospitalizations(:one)
+    event = AuditEvent.create!(
+      auditable_type: "Surgery",
+      auditable_id: surgeries(:one).id,
+      action: "update",
+      record_label: surgeries(:one).to_s,
+      change_data: { "hospitalization_id" => [ nil, hospitalization.id ] }
+    )
+
+    get audit_event_url(event)
+
+    assert_response :success
+    assert_match hospitalization.to_s, response.body
+  end
+
+  test "show resolves an associated surgery_procedure_selection's surgery_procedure_id to its name" do
+    surgery = surgeries(:one)
+    selection = surgery_procedure_selections(:one_appendectomy)
+    event = AuditEvent.create!(
+      auditable_type: "Surgery",
+      auditable_id: surgery.id,
+      action: "update",
+      record_label: surgery.to_s,
+      change_data: { "surgery_procedure_selection[#{selection.id}].surgery_procedure_id" => [ nil, selection.surgery_procedure_id ] }
+    )
+
+    get audit_event_url(event)
+
+    assert_response :success
+    assert_match selection.surgery_procedure.name, response.body
+    assert_no_match(/SurgeryProcedure:0x/, response.body)
+  end
+
+  test "show resolves an associated surgery_diagnosis_link's patient_diagnosis_id to its label" do
+    surgery = surgeries(:one)
+    link = surgery_diagnosis_links(:one_appendicitis)
+    event = AuditEvent.create!(
+      auditable_type: "Surgery",
+      auditable_id: surgery.id,
+      action: "update",
+      record_label: surgery.to_s,
+      change_data: { "surgery_diagnosis_link[#{link.id}].patient_diagnosis_id" => [ nil, link.patient_diagnosis_id ] }
+    )
+
+    get audit_event_url(event)
+
+    assert_response :success
+    assert_match link.patient_diagnosis.to_s, response.body
+    assert_no_match(/PatientDiagnosis:0x/, response.body)
+  end
+
   test "only read routes exist" do
     post audit_events_url
     assert_response :not_found

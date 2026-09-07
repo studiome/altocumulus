@@ -33,74 +33,140 @@
     </div>
   <% end %>
 
-  <div class="app-field">
-    <%= form.label :patient_id, "Patient", class: "app-field-label" %>
-    <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: "Select a patient" }, class: "select w-full focus:select-primary" %>
-  </div>
+  <section class="space-y-4">
+    <h2 class="text-lg font-bold text-primary">Patient & Schedule</h2>
 
-  <div class="space-y-4" data-controller="hospitalization-diagnosis-fields" data-hospitalization-diagnosis-fields-max-items-value="10" data-action="diagnosis:created@window->hospitalization-diagnosis-fields#addDiagnosisOption">
-    <div class="flex items-center justify-between gap-3">
-      <div>
-        <span class="app-field-label">Diagnoses at Admission</span>
-        <p class="app-helper">Add one or more diagnosis names for this hospitalization.</p>
+    <div class="app-field">
+      <%= form.label :patient_id, "Patient", class: "app-field-label" %>
+      <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: "Select a patient" }, class: "select w-full focus:select-primary" %>
+    </div>
+
+    <div class="app-field">
+      <%= form.label :reservation_status, "Reservation Status", class: "app-field-label" %>
+      <%= form.select :reservation_status, Hospitalization.reservation_status_form_options, {}, class: "select w-full focus:select-primary" %>
+    </div>
+
+    <div class="app-field">
+      <%= form.label :purpose, "Purpose", class: "app-field-label" %>
+      <%= form.select :purpose, Hospitalization.purpose_form_options, {}, class: "select w-full focus:select-primary" %>
+    </div>
+
+    <div class="app-field">
+      <%= form.label :scheduled_admission_date, "Scheduled Admission Date", class: "app-field-label" %>
+      <%= form.date_field :scheduled_admission_date, class: "input w-full focus:input-primary" %>
+      <p class="app-helper">Set this while the admission is still a reservation. Leave undecided if unknown.</p>
+    </div>
+
+    <div class="app-field">
+      <%= form.label :admission_date, "Admission Date (Actual)", class: "app-field-label" %>
+      <%= form.date_field :admission_date, class: "input w-full focus:input-primary" %>
+      <p class="app-helper">Either this or the scheduled admission date above must be set.</p>
+    </div>
+
+    <div class="app-field">
+      <%= form.label :discharge_date, "Discharge Date", class: "app-field-label" %>
+      <%= form.date_field :discharge_date, class: "input w-full focus:input-primary" %>
+    </div>
+
+    <div class="app-field">
+      <%= form.label :planned_days, "Planned Length of Stay (Days)", class: "app-field-label" %>
+      <%= form.number_field :planned_days, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 5" %>
+    </div>
+
+    <div class="app-field">
+      <%= form.label :submitted_on, "Submitted On", class: "app-field-label" %>
+      <%= form.date_field :submitted_on, class: "input w-full focus:input-primary" %>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="space-y-4">
+    <h2 class="text-lg font-bold text-primary">Admission & Surgery Details</h2>
+
+    <div class="space-y-4" data-controller="hospitalization-diagnosis-fields" data-hospitalization-diagnosis-fields-max-items-value="10" data-action="diagnosis:created@window->hospitalization-diagnosis-fields#addDiagnosisOption">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <span class="app-field-label">Diagnoses at Admission</span>
+          <p class="app-helper">Add one or more diagnosis names for this hospitalization.</p>
+        </div>
+        <%= link_to "New Diagnosis", new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_modal_frame" } %>
       </div>
-      <%= link_to "New Diagnosis", new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_modal_frame" } %>
+
+      <div class="space-y-3" data-hospitalization-diagnosis-fields-target="list">
+        <%= form.fields_for :hospitalization_diagnoses do |diagnosis_fields| %>
+          <%= render "hospitalization_diagnosis_fields", diagnosis_fields: diagnosis_fields, diagnosis_options: diagnoses %>
+        <% end %>
+      </div>
+
+      <template data-hospitalization-diagnosis-fields-target="template">
+        <%= form.fields_for :hospitalization_diagnoses, HospitalizationDiagnosis.new, child_index: "NEW_RECORD" do |diagnosis_fields| %>
+          <%= render "hospitalization_diagnosis_fields", diagnosis_fields: diagnosis_fields, diagnosis_options: diagnoses %>
+        <% end %>
+      </template>
+
+      <div class="flex items-center justify-between gap-3">
+        <span class="app-helper">If the right diagnosis is not listed, create a new one first.</span>
+        <button type="button" class="btn btn-outline btn-sm" data-hospitalization-diagnosis-fields-target="addButton" data-action="hospitalization-diagnosis-fields#add">Add Diagnosis</button>
+      </div>
     </div>
 
-    <div class="space-y-3" data-hospitalization-diagnosis-fields-target="list">
-      <%= form.fields_for :hospitalization_diagnoses do |diagnosis_fields| %>
-        <%= render "hospitalization_diagnosis_fields", diagnosis_fields: diagnosis_fields, diagnosis_options: diagnoses %>
-      <% end %>
+    <div class="app-field">
+      <%= form.label :reservation_doctor, "Reservation Doctor", class: "app-field-label" %>
+      <%= form.text_field :reservation_doctor, class: "input w-full focus:input-primary" %>
     </div>
 
-    <template data-hospitalization-diagnosis-fields-target="template">
-      <%= form.fields_for :hospitalization_diagnoses, HospitalizationDiagnosis.new, child_index: "NEW_RECORD" do |diagnosis_fields| %>
-        <%= render "hospitalization_diagnosis_fields", diagnosis_fields: diagnosis_fields, diagnosis_options: diagnoses %>
-      <% end %>
-    </template>
-
-    <div class="flex items-center justify-between gap-3">
-      <span class="app-helper">If the right diagnosis is not listed, create a new one first.</span>
-      <button type="button" class="btn btn-outline btn-sm" data-hospitalization-diagnosis-fields-target="addButton" data-action="hospitalization-diagnosis-fields#add">Add Diagnosis</button>
+    <div class="app-field">
+      <%= form.label :attending_doctor, "Attending Doctor", class: "app-field-label" %>
+      <%= form.text_field :attending_doctor, class: "input w-full focus:input-primary" %>
     </div>
-  </div>
 
-  <div class="app-field">
-    <%= form.label :admission_date, "Admission Date", class: "app-field-label" %>
-    <%= form.date_field :admission_date, class: "input w-full focus:input-primary" %>
-  </div>
+    <div class="app-field">
+      <%= form.label :ward, "Ward", class: "app-field-label" %>
+      <%= form.text_field :ward, class: "input w-full focus:input-primary" %>
+    </div>
 
-  <div class="app-field">
-    <%= form.label :planned_days, "Planned Length of Stay (Days)", class: "app-field-label" %>
-    <%= form.number_field :planned_days, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: "e.g. 5" %>
-  </div>
+    <div class="app-field">
+      <%= form.label :room_preference, "Preferred Room", class: "app-field-label" %>
+      <%= form.text_field :room_preference, class: "input w-full focus:input-primary", placeholder: "e.g. Private room" %>
+    </div>
 
-  <div class="app-field">
-    <%= form.label :reason, "Reason for Admission", class: "app-field-label" %>
-    <%= form.text_area :reason, class: "textarea w-full focus:textarea-primary", rows: 3 %>
-  </div>
+    <div class="app-field">
+      <%= form.label :referred_from, "Referred From", class: "app-field-label" %>
+      <%= form.text_field :referred_from, class: "input w-full focus:input-primary" %>
+    </div>
 
-  <div class="app-field">
-    <%= form.label :room_preference, "Preferred Room", class: "app-field-label" %>
-    <%= form.text_field :room_preference, class: "input w-full focus:input-primary", placeholder: "e.g. Private room" %>
-  </div>
+    <div class="app-field">
+      <%= form.label :adl, "ADL", class: "app-field-label" %>
+      <%= form.text_field :adl, class: "input w-full focus:input-primary" %>
+    </div>
 
-  <div class="divider">Discharge</div>
+    <div class="app-field">
+      <%= form.label :outcome, "Outcome", class: "app-field-label" %>
+      <%= form.select :outcome, Hospitalization.outcome_form_options, { include_blank: true }, class: "select w-full focus:select-primary" %>
+    </div>
 
-  <div class="app-field">
-    <%= form.label :discharge_date, "Discharge Date", class: "app-field-label" %>
-    <%= form.date_field :discharge_date, class: "input w-full focus:input-primary" %>
-  </div>
+    <div class="app-field">
+      <%= form.label :discharge_destination, "Discharge Destination", class: "app-field-label" %>
+      <%= form.select :discharge_destination, Hospitalization.discharge_destination_form_options, { include_blank: true }, class: "select w-full focus:select-primary" %>
+    </div>
+  </section>
 
-  <div class="app-field">
-    <%= form.label :outcome, "Outcome", class: "app-field-label" %>
-    <%= form.select :outcome, Hospitalization.outcome_form_options, { include_blank: true }, class: "select w-full focus:select-primary" %>
-  </div>
+  <div class="divider"></div>
 
-  <div class="app-field">
-    <%= form.label :discharge_destination, "Discharge Destination", class: "app-field-label" %>
-    <%= form.select :discharge_destination, Hospitalization.discharge_destination_form_options, { include_blank: true }, class: "select w-full focus:select-primary" %>
-  </div>
+  <section class="space-y-4">
+    <h2 class="text-lg font-bold text-primary">Comments</h2>
+
+    <div class="app-field">
+      <%= form.label :reason, "Reason for Admission", class: "app-field-label" %>
+      <%= form.text_area :reason, class: "textarea w-full focus:textarea-primary", rows: 3 %>
+    </div>
+
+    <div class="app-field">
+      <%= form.label :clinical_comment, "Clinical Comment", class: "app-field-label" %>
+      <%= form.text_area :clinical_comment, class: "textarea w-full focus:textarea-primary", rows: 3 %>
+    </div>
+  </section>
 
   <div class="pt-4">
     <%= form.submit class: "btn btn-primary w-full" %>

@@ -78,6 +78,17 @@ class SurgerySchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/No elective slots \(holiday\)/, @response.body)
   end
 
+  test "index shows a fractional slot_count as its whole number of slots, with a shortened last slot" do
+    ElectiveSlotRule.find_by(day_of_week: Date.new(2026, 3, 3).wday).update!(slot_count: 2.5, slot_duration_minutes: 240)
+
+    get surgery_schedule_url, params: { week_of: "2026-03-03" }
+
+    assert_response :success
+    assert_match(%r{/ 3 slots in use}, @response.body)
+    assert_match(/Slot 3/, @response.body)
+    assert_match(%r{0 / 120 min}, @response.body) # slot 3's own (shortened) duration, empty
+  end
+
   test "index links to the holidays page" do
     get surgery_schedule_url
     assert_response :success

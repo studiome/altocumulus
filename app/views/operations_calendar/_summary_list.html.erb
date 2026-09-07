@@ -1,0 +1,24 @@
+<%# Renders one summary card of hospitalizations: a title, a count, and a
+    short list of patient links. Shared by every Hospitalization-based
+    summary in the sidebar (Waiting/Upcoming/etc, and the purpose-based
+    groups) so adding a new one is a one-line call. %>
+<div class="app-panel">
+  <div class="app-panel-body space-y-2">
+    <div class="flex items-center justify-between">
+      <h3 class="font-bold"><%= title %></h3>
+      <span class="badge badge-neutral"><%= records.size %></span>
+    </div>
+    <% if records.any? %>
+      <ul class="space-y-1 text-sm">
+        <% records.each do |record| %>
+          <li class="flex items-center justify-between gap-2">
+            <%= link_to record.patient&.name || "Patient ##{record.patient_id}", hospitalization_path(record), class: "app-inline-link truncate" %>
+            <span class="text-base-content/50 whitespace-nowrap"><%= record.effective_admission_date&.strftime("%Y-%m-%d") || "Undated" %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-base-content/40 italic text-sm">None</p>
+    <% end %>
+  </div>
+</div>

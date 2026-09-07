@@ -2,7 +2,7 @@ require "test_helper"
 
 class PatientTest < ActiveSupport::TestCase
   test "should be valid" do
-    patient = Patient.new(hospital_id: "H003", name: "Alice Brown", date_of_birth: "1975-10-20")
+    patient = Patient.new(hospital_id: "H004", name: "Alice Brown", date_of_birth: "1975-10-20")
     assert patient.valid?
   end
 
@@ -49,5 +49,34 @@ class PatientTest < ActiveSupport::TestCase
 
   test "ordered scope orders by hospital_id" do
     assert_equal Patient.all.sort_by(&:hospital_id), Patient.ordered.to_a
+  end
+
+  test "age computes years from date_of_birth as of today" do
+    travel_to Date.new(2026, 9, 7) do
+      patient = Patient.new(hospital_id: "H100", name: "Ages", date_of_birth: Date.new(1980, 9, 6))
+      assert_equal 46, patient.age
+
+      patient.date_of_birth = Date.new(1980, 9, 7)
+      assert_equal 46, patient.age
+
+      patient.date_of_birth = Date.new(1980, 9, 8)
+      assert_equal 45, patient.age
+    end
+  end
+
+  test "age is nil when date_of_birth is blank" do
+    patient = Patient.new(hospital_id: "H101", name: "No DOB")
+    assert_nil patient.age
+  end
+
+  test "sex must be one of the allowed options but blank is allowed" do
+    patient = Patient.new(hospital_id: "H102", name: "Sex Test", date_of_birth: "1990-01-01")
+    assert patient.valid?
+
+    patient.sex = "not_a_real_option"
+    assert_not patient.valid?
+
+    patient.sex = "female"
+    assert patient.valid?
   end
 end

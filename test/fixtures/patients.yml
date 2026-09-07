@@ -7,3 +7,14 @@ two:
   hospital_id: "H002"
   name: "Jane Smith"
   date_of_birth: 1990-05-15
+
+# Dedicated to hospitalization fixture `four` (a reservation-only booking with
+# no admission yet). Patients :one and :two each already anchor an open-ended
+# hospitalization/reservation of their own (:three and, historically, various
+# ad-hoc reservations created in tests), and Hospitalization only allows one
+# open period per patient at a time -- so `four` needs its own patient to
+# avoid tripping the overlap validation against unrelated tests.
+three:
+  hospital_id: "H003"
+  name: "Taylor Reed"
+  date_of_birth: 1985-07-20

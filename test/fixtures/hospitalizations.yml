@@ -23,3 +23,10 @@ three:
   admission_date: 2026-06-01
   planned_days: 3
   reason: "Observation"
+
+four:
+  patient: three
+  scheduled_admission_date: 2026-10-01
+  planned_days: 4
+  reason: "Elective gallbladder removal"
+  room_preference: "Private room"

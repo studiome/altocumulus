@@ -12,10 +12,32 @@ class HolidayTest < ActiveSupport::TestCase
     assert_includes holiday.errors[:date], "can't be blank"
   end
 
-  test "should require name" do
-    holiday = Holiday.new(date: Date.new(2026, 5, 5))
+  test "should require name when holiday is true" do
+    holiday = Holiday.new(date: Date.new(2026, 5, 5), holiday: true)
     assert_not holiday.valid?
     assert_includes holiday.errors[:name], "can't be blank"
+  end
+
+  # Holiday doubles as a plain day-comment: `holiday: false` means the row
+  # exists only to carry a note, and such a day must not require a name.
+  test "does not require name when holiday is false and a note is present" do
+    holiday = Holiday.new(date: Date.new(2026, 5, 5), holiday: false, note: "Short-staffed today")
+    assert holiday.valid?
+  end
+
+  test "does not require a note when holiday is false and a name is present" do
+    holiday = Holiday.new(date: Date.new(2026, 5, 5), holiday: false, name: "Hospital anniversary")
+    assert holiday.valid?
+  end
+
+  test "rejects an empty record with no holiday flag, no name, and no note" do
+    holiday = Holiday.new(date: Date.new(2026, 5, 5), holiday: false)
+    assert_not holiday.valid?
+    assert_includes holiday.errors[:base], "must have a name or a note"
+  end
+
+  test "holiday defaults to true" do
+    assert Holiday.new.holiday
   end
 
   test "should reject a duplicate date" do
@@ -61,5 +83,10 @@ class HolidayTest < ActiveSupport::TestCase
   test "to_s renders the date and name" do
     holiday = holidays(:national_holiday)
     assert_equal "2026-03-10 Vernal Equinox Day", holiday.to_s
+  end
+
+  test "to_s falls back to the note when there is no name" do
+    holiday = Holiday.new(date: Date.new(2026, 5, 5), holiday: false, note: "Short-staffed today")
+    assert_equal "2026-05-05 Short-staffed today", holiday.to_s
   end
 end

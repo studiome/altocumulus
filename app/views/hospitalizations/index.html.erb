@@ -8,10 +8,15 @@
         <p class="app-page-kicker">Admissions</p>
         <h1 class="app-page-title">Hospitalizations</h1>
       </div>
-      <%= link_to new_hospitalization_path, class: "btn btn-primary" do %>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        New Hospitalization
-      <% end %>
+      <div class="flex items-center gap-2">
+        <% if admin? %>
+          <%= link_to "Deleted", deleted_hospitalizations_path, class: "btn btn-ghost" %>
+        <% end %>
+        <%= link_to new_hospitalization_path, class: "btn btn-primary" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+          New Hospitalization
+        <% end %>
+      </div>
     </div>
   </section>
 
@@ -26,7 +31,7 @@
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label">Status</label>
-      <%= f.select :status, [ [ "In Hospital", "in_hospital" ], [ "Discharged", "discharged" ] ], { include_blank: "All", selected: params[:status] }, { class: "select select-sm" } %>
+      <%= f.select :status, Hospitalization.status_filter_form_options, { include_blank: "All", selected: params[:status] }, { class: "select select-sm" } %>
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label">Admitted From</label>
@@ -48,10 +53,13 @@
         <thead>
           <tr>
             <th class="bg-base-200">Status</th>
+            <th class="bg-base-200">Reservation Status</th>
+            <th class="bg-base-200">Purpose</th>
+            <th class="bg-base-200">Admin Status</th>
             <th class="bg-base-200">Diagnoses</th>
             <th class="bg-base-200">Admission Date</th>
             <th class="bg-base-200">Discharge Date</th>
-            <th class="bg-base-200">LOS</th>
+            <th class="bg-base-200">Length of Stay</th>
             <th class="bg-base-200">Planned Days</th>
             <th class="bg-base-200">Reason</th>
             <th class="bg-base-200">Preferred Room</th>
@@ -69,10 +77,25 @@
                     <%= hospitalization.status_label %>
                   </span>
                 </td>
+                <td><%= Hospitalization::RESERVATION_STATUS_OPTIONS[hospitalization.reservation_status] %></td>
+                <td><%= Hospitalization::PURPOSE_OPTIONS[hospitalization.purpose] %></td>
+                <td>
+                  <span class="badge <%= hospitalization.admin_status == "confirmed" ? "badge-success" : "badge-ghost" %>">
+                    <%= Hospitalization::ADMIN_STATUS_OPTIONS[hospitalization.admin_status] %>
+                  </span>
+                </td>
                 <td><%= hospitalization.diagnosis_names_display %></td>
-                <td class="font-mono font-medium"><%= hospitalization.admission_date&.strftime("%Y-%m-%d") %></td>
+                <td class="font-mono font-medium">
+                  <% if hospitalization.admission_date.present? %>
+                    <%= hospitalization.admission_date.strftime("%Y-%m-%d") %>
+                  <% elsif hospitalization.scheduled_admission_date.present? %>
+                    <%= hospitalization.scheduled_admission_date.strftime("%Y-%m-%d") %> <span class="text-base-content/50 italic">(scheduled)</span>
+                  <% else %>
+                    -
+                  <% end %>
+                </td>
                 <td class="font-mono"><%= hospitalization.discharge_date&.strftime("%Y-%m-%d") || "-" %></td>
-                <td><%= hospitalization.length_of_stay.present? ? "#{hospitalization.length_of_stay} days" : "-" %></td>
+                <td class="whitespace-nowrap"><%= length_of_stay_display(hospitalization) %></td>
                 <td><%= hospitalization.planned_days.present? ? "#{hospitalization.planned_days} days" : "-" %></td>
                 <td><%= hospitalization.reason %></td>
                 <td><%= hospitalization.room_preference.presence || "-" %></td>
@@ -94,7 +117,7 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="11" class="text-center py-10 text-base-content/50 italic">
+              <td colspan="14" class="text-center py-10 text-base-content/50 italic">
                 <% if params.values_at(:keyword, :diagnosis_id, :status, :admitted_from, :admitted_to).any?(&:present?) %>
                   No hospitalizations match your search.
                 <% else %>

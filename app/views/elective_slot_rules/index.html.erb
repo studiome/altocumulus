@@ -26,7 +26,7 @@
             <tr class="row-hover">
               <td class="font-semibold"><%= day_name %></td>
               <% if rule %>
-                <td><%= rule.slot_count %></td>
+                <td><%= rule.slot_count_display %></td>
                 <td><%= rule.slot_duration_minutes %> min</td>
                 <td class="text-right flex justify-end gap-2">
                   <%= link_to "View", rule, class: "btn btn-ghost btn-xs text-primary" %>

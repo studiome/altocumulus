@@ -28,5 +28,15 @@ module Altocumulus
     # `datetime` columns are time-zone aware.
     config.active_record.time_zone_aware_types = [ :datetime ]
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # How long a signed-in session may go without activity before it is
+    # invalidated. Overridable per-environment via ENV so ops can tighten or
+    # relax this without a code change.
+    config.x.session_idle_timeout = (ENV["SESSION_IDLE_TIMEOUT_MINUTES"].presence || 10).to_i.minutes
+
+    # The operations calendar flags a day whose admission count exceeds this
+    # as a "congestion" warning. Display-only: it never blocks a save (see
+    # OperationsCalendar). Overridable per-environment via ENV.
+    config.x.admission_warning_threshold = (ENV["ADMISSION_WARNING_THRESHOLD"].presence || 5).to_i
   end
 end

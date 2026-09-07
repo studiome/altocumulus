@@ -40,8 +40,15 @@
       <label class="app-filter-label">Performed To</label>
       <%= f.date_field :performed_to, value: params[:performed_to], class: "input input-sm" %>
     </div>
+    <div class="app-filter-field">
+      <label class="app-filter-label">Undated</label>
+      <label class="label cursor-pointer justify-start gap-2 py-0">
+        <%= f.check_box :undated, { checked: ActiveModel::Type::Boolean.new.cast(params[:undated]), class: "checkbox checkbox-sm" }, "1", "0" %>
+        <span class="text-sm">Undated only</span>
+      </label>
+    </div>
     <%= f.submit "Search", class: "btn btn-primary btn-sm" %>
-    <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type).any?(&:present?) %>
+    <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type, :undated).any?(&:present?) %>
       <%= link_to "Clear", surgeries_path, class: "btn btn-ghost btn-sm" %>
     <% end %>
   <% end %>
@@ -68,7 +75,13 @@
             <% @surgeries.each do |surgery| %>
               <% slot_rule = @slot_rules[surgery.surgery_date&.wday] %>
               <tr class="row-hover">
-                <td class="font-mono font-medium"><%= surgery.surgery_date&.strftime("%Y-%m-%d") %></td>
+                <td class="font-mono font-medium">
+                  <% if surgery.surgery_date %>
+                    <%= surgery.surgery_date.strftime("%Y-%m-%d") %>
+                  <% else %>
+                    <span class="badge badge-ghost badge-sm">Undated</span>
+                  <% end %>
+                </td>
                 <td>
                   <span class="badge <%= surgery.emergency? ? "badge-error" : "badge-ghost" %>"><%= surgery.scheduling_type_label %></span>
                 </td>
@@ -78,7 +91,7 @@
                   <div class="font-semibold leading-snug"><%= surgery.display_procedure_name %></div>
                   <% if surgery.elective? %>
                     <% if surgery.slot_number %>
-                      <span class="badge badge-ghost badge-sm mt-1">Slot <%= surgery.slot_number %><% if slot_rule %> / <%= slot_rule.slot_count %><% end %></span>
+                      <span class="badge badge-ghost badge-sm mt-1">Slot <%= surgery.slot_number %><% if slot_rule %> / <%= slot_rule.total_slots %><% end %></span>
                     <% else %>
                       <span class="badge badge-warning badge-sm mt-1">No slot assigned</span>
                     <% end %>
@@ -111,7 +124,7 @@
           <% else %>
             <tr>
               <td colspan="10" class="text-center py-10 text-base-content/50 italic">
-                <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type).any?(&:present?) %>
+                <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type, :undated).any?(&:present?) %>
                   No surgeries match your search.
                 <% else %>
                   No surgeries found. Click "New Surgery" to get started.

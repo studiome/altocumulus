@@ -4,4 +4,8 @@ class SurgeryProcedure < ApplicationRecord
   validates :name, presence: true, uniqueness: true
 
   scope :alphabetical, -> { order(:name) }
+
+  def to_s
+    name
+  end
 end

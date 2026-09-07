@@ -26,4 +26,12 @@ class SurgeryProcedureTest < ActiveSupport::TestCase
     end
     assert procedure.errors[:base].any?
   end
+
+  # AuditEventsHelper#audit_change_value resolves a "*_id" attribute to
+  # `record.to_s` so the audit trail reads as a name instead of a raw id --
+  # without this, a surgery_procedure_selection change in the audit log
+  # renders as Ruby's default "#<SurgeryProcedure:0x...>" object inspection.
+  test "to_s renders the surgery procedure name" do
+    assert_equal "Appendectomy", surgery_procedures(:appendectomy).to_s
+  end
 end

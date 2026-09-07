@@ -47,9 +47,38 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/No slot assigned/, @response.body) # surgeries(:six)
   end
 
+  test "index shows the day's whole number of slots (total_slots), not the raw fractional slot_count" do
+    ElectiveSlotRule.find_by(day_of_week: surgeries(:three).surgery_date.wday).update!(slot_count: 2.5, slot_duration_minutes: 240)
+
+    get surgeries_url
+    assert_response :success
+    assert_match(%r{Slot 1 / 3}, @response.body)
+    assert_no_match(/2\.5/, @response.body)
+  end
+
   test "should get new" do
     get new_surgery_url
     assert_response :success
+  end
+
+  test "new shows the day's whole number of slots (total_slots) in the configured-slots hint" do
+    ElectiveSlotRule.find_by(day_of_week: 2).update!(slot_count: 2.5, slot_duration_minutes: 240)
+
+    get new_surgery_url
+
+    assert_response :success
+    assert_match(/Tuesday: 3/, @response.body)
+    assert_no_match(/Tuesday: 2\.5/, @response.body)
+  end
+
+  test "new excludes discarded hospitalizations from the linked hospitalization dropdown" do
+    hospitalizations(:one).discard!
+
+    get new_surgery_url
+
+    assert_response :success
+    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:one).id}']", count: 0
+    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:two).id}']", count: 1
   end
 
   test "should create surgery" do
@@ -72,6 +101,78 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Cholecystectomy", "Appendectomy" ], Surgery.last.procedure_names
     assert_equal [ "bilateral", "left" ], Surgery.last.surgery_procedure_selections.order(:id).pluck(:laterality)
     assert_equal "Bilateral Cholecystectomy、Left Appendectomy", Surgery.last.display_procedure_name
+  end
+
+  test "should create a surgery with an undecided surgery_date" do
+    assert_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        surgery_date: "",
+        surgery_date_status: "undecided",
+        anesthesia_method: "General",
+        duration_hours: 1.0,
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    assert_redirected_to surgery_url(Surgery.last)
+    assert_nil Surgery.last.surgery_date
+  end
+
+  test "rejects a surgery marked scheduled with a blank surgery_date" do
+    assert_no_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        surgery_date: "",
+        surgery_date_status: "scheduled",
+        anesthesia_method: "General",
+        duration_hours: 1.0,
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "should create a surgery with operator_name assistant_name and operation_order" do
+    assert_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        surgery_date: "2026-03-05",
+        operator_name: "Dr. A",
+        assistant_name: "Dr. B",
+        operation_order: 1,
+        anesthesia_method: "General",
+        duration_hours: 1.0,
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    surgery = Surgery.last
+    assert_equal "Dr. A", surgery.operator_name
+    assert_equal "Dr. B", surgery.assistant_name
+    assert_equal 1, surgery.operation_order
+  end
+
+  test "index filters by undated" do
+    Surgery.create!(
+      patient: patients(:one),
+      surgery_date: nil,
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+
+    get surgeries_url, params: { undated: "1" }
+
+    assert_response :success
+    assert_match(/Undated/, @response.body)
   end
 
   test "should create an emergency surgery on an unconfigured weekday at night" do
@@ -190,6 +291,28 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     get surgery_url(@surgery)
     assert_response :success
     assert_no_match(/Vernal Equinox Day/, @response.body)
+  end
+
+  test "show does not display a holiday badge for a comment-only day (holiday: false)" do
+    note_only = Holiday.create!(date: @surgery.surgery_date, holiday: false, note: "Fire drill today")
+
+    get surgery_url(@surgery)
+
+    assert_response :success
+    assert_select ".badge-secondary", count: 0
+  ensure
+    note_only&.destroy
+  end
+
+  test "show displays the day's whole number of slots (total_slots), not the raw fractional slot_count" do
+    surgery = surgeries(:three) # Tuesday, slot_number 1
+    ElectiveSlotRule.find_by(day_of_week: surgery.surgery_date.wday).update!(slot_count: 2.5, slot_duration_minutes: 240)
+
+    get surgery_url(surgery)
+
+    assert_response :success
+    assert_match(%r{Slot 1 of 3}, @response.body)
+    assert_no_match(/2\.5/, @response.body)
   end
 
   test "should get edit" do

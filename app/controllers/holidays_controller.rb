@@ -51,7 +51,7 @@ class HolidaysController < ApplicationController
     end
 
     def holiday_params
-      params.expect(holiday: [ :date, :name ])
+      params.expect(holiday: [ :date, :name, :note, :holiday ])
     end
 
     def filter_params

@@ -10,6 +10,16 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index.json excludes discarded hospitalizations" do
+    @hospitalization.discard!
+
+    get hospitalizations_url(format: :json)
+
+    assert_response :success
+    ids = JSON.parse(@response.body).map { |h| h["id"] }
+    assert_not_includes ids, @hospitalization.id
+  end
+
   test "index does not error out on a crafted Array page param" do
     get hospitalizations_url, params: { page: [ "1" ] }
     assert_response :success
@@ -34,9 +44,127 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index filters by status upcoming" do
+    patient = Patient.create!(hospital_id: "H910", name: "Future Patient", date_of_birth: "1980-01-01")
+    Hospitalization.create!(
+      patient: patient,
+      scheduled_admission_date: 30.days.from_now.to_date,
+      reason: "Upcoming filter target",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    get hospitalizations_url, params: { status: "upcoming" }
+
+    assert_response :success
+    assert_match(/Upcoming filter target/, @response.body)
+    assert_no_match(/Community-acquired pneumonia/, @response.body)
+  end
+
+  test "index filters by status waiting" do
+    @hospitalization.update!(reservation_status: "waiting")
+    hospitalizations(:two).update!(reservation_status: "admitted")
+
+    get hospitalizations_url, params: { status: "waiting" }
+
+    assert_response :success
+    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+    assert_no_match(/Post-surgical observation/, @response.body)
+  end
+
+  test "index filters by status unconfirmed" do
+    hospitalizations(:two).update!(admin_status: "confirmed")
+
+    get hospitalizations_url, params: { status: "unconfirmed" }
+
+    assert_response :success
+    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+    assert_no_match(/Post-surgical observation/, @response.body)
+  end
+
+  test "index filters by status recently_updated" do
+    hospitalizations(:two).update_column(:updated_at, 5.days.ago)
+
+    get hospitalizations_url, params: { status: "recently_updated" }
+
+    assert_response :success
+    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+    assert_no_match(/Post-surgical observation/, @response.body)
+  end
+
+  test "index filters by status referred" do
+    @hospitalization.update!(referred_from: "General Clinic")
+
+    get hospitalizations_url, params: { status: "referred" }
+
+    assert_response :success
+    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+    assert_no_match(/Post-surgical observation/, @response.body)
+  end
+
+  test "index shows reservation status, purpose, and admin confirmation state" do
+    get hospitalizations_url
+    assert_response :success
+    assert_match(/Requested|Waiting for Admission|Admission Date Fixed/, @response.body)
+    assert_match(/Unconfirmed|Confirmed/, @response.body)
+  end
+
+  test "index spells out Length of Stay instead of the LOS abbreviation" do
+    get hospitalizations_url
+    assert_response :success
+
+    headers = Nokogiri::HTML(@response.body).css("thead th").map { |th| th.text.strip }
+    assert_includes headers, "Length of Stay"
+    assert_not_includes headers, "LOS"
+  end
+
+  test "index shows the finalized length of stay for a discharged hospitalization" do
+    get hospitalizations_url
+    assert_response :success
+
+    assert_equal "6 days", length_of_stay_cell_for(@response.body, hospitalizations(:one).reason)
+  end
+
+  test "index shows the running day count for a hospitalization still admitted" do
+    travel_to Date.new(2026, 6, 4) do
+      get hospitalizations_url
+      assert_response :success
+
+      assert_equal "Day 4 (ongoing)", length_of_stay_cell_for(@response.body, hospitalizations(:three).reason)
+    end
+  end
+
+  test "index shows a dash for a reservation that has not been admitted yet" do
+    get hospitalizations_url
+    assert_response :success
+
+    assert_equal "-", length_of_stay_cell_for(@response.body, hospitalizations(:four).reason)
+  end
+
+  test "index orders reservation-only hospitalizations by scheduled_admission_date" do
+    reservation = Hospitalization.create!(
+      patient: patients(:two),
+      scheduled_admission_date: Date.new(2027, 1, 1),
+      reason: "Planned surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    get hospitalizations_url
+    assert_response :success
+
+    body_index = @response.body.index(reservation.reason)
+    other_index = @response.body.index(hospitalizations(:three).reason)
+    assert body_index < other_index, "expected the furthest-out scheduled hospitalization to sort first"
+  end
+
   test "should get new" do
     get new_hospitalization_url
     assert_response :success
+  end
+
+  test "new pre-fills the scheduled admission date from a query param" do
+    get new_hospitalization_url, params: { scheduled_admission_date: "2027-02-01" }
+    assert_response :success
+    assert_select "input#hospitalization_scheduled_admission_date[value='2027-02-01']"
   end
 
   test "new renders the diagnosis modal frame and turbo-frame New Diagnosis links" do
@@ -84,6 +212,29 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   test "should show hospitalization" do
     get hospitalization_url(@hospitalization)
     assert_response :success
+  end
+
+  test "show displays the finalized length of stay for a discharged hospitalization" do
+    get hospitalization_url(@hospitalization)
+    assert_response :success
+
+    assert_equal "6 days", length_of_stay_field(@response.body)
+  end
+
+  test "show displays the running day count for a hospitalization still admitted" do
+    travel_to Date.new(2026, 6, 4) do
+      get hospitalization_url(hospitalizations(:three))
+      assert_response :success
+
+      assert_equal "Day 4 (ongoing)", length_of_stay_field(@response.body)
+    end
+  end
+
+  test "show displays a dash for a reservation that has not been admitted yet" do
+    get hospitalization_url(hospitalizations(:four))
+    assert_response :success
+
+    assert_equal "-", length_of_stay_field(@response.body)
   end
 
   test "should get edit" do
@@ -207,11 +358,250 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should destroy hospitalization" do
-    assert_difference("Hospitalization.count", -1) do
+    # destroy is now a logical delete: the row survives, moves out of the
+    # default index/API scope, and shows up in the deleted list instead.
+    assert_no_difference("Hospitalization.count") do
       delete hospitalization_url(@hospitalization)
     end
 
     assert_redirected_to hospitalizations_url
+    assert @hospitalization.reload.deleted?
+
+    get hospitalizations_url
+    assert_no_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+
+    get deleted_hospitalizations_url
+    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
+  end
+
+  test "admin can restore a discarded hospitalization" do
+    @hospitalization.discard!
+
+    patch restore_hospitalization_url(@hospitalization)
+
+    assert_redirected_to hospitalization_url(@hospitalization)
+    assert_not @hospitalization.reload.deleted?
+  end
+
+  test "a general user cannot restore a discarded hospitalization" do
+    @hospitalization.discard!
+    sign_out
+    sign_in_as(users(:member))
+
+    patch restore_hospitalization_url(@hospitalization)
+
+    assert_redirected_to root_url
+    assert @hospitalization.reload.deleted?
+  end
+
+  test "a general user cannot view the deleted list" do
+    sign_out
+    sign_in_as(users(:member))
+
+    get deleted_hospitalizations_url
+
+    assert_redirected_to root_url
+  end
+
+  test "deleted list paginates results" do
+    @hospitalization.discard!
+
+    get deleted_hospitalizations_url, params: { page: 1 }
+
+    assert_response :success
+  end
+
+  test "deleted list does not error out on a crafted Array page param" do
+    @hospitalization.discard!
+
+    get deleted_hospitalizations_url, params: { page: [ "1" ] }
+
+    assert_response :success
+  end
+
+  test "deleted list shows the deletion time and a restore action" do
+    @hospitalization.discard!
+
+    get deleted_hospitalizations_url
+
+    assert_response :success
+    assert_match(/Restore/, @response.body)
+    assert_match(/#{@hospitalization.deleted_at.strftime("%Y-%m-%d")}/, @response.body)
+  end
+
+  test "admin can copy a hospitalization to a new scheduled admission date" do
+    hospitalization = hospitalizations(:two)
+
+    assert_difference("Hospitalization.count", 1) do
+      post copy_hospitalization_url(hospitalization), params: { scheduled_admission_date: "2027-02-01" }
+    end
+
+    copy = Hospitalization.order(:id).last
+    assert_redirected_to edit_hospitalization_url(copy)
+    assert_equal Date.new(2027, 2, 1), copy.scheduled_admission_date
+    assert_equal "requested", copy.reservation_status
+    assert_equal "unconfirmed", copy.admin_status
+  end
+
+  test "copy with a blank date does not save and redirects back to the original" do
+    hospitalization = hospitalizations(:two)
+
+    assert_no_difference("Hospitalization.count") do
+      post copy_hospitalization_url(hospitalization), params: { scheduled_admission_date: "" }
+    end
+
+    assert_redirected_to hospitalization_url(hospitalization)
+  end
+
+  test "a general user cannot copy a hospitalization" do
+    hospitalization = hospitalizations(:two)
+    sign_out
+    sign_in_as(users(:member))
+
+    assert_no_difference("Hospitalization.count") do
+      post copy_hospitalization_url(hospitalization), params: { scheduled_admission_date: "2027-02-01" }
+    end
+
+    assert_redirected_to root_url
+  end
+
+  test "discarding a hospitalization does not unlink its surgeries" do
+    surgery = Surgery.create!(
+      patient: patients(:one),
+      hospitalization: @hospitalization,
+      surgery_date: Date.new(2026, 3, 3),
+      anesthesia_method: "General",
+      duration_hours: 1.0,
+      surgery_procedure_selections_attributes: [
+        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+      ]
+    )
+
+    delete hospitalization_url(@hospitalization)
+
+    assert_equal @hospitalization.id, surgery.reload.hospitalization_id
+  end
+
+  test "a general user update resets admin_status to unconfirmed" do
+    @hospitalization.update!(admin_status: "confirmed")
+    sign_out
+    sign_in_as(users(:member))
+
+    patch hospitalization_url(@hospitalization), params: { hospitalization: {
+      patient_id: @hospitalization.patient_id,
+      admission_date: @hospitalization.admission_date,
+      reason: @hospitalization.reason
+    } }
+
+    assert_redirected_to hospitalization_url(@hospitalization)
+    assert_equal "unconfirmed", @hospitalization.reload.admin_status
+  end
+
+  test "an admin update does not reset admin_status" do
+    @hospitalization.update!(admin_status: "confirmed")
+
+    patch hospitalization_url(@hospitalization), params: { hospitalization: {
+      patient_id: @hospitalization.patient_id,
+      admission_date: @hospitalization.admission_date,
+      reason: @hospitalization.reason
+    } }
+
+    assert_redirected_to hospitalization_url(@hospitalization)
+    assert_equal "confirmed", @hospitalization.reload.admin_status
+  end
+
+  test "a general user cannot set admin_status directly through params" do
+    sign_out
+    sign_in_as(users(:member))
+
+    patch hospitalization_url(@hospitalization), params: { hospitalization: {
+      patient_id: @hospitalization.patient_id,
+      admission_date: @hospitalization.admission_date,
+      reason: @hospitalization.reason,
+      admin_status: "confirmed"
+    } }
+
+    assert_equal "unconfirmed", @hospitalization.reload.admin_status
+  end
+
+  test "admin can confirm a hospitalization" do
+    patch confirm_hospitalization_url(@hospitalization)
+
+    assert_redirected_to hospitalization_url(@hospitalization)
+    assert_equal "confirmed", @hospitalization.reload.admin_status
+  end
+
+  test "a general user cannot confirm a hospitalization" do
+    sign_out
+    sign_in_as(users(:member))
+
+    patch confirm_hospitalization_url(@hospitalization)
+
+    assert_redirected_to root_url
+    assert_equal "unconfirmed", @hospitalization.reload.admin_status
+  end
+
+  test "should get new with the three form sections" do
+    get new_hospitalization_url
+
+    assert_response :success
+    assert_select "h2", text: "Patient & Schedule"
+    assert_select "h2", text: "Admission & Surgery Details"
+    assert_select "h2", text: "Comments"
+  end
+
+  test "show renders the diagnosis name, not a raw object, in the update history" do
+    @hospitalization.hospitalization_diagnoses.create!(diagnosis: diagnoses(:fracture))
+
+    get hospitalization_url(@hospitalization)
+
+    assert_response :success
+    assert_match(/Fracture/, @response.body)
+    assert_no_match(/#&lt;Diagnosis/, @response.body)
+  end
+
+  test "show displays only this hospitalization's own update history" do
+    @hospitalization.update!(room_preference: "History target room")
+    hospitalizations(:two).update!(room_preference: "Other hospitalization room")
+
+    get hospitalization_url(@hospitalization)
+
+    assert_response :success
+    assert_match(/History target room/, @response.body)
+    assert_no_match(/Other hospitalization room/, @response.body)
+  end
+
+  test "show does not issue more queries as more audit events exist for the hospitalization" do
+    patient_a = Patient.create!(hospital_id: "H920", name: "Audit Patient A", date_of_birth: "1970-01-01")
+    patient_b = Patient.create!(hospital_id: "H921", name: "Audit Patient B", date_of_birth: "1970-01-01")
+
+    one_update_hospitalization = Hospitalization.create!(
+      patient: patient_a,
+      admission_date: Date.new(2027, 6, 1),
+      discharge_date: Date.new(2027, 6, 10),
+      outcome: "recovered",
+      reason: "Observation",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+    one_update_hospitalization.update!(room_preference: "First update")
+
+    many_updates_hospitalization = Hospitalization.create!(
+      patient: patient_b,
+      admission_date: Date.new(2027, 7, 1),
+      discharge_date: Date.new(2027, 7, 10),
+      outcome: "recovered",
+      reason: "Observation",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+    5.times { |n| many_updates_hospitalization.update!(room_preference: "Update #{n}") }
+
+    one_update_queries = count_sql_queries { get hospitalization_url(one_update_hospitalization) }
+    assert_response :success
+
+    many_updates_queries = count_sql_queries { get hospitalization_url(many_updates_hospitalization) }
+    assert_response :success
+
+    assert_equal one_update_queries, many_updates_queries
   end
 
   test "show does not issue more queries as more surgeries are linked" do
@@ -268,6 +658,27 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+    # Reads the Length of Stay column from the index table for the row whose
+    # Reason cell matches `reason`. Looks up the column by the header's text
+    # rather than a hardcoded position, so reordering the table's columns
+    # doesn't silently break this helper.
+    def length_of_stay_cell_for(html, reason)
+      doc = Nokogiri::HTML(html)
+      headers = doc.css("table thead th").map { |th| th.text.strip }
+      column_index = headers.index("Length of Stay")
+
+      row = doc.css("table tbody tr").find { |tr| tr.css("td").any? { |td| td.text.strip == reason } }
+      row.css("td")[column_index].text.strip
+    end
+
+    # Reads the Length of Stay value from the show page's field grid, found
+    # by its label text rather than a hardcoded position in the markup.
+    def length_of_stay_field(html)
+      doc = Nokogiri::HTML(html)
+      label = doc.css("span").find { |span| span.text.strip == "Length of Stay" }
+      label.parent.css("span:last-child").text.strip
+    end
 
     def count_sql_queries
       count = 0
