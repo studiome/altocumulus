@@ -42,7 +42,7 @@ module AuditEventsHelper
 
     def audit_change_value(model_class, attribute, value)
       return "-" if value.nil? || value == ""
-      return value ? "Yes" : "No" if value == true || value == false
+      return audit_boolean_label(value) if value == true || value == false
 
       column_type = model_class&.columns_hash&.[](attribute.to_s)&.type
 
@@ -54,10 +54,14 @@ module AuditEventsHelper
       when :time
         audit_format_time(value)
       when :boolean
-        value ? "Yes" : "No"
+        audit_boolean_label(value)
       else
         attribute.to_s.end_with?("_id") ? audit_resolve_foreign_key(attribute, value) : value.to_s
       end
+    end
+
+    def audit_boolean_label(value)
+      value ? I18n.t("helpers.audit_events.yes") : I18n.t("helpers.audit_events.no")
     end
 
     def audit_format_date(value)

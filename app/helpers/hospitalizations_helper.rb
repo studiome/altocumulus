@@ -5,11 +5,11 @@ module HospitalizationsHelper
   # stay on the model; only the display string lives here.
   def length_of_stay_display(hospitalization)
     if hospitalization.length_of_stay.present?
-      "#{hospitalization.length_of_stay} days"
+      I18n.t("helpers.hospitalizations.length_of_stay.days", count: hospitalization.length_of_stay)
     elsif hospitalization.days_since_admission.present?
-      "Day #{hospitalization.days_since_admission} (ongoing)"
+      I18n.t("helpers.hospitalizations.length_of_stay.ongoing", count: hospitalization.days_since_admission)
     else
-      "-"
+      I18n.t("helpers.hospitalizations.length_of_stay.unknown")
     end
   end
 end
