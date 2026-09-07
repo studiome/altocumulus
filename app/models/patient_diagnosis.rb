@@ -21,4 +21,8 @@ class PatientDiagnosis < ApplicationRecord
     prefix = Lateralizable::LATERALITY_OPTIONS[laterality] || ""
     [ prefix, diagnosis_name ].reject(&:blank?).join(" ")
   end
+
+  def to_s
+    display_name
+  end
 end

@@ -136,6 +136,42 @@ class AuditEventsControllerTest < ActionDispatch::IntegrationTest
     assert_match hospitalization.to_s, response.body
   end
 
+  test "show resolves an associated surgery_procedure_selection's surgery_procedure_id to its name" do
+    surgery = surgeries(:one)
+    selection = surgery_procedure_selections(:one_appendectomy)
+    event = AuditEvent.create!(
+      auditable_type: "Surgery",
+      auditable_id: surgery.id,
+      action: "update",
+      record_label: surgery.to_s,
+      change_data: { "surgery_procedure_selection[#{selection.id}].surgery_procedure_id" => [ nil, selection.surgery_procedure_id ] }
+    )
+
+    get audit_event_url(event)
+
+    assert_response :success
+    assert_match selection.surgery_procedure.name, response.body
+    assert_no_match(/SurgeryProcedure:0x/, response.body)
+  end
+
+  test "show resolves an associated surgery_diagnosis_link's patient_diagnosis_id to its label" do
+    surgery = surgeries(:one)
+    link = surgery_diagnosis_links(:one_appendicitis)
+    event = AuditEvent.create!(
+      auditable_type: "Surgery",
+      auditable_id: surgery.id,
+      action: "update",
+      record_label: surgery.to_s,
+      change_data: { "surgery_diagnosis_link[#{link.id}].patient_diagnosis_id" => [ nil, link.patient_diagnosis_id ] }
+    )
+
+    get audit_event_url(event)
+
+    assert_response :success
+    assert_match link.patient_diagnosis.to_s, response.body
+    assert_no_match(/PatientDiagnosis:0x/, response.body)
+  end
+
   test "only read routes exist" do
     post audit_events_url
     assert_response :not_found
