@@ -7,8 +7,8 @@ class AccountsController < ApplicationController
     @user = current_user
 
     if password_change_requested?
-      return render_password_change_error(:password_confirmation, "can't be blank") if new_password_confirmation.blank?
-      return render_password_change_error(:current_password, "is incorrect") unless @user.authenticate(current_password_param)
+      return render_password_change_error(:password_confirmation, :blank) if new_password_confirmation.blank?
+      return render_password_change_error(:current_password, :incorrect) unless @user.authenticate(current_password_param)
     end
 
     if @user.update(account_params)

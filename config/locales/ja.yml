@@ -1,0 +1,300 @@
+ja:
+  hello: "こんにちは"
+
+  date:
+    formats:
+      default: "%Y年%m月%d日"
+      short: "%m/%d"
+      long: "%Y年%m月%d日"
+    day_names:
+      - 日曜日
+      - 月曜日
+      - 火曜日
+      - 水曜日
+      - 木曜日
+      - 金曜日
+      - 土曜日
+    abbr_day_names:
+      - 日
+      - 月
+      - 火
+      - 水
+      - 木
+      - 金
+      - 土
+    month_names:
+      - ~
+      - 1月
+      - 2月
+      - 3月
+      - 4月
+      - 5月
+      - 6月
+      - 7月
+      - 8月
+      - 9月
+      - 10月
+      - 11月
+      - 12月
+    abbr_month_names:
+      - ~
+      - 1月
+      - 2月
+      - 3月
+      - 4月
+      - 5月
+      - 6月
+      - 7月
+      - 8月
+      - 9月
+      - 10月
+      - 11月
+      - 12月
+    order:
+      - :year
+      - :month
+      - :day
+
+  time:
+    formats:
+      default: "%Y年%m月%d日(%a) %H時%M分%S秒"
+      short: "%y/%m/%d %H:%M"
+      long: "%Y年%m月%d日(%a) %H時%M分%S秒"
+    am: "午前"
+    pm: "午後"
+
+  nav:
+    app_name: "Altocumulus"
+    open_menu: "メニューを開く"
+    calendar: "カレンダー"
+    patients: "患者"
+    surgeries: "手術"
+    hospitalizations: "入院"
+    search: "検索"
+    reports: "レポート"
+    dashboard: "ダッシュボード"
+    schedule: "スケジュール"
+    audit_log: "監査ログ"
+    masters: "マスタ"
+    diagnoses: "診断名"
+    procedures: "術式"
+    slot_rules: "手術枠ルール"
+    holidays: "休日"
+    admin: "管理"
+    users: "利用者"
+    announcements: "お知らせ"
+    admin_notes: "管理者メモ"
+    account: "アカウント"
+    sign_out: "サインアウト"
+
+  locale:
+    switch_label: "言語"
+    en: "English"
+    ja: "日本語"
+
+  # Standard ActiveModel/ActiveRecord validation messages (mirrors en.yml's
+  # errors: block structure). This app doesn't bundle the rails-i18n gem, so
+  # these are hand-written to match the wording of `validates` calls actually
+  # used across app/models (presence, uniqueness, inclusion, numericality,
+  # length, confirmation).
+  errors:
+    format: "%{attribute}%{message}"
+    messages:
+      accepted: "を受諾してください"
+      blank: "を入力してください"
+      confirmation: "が%{attribute}と一致しません"
+      empty: "を入力してください"
+      equal_to: "は%{count}にしてください"
+      even: "は偶数にしてください"
+      exclusion: "は予約されています"
+      greater_than: "は%{count}より大きい値にしてください"
+      greater_than_or_equal_to: "は%{count}以上の値にしてください"
+      inclusion: "は一覧にありません"
+      invalid: "は不正な値です"
+      less_than: "は%{count}より小さい値にしてください"
+      less_than_or_equal_to: "は%{count}以下の値にしてください"
+      not_a_number: "は数値で入力してください"
+      not_an_integer: "は整数で入力してください"
+      odd: "は奇数にしてください"
+      other_than: "は%{count}以外の値にしてください"
+      present: "は入力しないでください"
+      required: "を入力してください"
+      too_long: "は%{count}文字以内で入力してください"
+      too_short: "は%{count}文字以上で入力してください"
+      wrong_length: "は%{count}文字で入力してください"
+
+  activerecord:
+    models:
+      access_log: "アクセスログ"
+      admin_note: "管理者メモ"
+      announcement: "お知らせ"
+      audit_event: "監査イベント"
+      diagnosis: "診断名"
+      elective_slot_rule: "手術枠ルール"
+      holiday: "休日"
+      hospitalization: "入院"
+      hospitalization_diagnosis: "入院診断"
+      patient: "患者"
+      patient_diagnosis: "患者診断"
+      surgery: "手術"
+      surgery_diagnosis_link: "手術診断リンク"
+      surgery_procedure: "術式"
+      surgery_procedure_selection: "手術術式選択"
+      user: "利用者"
+
+    attributes:
+      access_log:
+        event: "イベント"
+        ip_address: "IPアドレス"
+        last_url: "最終URL"
+        user_agent: "ユーザーエージェント"
+        user_id: "利用者"
+      admin_note:
+        body: "本文"
+        user_id: "作成者"
+      announcement:
+        title: "タイトル"
+        body: "本文"
+        published: "公開"
+      audit_event:
+        action: "操作"
+        auditable_id: "対象ID"
+        auditable_type: "対象種別"
+        change_data: "変更内容"
+        ip_address: "IPアドレス"
+        record_label: "対象"
+        user_id: "操作者"
+      diagnosis:
+        name: "病名"
+      elective_slot_rule:
+        day_of_week: "曜日"
+        slot_count: "枠数"
+        slot_duration_minutes: "枠時間(分)"
+      holiday:
+        date: "日付"
+        holiday: "休日"
+        name: "名称"
+        note: "備考"
+      hospitalization:
+        adl: "ADL"
+        admin_status: "確認ステータス"
+        admission_date: "入院日"
+        attending_doctor: "主治医"
+        clinical_comment: "臨床コメント"
+        deleted_at: "削除日時"
+        discharge_date: "退院日"
+        discharge_destination: "退院先"
+        outcome: "転帰"
+        patient_age_snapshot: "患者年齢(記録時点)"
+        patient_id: "患者"
+        patient_name_snapshot: "患者氏名(記録時点)"
+        patient_sex_snapshot: "患者性別(記録時点)"
+        planned_days: "予定入院日数"
+        purpose: "入院目的"
+        reason: "入院理由"
+        referred_from: "紹介元"
+        reservation_doctor: "予約医師"
+        reservation_status: "予約ステータス"
+        room_preference: "病室希望"
+        scheduled_admission_date: "入院予定日"
+        submitted_on: "提出日"
+        ward: "病棟"
+      hospitalization_diagnosis:
+        diagnosis_id: "診断名"
+        hospitalization_id: "入院"
+      patient:
+        clinical_info: "臨床情報"
+        date_of_birth: "生年月日"
+        hospital_id: "患者ID"
+        name: "氏名"
+        name_kana: "フリガナ"
+        sex: "性別"
+        telephone: "電話番号"
+      patient_diagnosis:
+        diagnosed_on: "診断日"
+        diagnosis_id: "診断名"
+        laterality: "左右"
+        patient_id: "患者"
+      surgery:
+        anesthesia_method: "麻酔方法"
+        assistant_name: "助手"
+        duration_hours: "手術時間(時間)"
+        hospitalization_id: "入院"
+        operation_order: "手術順"
+        operator_name: "執刀医"
+        patient_id: "患者"
+        scheduling_type: "予定区分"
+        slot_number: "枠番号"
+        start_time: "開始時刻"
+        surgery_date: "手術日"
+      surgery_diagnosis_link:
+        patient_diagnosis_id: "患者診断"
+        surgery_id: "手術"
+      surgery_procedure:
+        name: "術式名"
+      surgery_procedure_selection:
+        laterality: "左右"
+        surgery_id: "手術"
+        surgery_procedure_id: "術式"
+      user:
+        active: "有効"
+        current_password: "現在のパスワード"
+        email: "メールアドレス"
+        locale: "表示言語"
+        name: "氏名"
+        password: "パスワード"
+        password_confirmation: "パスワード(確認)"
+        role: "権限"
+
+    errors:
+      format: "%{attribute}%{message}"
+      messages:
+        taken: "はすでに存在します"
+        record_invalid: "バリデーションに失敗しました: %{errors}"
+        restrict_dependent_destroy:
+          has_one: "%{record}が存在しているため削除できません"
+          has_many: "%{record}が存在しているため削除できません"
+        incorrect: "が正しくありません"
+        not_a_valid_date: "は正しい日付ではありません"
+        requires_discharge_date: "は退院日と併せて設定してください"
+        must_include_linked_surgeries_within_period: "は紐づく手術をすべて入院期間内に含めてください"
+        overlaps_another_hospitalization: "が同じ患者の他の入院期間と重複しています"
+
+      models:
+        holiday:
+          attributes:
+            base:
+              must_have_name_or_note: "名称または備考を入力してください"
+        user:
+          attributes:
+            base:
+              cannot_remove_last_admin: "最後の管理者を削除・降格・無効化することはできません"
+        hospitalization:
+          attributes:
+            hospitalization_diagnoses:
+              must_include_at_least_one_diagnosis: "を1件以上入力してください"
+              no_duplicate_diagnoses: "に重複を含めることはできません"
+              cannot_swap_diagnoses_between_rows: "は既存の行同士で診断名を入れ替えることができません。まず一方の行を別の診断名に変更してください"
+            discharge_date:
+              must_be_on_or_after_admission_date: "は入院日以降の日付にしてください"
+            admission_date:
+              or_scheduled_admission_date_required: "または入院予定日のいずれかを入力してください"
+            patient_id:
+              must_match_patient_of_linked_surgeries: "は紐づくすべての手術の患者と一致させてください"
+        surgery:
+          attributes:
+            patient_diagnoses:
+              must_all_belong_to_selected_patient: "はすべて選択した患者のものにしてください"
+            surgery_procedure_selections:
+              must_include_at_least_one_procedure: "を1件以上入力してください"
+              too_many_procedure_selections: "は5件以下にしてください"
+              no_duplicate_procedure_selections: "に重複を含めることはできません"
+              cannot_swap_procedures_between_rows: "は既存の行同士で術式を入れ替えることができません。まず一方の行を別の術式に変更してください"
+            hospitalization:
+              must_belong_to_same_patient_as_surgery: "は手術と同じ患者のものにしてください"
+            surgery_date:
+              must_fall_within_hospitalization_period: "は紐づく入院期間内の日付にしてください"
+              must_be_blank_when_undecided: "は「未定」を選択している場合は空欄にしてください"
+              must_be_entered_or_undecided: "を入力するか「未定」を選択してください"
+            surgery_date_status:
+              not_valid: "は正しくありません"

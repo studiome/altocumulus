@@ -30,6 +30,73 @@
 en:
   hello: "Hello world"
 
+  # These date/time keys mirror Rails' own built-in English defaults, spelled
+  # out explicitly so this file has the same structure as ja.yml. No view in
+  # the app calls `l()`/`I18n.l` yet (they format dates with `strftime`
+  # directly), so this is groundwork for a later stage rather than something
+  # that changes current rendering.
+  date:
+    formats:
+      default: "%Y-%m-%d"
+      short: "%b %d"
+      long: "%B %d, %Y"
+    day_names:
+      - Sunday
+      - Monday
+      - Tuesday
+      - Wednesday
+      - Thursday
+      - Friday
+      - Saturday
+    abbr_day_names:
+      - Sun
+      - Mon
+      - Tue
+      - Wed
+      - Thu
+      - Fri
+      - Sat
+    month_names:
+      - ~
+      - January
+      - February
+      - March
+      - April
+      - May
+      - June
+      - July
+      - August
+      - September
+      - October
+      - November
+      - December
+    abbr_month_names:
+      - ~
+      - Jan
+      - Feb
+      - Mar
+      - Apr
+      - May
+      - Jun
+      - Jul
+      - Aug
+      - Sep
+      - Oct
+      - Nov
+      - Dec
+    order:
+      - :year
+      - :month
+      - :day
+
+  time:
+    formats:
+      default: "%a, %d %b %Y %H:%M:%S %z"
+      short: "%d %b %H:%M"
+      long: "%B %d, %Y %H:%M"
+    am: "am"
+    pm: "pm"
+
   nav:
     app_name: "Altocumulus"
     open_menu: "Open menu"
@@ -58,3 +125,98 @@ en:
     switch_label: "Language"
     en: "English"
     ja: "日本語"
+
+  # Standard ActiveModel/ActiveRecord validation messages, spelled out so
+  # ja.yml has the same structure. These match Rails' own built-in English
+  # defaults byte-for-byte, so defining them here does not change anything
+  # that already renders in English -- it is what lets ja.yml override them
+  # for the Japanese locale.
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      accepted: "must be accepted"
+      blank: "can't be blank"
+      confirmation: "doesn't match %{attribute}"
+      empty: "can't be empty"
+      equal_to: "must be equal to %{count}"
+      even: "must be even"
+      exclusion: "is reserved"
+      greater_than: "must be greater than %{count}"
+      greater_than_or_equal_to: "must be greater than or equal to %{count}"
+      inclusion: "is not included in the list"
+      invalid: "is invalid"
+      less_than: "must be less than %{count}"
+      less_than_or_equal_to: "must be less than or equal to %{count}"
+      not_a_number: "is not a number"
+      not_an_integer: "must be an integer"
+      odd: "must be odd"
+      other_than: "must be other than %{count}"
+      present: "must be blank"
+      required: "must exist"
+      too_long: "is too long (maximum is %{count} characters)"
+      too_short: "is too short (minimum is %{count} characters)"
+      wrong_length: "is the wrong length (should be %{count} characters)"
+
+  # activerecord.models / activerecord.attributes are intentionally NOT
+  # overridden for English: Rails' own automatic humanize (e.g.
+  # "date_of_birth" -> "Date of birth") is already what every existing view
+  # and test renders/asserts today, and it is used directly by
+  # AuditEventsHelper (human_attribute_name / model_name.human) for the
+  # audit-log diff table. Explicitly redefining these in English risks
+  # silently drifting from Rails' own capitalization rules in ways nothing
+  # here would catch (it already broke one audit-log test with "Date of
+  # Birth" vs the expected "Date of birth" -- reverted). ja.yml defines the
+  # full set for Japanese; English keeps relying on the humanize default.
+  activerecord:
+    errors:
+      format: "%{attribute} %{message}"
+      messages:
+        taken: "has already been taken"
+        record_invalid: "Validation failed: %{errors}"
+        restrict_dependent_destroy:
+          has_one: "Cannot delete record because a dependent %{record} exists"
+          has_many: "Cannot delete record because dependent %{record} exist"
+        incorrect: "is incorrect"
+        not_a_valid_date: "is not a valid date"
+        requires_discharge_date: "can only be set together with a discharge date"
+        must_include_linked_surgeries_within_period: "must include all linked surgeries within the hospitalization period"
+        overlaps_another_hospitalization: "overlaps another hospitalization for this patient"
+
+      models:
+        holiday:
+          attributes:
+            base:
+              must_have_name_or_note: "must have a name or a note"
+        user:
+          attributes:
+            base:
+              cannot_remove_last_admin: "Cannot remove the last active admin"
+        hospitalization:
+          attributes:
+            hospitalization_diagnoses:
+              must_include_at_least_one_diagnosis: "must include at least one diagnosis"
+              no_duplicate_diagnoses: "must not include duplicate diagnoses"
+              cannot_swap_diagnoses_between_rows: "cannot swap diagnoses between existing rows in one save; change one row to a different diagnosis first"
+            discharge_date:
+              must_be_on_or_after_admission_date: "must be on or after the admission date"
+            admission_date:
+              or_scheduled_admission_date_required: "or a scheduled admission date must be present"
+            patient_id:
+              must_match_patient_of_linked_surgeries: "must match the patient of every linked surgery"
+        surgery:
+          attributes:
+            patient_diagnoses:
+              must_all_belong_to_selected_patient: "must all belong to the selected patient"
+            surgery_procedure_selections:
+              must_include_at_least_one_procedure: "must include at least one procedure"
+              too_many_procedure_selections: "must be five or fewer"
+              no_duplicate_procedure_selections: "must not include duplicate procedures"
+              cannot_swap_procedures_between_rows: "cannot swap procedures between existing rows in one save; change one row to a different procedure first"
+            hospitalization:
+              must_belong_to_same_patient_as_surgery: "must belong to the same patient as the surgery"
+            surgery_date:
+              must_fall_within_hospitalization_period: "must fall within the linked hospitalization period"
+              must_be_blank_when_undecided: "must be left blank when marked as undecided"
+              must_be_entered_or_undecided: "must be entered, or choose Undecided"
+            surgery_date_status:
+              not_valid: "is not valid"

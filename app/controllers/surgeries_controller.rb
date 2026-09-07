@@ -90,7 +90,7 @@ class SurgeriesController < ApplicationController
       yield
     rescue ActiveRecord::RecordNotUnique => e
       if e.message.include?("surgery_procedure_selections")
-        @surgery.errors.add(:surgery_procedure_selections, "cannot swap procedures between existing rows in one save; change one row to a different procedure first")
+        @surgery.errors.add(:surgery_procedure_selections, :cannot_swap_procedures_between_rows)
         false
       else
         raise e

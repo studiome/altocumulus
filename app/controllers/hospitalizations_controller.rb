@@ -119,7 +119,7 @@ class HospitalizationsController < ApplicationController
       yield
     rescue ActiveRecord::RecordNotUnique => e
       if e.message.include?("hospitalization_diagnoses")
-        @hospitalization.errors.add(:hospitalization_diagnoses, "cannot swap diagnoses between existing rows in one save; change one row to a different diagnosis first")
+        @hospitalization.errors.add(:hospitalization_diagnoses, :cannot_swap_diagnoses_between_rows)
         false
       else
         raise e

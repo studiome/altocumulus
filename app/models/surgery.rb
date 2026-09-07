@@ -166,32 +166,32 @@ class Surgery < ApplicationRecord
     return if patient_diagnoses.empty? || patient_id.blank?
     return if patient_diagnoses.all? { |pd| pd.patient_id == patient_id }
 
-    errors.add(:patient_diagnoses, "must all belong to the selected patient")
+    errors.add(:patient_diagnoses, :must_all_belong_to_selected_patient)
   end
 
   def must_have_at_least_one_procedure_selection
     return if procedure_names.any?
 
-    errors.add(:surgery_procedure_selections, "must include at least one procedure")
+    errors.add(:surgery_procedure_selections, :must_include_at_least_one_procedure)
   end
 
   def no_more_than_five_procedure_selections
     return if procedure_names.size <= 5
 
-    errors.add(:surgery_procedure_selections, "must be five or fewer")
+    errors.add(:surgery_procedure_selections, :too_many_procedure_selections)
   end
 
   def no_duplicate_procedure_selections
     return if procedure_names.uniq.size == procedure_names.size
 
-    errors.add(:surgery_procedure_selections, "must not include duplicate procedures")
+    errors.add(:surgery_procedure_selections, :no_duplicate_procedure_selections)
   end
 
   def hospitalization_must_belong_to_same_patient
     return if hospitalization.blank? || patient_id.blank?
     return if hospitalization.patient_id == patient_id
 
-    errors.add(:hospitalization, "must belong to the same patient as the surgery")
+    errors.add(:hospitalization, :must_belong_to_same_patient_as_surgery)
   end
 
   def surgery_date_must_fall_within_hospitalization_period
@@ -200,7 +200,7 @@ class Surgery < ApplicationRecord
     return if surgery_date >= hospitalization.effective_admission_date &&
               (hospitalization.discharge_date.blank? || surgery_date <= hospitalization.discharge_date)
 
-    errors.add(:surgery_date, "must fall within the linked hospitalization period")
+    errors.add(:surgery_date, :must_fall_within_hospitalization_period)
   end
 
   # Only checked when surgery_date_status is explicitly assigned (i.e. the
@@ -211,15 +211,15 @@ class Surgery < ApplicationRecord
     return unless surgery_date_status_specified?
 
     unless SURGERY_DATE_STATUS_OPTIONS.key?(@surgery_date_status)
-      errors.add(:surgery_date_status, "is not valid")
+      errors.add(:surgery_date_status, :not_valid)
       return
     end
 
     raw = surgery_date_before_type_cast
     if @surgery_date_status == "undecided"
-      errors.add(:surgery_date, "must be left blank when marked as undecided") if raw.present?
+      errors.add(:surgery_date, :must_be_blank_when_undecided) if raw.present?
     elsif raw.blank?
-      errors.add(:surgery_date, "must be entered, or choose Undecided")
+      errors.add(:surgery_date, :must_be_entered_or_undecided)
     end
   end
 end

@@ -313,43 +313,43 @@ class Hospitalization < ApplicationRecord
     def must_have_at_least_one_diagnosis
       return if diagnosis_ids_in_use.any?
 
-      errors.add(:hospitalization_diagnoses, "must include at least one diagnosis")
+      errors.add(:hospitalization_diagnoses, :must_include_at_least_one_diagnosis)
     end
 
     def no_duplicate_diagnoses
       ids = diagnosis_ids_in_use
       return if ids.uniq.size == ids.size
 
-      errors.add(:hospitalization_diagnoses, "must not include duplicate diagnoses")
+      errors.add(:hospitalization_diagnoses, :no_duplicate_diagnoses)
     end
 
     def discharge_date_on_or_after_admission_date
       return if discharge_date.blank? || admission_date.blank?
       return if discharge_date >= admission_date
 
-      errors.add(:discharge_date, "must be on or after the admission date")
+      errors.add(:discharge_date, :must_be_on_or_after_admission_date)
     end
 
     def outcome_required_when_discharged
       return if discharge_date.blank?
       return if outcome.present?
 
-      errors.add(:outcome, "can't be blank")
+      errors.add(:outcome, :blank)
     end
 
     def discharge_fields_require_discharge_date
       return if discharge_date.present?
 
-      errors.add(:outcome, "can only be set together with a discharge date") if outcome.present?
+      errors.add(:outcome, :requires_discharge_date) if outcome.present?
       if discharge_destination.present?
-        errors.add(:discharge_destination, "can only be set together with a discharge date")
+        errors.add(:discharge_destination, :requires_discharge_date)
       end
     end
 
     def admission_date_or_scheduled_admission_date_required
       return if admission_date.present? || scheduled_admission_date.present?
 
-      errors.add(:admission_date, "or a scheduled admission date must be present")
+      errors.add(:admission_date, :or_scheduled_admission_date_required)
     end
 
     # scheduled_admission_date, admission_date, and discharge_date all mean
@@ -360,7 +360,7 @@ class Hospitalization < ApplicationRecord
     def valid_date_values
       %i[scheduled_admission_date admission_date discharge_date].each do |field|
         raw = public_send("#{field}_before_type_cast")
-        errors.add(field, "is not a valid date") if raw.present? && public_send(field).nil?
+        errors.add(field, :not_a_valid_date) if raw.present? && public_send(field).nil?
       end
     end
 
@@ -381,7 +381,7 @@ class Hospitalization < ApplicationRecord
         start_date: effective_admission_date, end_date: discharge_date
       ).exists?
 
-      errors.add(effective_admission_date_field, "overlaps another hospitalization for this patient") if conflict
+      errors.add(effective_admission_date_field, :overlaps_another_hospitalization) if conflict
     end
 
     def linked_surgeries_must_remain_within_period
@@ -391,11 +391,11 @@ class Hospitalization < ApplicationRecord
       return if dates.empty?
 
       if dates.any? { |date| date < effective_admission_date }
-        errors.add(effective_admission_date_field, "must include all linked surgeries within the hospitalization period")
+        errors.add(effective_admission_date_field, :must_include_linked_surgeries_within_period)
       end
 
       if discharge_date.present? && dates.any? { |date| date > discharge_date }
-        errors.add(:discharge_date, "must include all linked surgeries within the hospitalization period")
+        errors.add(:discharge_date, :must_include_linked_surgeries_within_period)
       end
     end
 
@@ -403,7 +403,7 @@ class Hospitalization < ApplicationRecord
       return if patient_id.blank?
       return if linked_surgeries.all? { |surgery| surgery.patient_id == patient_id }
 
-      errors.add(:patient_id, "must match the patient of every linked surgery")
+      errors.add(:patient_id, :must_match_patient_of_linked_surgeries)
     end
 
     def reset_linked_surgeries_memo
