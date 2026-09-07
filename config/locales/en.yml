@@ -353,6 +353,7 @@ en:
     audit_events:
       "yes": "Yes"
       "no": "No"
+      not_found: "(not found)"
 
   # Stage 3 of the i18n rollout: view text. Group 1 (Diagnoses /
   # SurgeryProcedures / Holidays / ElectiveSlotRules master-data screens)

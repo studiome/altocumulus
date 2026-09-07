@@ -138,7 +138,7 @@ class Surgery < ApplicationRecord
   end
 
   def surgery_date_display
-    surgery_date&.strftime("%Y-%m-%d") || I18n.t("models.surgery.surgery_date_display_undated")
+    surgery_date ? I18n.l(surgery_date, format: :default) : I18n.t("models.surgery.surgery_date_display_undated")
   end
 
   # Lets a form explicitly choose between a scheduled surgery_date and

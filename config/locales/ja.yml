@@ -421,6 +421,7 @@ ja:
     audit_events:
       "yes": "はい"
       "no": "いいえ"
+      not_found: "(見つかりません)"
 
   # Stage 3 of the i18n rollout (see en.yml for the design notes on the
   # common: namespace and the lazy-lookup / shared-scope conventions).
