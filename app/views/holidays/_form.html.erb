@@ -19,8 +19,22 @@
   </div>
 
   <div class="app-field">
+    <label class="label cursor-pointer justify-start gap-2 py-0">
+      <%= form.check_box :holiday, class: "checkbox checkbox-primary" %>
+      <span class="app-field-label mb-0">Closed day (stops elective slots)</span>
+    </label>
+    <p class="app-helper">Uncheck to leave this as a note-only day: it is shown on the calendar but elective slots stay open.</p>
+  </div>
+
+  <div class="app-field">
     <%= form.label :name, "Holiday Name", class: "app-field-label" %>
     <%= form.text_field :name, class: "input w-full focus:input-primary", placeholder: "e.g. Vernal Equinox Day" %>
+    <p class="app-helper">Required for a closed day. Optional for a note-only day.</p>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :note, class: "app-field-label" %>
+    <%= form.text_area :note, class: "textarea w-full focus:textarea-primary", rows: 3, placeholder: "e.g. Fire drill in the morning" %>
   </div>
 
   <div class="pt-4">

@@ -72,8 +72,11 @@ class ElectiveSlotUsage
     @holiday = holiday
   end
 
+  # A Holiday row on this date only shuts down elective slots when it is an
+  # actual closed day (holiday: true). A comment-only row (holiday: false)
+  # must never affect slot usage.
   def holiday?
-    holiday.present?
+    holiday.present? && holiday.holiday?
   end
 
   # The rule to actually apply for elective slots. A holiday shuts down

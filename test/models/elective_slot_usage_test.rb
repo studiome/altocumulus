@@ -303,6 +303,37 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_equal holidays(:national_holiday), usages[holidays(:national_holiday).date].holiday
   end
 
+  # Holiday doubles as a plain day-comment (holiday: false). Only an actual
+  # closed day (holiday: true) may shut down elective slots - a comment-only
+  # day must never stop them. This is the regression the 5-b handoff calls
+  # out by name.
+  test "a comment-only day (holiday: false) does not stop elective slots" do
+    note_only = Holiday.create!(date: Date.new(2026, 3, 4), holiday: false, note: "Fire drill today")
+    usage = ElectiveSlotUsage.new(
+      date: note_only.date,
+      rule: elective_slot_rules(:wednesday), # 2 slots x 180 min
+      elective_surgeries: [ surgeries(:three) ],
+      emergency_surgeries: [],
+      holiday: note_only
+    )
+
+    assert_not usage.holiday?
+    assert_equal elective_slot_rules(:wednesday), usage.effective_rule
+    assert usage.configured?
+    assert_equal 2, usage.total_slots
+    assert_empty usage.warnings
+  ensure
+    note_only&.destroy
+  end
+
+  test "an actual holiday (holiday: true) still stops elective slots as before" do
+    usage = ElectiveSlotUsage.for_dates([ holidays(:national_holiday).date ])[holidays(:national_holiday).date]
+
+    assert usage.holiday?
+    assert_nil usage.effective_rule
+    assert_not usage.configured?
+  end
+
   test "a holiday zeroes out the day's elective slots even though a rule exists" do
     usage = ElectiveSlotUsage.for_dates([ holidays(:national_holiday).date ])[holidays(:national_holiday).date]
 

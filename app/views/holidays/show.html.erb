@@ -13,10 +13,17 @@
     <div class="card-body">
       <div class="flex justify-between items-start mb-6">
         <div>
-          <h2 class="card-title text-3xl mb-1 text-primary"><%= @holiday.name %></h2>
+          <h2 class="card-title text-3xl mb-1 text-primary"><%= @holiday.name.presence || "(no name)" %></h2>
           <p class="text-base-content/60 font-mono">Holiday Master</p>
         </div>
-        <div class="badge badge-secondary badge-lg p-4"><%= @holiday.date&.strftime("%Y-%m-%d") %></div>
+        <div class="flex flex-col items-end gap-2">
+          <div class="badge badge-secondary badge-lg p-4"><%= @holiday.date&.strftime("%Y-%m-%d") %></div>
+          <% if @holiday.holiday? %>
+            <span class="badge badge-secondary">Closed</span>
+          <% else %>
+            <span class="badge badge-ghost">Note only</span>
+          <% end %>
+        </div>
       </div>
 
       <div class="divider">Information</div>
@@ -28,7 +35,11 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Name</span>
-          <span class="text-lg font-medium"><%= @holiday.name %></span>
+          <span class="text-lg font-medium"><%= @holiday.name.presence || "-" %></span>
+        </div>
+        <div class="sm:col-span-2">
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1">Note</span>
+          <span class="text-lg font-medium whitespace-pre-line"><%= @holiday.note.presence || "-" %></span>
         </div>
       </div>
 

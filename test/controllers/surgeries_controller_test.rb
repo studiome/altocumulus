@@ -293,6 +293,17 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Vernal Equinox Day/, @response.body)
   end
 
+  test "show does not display a holiday badge for a comment-only day (holiday: false)" do
+    note_only = Holiday.create!(date: @surgery.surgery_date, holiday: false, note: "Fire drill today")
+
+    get surgery_url(@surgery)
+
+    assert_response :success
+    assert_select ".badge-secondary", count: 0
+  ensure
+    note_only&.destroy
+  end
+
   test "show displays the day's whole number of slots (total_slots), not the raw fractional slot_count" do
     surgery = surgeries(:three) # Tuesday, slot_number 1
     ElectiveSlotRule.find_by(day_of_week: surgery.surgery_date.wday).update!(slot_count: 2.5, slot_duration_minutes: 240)

@@ -28,7 +28,7 @@
               <span class="badge badge-warning">No slot assigned</span>
             <% end %>
           <% end %>
-          <% if @holiday %>
+          <% if @holiday&.holiday? %>
             <span class="badge badge-secondary"><%= @holiday.name %></span>
           <% end %>
         </div>
