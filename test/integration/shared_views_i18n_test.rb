@@ -31,4 +31,20 @@ class SharedViewsI18nTest < ActionDispatch::IntegrationTest
     assert_match "Create a diagnosis master without leaving this diagnosis entry form.", response.body
     assert_match "Loading...", response.body
   end
+
+  # The modal-backdrop's dismiss button (a visually hidden hit-target
+  # covering the rest of the screen, closing the dialog on click) is a
+  # second, separate close control from the one in the modal header --
+  # unlike that one, it had a hard-coded English "Close" aria-label that
+  # never localized. Mirrors surgery_procedure_modal's backdrop button,
+  # which already reused common.close correctly.
+  test "diagnosis modal backdrop close button aria-label localizes to Japanese" do
+    sign_in_as(users(:japanese_member))
+
+    get new_hospitalization_url
+
+    assert_response :success
+    assert_match 'aria-label="閉じる"', response.body
+    assert_no_match(/aria-label="Close"/, response.body)
+  end
 end
