@@ -384,7 +384,21 @@ ja:
           same_limit: "枠%{numbers}は上限%{limit}分を超過しています。"
           item: "第%{number}枠は上限%{limit}分を超過しています。"
 
+  # `helpers.submit` is intentionally defined ONLY here, not in en.yml (see
+  # the note above en.yml's own `helpers:` block -- Rails' English default
+  # template ("Create %{model}"/"Update %{model}") already matches this
+  # app's English rendering byte-for-byte, so redefining it in English would
+  # only risk future drift). Without a Japanese override, a bare
+  # `form.submit` (no explicit label -- all 9 of this app's plain
+  # create/update forms) falls back to that same English template with
+  # `model` interpolated as the Japanese model name, mixing the two
+  # languages (e.g. "Create 患者"). `%{model}` here is already the localized
+  # name (`Model.model_name.human`, e.g. "患者"), matching activerecord.models
+  # above.
   helpers:
+    submit:
+      create: "%{model}を作成"
+      update: "%{model}を更新"
     hospitalizations:
       length_of_stay:
         days:

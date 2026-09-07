@@ -321,6 +321,13 @@ en:
           same_limit: "Slots %{numbers} are booked past their %{limit} min limit."
           item: "Slot %{number} is booked past its %{limit} min limit."
 
+  # `helpers.submit` is deliberately NOT defined here -- Rails' own English
+  # default template for a bare `form.submit` ("Create %{model}" /
+  # "Update %{model}") already matches this app's English rendering
+  # byte-for-byte, so redefining it risks silently drifting from Rails' own
+  # wording in a way nothing here would catch. ja.yml defines it explicitly
+  # instead, since Japanese has no such built-in default and was rendering
+  # as a mix of the two languages (e.g. "Create 患者") without it.
   helpers:
     hospitalizations:
       length_of_stay:
