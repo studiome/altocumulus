@@ -66,10 +66,18 @@ aliases:
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
 
-# Use a persistent storage volume for sqlite database files and local Active Storage files.
-# Recommended to change this to a mounted volume path that is backed up off server.
+# Bind-mount the storage directory to a host path (rather than a named Docker
+# volume) so it is reachable from the host for backups, e.g. by bin/backup-db
+# or a cron job -- see the "Database backup" section of the README.
+#
+# The host directory must be owned by uid/gid 1000, matching the "rails" user
+# inside the container (mkdir -p /srv/altocumulus/storage && chown 1000:1000 _).
+#
+# Migrating from the previous named volume requires copying its contents into
+# this host path before the first deploy with this config (e.g. via
+# `docker run --rm -v altocumulus_storage:/from -v /srv/altocumulus/storage:/to alpine cp -a /from/. /to/`).
 volumes:
-  - "altocumulus_storage:/rails/storage"
+  - "/srv/altocumulus/storage:/rails/storage"
 
 # Bridge fingerprinted assets, like JS and CSS, between versions to avoid
 # hitting 404 on in-flight requests. Combines all files from new and old

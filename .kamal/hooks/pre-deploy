@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Back up the production database on every server before deploying.
+#
+# Kamal hooks run on the machine invoking kamal, not on the server, hence the
+# ssh below -- this hook can't just shell out to bin/backup-db locally.
+#
+# These environment variables are available (see .kamal/hooks/pre-deploy.sample
+# for the full list):
+# KAMAL_HOSTS, KAMAL_COMMAND, KAMAL_DESTINATION
+set -euo pipefail
+
+if [ "${KAMAL_COMMAND:-}" = "rollback" ]; then
+  exit 0
+fi
+
+if [ -n "${SKIP_PRE_DEPLOY_BACKUP:-}" ]; then
+  echo "pre-deploy: SKIP_PRE_DEPLOY_BACKUP is set, skipping database backup"
+  exit 0
+fi
+
+if [ -z "${KAMAL_HOSTS:-}" ]; then
+  echo "pre-deploy: KAMAL_HOSTS is not set, cannot back up before deploy" >&2
+  exit 1
+fi
+
+SSH_USER="${BACKUP_SSH_USER:-root}"
+REMOTE_SCRIPT="${BACKUP_REMOTE_SCRIPT:-/usr/local/bin/altocumulus-backup}"
+
+IFS=',' read -ra hosts <<< "$KAMAL_HOSTS"
+
+for host in "${hosts[@]}"; do
+  echo "pre-deploy: backing up database on $host..."
+  if ! ssh "${SSH_USER}@${host}" "$REMOTE_SCRIPT"; then
+    echo "pre-deploy: backup failed on $host." >&2
+    echo "pre-deploy: install bin/backup-db on the server as $REMOTE_SCRIPT, or set SKIP_PRE_DEPLOY_BACKUP=1 to deploy anyway." >&2
+    exit 1
+  fi
+done

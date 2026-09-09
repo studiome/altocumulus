@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Back up the production SQLite database.
+#
+# Rails opens SQLite in WAL mode, so a plain `cp` of the .sqlite3 file can miss
+# committed data that still lives in the -wal file. This uses SQLite's online
+# backup API, which is consistent even while the app is writing.
+#
+# Only the primary database is backed up: the cache/queue/cable databases are
+# regenerable (this app defines no jobs of its own -- see config/recurring.yml).
+#
+# Meant to run on the server that holds the storage volume, e.g. from cron:
+#   0 2 * * * /usr/local/bin/altocumulus-backup >> /var/log/altocumulus-backup.log 2>&1
+set -euo pipefail
+
+SRC="${BACKUP_SRC:-/srv/altocumulus/storage/production.sqlite3}"
+DEST_DIR="${BACKUP_DEST_DIR:-/srv/backup/altocumulus}"
+KEEP="${BACKUP_KEEP:-30}"
+RECIPIENT="${BACKUP_GPG_RECIPIENT:-}"
+
+if [ ! -f "$SRC" ]; then
+  echo "backup-db: source database not found: $SRC" >&2
+  exit 1
+fi
+
+mkdir -p "$DEST_DIR"
+
+stamp="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+snapshot="$DEST_DIR/production-$stamp.sqlite3"
+
+sqlite3 "$SRC" ".backup '$snapshot'"
+
+# Verify before keeping it -- storing a corrupt backup is worse than storing none.
+if [ "$(sqlite3 "$snapshot" 'PRAGMA integrity_check;')" != "ok" ]; then
+  echo "backup-db: integrity check failed for $snapshot" >&2
+  rm -f "$snapshot"
+  exit 1
+fi
+
+gzip -9 "$snapshot"
+artifact="$snapshot.gz"
+
+# Patient data: encrypt whenever a recipient is configured. Public-key
+# encryption keeps the decryption key off the server.
+if [ -n "$RECIPIENT" ]; then
+  gpg --batch --yes --encrypt --recipient "$RECIPIENT" "$artifact"
+  rm -f "$artifact"
+  artifact="$artifact.gpg"
+fi
+
+# Retention: keep only the newest $KEEP artifacts.
+if compgen -G "$DEST_DIR/production-*.sqlite3.gz*" > /dev/null; then
+  ls -1t "$DEST_DIR"/production-*.sqlite3.gz* | tail -n "+$((KEEP + 1))" | xargs -r rm --
+fi
+
+echo "$artifact"

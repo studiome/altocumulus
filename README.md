@@ -387,6 +387,65 @@ created automatically on the first deploy, through the `db:prepare` (plus `db:se
 database is created fresh) run by `bin/docker-entrypoint` at container start. See [Setup](#setup)
 for details.
 
+### Database backup
+
+Rails opens SQLite in WAL mode, so copying `production.sqlite3` with a plain `cp` while the app is
+running can produce a broken backup (recent commits may still be sitting in the `-wal` file).
+`bin/backup-db` instead uses SQLite's Online Backup API (`sqlite3 <db> ".backup '<dest>'"`), which
+stays consistent even while the app is writing.
+
+Only `storage/production.sqlite3` is backed up. The cache/queue/cable databases are regenerable
+(this app defines no jobs of its own — see `config/recurring.yml`) and don't need backing up.
+
+`config/deploy.yml` bind-mounts the storage directory to a host path (`/srv/altocumulus/storage`)
+rather than a named Docker volume, so the backup script can run directly on the host.
+
+Install it on the server and run it from cron:
+
+```bash
+sudo install -m 755 bin/backup-db /usr/local/bin/altocumulus-backup
+# crontab -e
+0 2 * * * BACKUP_GPG_RECIPIENT=backup@example.org /usr/local/bin/altocumulus-backup >> /var/log/altocumulus-backup.log 2>&1
+```
+
+Environment variables:
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `BACKUP_SRC` | `/srv/altocumulus/storage/production.sqlite3` | Path to the source database |
+| `BACKUP_DEST_DIR` | `/srv/backup/altocumulus` | Directory to write backup artifacts into |
+| `BACKUP_KEEP` | `30` | Number of most recent artifacts to retain (older ones are deleted) |
+| `BACKUP_GPG_RECIPIENT` | *(unset)* | GPG recipient (key ID/email) to encrypt the backup for; encryption is skipped when unset |
+
+Since this data is patient data, always set `BACKUP_GPG_RECIPIENT` so backups are encrypted at
+rest, and `rsync` the encrypted artifacts to a separate machine or NAS — not just the same server's
+disk.
+
+`.kamal/hooks/pre-deploy` runs the backup on every server before each deploy automatically. Set
+`SKIP_PRE_DEPLOY_BACKUP=1` to skip it for a given deploy.
+
+To restore:
+
+```bash
+bin/kamal app stop
+gpg -d production-20260909T020000Z-123.sqlite3.gz.gpg | gunzip > /srv/altocumulus/storage/production.sqlite3
+rm -f /srv/altocumulus/storage/production.sqlite3-wal /srv/altocumulus/storage/production.sqlite3-shm
+chown 1000:1000 /srv/altocumulus/storage/production.sqlite3
+bin/kamal app boot
+```
+
+Forgetting to remove the `-wal`/`-shm` files can let a stale WAL overwrite the data you just
+restored. Also make sure the app version running matches the one the backup was taken from —
+restoring an old database under a newer version can break on unapplied migrations.
+
+A daily snapshot can lose up to 24 hours of data. To tighten the recovery point objective, pair
+this with continuous replication via [Litestream](https://litestream.io) (e.g. to a file replica
+on a NAS, or to an S3-compatible target like MinIO).
+
+The biggest risk with backups is not noticing when they stop working: monitor and alert on the
+cron job's output, monitor the freshness of the most recent backup artifact, and periodically
+rehearse an actual restore.
+
 ## Development rules
 
 The conventions for the development flow, including AI agents, are documented here.

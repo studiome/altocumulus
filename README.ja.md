@@ -372,6 +372,66 @@ bin/kamal deploy    # 以降
 実行）を通じて、初回デプロイ時に最初の管理者アカウントが自動作成されます。
 詳しくは[セットアップ](#セットアップ)を参照してください。
 
+### データベースのバックアップ
+
+Rails は SQLite を WAL モードで開くため、稼働中に `production.sqlite3` を単純に `cp` すると
+壊れたバックアップになることがあります（直近のコミットが `-wal` ファイルにだけ残っている
+場合があるため）。`bin/backup-db` は代わりに SQLite の Online Backup API
+（`sqlite3 <db> ".backup '<dest>'"`）を使うため、アプリが書き込み中でも一貫性のある
+バックアップが取得できます。
+
+バックアップ対象は `storage/production.sqlite3` のみです。cache/queue/cable 用のデータベースは
+再生成可能なため（このアプリは独自のジョブを定義していません。`config/recurring.yml` 参照）、
+バックアップ不要です。
+
+`config/deploy.yml` では storage ディレクトリを named volume ではなくホストのパス
+（`/srv/altocumulus/storage`）にバインドマウントしているため、バックアップスクリプトは
+ホスト上から直接実行できます。
+
+サーバに設置して cron から実行します。
+
+```bash
+sudo install -m 755 bin/backup-db /usr/local/bin/altocumulus-backup
+# crontab -e
+0 2 * * * BACKUP_GPG_RECIPIENT=backup@example.org /usr/local/bin/altocumulus-backup >> /var/log/altocumulus-backup.log 2>&1
+```
+
+環境変数:
+
+| 変数 | デフォルト | 意味 |
+| --- | --- | --- |
+| `BACKUP_SRC` | `/srv/altocumulus/storage/production.sqlite3` | バックアップ元データベースのパス |
+| `BACKUP_DEST_DIR` | `/srv/backup/altocumulus` | バックアップ成果物の出力先ディレクトリ |
+| `BACKUP_KEEP` | `30` | 保持する最新の成果物数（それより古いものは削除） |
+| `BACKUP_GPG_RECIPIENT` | （未設定） | バックアップを暗号化する GPG 受信者（鍵ID/メールアドレス）。未設定の場合は暗号化をスキップ |
+
+患者データであるため、`BACKUP_GPG_RECIPIENT` を必ず設定して保存時に暗号化し、暗号化した
+成果物を同じサーバのディスクだけでなく、別筐体や NAS へ `rsync` してください。
+
+`.kamal/hooks/pre-deploy` が各デプロイ前に全サーバでこのバックアップを自動実行します。
+このデプロイだけスキップしたい場合は `SKIP_PRE_DEPLOY_BACKUP=1` を設定してください。
+
+リストア手順:
+
+```bash
+bin/kamal app stop
+gpg -d production-20260909T020000Z-123.sqlite3.gz.gpg | gunzip > /srv/altocumulus/storage/production.sqlite3
+rm -f /srv/altocumulus/storage/production.sqlite3-wal /srv/altocumulus/storage/production.sqlite3-shm
+chown 1000:1000 /srv/altocumulus/storage/production.sqlite3
+bin/kamal app boot
+```
+
+`-wal` / `-shm` ファイルの削除を忘れると、古い WAL の内容でリストアしたデータが上書きされて
+しまいます。また、バックアップを取得した時点のアプリバージョンに戻さないと、未適用の
+マイグレーションが原因で壊れることがあるので注意してください。
+
+日次スナップショットでは最大 24 時間分のデータを失う可能性があります。RPO（目標復旧時点）を
+詰めたい場合は、[Litestream](https://litestream.io) による継続的レプリケーション（NAS への
+file レプリカ、または MinIO のような S3 互換先など）を併用してください。
+
+バックアップにおける最大のリスクは、失敗に気づかないことです。cron ジョブの出力を監視・通知し、
+最新のバックアップ成果物の鮮度を監視し、定期的に実際のリストアを演習してください。
+
 ## 開発ルール
 
 AI エージェントを含む開発フローの取り決めは以下にまとめています。
