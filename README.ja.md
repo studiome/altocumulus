@@ -55,7 +55,8 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 | 管理者メモ（管理者専用） | `/admin/admin_notes` | 管理者間の申し送り用フリーテキストメモ |
 
 **認証・利用者管理・権限分離（一般/管理者）・アクセスログ・無操作タイムアウトを実装済みです。**
-すべての画面はログインしたユーザーのみアクセスできます（`/login` を除く）。
+アプリケーションの画面はログインしたユーザーのみアクセスできます（`/login`、
+言語切り替え（`PATCH /locale`）、ヘルスチェック `/up` を除く）。
 
 ## 技術スタック
 
@@ -64,7 +65,7 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 | 言語 / フレームワーク | Ruby 4.0.6 / Rails 8.1 |
 | データベース | SQLite（アプリ本体・Solid Queue・Solid Cache・Solid Cable の 4 スキーマ） |
 | バックグラウンド処理 | Solid Queue / Solid Cache / Solid Cable |
-| アセット | Propshaft + importmap-rails（**Node / バンドラ不使用**） |
+| アセット | Propshaft + importmap-rails（**Node / JS バンドラ不使用**） |
 | CSS | Tailwind CSS + daisyUI（`tailwindcss-rails`） |
 | フロントエンド | Hotwire（Turbo Drive / Turbo Streams / Stimulus） |
 | テスト | Minitest + fixtures、システムテストは Capybara + Selenium |

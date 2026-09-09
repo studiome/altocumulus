@@ -56,7 +56,8 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Admin notes (admin only) | `/admin/admin_notes` | Free-text handover notes shared between administrators |
 
 **Authentication, user management, role separation (user/admin), access logging, and
-idle timeout are implemented.** Every screen requires a logged-in user (except `/login`).
+idle timeout are implemented.** Every application screen requires a logged-in user; the
+exceptions are `/login`, the language switcher (`PATCH /locale`), and the `/up` health check.
 
 ## Tech stack
 
@@ -65,7 +66,7 @@ idle timeout are implemented.** Every screen requires a logged-in user (except `
 | Language / framework | Ruby 4.0.6 / Rails 8.1 |
 | Database | SQLite (four schemas: the app itself, Solid Queue, Solid Cache, Solid Cable) |
 | Background processing | Solid Queue / Solid Cache / Solid Cable |
-| Assets | Propshaft + importmap-rails (**no Node, no bundler**) |
+| Assets | Propshaft + importmap-rails (**no Node, no JS bundler**) |
 | CSS | Tailwind CSS + daisyUI (`tailwindcss-rails`) |
 | Front end | Hotwire (Turbo Drive / Turbo Streams / Stimulus) |
 | Testing | Minitest + fixtures; system tests with Capybara + Selenium |
