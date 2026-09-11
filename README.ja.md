@@ -376,6 +376,130 @@ bin/kamal deploy    # 以降
 実行）を通じて、初回デプロイ時に最初の管理者アカウントが自動作成されます。
 詳しくは[セットアップ](#セットアップ)を参照してください。
 
+この構成は web サーバ1台構成が前提です。`SOLID_QUEUE_IN_PUMA` によって Solid Queue の
+supervisor を Puma プロセス内で動かしており、`config/deploy.yml` も SQLite の storage
+ディレクトリを共有ボリュームではなくホストの特定パス（`/srv/altocumulus/storage`）に
+バインドマウントしています。
+
+### 初回デプロイ前の準備
+
+**`config/master.key`。** `.kamal/secrets` は `RAILS_MASTER_KEY=$(cat config/master.key)` を
+読み込みますが、`config/*.key` は `.gitignore` 対象でリポジトリには含まれていません。鍵を
+すでに持っているなら `config/master.key` に配置してください（`chmod 600`）。持っていない
+場合、このアプリは credentials に独自の値を入れておらず（実質 `secret_key_base` のみ）、
+作り直しても問題ありません。
+
+```bash
+rm config/credentials.yml.enc
+EDITOR=true bin/rails credentials:edit
+```
+
+ただし、既に稼働中の環境で作り直すと `secret_key_base` が変わり、既存の全セッションが
+無効化されます（再ログインが必要になるだけで、データが失われるわけではありません）。
+
+**`config/deploy.yml` のプレースホルダ。** このファイルは Rails の雛形のプレースホルダの
+ままです。`servers.web` の `192.168.0.1` は実サーバのホスト名/IP に、`registry.server` の
+`localhost:5555` は実在するレジストリ（ghcr.io、Docker Hub、自前レジストリなど）と
+`username` / `password`（`KAMAL_REGISTRY_PASSWORD`）に置き換えてください。独自ドメインで
+Let's Encrypt を使う場合は `proxy:` のコメントを外し、あわせて
+`config/environments/production.rb` の `config.assume_ssl`（28行目）と `config.force_ssl`
+（31行目）のコメントも外してください。`deploy.yml` のコメントにもある通り、片方だけ有効に
+するとリダイレクトループになります。
+
+**初期管理者の環境変数を `env:` に追加する。** `db/seeds.rb` はコンテナ内の ENV を
+読みますが、Kamal は `config/deploy.yml` の `env:` に書かれた変数しかコンテナへ渡しません。
+現状これらは未記載なので、このままデプロイすると管理者が作られず、ログインできる人が
+誰もいない状態になります。
+
+```yaml
+env:
+  secret:
+    - RAILS_MASTER_KEY
+    - BOOTSTRAP_ADMIN_PASSWORD
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+    BOOTSTRAP_ADMIN_LOGIN_ID: admin@example.org
+    ACCOUNT_IDENTIFIER: email          # username にする場合はここで指定
+    SESSION_IDLE_TIMEOUT_MINUTES: 10
+```
+
+`.kamal/secrets` にもシークレットを追記します（生の値は書かないこと）:
+
+```bash
+BOOTSTRAP_ADMIN_PASSWORD=$BOOTSTRAP_ADMIN_PASSWORD
+```
+
+[セットアップ](#セットアップ)の表にある通り、`ACCOUNT_IDENTIFIER` はここで決めたら
+以後変更しないでください。
+
+**サーバ側の準備。** バインドマウント先のディレクトリを、コンテナ内の `rails` ユーザー
+所有で作成します。
+
+```bash
+mkdir -p /srv/altocumulus/storage
+chown 1000:1000 /srv/altocumulus/storage
+```
+
+バックアップスクリプトのインストールも必要です。[データベースのバックアップ](#データベースのバックアップ)を
+参照してください。デプロイを実行するマシンから対象サーバへ `ssh` でログインできることも
+必要です（Kamal 本体も `.kamal/hooks/pre-deploy` も ssh を使います）。
+
+### 初回デプロイ
+
+`.kamal/hooks/pre-deploy` は各デプロイ前に全サーバで `ssh` 経由
+`/usr/local/bin/altocumulus-backup` を実行してバックアップを取りますが、`bin/backup-db` は
+対象 DB が存在しないとエラー終了します。初回デプロイの時点ではまだ DB が無いため、
+このフックが失敗して `kamal setup` が止まってしまいます。初回だけバックアップを
+スキップしてください。
+
+```bash
+export BOOTSTRAP_ADMIN_PASSWORD='...'
+SKIP_PRE_DEPLOY_BACKUP=1 bin/kamal setup
+```
+
+以降は `bin/kamal deploy` を使います（pre-deploy で自動的にバックアップが取られます）。
+デプロイが成功したか確認するには:
+
+```bash
+curl -f https://<host>/up
+bin/kamal logs -f
+```
+
+`config/deploy.yml` にはいくつかの運用コマンドが alias として定義済みです:
+
+| コマンド | 用途 |
+| --- | --- |
+| `bin/kamal logs` | アプリケーションログを追跡 |
+| `bin/kamal console` | サーバ上で Rails console を開く |
+| `bin/kamal shell` | 稼働中コンテナでシェルを開く |
+| `bin/kamal dbc` | `rails dbconsole` を開く |
+| `bin/kamal app stop` / `bin/kamal app boot` | アプリコンテナの停止 / 起動 |
+| `bin/kamal rollback <version>` | 以前のバージョンへロールバック |
+
+`rollback` では pre-deploy のバックアップはスキップされます（フックが `KAMAL_COMMAND` を
+判定し、`rollback` の場合は早期に終了するため）。
+
+### Kamal を使わない場合
+
+Kamal を使わず素の Docker で試す場合の手順です（`Dockerfile` 冒頭のコメントと同等ですが、
+必要な環境変数を補っています）:
+
+```bash
+docker build -t altocumulus .
+mkdir -p /srv/altocumulus/storage && chown 1000:1000 /srv/altocumulus/storage
+docker run -d --name altocumulus -p 80:80 \
+  -v /srv/altocumulus/storage:/rails/storage \
+  -e RAILS_MASTER_KEY="$(cat config/master.key)" \
+  -e SOLID_QUEUE_IN_PUMA=true \
+  -e ACCOUNT_IDENTIFIER=email \
+  -e BOOTSTRAP_ADMIN_LOGIN_ID=admin@example.org \
+  -e BOOTSTRAP_ADMIN_PASSWORD='...' \
+  altocumulus
+```
+
+SSL 終端が無いため、本番では前段に nginx/Caddy を置き、`assume_ssl` / `force_ssl` を
+有効にしてください。
+
 ### データベースのバックアップ
 
 Rails は SQLite を WAL モードで開くため、稼働中に `production.sqlite3` を単純に `cp` すると

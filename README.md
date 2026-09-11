@@ -391,6 +391,123 @@ created automatically on the first deploy, through the `db:prepare` (plus `db:se
 database is created fresh) run by `bin/docker-entrypoint` at container start. See [Setup](#setup)
 for details.
 
+This configuration assumes a single web server: `SOLID_QUEUE_IN_PUMA` runs the Solid Queue
+supervisor inside the same Puma process, and `config/deploy.yml` bind-mounts SQLite's storage
+directory from a specific host path (`/srv/altocumulus/storage`) rather than a shared volume.
+
+### Before the first deploy
+
+**`config/master.key`.** `.kamal/secrets` reads `RAILS_MASTER_KEY=$(cat config/master.key)`,
+but `config/*.key` is gitignored and isn't part of the repository. If you already hold the key,
+place it at `config/master.key` (`chmod 600`). Otherwise, this app stores nothing of its own in
+credentials (only `secret_key_base`), so it's fine to generate a fresh one:
+
+```bash
+rm config/credentials.yml.enc
+EDITOR=true bin/rails credentials:edit
+```
+
+Regenerating it against an environment that's already live changes `secret_key_base` and
+invalidates every existing session (users just need to log in again; no data is lost).
+
+**Placeholders in `config/deploy.yml`.** The file still has the Rails template's placeholders:
+`servers.web`'s `192.168.0.1` needs the real server's host/IP, and `registry.server`'s
+`localhost:5555` needs a real registry (ghcr.io, Docker Hub, a self-hosted registry, ...) along
+with `username` / `password` (`KAMAL_REGISTRY_PASSWORD`). If you're using a custom domain with
+Let's Encrypt, uncomment the `proxy:` block -- and also uncomment `config.assume_ssl` and
+`config.force_ssl` in `config/environments/production.rb` (lines 28 and 31), since enabling only
+one of the two causes a redirect loop, as the `deploy.yml` comment notes.
+
+**Add the bootstrap admin variables to `env:`.** `db/seeds.rb` reads these from the container's
+ENV, but Kamal only forwards variables listed under `env:` in `config/deploy.yml`. They aren't
+there yet, so deploying as-is creates no administrator and leaves nobody able to log in:
+
+```yaml
+env:
+  secret:
+    - RAILS_MASTER_KEY
+    - BOOTSTRAP_ADMIN_PASSWORD
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+    BOOTSTRAP_ADMIN_LOGIN_ID: admin@example.org
+    ACCOUNT_IDENTIFIER: email          # set to "username" instead if you prefer
+    SESSION_IDLE_TIMEOUT_MINUTES: 10
+```
+
+Add the secret to `.kamal/secrets` too (never the raw value):
+
+```bash
+BOOTSTRAP_ADMIN_PASSWORD=$BOOTSTRAP_ADMIN_PASSWORD
+```
+
+As the [Setup](#setup) table notes, decide `ACCOUNT_IDENTIFIER` now and don't change it later.
+
+**Prepare the server.** Create the bind-mounted storage directory, owned by the container's
+`rails` user:
+
+```bash
+mkdir -p /srv/altocumulus/storage
+chown 1000:1000 /srv/altocumulus/storage
+```
+
+Install the backup script too -- see [Database backup](#database-backup) below. The machine you
+deploy from also needs `ssh` access to the server, since both Kamal itself and
+`.kamal/hooks/pre-deploy` use it.
+
+### First deploy
+
+`.kamal/hooks/pre-deploy` backs up the database on every server before each deploy by running
+`/usr/local/bin/altocumulus-backup` over `ssh`, but `bin/backup-db` exits with an error when the
+database doesn't exist yet. On the very first deploy there's no database yet, so the hook fails
+and `kamal setup` aborts unless the backup is skipped for that one run:
+
+```bash
+export BOOTSTRAP_ADMIN_PASSWORD='...'
+SKIP_PRE_DEPLOY_BACKUP=1 bin/kamal setup
+```
+
+From then on, use `bin/kamal deploy` (which runs the pre-deploy backup automatically). To check
+the deploy succeeded:
+
+```bash
+curl -f https://<host>/up
+bin/kamal logs -f
+```
+
+A few operational commands are predefined as aliases in `config/deploy.yml`:
+
+| Command | Purpose |
+| --- | --- |
+| `bin/kamal logs` | Tail application logs |
+| `bin/kamal console` | Open a Rails console on the server |
+| `bin/kamal shell` | Open a shell in the running container |
+| `bin/kamal dbc` | Open a `rails dbconsole` |
+| `bin/kamal app stop` / `bin/kamal app boot` | Stop / start the app container |
+| `bin/kamal rollback <version>` | Roll back to a previous version |
+
+`rollback` skips the pre-deploy backup -- the hook checks `KAMAL_COMMAND` and exits early for it.
+
+### Running without Kamal
+
+To try a plain Docker build without Kamal (matching the comment at the top of `Dockerfile`, with
+the extra environment variables filled in):
+
+```bash
+docker build -t altocumulus .
+mkdir -p /srv/altocumulus/storage && chown 1000:1000 /srv/altocumulus/storage
+docker run -d --name altocumulus -p 80:80 \
+  -v /srv/altocumulus/storage:/rails/storage \
+  -e RAILS_MASTER_KEY="$(cat config/master.key)" \
+  -e SOLID_QUEUE_IN_PUMA=true \
+  -e ACCOUNT_IDENTIFIER=email \
+  -e BOOTSTRAP_ADMIN_LOGIN_ID=admin@example.org \
+  -e BOOTSTRAP_ADMIN_PASSWORD='...' \
+  altocumulus
+```
+
+There's no SSL termination here, so put nginx/Caddy in front in production and enable
+`assume_ssl` / `force_ssl` accordingly.
+
 ### Database backup
 
 Rails opens SQLite in WAL mode, so copying `production.sqlite3` with a plain `cp` while the app is
