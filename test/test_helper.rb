@@ -2,6 +2,20 @@ ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
 
+# Lets a test temporarily switch the server's account_identifier mode
+# (email/username) without depending on ENV or process restart. Always
+# restores the original value, even if the block raises. Defined before
+# ActiveSupport::TestCase below so it can be included there.
+module AccountIdentifierTestHelper
+  def with_account_identifier(mode)
+    original = Rails.application.config.x.account_identifier
+    Rails.application.config.x.account_identifier = mode
+    yield
+  ensure
+    Rails.application.config.x.account_identifier = original
+  end
+end
+
 module ActiveSupport
   class TestCase
     # Run tests in parallel with specified workers
@@ -11,6 +25,7 @@ module ActiveSupport
     fixtures :all
 
     # Add more helper methods to be used by all tests here...
+    include AccountIdentifierTestHelper
   end
 end
 
@@ -21,7 +36,7 @@ module SignInHelper
   DEFAULT_PASSWORD = "password"
 
   def sign_in_as(user, password: SignInHelper::DEFAULT_PASSWORD)
-    post login_url, params: { session: { email: user.email, password: password } }
+    post login_url, params: { session: { login_id: user.login_id, password: password } }
   end
 
   def sign_out

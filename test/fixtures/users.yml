@@ -1,26 +1,26 @@
 admin:
-  email: admin@example.com
+  login_id: admin@example.com
   name: Admin User
   password_digest: <%= BCrypt::Password.create("password") %>
   role: admin
   active: true
 
 member:
-  email: member@example.com
+  login_id: member@example.com
   name: Member User
   password_digest: <%= BCrypt::Password.create("password") %>
   role: user
   active: true
 
 inactive:
-  email: inactive@example.com
+  login_id: inactive@example.com
   name: Inactive User
   password_digest: <%= BCrypt::Password.create("password") %>
   role: user
   active: false
 
 japanese_member:
-  email: ja-member@example.com
+  login_id: ja-member@example.com
   name: Japanese Member
   password_digest: <%= BCrypt::Password.create("password") %>
   role: user
@@ -28,7 +28,7 @@ japanese_member:
   locale: ja
 
 japanese_admin:
-  email: ja-admin@example.com
+  login_id: ja-admin@example.com
   name: Japanese Admin
   password_digest: <%= BCrypt::Password.create("password") %>
   role: admin

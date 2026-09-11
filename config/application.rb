@@ -47,6 +47,14 @@ module Altocumulus
     # relax this without a code change.
     config.x.session_idle_timeout = (ENV["SESSION_IDLE_TIMEOUT_MINUTES"].presence || 10).to_i.minutes
 
+    # Whether an account logs in with an email address or a plain username.
+    # This is a server-setup-time decision, not a per-request one: switching
+    # it after users already exist makes existing login_id values fail the
+    # new format validation, so pick a mode when standing up the server and
+    # leave it alone afterward. See User.identifier_mode for the fallback
+    # applied to an unrecognized value.
+    config.x.account_identifier = (ENV["ACCOUNT_IDENTIFIER"].presence || "email")
+
     # The operations calendar flags a day whose admission count exceeds this
     # as a "congestion" warning. Display-only: it never blocks a save (see
     # OperationsCalendar). Overridable per-environment via ENV.

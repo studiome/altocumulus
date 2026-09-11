@@ -39,7 +39,7 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 
 | Feature | Screen | Description |
 | --- | --- | --- |
-| Login | `/login` | Email + password authentication. Sessions expire automatically after a period of inactivity |
+| Login | `/login` | Login id (email or username, per `ACCOUNT_IDENTIFIER`) + password authentication. Sessions expire automatically after a period of inactivity |
 | Operations calendar (home) | `/operations_calendar` | Day-by-day view spanning 50 days by default. Surgery and admission counts, congestion warnings, holidays / per-day comments, summaries (waiting, recently updated, needs attention), and announcements |
 | Patient ledger | `/patients` | Patient master data, with keyword search by name or hospital ID and pagination |
 | Patient diagnoses | `/patients/:id/patient_diagnoses` | Per-patient diagnosis history referencing the diagnosis master, holding the diagnosis date and laterality |
@@ -50,7 +50,7 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Cross-entity search | `/search` | Search patients, hospitalizations, and surgeries with a single keyword |
 | Audit log | `/audit_events` | Records and displays create/update/delete of patients, surgeries, and hospitalizations with the operator, IP address, and before/after values |
 | Master data | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` | Diagnosis names, procedures, per-weekday slot rules (fractional slot counts supported), holidays / per-day comments |
-| Account settings | `/account` | Change your own name, email, and password, and switch the display language |
+| Account settings | `/account` | Change your own name, login id, and password, and switch the display language |
 | User management (admin only) | `/admin/users` | Create, edit, and deactivate users and reset passwords. The last active admin can be neither deactivated nor demoted |
 | Announcement management (admin only) | `/admin/announcements` | Create announcements shown on the operations calendar and toggle their visibility |
 | Admin notes (admin only) | `/admin/admin_notes` | Free-text handover notes shared between administrators |
@@ -104,23 +104,27 @@ login screen.
 In development, `bin/setup` also runs the seeds, so you can log in with the following
 demo administrator account (see `db/seeds.rb`).
 
-| Email | Password |
+| Login ID | Password |
 | --- | --- |
 | `admin@example.com` | `password` |
 
 In production, setting **both** of the environment variables below on first boot creates
 a bootstrap administrator account (named `Administrator`) when `db:seed` runs. If a user
-with the same email already exists, nothing happens.
+with the same login id already exists, nothing happens.
 
 | Environment variable | Description |
 | --- | --- |
-| `BOOTSTRAP_ADMIN_EMAIL` | Email of the first administrator |
+| `BOOTSTRAP_ADMIN_LOGIN_ID` | Login id (email or username, depending on `ACCOUNT_IDENTIFIER`) of the first administrator |
 | `BOOTSTRAP_ADMIN_PASSWORD` | Password of the first administrator |
+
+`BOOTSTRAP_ADMIN_EMAIL` is kept as an older name for the same variable: it is still read as
+a fallback when `BOOTSTRAP_ADMIN_LOGIN_ID` is unset.
 
 The following environment variables tune runtime behavior (`config/application.rb`).
 
 | Environment variable | Description | Default |
 | --- | --- | --- |
+| `ACCOUNT_IDENTIFIER` | Whether an account logs in with an `email` address or a `username`. **Decide this when first setting up the server and do not change it afterward** -- switching modes later makes existing login ids fail the new format validation. | `email` |
 | `SESSION_IDLE_TIMEOUT_MINUTES` | Session idle timeout, in minutes | `10` |
 | `ADMISSION_WARNING_THRESHOLD` | Admissions per day above which the operations calendar flags congestion | `5` |
 
@@ -197,7 +201,7 @@ erDiagram
         string laterality
     }
     User {
-        string email UK
+        string login_id UK
         string role "user/admin"
         string locale "en/ja"
         boolean active
@@ -282,7 +286,7 @@ The session stores the time of last access; going longer than `config.x.session_
 (10 minutes by default, configurable via `SESSION_IDLE_TIMEOUT_MINUTES`) without activity expires
 the session and records a `timeout` event in `AccessLog`. Successful and failed logins and logouts
 are recorded the same way (with IP address, User-Agent, and requested URL). A failed login does not
-distinguish between an unknown email and a wrong password, and `authenticate_by` performs a dummy
+distinguish between an unknown login id and a wrong password, and `authenticate_by` performs a dummy
 BCrypt comparison so the two cannot be told apart by response time either.
 
 `User` also validates that **the last active administrator cannot be deactivated or demoted**,
@@ -382,7 +386,7 @@ bin/kamal deploy    # afterwards
 
 The health check is exposed at `/up` (`rails/health#show`).
 
-If `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` are set, the first administrator account is
+If `BOOTSTRAP_ADMIN_LOGIN_ID` (or the older `BOOTSTRAP_ADMIN_EMAIL`) / `BOOTSTRAP_ADMIN_PASSWORD` are set, the first administrator account is
 created automatically on the first deploy, through the `db:prepare` (plus `db:seed` when the
 database is created fresh) run by `bin/docker-entrypoint` at container start. See [Setup](#setup)
 for details.

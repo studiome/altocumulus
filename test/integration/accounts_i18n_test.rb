@@ -42,7 +42,7 @@ class AccountsI18nTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:japanese_member))
     user = users(:japanese_member)
 
-    patch account_url, params: { user: { name: "Updated Name", email: user.email } }
+    patch account_url, params: { user: { name: "Updated Name", login_id: user.login_id } }
 
     follow_redirect!
     assert_match "アカウントを更新しました。", response.body
@@ -52,7 +52,7 @@ class AccountsI18nTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:member))
     user = users(:member)
 
-    patch account_url, params: { user: { name: "Updated Name", email: user.email } }
+    patch account_url, params: { user: { name: "Updated Name", login_id: user.login_id } }
 
     follow_redirect!
     assert_match "Account was successfully updated.", response.body
@@ -61,7 +61,7 @@ class AccountsI18nTest < ActionDispatch::IntegrationTest
   test "form validation errors heading renders in Japanese" do
     sign_in_as(users(:japanese_member))
 
-    patch account_url, params: { user: { name: "", email: "" } }
+    patch account_url, params: { user: { name: "", login_id: "" } }
 
     assert_response :unprocessable_entity
     assert_match(/件のエラーによりこのアカウントを保存できませんでした:/, response.body)
@@ -70,7 +70,7 @@ class AccountsI18nTest < ActionDispatch::IntegrationTest
   test "form validation errors heading renders in English" do
     sign_in_as(users(:member))
 
-    patch account_url, params: { user: { name: "", email: "" } }
+    patch account_url, params: { user: { name: "", login_id: "" } }
 
     assert_response :unprocessable_entity
     assert_match(/errors? prohibited this account from being saved:/, response.body)

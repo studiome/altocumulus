@@ -9,7 +9,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
   test "admin can view the user list" do
     get admin_users_url
     assert_response :success
-    assert_select "td", text: @member.email
+    assert_select "td", text: @member.login_id
   end
 
   test "member cannot view the user list" do
@@ -30,13 +30,13 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
 
   test "admin can create a new user" do
     assert_difference("User.count", 1) do
-      post admin_users_url, params: { user: { name: "New User", email: "created@example.com", password: "password", password_confirmation: "password", role: "user", active: true } }
+      post admin_users_url, params: { user: { name: "New User", login_id: "created@example.com", password: "password", password_confirmation: "password", role: "user", active: true } }
     end
     assert_redirected_to admin_users_url
   end
 
   test "admin can update a user's role and active flag" do
-    patch admin_user_url(@member), params: { user: { name: @member.name, email: @member.email, role: "admin", active: true } }
+    patch admin_user_url(@member), params: { user: { name: @member.name, login_id: @member.login_id, role: "admin", active: true } }
     assert_redirected_to admin_users_url
     assert @member.reload.admin?
   end
@@ -44,7 +44,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
   test "admin cannot deactivate the last active admin" do
     User.where(role: "admin").where.not(id: @admin.id).update_all(active: false)
 
-    patch admin_user_url(@admin), params: { user: { name: @admin.name, email: @admin.email, role: @admin.role, active: false } }
+    patch admin_user_url(@admin), params: { user: { name: @admin.name, login_id: @admin.login_id, role: @admin.role, active: false } }
     assert_response :unprocessable_entity
     assert @admin.reload.active?
   end

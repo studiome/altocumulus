@@ -21,7 +21,7 @@
         <thead>
           <tr>
             <th class="bg-base-200"><%= User.human_attribute_name(:name) %></th>
-            <th class="bg-base-200"><%= User.human_attribute_name(:email) %></th>
+            <th class="bg-base-200"><%= User.human_attribute_name(:login_id) %></th>
             <th class="bg-base-200"><%= User.human_attribute_name(:role) %></th>
             <th class="bg-base-200"><%= t(".status_header") %></th>
             <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
@@ -31,7 +31,7 @@
           <% @users.each do |user| %>
             <tr class="row-hover">
               <td class="font-semibold"><%= user.name %></td>
-              <td><%= user.email %></td>
+              <td><%= user.login_id %></td>
               <td><span class="badge <%= user.admin? ? "badge-primary" : "badge-ghost" %>"><%= user.role_label %></span></td>
               <td><span class="badge <%= user.active? ? "badge-success" : "badge-error" %>"><%= user.active? ? t(".active_status") : t(".inactive_status") %></span></td>
               <td class="text-right flex justify-end gap-2">

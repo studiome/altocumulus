@@ -257,7 +257,6 @@ ja:
       user:
         active: "有効"
         current_password: "現在のパスワード"
-        email: "メールアドレス"
         locale: "表示言語"
         name: "氏名"
         password: "パスワード"
@@ -287,6 +286,9 @@ ja:
           attributes:
             base:
               cannot_remove_last_admin: "最後の管理者を削除・降格・無効化することはできません"
+            login_id:
+              invalid_email_format: "は有効なメールアドレスではありません"
+              invalid_username_format: "は半角小文字英数字・ドット・アンダースコア・ハイフンのみ、3〜32文字で入力してください"
         hospitalization:
           attributes:
             hospitalization_diagnoses:
@@ -401,6 +403,9 @@ ja:
       role_options:
         user: "利用者"
         admin: "管理者"
+      login_id_labels:
+        email: "メールアドレス"
+        username: "ユーザー名"
     audit_event:
       # AUDITABLE_TYPES itself (Patient/Surgery/Hospitalization) is not
       # listed here -- it reuses activerecord.models.* via
@@ -1018,7 +1023,8 @@ ja:
       submit_button: "サインイン"
     create:
       success_notice: "サインインしました。"
-      invalid_credentials_alert: "メールアドレスまたはパスワードが正しくありません。"
+      invalid_credentials_alert_email: "メールアドレスまたはパスワードが正しくありません。"
+      invalid_credentials_alert_username: "ユーザー名またはパスワードが正しくありません。"
     destroy:
       success_notice: "サインアウトしました。"
 

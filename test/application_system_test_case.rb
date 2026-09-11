@@ -15,7 +15,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # request-test version).
   def sign_in_as(user, password: SignInHelper::DEFAULT_PASSWORD)
     visit login_path
-    fill_in "Email", with: user.email
+    fill_in "Email", with: user.login_id
     fill_in "Password", with: password
     click_button "Sign In"
     # Wait for the post-login redirect to fully land before the test's own

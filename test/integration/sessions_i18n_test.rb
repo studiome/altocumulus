@@ -43,14 +43,14 @@ class SessionsI18nTest < ActionDispatch::IntegrationTest
   test "invalid credentials alert renders in Japanese" do
     switch_to_japanese
 
-    post login_url, params: { session: { email: users(:admin).email, password: "wrong-password" } }
+    post login_url, params: { session: { login_id: users(:admin).login_id, password: "wrong-password" } }
 
     assert_response :unprocessable_entity
     assert_match "メールアドレスまたはパスワードが正しくありません。", response.body
   end
 
   test "invalid credentials alert renders unchanged in English" do
-    post login_url, params: { session: { email: users(:admin).email, password: "wrong-password" } }
+    post login_url, params: { session: { login_id: users(:admin).login_id, password: "wrong-password" } }
 
     assert_response :unprocessable_entity
     assert_equal "Invalid email or password.", flash[:alert]
@@ -59,7 +59,7 @@ class SessionsI18nTest < ActionDispatch::IntegrationTest
   test "sign in success flash renders in Japanese" do
     switch_to_japanese
 
-    post login_url, params: { session: { email: users(:japanese_admin).email, password: "password" } }
+    post login_url, params: { session: { login_id: users(:japanese_admin).login_id, password: "password" } }
 
     assert_redirected_to root_url
     follow_redirect!
@@ -67,7 +67,7 @@ class SessionsI18nTest < ActionDispatch::IntegrationTest
   end
 
   test "sign in success flash renders unchanged in English" do
-    post login_url, params: { session: { email: users(:admin).email, password: "password" } }
+    post login_url, params: { session: { login_id: users(:admin).login_id, password: "password" } }
 
     assert_redirected_to root_url
     follow_redirect!

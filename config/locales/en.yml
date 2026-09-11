@@ -206,6 +206,9 @@ en:
           attributes:
             base:
               cannot_remove_last_admin: "Cannot remove the last active admin"
+            login_id:
+              invalid_email_format: "is not a valid email address"
+              invalid_username_format: "must be 3-32 characters using only lowercase letters, numbers, dots, underscores, or hyphens"
         hospitalization:
           attributes:
             hospitalization_diagnoses:
@@ -324,6 +327,11 @@ en:
       role_options:
         user: "User"
         admin: "Admin"
+      # Label for :login_id, chosen per config.x.account_identifier (see
+      # User.human_attribute_name).
+      login_id_labels:
+        email: "Email"
+        username: "Username"
     audit_event:
       # AUDITABLE_TYPES itself (Patient/Surgery/Hospitalization) is not
       # listed here -- it reuses activerecord.models.* via
@@ -1004,13 +1012,15 @@ en:
   #     title, and (via `sessions.new.submit_button`, kept as a *separate*
   #     key despite the identical English text) is available if the submit
   #     label and page title ever need to diverge later.
-  #   - Login form's email/password labels reuse `User.human_attribute_name`
+  #   - Login form's login_id/password labels reuse `User.human_attribute_name`
   #     directly: `form_with scope: :session` isn't backed by a real model,
   #     so Rails' automatic label translation has no `User` attribute
   #     metadata to draw on and would otherwise stay stuck on the raw
   #     humanized attribute name in every locale. Since the fields really are
-  #     a User's email/password, reusing that model's own translations avoids
-  #     a duplicate pair of keys with the identical text.
+  #     a User's login_id/password, reusing that model's own translations
+  #     (login_id's label itself switches on config.x.account_identifier --
+  #     see User.human_attribute_name) avoids a duplicate pair of keys with
+  #     the identical text.
   #   - `shared.pagination.*` and `shared.diagnosis_modal.*` are keyed off
   #     their partials' own virtual paths (`shared/_pagination.html.erb`,
   #     `shared/_diagnosis_modal.html.erb`), same as any other partial.
@@ -1125,7 +1135,8 @@ en:
       submit_button: "Sign In"
     create:
       success_notice: "Signed in successfully."
-      invalid_credentials_alert: "Invalid email or password."
+      invalid_credentials_alert_email: "Invalid email or password."
+      invalid_credentials_alert_username: "Invalid username or password."
     destroy:
       success_notice: "Signed out."
 

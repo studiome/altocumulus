@@ -38,7 +38,7 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 
 | 機能 | 画面 | 概要 |
 | --- | --- | --- |
-| ログイン | `/login` | メールアドレス + パスワードによる認証。無操作が一定時間続くと自動的にセッションが失効 |
+| ログイン | `/login` | ログインID（`ACCOUNT_IDENTIFIER` によりメールアドレスまたはユーザー名） + パスワードによる認証。無操作が一定時間続くと自動的にセッションが失効 |
 | 運用カレンダー（トップ） | `/operations_calendar` | 既定 50 日分の日別ビュー。手術・入院件数、混雑注意、休日/日別コメント、待機・直近更新・要確認などのサマリー、お知らせを一覧表示 |
 | 患者台帳 | `/patients` | 患者基本情報の管理。氏名・患者 ID でのキーワード検索、ページネーション対応 |
 | 患者診断 | `/patients/:id/patient_diagnoses` | 診断マスタを参照した患者ごとの診断履歴。診断日と左右区分（laterality）を保持 |
@@ -49,7 +49,7 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 | 横断検索 | `/search` | キーワード 1 つで患者・入院・手術を横断的に検索 |
 | 監査ログ | `/audit_events` | 患者・手術・入院の作成/更新/削除を、操作者・IP アドレス・変更前後の値つきで記録・閲覧 |
 | マスタ管理 | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` | 診断名・術式・曜日別の手術枠ルール（枠数は小数対応）・休日/日別コメント |
-| アカウント設定 | `/account` | 自分の氏名・メールアドレス・パスワードの変更、表示言語の切り替え |
+| アカウント設定 | `/account` | 自分の氏名・ログインID・パスワードの変更、表示言語の切り替え |
 | 利用者管理（管理者専用） | `/admin/users` | 利用者の作成・編集・無効化、パスワード初期化。最後の有効な管理者は無効化・降格できない |
 | お知らせ管理（管理者専用） | `/admin/announcements` | 運用カレンダーに表示するお知らせの作成・公開/非公開切り替え |
 | 管理者メモ（管理者専用） | `/admin/admin_notes` | 管理者間の申し送り用フリーテキストメモ |
@@ -103,23 +103,27 @@ http://localhost:3000 でアクセスできます。ルートパスは運用カ�
 `bin/setup`（開発環境）は seed も実行し、以下のデモ管理者アカウントでログインできます
 （`db/seeds.rb` 参照）。
 
-| メールアドレス | パスワード |
+| ログインID | パスワード |
 | --- | --- |
 | `admin@example.com` | `password` |
 
 本番環境では、初回起動時に以下の環境変数を**両方**指定すると、ブートストラップ用の
 管理者アカウント（名前は `Administrator`）が `db:seed` 実行時に作成されます。
-既に同じメールアドレスのユーザーが存在する場合は何もしません。
+既に同じログインIDのユーザーが存在する場合は何もしません。
 
 | 環境変数 | 内容 |
 | --- | --- |
-| `BOOTSTRAP_ADMIN_EMAIL` | 初回管理者のメールアドレス |
+| `BOOTSTRAP_ADMIN_LOGIN_ID` | 初回管理者のログインID（`ACCOUNT_IDENTIFIER` によりメールアドレスまたはユーザー名） |
 | `BOOTSTRAP_ADMIN_PASSWORD` | 初回管理者のパスワード |
+
+`BOOTSTRAP_ADMIN_EMAIL` は同じ変数の旧名として引き続き利用でき、
+`BOOTSTRAP_ADMIN_LOGIN_ID` が未設定の場合のフォールバックとして参照されます。
 
 その他、以下の環境変数で挙動を調整できます（`config/application.rb`）。
 
 | 環境変数 | 内容 | 既定値 |
 | --- | --- | --- |
+| `ACCOUNT_IDENTIFIER` | ログインIDを `email`（メールアドレス）にするか `username`（ユーザー名）にするか。**サーバ構築時に決定し、以後は変更しないこと**（後から切り替えると既存のログインIDが新しい書式バリデーションに通らなくなる） | `email` |
 | `SESSION_IDLE_TIMEOUT_MINUTES` | セッションの無操作タイムアウト（分） | `10` |
 | `ADMISSION_WARNING_THRESHOLD` | 運用カレンダーで「混雑注意」とする 1 日あたりの入院件数 | `5` |
 
@@ -196,7 +200,7 @@ erDiagram
         string laterality
     }
     User {
-        string email UK
+        string login_id UK
         string role "user/admin"
         string locale "en/ja"
         boolean active
@@ -272,7 +276,7 @@ erDiagram
 （既定 10 分、`SESSION_IDLE_TIMEOUT_MINUTES` で変更可）を超えて無操作だとセッションを
 失効させ、`AccessLog` に `timeout` イベントを記録します。ログイン成功/失敗・ログアウトも
 同様に `AccessLog`（IP アドレス・User-Agent・アクセス URL つき）へ記録されます。ログイン
-失敗時はメールアドレスが存在しない場合と間違ったパスワードの場合を区別せず、`authenticate_by`
+失敗時はログインIDが存在しない場合と間違ったパスワードの場合を区別せず、`authenticate_by`
 がダミーの BCrypt ハッシュ照合まで行うことで応答時間からも判別できないようにしています。
 
 `User` には**最後の有効な管理者を無効化・一般利用者へ降格できない**バリデーションがあり、
@@ -367,7 +371,7 @@ bin/kamal deploy    # 以降
 
 ヘルスチェックは `/up`（`rails/health#show`）で公開されています。
 
-`BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` を設定しておくと、コンテナ起動時に
+`BOOTSTRAP_ADMIN_LOGIN_ID`（または旧名の `BOOTSTRAP_ADMIN_EMAIL`） / `BOOTSTRAP_ADMIN_PASSWORD` を設定しておくと、コンテナ起動時に
 実行される `bin/docker-entrypoint` の `db:prepare`（DB を新規作成した場合は `db:seed` も
 実行）を通じて、初回デプロイ時に最初の管理者アカウントが自動作成されます。
 詳しくは[セットアップ](#セットアップ)を参照してください。

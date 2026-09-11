@@ -15,8 +15,8 @@
         <% end %>
 
         <div class="app-field">
-          <%= form.label :email, User.human_attribute_name(:email), class: "app-field-label" %>
-          <%= form.email_field :email, class: "input w-full focus:input-primary", autofocus: true, autocomplete: "username" %>
+          <%= form.label :login_id, User.human_attribute_name(:login_id), class: "app-field-label" %>
+          <%= login_id_field(form, class: "input w-full focus:input-primary", autofocus: true, autocomplete: "username") %>
         </div>
 
         <div class="app-field">

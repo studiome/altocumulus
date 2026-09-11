@@ -29,7 +29,7 @@ class AdminRoutingTest < ActionDispatch::IntegrationTest
     @admin = users(:admin)
     @member = users(:member)
 
-    patch admin_user_url(@member), params: { user: { name: @member.name, email: @member.email, role: "admin", active: true } }
+    patch admin_user_url(@member), params: { user: { name: @member.name, login_id: @member.login_id, role: "admin", active: true } }
     assert_redirected_to admin_users_url
   end
 

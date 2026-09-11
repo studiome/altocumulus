@@ -11,11 +11,14 @@
 # Bootstrap the very first administrator. Only runs when BOTH env vars are
 # present, and never touches the password of a user that already exists, so
 # re-running `db:seed` in production is always safe.
-bootstrap_admin_email = ENV["BOOTSTRAP_ADMIN_EMAIL"]
+# BOOTSTRAP_ADMIN_LOGIN_ID is the current name; BOOTSTRAP_ADMIN_EMAIL is kept
+# as a fallback for deployments that set it from before the login id could
+# be a username.
+bootstrap_admin_login_id = ENV["BOOTSTRAP_ADMIN_LOGIN_ID"] || ENV["BOOTSTRAP_ADMIN_EMAIL"]
 bootstrap_admin_password = ENV["BOOTSTRAP_ADMIN_PASSWORD"]
 
-if bootstrap_admin_email.present? && bootstrap_admin_password.present?
-  User.find_or_create_by!(email: bootstrap_admin_email) do |user|
+if bootstrap_admin_login_id.present? && bootstrap_admin_password.present?
+  User.find_or_create_by!(login_id: bootstrap_admin_login_id) do |user|
     user.name = "Administrator"
     user.password = bootstrap_admin_password
     user.role = "admin"
@@ -24,7 +27,9 @@ if bootstrap_admin_email.present? && bootstrap_admin_password.present?
 end
 
 if Rails.env.development?
-  User.find_or_create_by!(email: "admin@example.com") do |user|
+  demo_admin_login_id = User.identifier_email? ? "admin@example.com" : "admin"
+
+  User.find_or_create_by!(login_id: demo_admin_login_id) do |user|
     user.name = "Demo Admin"
     user.password = "password"
     user.role = "admin"

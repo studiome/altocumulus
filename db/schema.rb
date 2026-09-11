@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_07_112623) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_11_000000) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -200,13 +200,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_112623) do
   create_table "users", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
-    t.string "email", null: false
     t.string "locale", default: "en", null: false
+    t.string "login_id", null: false
     t.string "name", null: false
     t.string "password_digest", null: false
     t.string "role", default: "user", null: false
     t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["login_id"], name: "index_users_on_login_id", unique: true
   end
 
   add_foreign_key "access_logs", "users"

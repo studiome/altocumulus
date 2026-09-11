@@ -7,11 +7,12 @@ class SessionsController < ApplicationController
   def create
     # Scoping to `active` before `authenticate_by` means a deactivated user's
     # record is invisible to the lookup, so it falls into the same "not
-    # found" branch as an unknown email: `authenticate_by` still runs a dummy
-    # BCrypt hash in that branch, keeping the response time indistinguishable
-    # from a truly nonexistent email (see ActiveRecord::SecurePassword).
+    # found" branch as an unknown login id: `authenticate_by` still runs a
+    # dummy BCrypt hash in that branch, keeping the response time
+    # indistinguishable from a truly nonexistent login id (see
+    # ActiveRecord::SecurePassword).
     user = User.active.authenticate_by(
-      email: session_params[:email],
+      login_id: session_params[:login_id],
       password: session_params[:password]
     )
 
@@ -29,7 +30,7 @@ class SessionsController < ApplicationController
       # account exists. IP, user agent and timestamp are still recorded.
       # Please do not "fix" this back to attributing failures to a user.
       record_access_log(user: nil, event: "login_failed")
-      flash.now[:alert] = t(".invalid_credentials_alert")
+      flash.now[:alert] = t(".invalid_credentials_alert_#{User.identifier_mode}")
       render :new, status: :unprocessable_entity
     end
   end
