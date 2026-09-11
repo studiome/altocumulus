@@ -411,10 +411,18 @@ Regenerating it against an environment that's already live changes `secret_key_b
 invalidates every existing session (users just need to log in again; no data is lost).
 
 **Placeholders in `config/deploy.yml`.** The file still has the Rails template's placeholders:
-`servers.web`'s `192.168.0.1` needs the real server's host/IP, and `registry.server`'s
-`localhost:5555` needs a real registry (ghcr.io, Docker Hub, a self-hosted registry, ...) along
-with `username` / `password` (`KAMAL_REGISTRY_PASSWORD`). If you're using a custom domain with
-Let's Encrypt, uncomment the `proxy:` block -- and also uncomment `config.assume_ssl` and
+`servers.web`'s `192.168.0.1` needs the real server's host/IP. `registry.server`'s
+`localhost:5555`, however, does *not* need to change: Kamal treats any `registry.server` matching
+`localhost[:port]` as "local registry mode" (`Registry#local?`), and in that mode it starts a
+`registry:3` container (`kamal-docker-registry`) on the build machine bound to `127.0.0.1:<port>`,
+adds `--driver-opt network=host` to the buildx builder, and forwards that same port to every
+server over an SSH remote tunnel -- which is what lets the server's own `docker pull
+localhost:5555/...` resolve back to the build machine. `username` / `password` are only required
+once `registry.server` stops matching `localhost`. So in the common case where the machine you
+build from and the servers you deploy to are different machines, `localhost:5555` works untouched;
+switching to a real registry (ghcr.io, Docker Hub, a self-hosted one, ...) is only needed if you
+actually want the image kept in a shared registry. If you're using a custom domain with Let's
+Encrypt, uncomment the `proxy:` block -- and also uncomment `config.assume_ssl` and
 `config.force_ssl` in `config/environments/production.rb` (lines 28 and 31), since enabling only
 one of the two causes a redirect loop, as the `deploy.yml` comment notes.
 
@@ -486,6 +494,114 @@ A few operational commands are predefined as aliases in `config/deploy.yml`:
 | `bin/kamal rollback <version>` | Roll back to a previous version |
 
 `rollback` skips the pre-deploy backup -- the hook checks `KAMAL_COMMAND` and exits early for it.
+
+### Deploying to the machine you run Kamal from
+
+To try this out on your own machine, or to run a permanent single-server setup where the box you
+build on and the box you deploy to are the same, use a separate Kamal destination alongside a few
+settings that only matter in that specific case.
+
+**Keep production config untouched with a destination.** `config/deploy.<name>.yml` gets merged
+into `config/deploy.yml`, and `bin/kamal deploy -d <name>` picks it up. When a destination is
+given, Kamal's secrets loader only reads `.kamal/secrets-common` and `.kamal/secrets.<name>` --
+never the production `.kamal/secrets` (`Kamal::Secrets#secrets_filenames`). Gitignore both files.
+
+**SSH is still required, even against localhost.** Kamal always talks to servers over SSH, even
+when the server is the machine it's run from. Passwordless login has to work: generate a
+dedicated key, add it to `authorized_keys`, and point `ssh.user` / `ssh.keys` / `ssh.keys_only` at
+it.
+
+**Pitfall 1: local registry mode collides with itself.** Leaving `registry.server` as
+`localhost:5555` makes Kamal SSH-remote-forward `127.0.0.1:5555` to the server. When the server is
+the same machine you build on, that port is already held by the registry container itself, so
+sshd can't bind it and the deploy fails with `Failed to establish port forward on <host>`. Work
+around it by running your own registry on an address that does *not* match `^localhost[:$]`, such
+as `127.0.0.1:5555` -- Docker treats `127.0.0.0/8` as an insecure registry by default, so no
+daemon configuration change is needed. Kamal still requires `username` / `password` once the
+address isn't `localhost`, but a registry with no auth configured accepts any credentials:
+
+```bash
+docker run -d --name altocumulus-local-registry --restart unless-stopped \
+  -p 127.0.0.1:5555:5000 registry:3
+```
+
+**Pitfall 2: buildx can't reach the registry.** Kamal only adds `--driver-opt network=host` when
+the registry is `localhost:...`. With `127.0.0.1:5555`, the default `docker-container` builder
+looks for the registry on its own container's loopback interface, and the push fails with
+`connection refused`. Work around it by setting `builder.driver: docker` to build directly against
+the host's Docker daemon -- you lose build caching and multi-arch builds, but neither matters for
+a single-machine setup.
+
+**Pitfall 3: kamal-proxy routes by Host header.** Any request whose Host header isn't listed in
+`proxy.host` gets a 404. List every name/address you might type into a browser -- `localhost`,
+the LAN IP, the hostname, a Tailscale name, ... -- comma-separated. Omitting `host` turns the
+proxy into a catch-all that accepts every Host instead.
+
+**Port 80.** kamal-proxy publishes the host's ports 80/443. Stop any system Apache/nginx first, or
+it won't be able to bind.
+
+**Skipping `master.key` entirely.** Rails reads `SECRET_KEY_BASE` from the environment in
+production and only falls back to credentials when it's absent. For a local destination, list
+`SECRET_KEY_BASE` under `env.secret` and never touch `config/credentials.yml.enc` at all. Generate
+a value with `bin/rails secret`.
+
+**The pre-deploy backup hook still runs every time.** Not just on the first deploy -- it runs
+`ssh root@<host> /usr/local/bin/altocumulus-backup` before every deploy. If the local destination
+doesn't have that script installed, pass `SKIP_PRE_DEPLOY_BACKUP=1` every time (or install the
+script and adjust `BACKUP_SSH_USER` / `BACKUP_REMOTE_SCRIPT` -- see [Database
+backup](#database-backup) below).
+
+**Putting it together**, an example `config/deploy.local.yml`:
+
+```yaml
+servers:
+  web:
+    - 127.0.0.1
+
+registry:
+  server: 127.0.0.1:5555
+  username: kamal
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+ssh:
+  user: youruser
+  keys_only: true
+  keys:
+    - "~/.ssh/id_ed25519_kamal_local"
+
+builder:
+  driver: docker
+  arch: amd64
+
+proxy:
+  ssl: false
+  host: localhost,192.168.1.10,yourhost.local
+  app_port: 80
+
+volumes:
+  - "/home/youruser/altocumulus-storage:/rails/storage"
+
+env:
+  secret:
+    - SECRET_KEY_BASE
+    - BOOTSTRAP_ADMIN_PASSWORD
+    - KAMAL_REGISTRY_PASSWORD
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+    ACCOUNT_IDENTIFIER: email
+    BOOTSTRAP_ADMIN_LOGIN_ID: admin@example.org
+```
+
+```bash
+SKIP_PRE_DEPLOY_BACKUP=1 bin/kamal setup -d local   # first time
+SKIP_PRE_DEPLOY_BACKUP=1 bin/kamal deploy -d local  # afterwards
+```
+
+**Security note.** This setup serves plain HTTP: SSL is disabled because Let's Encrypt only works
+for a real domain name, not for `localhost` or a LAN name/IP. Exposing it on a LAN sends login
+credentials and patient data unencrypted. Treat it as a way to verify things work, not a place to
+put real data.
 
 ### Running without Kamal
 

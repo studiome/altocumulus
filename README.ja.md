@@ -398,13 +398,22 @@ EDITOR=true bin/rails credentials:edit
 無効化されます（再ログインが必要になるだけで、データが失われるわけではありません）。
 
 **`config/deploy.yml` のプレースホルダ。** このファイルは Rails の雛形のプレースホルダの
-ままです。`servers.web` の `192.168.0.1` は実サーバのホスト名/IP に、`registry.server` の
-`localhost:5555` は実在するレジストリ（ghcr.io、Docker Hub、自前レジストリなど）と
-`username` / `password`（`KAMAL_REGISTRY_PASSWORD`）に置き換えてください。独自ドメインで
-Let's Encrypt を使う場合は `proxy:` のコメントを外し、あわせて
-`config/environments/production.rb` の `config.assume_ssl`（28行目）と `config.force_ssl`
-（31行目）のコメントも外してください。`deploy.yml` のコメントにもある通り、片方だけ有効に
-するとリダイレクトループになります。
+ままです。`servers.web` の `192.168.0.1` は実サーバのホスト名/IP に置き換える必要があります。
+一方 `registry.server` の `localhost:5555` は変更**しなくて構いません**。Kamal は
+`registry.server` が `localhost[:ポート]` に一致すると「ローカルレジストリモード」
+（`Registry#local?`）になり、このモードではビルドを実行するマシン上に `registry:3`
+コンテナ（`kamal-docker-registry`）を `127.0.0.1:<port>` で自動起動したうえで buildx
+ビルダーに `--driver-opt network=host` を付与し、さらに SSH のリモートフォワードで
+同じポートを各サーバへ転送します。これにより各サーバ側の `docker pull
+localhost:5555/...` がビルドマシンへ折り返される形で成立します。`username` /
+`password` が必須になるのは `registry.server` が `localhost` に一致しなくなった場合の
+みです。したがって、ビルドを実行するマシンとデプロイ先サーバが別マシンである通常の
+構成では、`localhost:5555` のまま何も変更する必要はありません。ghcr.io や Docker Hub、
+自前レジストリなどへ切り替えるのは、イメージを共有レジストリに置きたい場合にのみ
+選べばよい任意の対応です。独自ドメインで Let's Encrypt を使う場合は `proxy:` の
+コメントを外し、あわせて `config/environments/production.rb` の `config.assume_ssl`
+（28行目）と `config.force_ssl`（31行目）のコメントも外してください。`deploy.yml`
+のコメントにもある通り、片方だけ有効にするとリダイレクトループになります。
 
 **初期管理者の環境変数を `env:` に追加する。** `db/seeds.rb` はコンテナ内の ENV を
 読みますが、Kamal は `config/deploy.yml` の `env:` に書かれた変数しかコンテナへ渡しません。
@@ -478,6 +487,117 @@ bin/kamal logs -f
 
 `rollback` では pre-deploy のバックアップはスキップされます（フックが `KAMAL_COMMAND` を
 判定し、`rollback` の場合は早期に終了するため）。
+
+### Kamal を実行するマシン自体にデプロイする場合
+
+手元のマシンで試したい場合や、ビルドを実行するマシンとデプロイ先が同一の1台構成で
+そのまま運用したい場合は、専用の Kamal destination を用意し、その構成でのみ問題になる
+いくつかの設定に対応します。
+
+**destination を使って本番設定を汚さない。** `config/deploy.<name>.yml` は
+`config/deploy.yml` にマージされ、`bin/kamal deploy -d <name>` で選択します。destination
+を指定すると、Kamal の secrets 読み込みは `.kamal/secrets-common` と
+`.kamal/secrets.<name>` のみを見るようになり、本番用の `.kamal/secrets` は参照されません
+（`Kamal::Secrets#secrets_filenames`）。両ファイルとも `.gitignore` に加えてください。
+
+**SSH は localhost 相手でも必要。** Kamal はデプロイ先が自分自身であっても必ず SSH
+経由で操作します。パスワードなしでログインできる必要があるため、専用の鍵を作成して
+`authorized_keys` に登録し、`ssh.user` / `ssh.keys` / `ssh.keys_only` で指定してください。
+
+**落とし穴1: ローカルレジストリモードが自分自身と衝突する。** `registry.server` を
+`localhost:5555` のままにしておくと、Kamal は `127.0.0.1:5555` を SSH のリモート
+フォワードでサーバへ転送しようとします。サーバがビルドを実行するマシンと同一だと、
+そのポートは既にレジストリコンテナ自身が握っているため sshd がバインドできず、
+`Failed to establish port forward on <host>` で失敗します。対処法は、`^localhost[:$]`
+に一致しないアドレス、たとえば `127.0.0.1:5555` で自前のレジストリを起動することです。
+Docker は既定で `127.0.0.0/8` を insecure registry として扱うため、daemon の設定変更は
+不要です。Kamal はアドレスが `localhost` でなくなると `username` / `password` を必須に
+しますが、認証を設定していないレジストリは任意の認証情報を受け入れます。
+
+```bash
+docker run -d --name altocumulus-local-registry --restart unless-stopped \
+  -p 127.0.0.1:5555:5000 registry:3
+```
+
+**落とし穴2: buildx がレジストリに到達できない。** Kamal が `--driver-opt network=host`
+を付けるのは、レジストリが `localhost:...` のときだけです。`127.0.0.1:5555` にすると、
+既定の `docker-container` ビルダーはビルダーコンテナ自身の loopback インタフェースを
+見に行ってしまい、push が `connection refused` で失敗します。対処法は
+`builder.driver: docker` にしてホストの Docker daemon 上で直接ビルドすることです
+（ビルドキャッシュとマルチアーキビルドは使えなくなりますが、1台構成ではどちらも
+不要です）。
+
+**落とし穴3: kamal-proxy は Host ヘッダで振り分ける。** `proxy.host` に列挙した Host
+以外のリクエストはすべて 404 になります。ブラウザの URL 欄に入力しうる名前・アドレスを
+すべてカンマ区切りで列挙してください（`localhost`、LAN の IP、ホスト名、Tailscale の
+名前など）。`host` を省略すると、すべての Host を受け付けるキャッチオールになります。
+
+**ポート80。** kamal-proxy はホストの 80/443 番ポートを publish します。システムの
+Apache/nginx が動いていると先にバインドされてしまうため、事前に停止してください。
+
+**master.key なしで済ませる。** Rails は production 環境では環境変数 `SECRET_KEY_BASE`
+を読み、それが無い場合にのみ credentials にフォールバックします。ローカル用の
+destination では `env.secret` に `SECRET_KEY_BASE` を並べれば、
+`config/credentials.yml.enc` には一切触れずに済みます。値は `bin/rails secret` で
+生成してください。
+
+**pre-deploy バックアップフックは毎回動く。** 初回デプロイ時だけでなく、デプロイの
+たびに `ssh root@<host> /usr/local/bin/altocumulus-backup` が実行されます。ローカル用の
+destination にこのスクリプトを用意していない場合は、毎回 `SKIP_PRE_DEPLOY_BACKUP=1` を
+付けてください（あるいはスクリプトを設置し `BACKUP_SSH_USER` / `BACKUP_REMOTE_SCRIPT` を
+調整してください。[データベースのバックアップ](#データベースのバックアップ)を参照）。
+
+**まとめると**、`config/deploy.local.yml` の例は次のようになります:
+
+```yaml
+servers:
+  web:
+    - 127.0.0.1
+
+registry:
+  server: 127.0.0.1:5555
+  username: kamal
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+ssh:
+  user: youruser
+  keys_only: true
+  keys:
+    - "~/.ssh/id_ed25519_kamal_local"
+
+builder:
+  driver: docker
+  arch: amd64
+
+proxy:
+  ssl: false
+  host: localhost,192.168.1.10,yourhost.local
+  app_port: 80
+
+volumes:
+  - "/home/youruser/altocumulus-storage:/rails/storage"
+
+env:
+  secret:
+    - SECRET_KEY_BASE
+    - BOOTSTRAP_ADMIN_PASSWORD
+    - KAMAL_REGISTRY_PASSWORD
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+    ACCOUNT_IDENTIFIER: email
+    BOOTSTRAP_ADMIN_LOGIN_ID: admin@example.org
+```
+
+```bash
+SKIP_PRE_DEPLOY_BACKUP=1 bin/kamal setup -d local   # 初回
+SKIP_PRE_DEPLOY_BACKUP=1 bin/kamal deploy -d local  # 以降
+```
+
+**セキュリティ注記。** この構成は平文の HTTP です。`localhost` や LAN 上の名前/IP では
+Let's Encrypt が使えないため SSL を無効にしています。LAN に公開するとログイン情報や
+患者データが暗号化されずに流れてしまいます。動作確認用と割り切り、実データは
+入れないでください。
 
 ### Kamal を使わない場合
 

@@ -37,3 +37,8 @@
 /app/assets/builds/*
 !/app/assets/builds/.keep
 .claude/settings.local.json
+
+# Local-machine Kamal destination (see config/deploy.local.yml); the secrets
+# file holds a generated SECRET_KEY_BASE and must never be committed.
+/config/deploy.local.yml
+/.kamal/secrets.local
