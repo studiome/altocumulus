@@ -375,6 +375,57 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert reservation.persisted?
   end
 
+  test "allows overlapping period with a discarded hospitalization for the same patient" do
+    patient = patients(:two)
+    discarded = Hospitalization.create!(
+      patient: patient,
+      admission_date: Date.new(2026, 10, 1),
+      discharge_date: Date.new(2026, 10, 10),
+      outcome: "recovered",
+      reason: "Canceled stay",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+    discarded.discard!
+
+    replacement = Hospitalization.new(
+      patient: patient,
+      admission_date: Date.new(2026, 10, 1),
+      discharge_date: Date.new(2026, 10, 10),
+      outcome: "recovered",
+      reason: "Replacement stay",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    assert replacement.valid?
+  end
+
+  test "rejects restoring a discarded hospitalization if an active one overlaps" do
+    patient = patients(:two)
+    discarded = Hospitalization.create!(
+      patient: patient,
+      admission_date: Date.new(2026, 11, 1),
+      discharge_date: Date.new(2026, 11, 10),
+      outcome: "recovered",
+      reason: "Originally scheduled",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+    discarded.discard!
+
+    Hospitalization.create!(
+      patient: patient,
+      admission_date: Date.new(2026, 11, 5),
+      discharge_date: Date.new(2026, 11, 15),
+      outcome: "recovered",
+      reason: "New active stay",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+    )
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      discarded.restore!
+    end
+    assert_includes discarded.errors[:admission_date], "overlaps another hospitalization for this patient"
+  end
+
   test "rejects moving admission_date after a linked surgery date" do
     hospitalization = hospitalizations(:one)
     Surgery.create!(

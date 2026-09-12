@@ -371,8 +371,9 @@ class Hospitalization < ApplicationRecord
 
     def no_overlapping_hospitalization_period
       return if patient_id.blank? || effective_admission_date.blank?
+      return if deleted?
 
-      scope = Hospitalization.where(patient_id: patient_id)
+      scope = Hospitalization.active.where(patient_id: patient_id)
       scope = scope.where.not(id: id) if persisted?
       conflict = scope.where(
         "(:end_date IS NULL OR COALESCE(admission_date, scheduled_admission_date) <= :end_date) AND (discharge_date IS NULL OR discharge_date >= :start_date)",
