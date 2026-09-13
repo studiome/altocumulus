@@ -205,6 +205,17 @@ class OperationsCalendarTest < ActiveSupport::TestCase
     assert_empty calendar.outside_regular_day_surgeries
   end
 
+  test "outside_regular_day_surgeries ignores surgeries booked outside the regular slots" do
+    # 2026-03-01 is a Sunday with no ElectiveSlotRule. A cath lab case that
+    # never wanted a regular slot is not "outside the regular surgery days" in
+    # any useful sense, so it must not be called out alongside surgeries(:one).
+    surgeries(:one).update!(slot_category: "off_slot", location: "Cath Lab 1")
+
+    calendar = OperationsCalendar.build(start: Date.new(2026, 3, 1), days: 1)
+
+    assert_empty calendar.outside_regular_day_surgeries
+  end
+
   test "announcements only include published ones" do
     calendar = OperationsCalendar.build
     assert_includes calendar.announcements, announcements(:published_one)

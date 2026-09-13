@@ -89,9 +89,70 @@ class SurgerySchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_match(%r{0 / 120 min}, @response.body) # slot 3's own (shortened) duration, empty
   end
 
+  test "index groups other-department and off-slot surgeries into their own sections" do
+    simultaneous = create_week_surgery(slot_category: "simultaneous", target_department: "Gynecology")
+    backup = create_week_surgery(slot_category: "backup", target_department: "Cardiovascular Surgery")
+    off_slot = create_week_surgery(slot_category: "off_slot", location: "Cath Lab 1")
+
+    get surgery_schedule_url, params: { week_of: "2026-03-03" }
+
+    assert_response :success
+    assert_no_match(/translation missing/, @response.body)
+    assert_match(/Other Departments \(Joint \/ Backup\)/, @response.body)
+    assert_match(/Off-slot \(Cath Lab, Procedure Room\)/, @response.body)
+    assert_match(/Gynecology/, @response.body)
+    assert_match(/Cardiovascular Surgery/, @response.body)
+    assert_match(/Cath Lab 1/, @response.body)
+    assert_select "a[href=?]", surgery_path(simultaneous)
+    assert_select "a[href=?]", surgery_path(backup)
+    assert_select "a[href=?]", surgery_path(off_slot)
+  end
+
+  test "index keeps other-department and off-slot surgeries out of the regular slot totals" do
+    # Tuesday already books 420 of its 720 min across slots 1 and 2, with one
+    # elective surgery still unassigned. A 180 min off-slot surgery on the same
+    # day must not move that total, nor add to the unassigned warning.
+    create_week_surgery(slot_category: "off_slot", location: "Cath Lab 1", duration_hours: 3.0)
+
+    get surgery_schedule_url, params: { week_of: "2026-03-03" }
+
+    assert_response :success
+    assert_match(%r{\(420 / 720 min\)}, @response.body)
+    assert_no_match(%r{\(600 / 720 min\)}, @response.body)
+    assert_match(/1 elective surgery is not assigned to an available slot/, @response.body)
+  end
+
+  test "index labels an emergency surgery booked outside the regular slots" do
+    emergency = surgeries(:emergency_one)
+    emergency.update!(slot_category: "off_slot", location: "Cath Lab 1")
+
+    get surgery_schedule_url, params: { week_of: "2026-02-25" } # week containing 2026-03-01
+
+    assert_response :success
+    assert_match(/Cath Lab 1/, @response.body)
+    assert_select "a[href=?]", surgery_path(emergency)
+  end
+
   test "index links to the holidays page" do
     get surgery_schedule_url
     assert_response :success
     assert_select "a[href=?]", holidays_path
   end
+
+  private
+
+    def create_week_surgery(slot_category:, target_department: nil, location: nil, duration_hours: 1.0)
+      Surgery.create!(
+        patient: patients(:one),
+        surgery_date: Date.new(2026, 3, 3),
+        scheduling_type: "elective",
+        slot_category: slot_category,
+        target_department: target_department,
+        location: location,
+        start_time: "09:00",
+        anesthesia_method: "General",
+        duration_hours: duration_hours,
+        surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+      )
+    end
 end

@@ -91,16 +91,39 @@
             </div>
           <% end %>
 
+          <% if usage.simultaneous_surgeries.any? || usage.backup_surgeries.any? %>
+            <div class="divider my-1 text-xs font-semibold uppercase text-info/70"><%= t(".other_departments_heading") %></div>
+            <div class="space-y-2">
+              <% (usage.simultaneous_surgeries + usage.backup_surgeries).each do |surgery| %>
+                <div class="rounded-box border border-info/30 bg-info/5 p-2.5 text-sm">
+                  <%= render "slot_surgery", surgery: surgery %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
+          <% if usage.off_slot_surgeries.any? %>
+            <div class="divider my-1 text-xs font-semibold uppercase text-accent/70"><%= t(".off_slot_heading") %></div>
+            <div class="space-y-2">
+              <% usage.off_slot_surgeries.each do |surgery| %>
+                <div class="rounded-box border border-accent/30 bg-accent/5 p-2.5 text-sm">
+                  <%= render "slot_surgery", surgery: surgery %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
           <div class="divider my-1"><%= Surgery.scheduling_type_options["emergency"] %></div>
           <div class="space-y-2">
+            <%# Rendered through the same partial as every other card on the
+                board (and as the operations calendar's emergency cards), so an
+                emergency case booked in the cath lab or a procedure room still
+                carries its slot-category badge instead of silently looking
+                like a main-OR case. %>
             <% if usage.emergency_surgeries.any? %>
               <% usage.emergency_surgeries.each do |surgery| %>
                 <div class="rounded-box border border-error/40 p-3 text-sm">
-                  <div class="flex justify-between items-baseline">
-                    <span class="font-semibold"><%= surgery.patient&.name || t("surgery_schedules.labels.unknown_patient_name", id: surgery.patient_id) %></span>
-                    <span class="font-mono text-xs"><%= surgery.start_time_display %></span>
-                  </div>
-                  <div class="text-base-content/70"><%= surgery.display_procedure_name %></div>
+                  <%= render "slot_surgery", surgery: surgery %>
                 </div>
               <% end %>
             <% else %>

@@ -1,4 +1,4 @@
-<%= form_with(model: surgery, class: "app-form", data: { controller: "surgery-diagnosis-link-filter" }) do |form| %>
+<%= form_with(model: surgery, class: "app-form", data: { controller: "surgery-diagnosis-link-filter surgery-slot-category" }) do |form| %>
   <% if surgery.errors.any? %>
     <div role="alert" class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -85,14 +85,51 @@
     <span class="app-field-label"><%= t(".scheduling_type_label") %></span>
     <div class="flex gap-6 pt-1">
       <label class="flex items-center gap-2 cursor-pointer">
-        <%= form.radio_button :scheduling_type, "elective", class: "radio radio-primary" %>
+        <%= form.radio_button :scheduling_type, "elective", class: "radio radio-primary", data: { surgery_slot_category_target: "schedulingTypeRadio", action: "change->surgery-slot-category#toggle" } %>
         <%= Surgery.scheduling_type_options["elective"] %>
       </label>
       <label class="flex items-center gap-2 cursor-pointer">
-        <%= form.radio_button :scheduling_type, "emergency", class: "radio radio-primary" %>
+        <%= form.radio_button :scheduling_type, "emergency", class: "radio radio-primary", data: { surgery_slot_category_target: "schedulingTypeRadio", action: "change->surgery-slot-category#toggle" } %>
         <%= Surgery.scheduling_type_options["emergency"] %>
       </label>
     </div>
+  </div>
+
+  <div class="app-field">
+    <span class="app-field-label"><%= t(".slot_category_label") %></span>
+    <%# Two columns at most: the form sits in a max-w-xl card, and a category
+        name like "Joint/Simultaneous Surgery" does not fit a quarter of that.
+        Plain flex rather than daisyUI's .label, whose nowrap would push a long
+        name out over the next option instead of wrapping it. %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+      <% Surgery.slot_category_options.each do |value, label| %>
+        <label class="flex items-center gap-2 cursor-pointer rounded-xl border border-base-200 px-3 py-2.5 has-checked:border-primary has-checked:bg-primary/5">
+          <%= form.radio_button :slot_category, value, checked: surgery.slot_category == value, class: "radio radio-primary radio-sm shrink-0", data: { surgery_slot_category_target: "categoryRadio", action: "change->surgery-slot-category#toggle" } %>
+          <span class="text-sm font-medium"><%= label %></span>
+        </label>
+      <% end %>
+    </div>
+    <p class="app-helper"><%= t(".slot_category_helper") %></p>
+  </div>
+
+  <div class="app-field hidden" data-surgery-slot-category-target="targetDepartmentSection">
+    <%= form.label :target_department, t(".target_department_label"), class: "app-field-label" %>
+    <%= form.text_field :target_department, class: "input w-full focus:input-primary", placeholder: t(".target_department_placeholder") %>
+    <p class="app-helper"><%= t(".target_department_helper") %></p>
+  </div>
+
+  <div class="app-field hidden" data-surgery-slot-category-target="locationSection">
+    <%= form.label :location, t(".location_label"), class: "app-field-label" %>
+    <%= form.text_field :location, list: "surgery_location_suggestions", class: "input w-full focus:input-primary", placeholder: t(".location_placeholder") %>
+    <datalist id="surgery_location_suggestions">
+      <option value="<%= t(".location_suggestions.catheter_lab") %>"></option>
+      <option value="<%= t(".location_suggestions.outpatient_room") %>"></option>
+      <option value="<%= t(".location_suggestions.endoscopy_room") %>"></option>
+      <option value="<%= t(".location_suggestions.angio_room") %>"></option>
+      <option value="<%= t(".location_suggestions.minor_or") %>"></option>
+      <option value="<%= t(".location_suggestions.ward") %>"></option>
+    </datalist>
+    <p class="app-helper"><%= t(".location_helper") %></p>
   </div>
 
   <div class="app-field">
@@ -101,33 +138,35 @@
     <p class="app-helper"><%= t(".start_time_helper") %></p>
   </div>
 
-  <div class="app-field">
-    <%= form.label :slot_number, t(".slot_number_label"), class: "app-field-label" %>
-    <%= form.number_field :slot_number, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: t(".slot_number_placeholder") %>
-    <p class="app-helper">
-      <%= t(".slot_number_helper") %>
-      <% if @elective_slot_rules.present? %>
-        <br>
-        <%= t(".configured_slots_prefix") %>
-        <%= @elective_slot_rules.map { |rule| "#{rule.day_name}: #{rule.total_slots}" }.join(", ") %>.
-      <% end %>
-    </p>
-  </div>
-
-  <div class="rounded-box border border-base-200 bg-base-100 p-4 space-y-2">
-    <div class="flex items-center justify-between gap-3">
-      <span class="text-sm font-semibold"><%= t(".slot_rules_heading") %></span>
-      <%= link_to t(".manage_slot_rules_link"), elective_slot_rules_path, class: "app-inline-link text-sm" %>
-    </div>
-    <% if elective_slot_rules.any? %>
-      <ul class="text-sm text-base-content/60 space-y-1">
-        <% elective_slot_rules.each do |rule| %>
-          <li><%= rule.to_s %></li>
+  <div class="space-y-4" data-surgery-slot-category-target="slotNumberSection">
+    <div class="app-field">
+      <%= form.label :slot_number, t(".slot_number_label"), class: "app-field-label" %>
+      <%= form.number_field :slot_number, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: t(".slot_number_placeholder") %>
+      <p class="app-helper">
+        <%= t(".slot_number_helper") %>
+        <% if @elective_slot_rules.present? %>
+          <br>
+          <%= t(".configured_slots_prefix") %>
+          <%= @elective_slot_rules.map { |rule| "#{rule.day_name}: #{rule.total_slots}" }.join(", ") %>.
         <% end %>
-      </ul>
-    <% else %>
-      <p class="app-helper"><%= t(".no_slot_rules") %></p>
-    <% end %>
+      </p>
+    </div>
+
+    <div class="rounded-box border border-base-200 bg-base-100 p-4 space-y-2">
+      <div class="flex items-center justify-between gap-3">
+        <span class="text-sm font-semibold"><%= t(".slot_rules_heading") %></span>
+        <%= link_to t(".manage_slot_rules_link"), elective_slot_rules_path, class: "app-inline-link text-sm" %>
+      </div>
+      <% if elective_slot_rules.any? %>
+        <ul class="text-sm text-base-content/60 space-y-1">
+          <% elective_slot_rules.each do |rule| %>
+            <li><%= rule.to_s %></li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="app-helper"><%= t(".no_slot_rules") %></p>
+      <% end %>
+    </div>
   </div>
 
   <div class="app-field">

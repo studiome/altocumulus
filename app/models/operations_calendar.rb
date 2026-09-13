@@ -124,12 +124,17 @@ class OperationsCalendar
     # only the weekday's own configuration, so a holiday that happens to fall
     # on a normally-configured weekday is correctly excluded from this list
     # (it is already called out as a holiday).
+    #
+    # Only regular-slot surgeries can be "outside the regular surgery days":
+    # a cath lab or partner-department case never wanted one of this
+    # department's slots, so flagging it here would be the same false alarm
+    # ElectiveSlotUsage#warnings already declines to raise for it.
     def build_outside_regular_day_surgeries
       dates.flat_map do |date|
         usage = slot_usages[date]
         next [] if usage.rule.present?
 
-        usage.elective_surgeries.map { |surgery| [ date, surgery ] }
+        usage.regular_surgeries.map { |surgery| [ date, surgery ] }
       end
     end
 

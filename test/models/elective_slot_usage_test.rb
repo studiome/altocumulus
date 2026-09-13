@@ -409,6 +409,76 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_equal one_date_queries, full_week_queries
   end
 
+  test "non-regular slot categories do not affect elective slots or warnings" do
+    simultaneous = Surgery.create!(
+      patient: patients(:one),
+      surgery_date: TUESDAY,
+      scheduling_type: "elective",
+      slot_category: "simultaneous",
+      target_department: "Gynecology",
+      anesthesia_method: "General",
+      duration_hours: 3.0,
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+    backup = Surgery.create!(
+      patient: patients(:two),
+      surgery_date: TUESDAY,
+      scheduling_type: "elective",
+      slot_category: "backup",
+      target_department: "Cardiovascular Surgery",
+      anesthesia_method: "General",
+      duration_hours: 2.0,
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+    off_slot = Surgery.create!(
+      patient: patients(:two),
+      surgery_date: TUESDAY,
+      scheduling_type: "elective",
+      slot_category: "off_slot",
+      location: "Catheter Lab",
+      anesthesia_method: "Local",
+      duration_hours: 1.5,
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+
+    usage = ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY]
+
+    # Non-regular surgeries are categorized into their dedicated collections
+    assert_includes usage.simultaneous_surgeries, simultaneous
+    assert_includes usage.backup_surgeries, backup
+    assert_includes usage.off_slot_surgeries, off_slot
+
+    # They do NOT appear in standard regular slots or unscheduled_surgeries
+    all_slot_surgeries = usage.slots.flat_map(&:surgeries)
+    assert_not_includes all_slot_surgeries, simultaneous
+    assert_not_includes all_slot_surgeries, backup
+    assert_not_includes all_slot_surgeries, off_slot
+
+    assert_not_includes usage.unscheduled_surgeries, simultaneous
+    assert_not_includes usage.unscheduled_surgeries, backup
+    assert_not_includes usage.unscheduled_surgeries, off_slot
+  ensure
+    simultaneous&.destroy
+    backup&.destroy
+    off_slot&.destroy
+  end
+
+  test "non-regular surgeries alone do not produce regular slot warnings" do
+    off_slot = Surgery.new(scheduling_type: "elective", slot_category: "off_slot")
+    holiday = holidays(:national_holiday)
+    backup = Surgery.new(scheduling_type: "elective", slot_category: "backup")
+
+    unconfigured_usage = ElectiveSlotUsage.new(
+      date: SUNDAY, rule: nil, elective_surgeries: [ off_slot ], emergency_surgeries: []
+    )
+    holiday_usage = ElectiveSlotUsage.new(
+      date: holiday.date, rule: nil, elective_surgeries: [ backup ], emergency_surgeries: [], holiday: holiday
+    )
+
+    assert_empty unconfigured_usage.warnings
+    assert_empty holiday_usage.warnings
+  end
+
   private
 
     def out_of_range_surgery

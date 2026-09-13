@@ -21,17 +21,23 @@
         <div class="flex flex-col items-end gap-2">
           <span class="badge <%= @surgery.emergency? ? "badge-error" : "badge-ghost" %> badge-lg p-4"><%= @surgery.scheduling_type_label %></span>
           <% if @surgery.elective? %>
-            <% slot_rule = @slot_rules[@surgery.surgery_date&.wday] %>
-            <% if @surgery.slot_number %>
-              <span class="badge badge-ghost">
-                <% if slot_rule %>
-                  <%= t(".slot_of_total", number: @surgery.slot_number, total: slot_rule.total_slots) %>
-                <% else %>
-                  <%= t(".slot_badge", number: @surgery.slot_number) %>
-                <% end %>
-              </span>
+            <% if @surgery.regular_slot? %>
+              <% slot_rule = @slot_rules[@surgery.surgery_date&.wday] %>
+              <% if @surgery.slot_number %>
+                <span class="badge badge-ghost">
+                  <% if slot_rule %>
+                    <%= t(".slot_of_total", number: @surgery.slot_number, total: slot_rule.total_slots) %>
+                  <% else %>
+                    <%= t(".slot_badge", number: @surgery.slot_number) %>
+                  <% end %>
+                </span>
+              <% else %>
+                <span class="badge badge-warning"><%= t("surgeries.labels.no_slot_assigned") %></span>
+              <% end %>
             <% else %>
-              <span class="badge badge-warning"><%= t("surgeries.labels.no_slot_assigned") %></span>
+              <span class="badge <%= @surgery.slot_category_badge_class %>">
+                <%= @surgery.slot_category_label %>
+              </span>
             <% end %>
           <% end %>
           <% if @holiday&.holiday? %>
@@ -43,6 +49,22 @@
       <div class="divider"><%= t("common.information") %></div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.slot_category") %></span>
+          <span class="text-lg font-medium"><%= @surgery.slot_category_label %></span>
+        </div>
+        <% if @surgery.target_department.present? %>
+          <div>
+            <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.target_department") %></span>
+            <span class="text-lg font-medium"><%= @surgery.target_department %></span>
+          </div>
+        <% end %>
+        <% if @surgery.location.present? %>
+          <div>
+            <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.location") %></span>
+            <span class="text-lg font-medium"><%= @surgery.location %></span>
+          </div>
+        <% end %>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.surgery_date") %></span>
           <span class="text-lg font-medium"><%= @surgery.surgery_date ? l(@surgery.surgery_date, format: :long) : t("models.surgery.surgery_date_display_undated") %></span>

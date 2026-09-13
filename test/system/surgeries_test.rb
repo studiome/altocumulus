@@ -175,4 +175,68 @@ class SurgeriesTest < ApplicationSystemTestCase
       assert_selector ".surgery-procedure-select option:checked", text: "Cholecystectomy"
     end
   end
+
+  test "the slot category picker shows only the fields that category needs" do
+    visit new_surgery_path
+
+    # Regular slot is the default: the slot number is asked for, the
+    # partner-department and location fields stay out of the way.
+    assert_selector "#surgery_slot_number", visible: true
+    assert_no_selector "#surgery_target_department", visible: true
+    assert_no_selector "#surgery_location", visible: true
+
+    choose "Joint/Simultaneous Surgery"
+    assert_selector "#surgery_target_department", visible: true
+    assert_no_selector "#surgery_slot_number", visible: true
+    assert_no_selector "#surgery_location", visible: true
+
+    choose "Backup/Standby"
+    assert_selector "#surgery_target_department", visible: true
+    assert_no_selector "#surgery_location", visible: true
+
+    choose "Procedure Room / Off-slot"
+    assert_selector "#surgery_location", visible: true
+    assert_no_selector "#surgery_target_department", visible: true
+    assert_no_selector "#surgery_slot_number", visible: true
+
+    choose "Regular Slot"
+    assert_selector "#surgery_slot_number", visible: true
+    assert_no_selector "#surgery_target_department", visible: true
+    assert_no_selector "#surgery_location", visible: true
+  end
+
+  test "an emergency surgery is not asked for a slot number" do
+    visit new_surgery_path
+
+    assert_selector "#surgery_slot_number", visible: true
+
+    choose "Emergency"
+    assert_no_selector "#surgery_slot_number", visible: true
+
+    choose "Elective"
+    assert_selector "#surgery_slot_number", visible: true
+  end
+
+  test "the slot category options stay inside their own boxes" do
+    # The form is rendered in a max-w-xl card, so a picker laid out in four
+    # fixed columns cannot hold a label like "Joint/Simultaneous Surgery":
+    # the text spills over the neighbouring option and out of the card. Both
+    # widths are pinned here because the layout switches column count at sm.
+    [ [ 1400, 1400 ], [ 500, 900 ] ].each do |width, height|
+      page.driver.browser.manage.window.resize_to(width, height)
+      visit edit_surgery_path(surgeries(:three))
+      assert_text "Slot Category"
+
+      overflowing = page.evaluate_script(<<~JS)
+        Array.from(document.querySelectorAll('input[name="surgery[slot_category]"]')).filter(radio => {
+          const box = radio.closest("label");
+          return box.scrollWidth > Math.ceil(box.getBoundingClientRect().width) + 1;
+        }).map(radio => radio.value)
+      JS
+
+      assert_empty overflowing, "slot category options overflow their boxes at #{width}px: #{overflowing.inspect}"
+    end
+  ensure
+    page.driver.browser.manage.window.resize_to(1400, 1400)
+  end
 end

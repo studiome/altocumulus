@@ -104,7 +104,7 @@ class SurgeriesController < ApplicationController
     def surgery_params
       params.expect(surgery: [
         :surgery_date, :surgery_date_status, :duration_hours, :anesthesia_method, :patient_id, :hospitalization_id,
-        :scheduling_type, :start_time, :slot_number,
+        :scheduling_type, :slot_category, :target_department, :location, :start_time, :slot_number,
         :operator_name, :assistant_name, :operation_order,
         { patient_diagnosis_ids: [] },
         { surgery_procedure_selections_attributes: [ [ :id, :surgery_procedure_id, :laterality, :_destroy ] ] }
@@ -112,6 +112,6 @@ class SurgeriesController < ApplicationController
     end
 
     def filter_params
-      params.permit(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type, :undated).to_h.symbolize_keys
+      params.permit(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type, :slot_category, :undated).to_h.symbolize_keys
     end
 end

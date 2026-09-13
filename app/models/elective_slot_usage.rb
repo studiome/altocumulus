@@ -111,9 +111,25 @@ class ElectiveSlotUsage
     effective_rule&.total_minutes&.round || 0
   end
 
+  def regular_surgeries
+    @regular_surgeries ||= elective_surgeries.select(&:regular_slot?)
+  end
+
+  def simultaneous_surgeries
+    @simultaneous_surgeries ||= elective_surgeries.select(&:simultaneous_slot?)
+  end
+
+  def backup_surgeries
+    @backup_surgeries ||= elective_surgeries.select(&:backup_slot?)
+  end
+
+  def off_slot_surgeries
+    @off_slot_surgeries ||= elective_surgeries.select(&:off_slot?)
+  end
+
   def slots
     @slots ||= begin
-      by_number = elective_surgeries.group_by(&:slot_number)
+      by_number = regular_surgeries.group_by(&:slot_number)
       durations = effective_rule&.slot_durations || []
       (1..total_slots).map do |number|
         Slot.new(
@@ -125,10 +141,12 @@ class ElectiveSlotUsage
     end
   end
 
-  # Elective surgeries that have no slot to sit in: either no slot number yet,
-  # or one pointing past the slots the day actually has.
+  # Regular elective surgeries that have no slot to sit in: either no slot number yet,
+  # or one pointing past the slots the day actually has. Surgeries booked into
+  # other slot categories (simultaneous, backup, off_slot) are displayed outside
+  # the regular slot limits and do not count as unscheduled.
   def unscheduled_surgeries
-    @unscheduled_surgeries ||= elective_surgeries.reject { |surgery| (1..total_slots).cover?(surgery.slot_number) }
+    @unscheduled_surgeries ||= regular_surgeries.reject { |surgery| (1..total_slots).cover?(surgery.slot_number) }
   end
 
   def used_slots
@@ -158,17 +176,17 @@ class ElectiveSlotUsage
   def warnings
     messages = []
 
-    if holiday? && elective_surgeries.any?
+    if holiday? && regular_surgeries.any?
       messages << I18n.t("models.elective_slot_usage.warnings.holiday", holiday_name: holiday.name)
-    elsif !configured? && elective_surgeries.any?
+    elsif !configured? && regular_surgeries.any?
       # I18n.l (not Date#strftime directly) so %A resolves through the
       # current locale's date.day_names rather than always English.
       messages << I18n.t("models.elective_slot_usage.warnings.not_configured", day: I18n.l(date, format: "%A"))
     end
 
     # On a holiday, or a weekday with no slot rule configured at all, the
-    # message above already explains why nothing can be scheduled, so listing
-    # the same surgeries as "not assigned to a slot" only adds noise.
+    # message above already explains why no regular surgery can be scheduled,
+    # so listing the same surgeries as "not assigned to a slot" only adds noise.
     return messages unless configured?
 
     messages << unscheduled_warning if over_capacity?

@@ -40,6 +40,14 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Emergency/, @response.body)
   end
 
+  test "index filters by slot_category" do
+    surgeries(:one).update!(slot_category: "off_slot", location: "Cath Lab Suite")
+
+    get surgeries_url, params: { slot_category: "off_slot" }
+    assert_response :success
+    assert_match(/Cath Lab Suite/, @response.body)
+  end
+
   test "index shows the assigned slot, and flags elective surgeries without one" do
     get surgeries_url
     assert_response :success
@@ -101,6 +109,50 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Cholecystectomy", "Appendectomy" ], Surgery.last.procedure_names
     assert_equal [ "bilateral", "left" ], Surgery.last.surgery_procedure_selections.order(:id).pluck(:laterality)
     assert_equal "Bilateral Cholecystectomy, Left Appendectomy", Surgery.last.display_procedure_name
+  end
+
+  test "should create surgery with simultaneous slot_category and target_department" do
+    assert_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        surgery_date: "2026-03-03",
+        anesthesia_method: "General",
+        duration_hours: 2.0,
+        slot_category: "simultaneous",
+        target_department: "Gynecology",
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
+        }
+      } }
+    end
+
+    assert_redirected_to surgery_url(Surgery.last)
+    created = Surgery.last
+    assert_equal "simultaneous", created.slot_category
+    assert_equal "Gynecology", created.target_department
+    assert_nil created.slot_number
+  end
+
+  test "should create surgery with off_slot and location" do
+    assert_difference("Surgery.count") do
+      post surgeries_url, params: { surgery: {
+        patient_id: patients(:one).id,
+        surgery_date: "2026-03-03",
+        anesthesia_method: "Local",
+        duration_hours: 1.0,
+        slot_category: "off_slot",
+        location: "Cath Lab 1",
+        surgery_procedure_selections_attributes: {
+          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "none" }
+        }
+      } }
+    end
+
+    assert_redirected_to surgery_url(Surgery.last)
+    created = Surgery.last
+    assert_equal "off_slot", created.slot_category
+    assert_equal "Cath Lab 1", created.location
+    assert_nil created.slot_number
   end
 
   test "should create a surgery with an undecided surgery_date" do

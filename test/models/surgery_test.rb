@@ -603,6 +603,99 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_equal [ surgeries(:emergency_one) ], Surgery.filtered(scheduling_type: "emergency").to_a
   end
 
+  test "slot_category defaults to regular" do
+    surgery = Surgery.new
+    assert_equal "regular", surgery.slot_category
+    assert surgery.regular_slot?
+    assert_not surgery.simultaneous_slot?
+    assert_not surgery.backup_slot?
+    assert_not surgery.off_slot?
+  end
+
+  test "rejects an invalid slot_category" do
+    surgery = surgeries(:one)
+    surgery.slot_category = "invalid_category"
+    assert_not surgery.valid?
+    assert_includes surgery.errors[:slot_category], "is not included in the list"
+  end
+
+  test "accepts valid slot_categories" do
+    surgery = surgeries(:one)
+    %w[regular simultaneous backup off_slot].each do |category|
+      surgery.slot_category = category
+      assert surgery.valid?, "Expected #{category} to be valid"
+    end
+  end
+
+  test "switching slot_category away from regular clears slot_number" do
+    surgery = surgeries(:three)
+    assert_equal 1, surgery.slot_number
+
+    surgery.slot_category = "simultaneous"
+    assert surgery.valid?
+    assert_nil surgery.slot_number
+
+    surgery.slot_category = "backup"
+    assert surgery.valid?
+    assert_nil surgery.slot_number
+
+    surgery.slot_category = "off_slot"
+    assert surgery.valid?
+    assert_nil surgery.slot_number
+  end
+
+  test "a non-regular slot category given a slot number saves with it cleared" do
+    surgery = surgeries(:one)
+    surgery.slot_category = "off_slot"
+    surgery.slot_number = 2
+    assert surgery.save
+    assert_nil surgery.reload.slot_number
+  end
+
+  test "leaving the simultaneous/backup categories clears target_department" do
+    surgery = surgeries(:one)
+    surgery.update!(slot_category: "simultaneous", target_department: "Gastroenterological Surgery")
+
+    surgery.slot_category = "regular"
+    assert surgery.save
+    assert_nil surgery.reload.target_department
+  end
+
+  test "a backup surgery keeps its target_department" do
+    surgery = surgeries(:one)
+    surgery.update!(slot_category: "backup", target_department: "Cardiovascular Surgery")
+
+    assert_equal "Cardiovascular Surgery", surgery.reload.target_department
+  end
+
+  test "moving to a partner-department category clears a stale location" do
+    surgery = surgeries(:one)
+    surgery.update!(slot_category: "off_slot", location: "Cath Lab 1")
+
+    surgery.slot_category = "simultaneous"
+    surgery.target_department = "Gynecology"
+    assert surgery.save
+    assert_nil surgery.reload.location
+    assert_equal "Gynecology", surgery.target_department
+  end
+
+  test "a regular slot surgery may still record where it was performed" do
+    # Not every regular case runs in the usual room, so location stays
+    # available outside the off_slot category (unlike target_department).
+    surgery = surgeries(:one)
+    surgery.update!(slot_category: "regular", location: "OR 3")
+
+    assert_equal "OR 3", surgery.reload.location
+  end
+
+  test "filtered by slot_category" do
+    surgery = surgeries(:two)
+    surgery.update!(slot_category: "off_slot", location: "Catheter Lab")
+
+    assert_includes Surgery.filtered(slot_category: "off_slot"), surgery
+    assert_not_includes Surgery.filtered(slot_category: "regular"), surgery
+  end
+
   test "diagnosis_names_display does not issue additional queries when patient_diagnoses are preloaded" do
     surgeries = Surgery.includes(patient_diagnoses: :diagnosis).where(id: [ surgeries(:one).id, surgeries(:two).id ]).load
 

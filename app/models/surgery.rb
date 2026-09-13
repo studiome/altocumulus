@@ -6,6 +6,7 @@ class Surgery < ApplicationRecord
   # the same pattern.
   SCHEDULING_TYPE_KEYS = %w[elective emergency].freeze
   SURGERY_DATE_STATUS_KEYS = %w[scheduled undecided].freeze
+  SLOT_CATEGORY_KEYS = %w[regular simultaneous backup off_slot].freeze
 
   belongs_to :patient
   belongs_to :hospitalization, optional: true
@@ -21,6 +22,7 @@ class Surgery < ApplicationRecord
   validates :anesthesia_method, presence: true
   validates :duration_hours, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :scheduling_type, presence: true, inclusion: { in: SCHEDULING_TYPE_KEYS }
+  validates :slot_category, presence: true, inclusion: { in: SLOT_CATEGORY_KEYS }
   validate :patient_diagnoses_must_belong_to_patient
   validate :must_have_at_least_one_procedure_selection
   validate :no_more_than_five_procedure_selections
@@ -31,11 +33,15 @@ class Surgery < ApplicationRecord
   validates :slot_number, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :operation_order, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 
-  # Emergency surgeries are intentionally unaffected by the slot rules: no rule
-  # lookup, no capacity check, no time-of-day check. They must stay saveable on
-  # any date, at any time, so a stray slot number is cleared rather than
-  # rejected. Never turn this into a validation.
-  before_validation :clear_slot_number_for_emergency
+  # Emergency surgeries and non-regular slot categories (simultaneous, backup,
+  # off_slot) are intentionally unaffected by the slot rules. They do not occupy
+  # regular elective slots, so their slot_number is cleared rather than rejected.
+  before_validation :clear_slot_number_for_non_regular_slots
+  # The form keeps every category's field in the DOM and only hides the ones the
+  # selected category does not use, so switching category re-submits the old
+  # value. Clear what the new category cannot mean, or a surgery moved back to
+  # the regular slots would keep claiming a partner department forever.
+  before_validation :clear_fields_the_slot_category_does_not_use
 
   scope :linked_to_hospitalization, -> { where.not(hospitalization_id: nil) }
   scope :standalone, -> { where(hospitalization_id: nil) }
@@ -59,6 +65,10 @@ class Surgery < ApplicationRecord
     SURGERY_DATE_STATUS_KEYS.index_with { |key| I18n.t("models.surgery.surgery_date_status_options.#{key}") }
   end
 
+  def self.slot_category_options
+    SLOT_CATEGORY_KEYS.index_with { |key| I18n.t("models.surgery.slot_category_options.#{key}") }
+  end
+
   def self.scheduling_type_form_options
     scheduling_type_options.map { |k, v| [ v, k ] }
   end
@@ -67,7 +77,11 @@ class Surgery < ApplicationRecord
     surgery_date_status_options.map { |k, v| [ v, k ] }
   end
 
-  def self.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil, scheduling_type: nil, undated: nil)
+  def self.slot_category_form_options
+    slot_category_options.map { |k, v| [ v, k ] }
+  end
+
+  def self.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil, scheduling_type: nil, slot_category: nil, undated: nil)
     scope = all
 
     if keyword.present?
@@ -89,6 +103,7 @@ class Surgery < ApplicationRecord
     scope = scope.where(surgery_date: performed_from..) if performed_from.present?
     scope = scope.where(surgery_date: ..performed_to) if performed_to.present?
     scope = scope.where(scheduling_type: scheduling_type) if scheduling_type.present?
+    scope = scope.where(slot_category: slot_category) if slot_category.present?
     scope = scope.undated if ActiveModel::Type::Boolean.new.cast(undated)
     scope
   end
@@ -133,6 +148,35 @@ class Surgery < ApplicationRecord
     self.class.scheduling_type_options[scheduling_type] || scheduling_type
   end
 
+  def regular_slot?
+    slot_category == "regular"
+  end
+
+  def simultaneous_slot?
+    slot_category == "simultaneous"
+  end
+
+  def backup_slot?
+    slot_category == "backup"
+  end
+
+  def off_slot?
+    slot_category == "off_slot"
+  end
+
+  def slot_category_label
+    self.class.slot_category_options[slot_category] || slot_category
+  end
+
+  def slot_category_badge_class
+    case slot_category
+    when "simultaneous" then "badge-info"
+    when "backup" then "badge-secondary"
+    when "off_slot" then "badge-accent"
+    else "badge-ghost"
+    end
+  end
+
   def start_time_display
     start_time&.strftime("%H:%M") || "-"
   end
@@ -169,8 +213,18 @@ class Surgery < ApplicationRecord
 
   private
 
-  def clear_slot_number_for_emergency
-    self.slot_number = nil if emergency?
+  def clear_slot_number_for_non_regular_slots
+    self.slot_number = nil if emergency? || !regular_slot?
+  end
+
+  # target_department only means anything for the two categories that run in
+  # another department's slot. location, by contrast, is deliberately kept for
+  # the regular slots too (a regular case can still record which room it ran
+  # in); it is only meaningless when the case sits in a partner department's
+  # slot rather than a room of our own.
+  def clear_fields_the_slot_category_does_not_use
+    self.target_department = nil unless simultaneous_slot? || backup_slot?
+    self.location = nil if simultaneous_slot? || backup_slot?
   end
 
   def patient_diagnoses_must_belong_to_patient

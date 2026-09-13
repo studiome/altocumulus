@@ -1,12 +1,16 @@
-<%# Renders one elective surgery on the week board, whether it sits in a slot
-    or is still waiting to be assigned to one. A slot holds several surgeries,
-    so the over-limit warning belongs to the slot, not to this partial. %>
 <%= link_to surgery, class: "block hover:opacity-80" do %>
   <div class="flex justify-between items-baseline gap-2">
     <span class="font-semibold"><%= surgery.patient&.name || t("surgery_schedules.labels.unknown_patient_name", id: surgery.patient_id) %></span>
     <span class="font-mono text-xs"><%= surgery.start_time_display %></span>
   </div>
-  <div class="text-base-content/70"><%= surgery.display_procedure_name %></div>
+  <% unless surgery.regular_slot? %>
+    <div class="mt-1 flex flex-wrap gap-1">
+      <span class="badge <%= surgery.slot_category_badge_class %> badge-xs">
+        <%= surgery.slot_category_label %><% if surgery.target_department.present? %>: <%= surgery.target_department %><% elsif surgery.location.present? %>: <%= surgery.location %><% end %>
+      </span>
+    </div>
+  <% end %>
+  <div class="text-base-content/70 mt-0.5"><%= surgery.display_procedure_name %></div>
   <div class="text-base-content/50 text-xs">
     <%= surgery.duration_minutes ? t(".duration_minutes_value", minutes: surgery.duration_minutes) : t("common.none") %>
   </div>
