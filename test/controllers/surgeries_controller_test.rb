@@ -89,13 +89,67 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "new excludes discarded hospitalizations from the linked hospitalization dropdown" do
+    # :one and :three both belong to patient :one, so scoping to that patient
+    # keeps this a same-patient discarded-vs-active comparison.
     hospitalizations(:one).discard!
 
-    get new_surgery_url
+    get new_surgery_url(patient_id: patients(:one).id)
 
     assert_response :success
     assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:one).id}']", count: 0
-    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:two).id}']", count: 1
+    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:three).id}']", count: 1
+  end
+
+  test "new without a selected patient shows no patient diagnoses or hospitalizations from any patient" do
+    get new_surgery_url
+
+    assert_response :success
+    assert_no_match(/Right Appendicitis/, @response.body)
+    assert_no_match(/Hypertension/, @response.body)
+    assert_no_match(/Bilateral Pneumonia/, @response.body)
+    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:one).id}']", count: 0
+    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:two).id}']", count: 0
+  end
+
+  test "new scoped to a patient shows only that patient's diagnoses" do
+    get new_surgery_url(patient_id: patients(:one).id)
+
+    assert_response :success
+    assert_match(/Right Appendicitis/, @response.body)
+    assert_match(/Hypertension/, @response.body)
+    assert_no_match(/Bilateral Pneumonia/, @response.body)
+  end
+
+  test "edit shows only the surgery's patient diagnoses, with existing links checked" do
+    get edit_surgery_url(@surgery)
+
+    assert_response :success
+    assert_match(/Right Appendicitis/, @response.body)
+    assert_no_match(/Bilateral Pneumonia/, @response.body)
+  end
+
+  test "patient_fields returns only the requested patient's diagnoses in the turbo frame" do
+    get patient_fields_surgeries_url(patient_id: patients(:one).id)
+
+    assert_response :success
+    assert_select "turbo-frame#surgery_patient_scoped_fields"
+    assert_match(/Right Appendicitis/, @response.body)
+    assert_match(/Hypertension/, @response.body)
+    assert_no_match(/Bilateral Pneumonia/, @response.body)
+  end
+
+  test "patient_fields without a patient_id shows the select-patient-first empty state" do
+    get patient_fields_surgeries_url
+
+    assert_response :success
+    assert_match(/#{Regexp.escape(I18n.t("surgeries.form.select_patient_first"))}/, @response.body)
+  end
+
+  test "patient_fields excludes other patients' hospitalizations from the linked hospitalization dropdown" do
+    get patient_fields_surgeries_url(patient_id: patients(:one).id)
+
+    assert_response :success
+    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:two).id}']", count: 0
   end
 
   test "should create surgery" do

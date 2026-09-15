@@ -684,6 +684,23 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_equal "H001 - John Doe (2026-06-01 - in hospital)", hospitalizations(:three).to_s
   end
 
+  test "period_display renders the admission/discharge period without the patient" do
+    assert_equal "2026-03-01 - 2026-03-06", hospitalizations(:one).period_display
+  end
+
+  test "period_display falls back to scheduled_admission_date when admission_date is absent" do
+    assert_equal "2026-10-01 - in hospital", hospitalizations(:four).period_display
+  end
+
+  test "period_display shows in hospital when discharge_date is absent" do
+    assert_equal "2026-06-01 - in hospital", hospitalizations(:three).period_display
+  end
+
+  test "period_display shows date not set when neither admission nor scheduled admission date is present" do
+    hospitalization = Hospitalization.new
+    assert_equal "date not set - in hospital", hospitalization.period_display
+  end
+
   test "discard! soft-deletes without removing the record" do
     hospitalization = hospitalizations(:one)
     hospitalization.discard!

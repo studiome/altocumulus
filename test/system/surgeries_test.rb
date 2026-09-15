@@ -4,9 +4,9 @@ class SurgeriesTest < ApplicationSystemTestCase
   test "diagnosis options are filtered by selected patient" do
     visit new_surgery_path
 
-    assert_text "Right Appendicitis"
-    assert_text "Hypertension"
-    assert_text "Bilateral Pneumonia"
+    assert_no_text "Right Appendicitis"
+    assert_no_text "Hypertension"
+    assert_no_text "Bilateral Pneumonia"
 
     choose_patient "H001 - John Doe"
 
@@ -19,6 +19,18 @@ class SurgeriesTest < ApplicationSystemTestCase
     assert_text "Bilateral Pneumonia"
     assert_no_text "Right Appendicitis"
     assert_no_text "Hypertension"
+  end
+
+  test "linked hospitalization options are scoped to the selected patient" do
+    visit new_surgery_path
+
+    choose_patient "H001 - John Doe"
+    assert_selector "#surgery_hospitalization_id option", text: /2026-03-01/
+    assert_no_selector "#surgery_hospitalization_id option", text: /2026-03-05/
+
+    choose_patient "H002 - Jane Smith"
+    assert_selector "#surgery_hospitalization_id option", text: /2026-03-05/
+    assert_no_selector "#surgery_hospitalization_id option", text: /2026-03-01/
   end
 
   test "user can create surgery from new surgery form" do

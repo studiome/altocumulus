@@ -25,7 +25,11 @@ Rails.application.routes.draw do
   end
   resources :diagnoses
   resources :surgery_procedures
-  resources :surgeries
+  resources :surgeries do
+    collection do
+      get :patient_fields
+    end
+  end
   resources :hospitalizations do
     member do
       patch :confirm

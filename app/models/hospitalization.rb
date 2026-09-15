@@ -247,9 +247,16 @@ class Hospitalization < ApplicationRecord
   end
 
   def to_s
+    "#{patient} (#{period_display})"
+  end
+
+  # Patient-scoped contexts (e.g. the surgery form's hospitalization picker,
+  # once the patient is already fixed by the picker above it) don't need the
+  # patient name that #to_s prefixes -- just the period.
+  def period_display
     date_not_set = I18n.t("models.hospitalization.to_s.date_not_set")
     in_hospital = I18n.t("models.hospitalization.to_s.in_hospital")
-    "#{patient} (#{effective_admission_date || date_not_set} - #{discharge_date || in_hospital})"
+    "#{effective_admission_date || date_not_set} - #{discharge_date || in_hospital}"
   end
 
   # Builds (and saves) a fresh "requested" reservation from this one, for the

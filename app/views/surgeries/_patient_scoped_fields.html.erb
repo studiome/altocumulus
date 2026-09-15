@@ -1,0 +1,48 @@
+<%# locals: patient_selected, patient_diagnoses, hospitalizations,
+      selected_patient_diagnosis_ids, selected_hospitalization_id
+
+    Rendered both as part of the surgery form and as the standalone
+    turbo-frame response from SurgeriesController#patient_fields, so it must
+    not receive a FormBuilder -- only plain *_tag helpers, whose field names
+    still land inside the surrounding <form> regardless of which response
+    rendered them.
+
+    t("surgeries.form.…") uses the full key rather than the relative t(".…")
+    form, since this partial is also rendered under surgeries/patient_fields,
+    which would otherwise resolve lazy lookups against the wrong scope. %>
+<%= turbo_frame_tag "surgery_patient_scoped_fields", data: { surgery_patient_fields_target: "frame" } do %>
+  <div class="space-y-3">
+    <div>
+      <%= label_tag "surgery_patient_diagnosis_ids", t("surgeries.labels.related_diagnoses"), class: "app-field-label" %>
+      <p class="app-helper"><%= t("surgeries.form.related_diagnoses_helper") %></p>
+    </div>
+
+    <%= hidden_field_tag "surgery[patient_diagnosis_ids][]", "" %>
+
+    <% if !patient_selected %>
+      <div class="app-empty-state"><%= t("surgeries.form.select_patient_first") %></div>
+    <% elsif patient_diagnoses.any? %>
+      <div class="space-y-3 rounded-box border border-base-200 bg-base-100 p-4">
+        <% patient_diagnoses.each do |entry| %>
+          <label class="label cursor-pointer justify-start gap-3 rounded-xl border border-base-200 px-4 py-3 has-checked:border-primary has-checked:bg-primary/5">
+            <%= check_box_tag "surgery[patient_diagnosis_ids][]", entry.id, selected_patient_diagnosis_ids.include?(entry.id), class: "checkbox checkbox-primary", id: "surgery_patient_diagnosis_ids_#{entry.id}" %>
+            <span><%= entry.display_name %> (<%= l(entry.diagnosed_on, format: :default) %>)</span>
+          </label>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="app-empty-state"><%= t("surgeries.form.no_diagnoses_for_selected_patient") %></div>
+    <% end %>
+
+    <p class="app-helper"><%= t("surgeries.form.diagnoses_helper") %></p>
+  </div>
+
+  <div class="app-field">
+    <%= label_tag "surgery_hospitalization_id", t("surgeries.form.hospitalization_label"), class: "app-field-label" %>
+    <%= select_tag "surgery[hospitalization_id]",
+          options_from_collection_for_select(hospitalizations, :id, :period_display, selected_hospitalization_id),
+          include_blank: t("surgeries.form.not_linked_option"),
+          id: "surgery_hospitalization_id",
+          class: "select w-full focus:select-primary" %>
+  </div>
+<% end %>

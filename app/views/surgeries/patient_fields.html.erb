@@ -1,0 +1,6 @@
+<%= render "patient_scoped_fields",
+      patient_selected: @patient_id.present?,
+      patient_diagnoses: @patient_diagnoses,
+      hospitalizations: @hospitalizations,
+      selected_patient_diagnosis_ids: @selected_patient_diagnosis_ids,
+      selected_hospitalization_id: @selected_hospitalization_id %>
