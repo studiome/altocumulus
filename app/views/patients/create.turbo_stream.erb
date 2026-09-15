@@ -1,0 +1,13 @@
+<%= turbo_stream.replace "patient_picker_frame" do %>
+  <%= turbo_frame_tag "patient_picker_frame" do %>
+    <div class="p-6 text-center"
+         data-controller="patient-picker-success"
+         data-patient-id="<%= @patient.id %>"
+         data-patient-label="<%= @patient.to_s %>">
+      <div class="alert alert-success justify-start mb-4">
+        <span><%= t(".success_notice") %></span>
+      </div>
+      <p class="text-sm text-base-content/60"><%= t(".added_helper_text") %></p>
+    </div>
+  <% end %>
+<% end %>

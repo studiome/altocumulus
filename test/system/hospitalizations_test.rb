@@ -6,7 +6,7 @@ class HospitalizationsTest < ApplicationSystemTestCase
 
     # Patient one (H001) already has an open-ended hospitalization fixture, so
     # this test uses patient two (H002) to avoid the overlap validation.
-    select "H002 - Jane Smith", from: "Patient"
+    choose_patient "H002 - Jane Smith"
     page.execute_script(<<~JS)
       const admissionDateInput = document.querySelector("#hospitalization_admission_date")
       admissionDateInput.value = "2026-05-01"

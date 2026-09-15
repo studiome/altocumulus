@@ -640,10 +640,12 @@ ja:
       delete_button: "患者を削除"
     new:
       title: "新規患者"
+      modal_description: "患者選択モーダルを離れずに新規患者を登録できます。"
     edit:
       title: "患者を編集"
     create:
       success_notice: "患者を作成しました。"
+      added_helper_text: "新しい患者を選択しました。"
     update:
       success_notice: "患者を更新しました。"
     destroy:
@@ -663,6 +665,17 @@ ja:
       date_of_birth: "生年月日"
       clinical_info: "臨床情報"
       add_diagnosis_button: "診断を追加"
+    picker:
+      title: "患者を選択"
+      description: "氏名または患者IDで検索してください。"
+      keyword_label: "キーワード"
+      keyword_placeholder: "氏名 / 患者ID"
+      empty_filtered: "該当する患者が見つかりません。"
+      empty_no_filter: "患者がまだ登録されていません。"
+      choose_button: "患者を選択"
+      unselected: "患者が選択されていません"
+      new_patient_link: "新規患者を登録"
+      back_to_search: "検索に戻る"
 
   patient_diagnoses:
     index:
@@ -764,7 +777,6 @@ ja:
       no_diagnoses_warning: "診断名マスタが登録されていません。先に診断名を作成してください。"
       new_diagnosis_link: "新規診断名"
       patient_schedule_heading: "患者・予定"
-      select_patient_prompt: "患者を選択してください"
       scheduled_admission_date_helper: "予約段階の間はこちらを設定してください。未定の場合は空欄のままで構いません。"
       admission_date_helper: "この項目か、上記の入院予定日のいずれかを設定してください。"
       planned_days_label: "入院予定日数"
@@ -849,7 +861,6 @@ ja:
       new_patient_link: "新規患者"
       no_procedures_warning: "術式マスタが登録されていません。先に術式を作成するか、新規作成画面を開いてください。"
       new_procedure_link: "新規術式"
-      select_patient_prompt: "患者を選択してください"
       related_diagnoses_helper: "この手術に該当する診断名を1つ以上選択してください。"
       no_diagnoses_for_selected_patient: "選択した患者に登録された診断名がありません。"
       no_diagnoses_available: "診断名がありません。先に患者の診断名を登録してください。"
@@ -1059,6 +1070,8 @@ ja:
       next: "次へ"
       page_of: "%{page} / %{total} ページ"
     diagnosis_modal:
+      loading: "読み込み中..."
+    patient_picker_modal:
       loading: "読み込み中..."
 
   # Stage 3 group 4b. See en.yml for the design notes.

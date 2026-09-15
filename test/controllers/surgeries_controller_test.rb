@@ -69,6 +69,15 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "new renders the patient picker field instead of a patient dropdown" do
+    get new_surgery_url
+
+    assert_response :success
+    assert_select "select[name='surgery[patient_id]']", count: 0
+    assert_select "input[type=hidden][name='surgery[patient_id]']"
+    assert_select "a[href='#{picker_patients_path}']"
+  end
+
   test "new shows the day's whole number of slots (total_slots) in the configured-slots hint" do
     ElectiveSlotRule.find_by(day_of_week: 2).update!(slot_count: 2.5, slot_duration_minutes: 240)
 

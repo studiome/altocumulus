@@ -1,0 +1,20 @@
+<%# locals: form, patient (nilable), label, input_data (default {}) %>
+<% input_data ||= {} %>
+<div class="app-field" data-controller="patient-picker"
+     data-action="patient:selected@window->patient-picker#select"
+     data-patient-picker-placeholder-value="<%= t("patients.picker.unselected") %>">
+  <span class="app-field-label"><%= label %></span>
+  <div class="flex flex-wrap items-center gap-3">
+    <div class="flex-1 min-w-0 rounded-box border border-base-200 bg-base-100 px-4 py-3"
+         data-patient-picker-target="display">
+      <% if patient %>
+        <span class="font-mono"><%= patient.hospital_id %></span> - <%= patient.name %>
+      <% else %>
+        <span class="text-base-content/50"><%= t("patients.picker.unselected") %></span>
+      <% end %>
+    </div>
+    <%= link_to t("patients.picker.choose_button"), picker_patients_path,
+        class: "btn btn-outline", data: { turbo_frame: "patient_picker_frame" } %>
+  </div>
+  <%= form.hidden_field :patient_id, data: { patient_picker_target: "input" }.merge(input_data) %>
+</div>

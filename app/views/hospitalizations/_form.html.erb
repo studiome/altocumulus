@@ -36,10 +36,8 @@
   <section class="space-y-4">
     <h2 class="text-lg font-bold text-primary"><%= t(".patient_schedule_heading") %></h2>
 
-    <div class="app-field">
-      <%= form.label :patient_id, Hospitalization.human_attribute_name(:patient_id), class: "app-field-label" %>
-      <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: t(".select_patient_prompt") }, class: "select w-full focus:select-primary" %>
-    </div>
+    <%= render "shared/patient_picker_field", form: form, patient: hospitalization.patient,
+          label: Hospitalization.human_attribute_name(:patient_id) %>
 
     <div class="app-field">
       <%= form.label :reservation_status, t("hospitalizations.labels.reservation_status"), class: "app-field-label" %>

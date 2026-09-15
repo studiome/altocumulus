@@ -27,4 +27,18 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   setup do
     sign_in_as(users(:admin))
   end
+
+  # The patient field on the surgery/hospitalization forms opens a search
+  # modal instead of a plain <select>. This drives it the same way a user
+  # would: open the modal, optionally narrow the results with a keyword,
+  # then click the matching result row (whose visible text is the patient's
+  # `to_s`, e.g. "H001 - John Doe").
+  def choose_patient(label, keyword: nil)
+    click_on "Select Patient", match: :first
+    within("turbo-frame#patient_picker_frame") do
+      fill_in "Keyword", with: keyword if keyword
+      click_on label
+    end
+    assert_no_selector "dialog#patient_picker_modal[open]"
+  end
 end

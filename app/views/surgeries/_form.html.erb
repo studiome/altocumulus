@@ -33,10 +33,10 @@
     </div>
   <% end %>
 
-  <div class="app-field">
-    <%= form.label :patient_id, Surgery.human_attribute_name(:patient_id), class: "app-field-label" %>
-    <%= form.collection_select :patient_id, patients, :id, :to_s, { prompt: t(".select_patient_prompt") }, class: "select w-full focus:select-primary", data: { surgery_diagnosis_link_filter_target: "patientSelect", action: "change->surgery-diagnosis-link-filter#filter" } %>
-  </div>
+  <%= render "shared/patient_picker_field", form: form, patient: surgery.patient,
+        label: Surgery.human_attribute_name(:patient_id),
+        input_data: { surgery_diagnosis_link_filter_target: "patientSelect",
+                      action: "change->surgery-diagnosis-link-filter#filter" } %>
 
   <div class="space-y-3">
     <div>

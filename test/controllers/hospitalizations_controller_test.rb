@@ -174,6 +174,15 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[data-turbo-frame='diagnosis_modal_frame']", text: "New Diagnosis"
   end
 
+  test "new renders the patient picker field instead of a patient dropdown" do
+    get new_hospitalization_url
+
+    assert_response :success
+    assert_select "select[name='hospitalization[patient_id]']", count: 0
+    assert_select "input[type=hidden][name='hospitalization[patient_id]']"
+    assert_select "a[href='#{picker_patients_path}']"
+  end
+
   test "should create hospitalization" do
     assert_difference("Hospitalization.count") do
       post hospitalizations_url, params: { hospitalization: {

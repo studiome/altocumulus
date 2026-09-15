@@ -1,8 +1,21 @@
 class PatientsController < ApplicationController
+  # Header set by the patient picker's turbo-frame so new/create can tell a
+  # picker-modal request apart from `new_patient_path` used as a plain link
+  # elsewhere (e.g. the "no patients" warning on the surgery/hospitalization
+  # forms), where `turbo_frame_request?` alone would be too broad.
+  PICKER_FRAME = "patient_picker_frame".freeze
+
   before_action :set_patient, only: %i[ show edit update destroy ]
+  helper_method :picker_frame_request?
 
   # GET /patients or /patients.json
   def index
+    @pagination = Pagination.new(Patient.filtered(**filter_params).ordered, page: params[:page])
+    @patients = @pagination.records
+  end
+
+  # GET /patients/picker
+  def picker
     @pagination = Pagination.new(Patient.filtered(**filter_params).ordered, page: params[:page])
     @patients = @pagination.records
   end
@@ -24,6 +37,15 @@ class PatientsController < ApplicationController
   # POST /patients or /patients.json
   def create
     @patient = Patient.new(patient_params)
+
+    if picker_frame_request?
+      if @patient.save
+        render :create, formats: :turbo_stream
+      else
+        render :new, formats: :turbo_stream, status: :unprocessable_entity
+      end
+      return
+    end
 
     respond_to do |format|
       if @patient.save
@@ -75,5 +97,9 @@ class PatientsController < ApplicationController
 
     def filter_params
       params.permit(:keyword).to_h.symbolize_keys
+    end
+
+    def picker_frame_request?
+      request.headers["Turbo-Frame"] == PICKER_FRAME
     end
 end

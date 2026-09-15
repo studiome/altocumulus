@@ -631,10 +631,12 @@ en:
       delete_button: "Delete Patient"
     new:
       title: "New Patient"
+      modal_description: "Register a new patient without leaving the patient picker."
     edit:
       title: "Edit Patient"
     create:
       success_notice: "Patient was successfully created."
+      added_helper_text: "The new patient has been selected."
     update:
       success_notice: "Patient was successfully updated."
     destroy:
@@ -659,6 +661,17 @@ en:
       date_of_birth: "Date of Birth"
       clinical_info: "Clinical Info"
       add_diagnosis_button: "Add Diagnosis"
+    picker:
+      title: "Select a Patient"
+      description: "Search by name or hospital ID."
+      keyword_label: "Keyword"
+      keyword_placeholder: "Name or hospital ID"
+      empty_filtered: "No patients match your search."
+      empty_no_filter: "No patients registered yet."
+      choose_button: "Select Patient"
+      unselected: "No patient selected"
+      new_patient_link: "Register New Patient"
+      back_to_search: "Back to search"
 
   patient_diagnoses:
     index:
@@ -801,7 +814,6 @@ en:
       no_diagnoses_warning: "No diagnosis names found. Create a diagnosis master first."
       new_diagnosis_link: "New Diagnosis"
       patient_schedule_heading: "Patient & Schedule"
-      select_patient_prompt: "Select a patient"
       scheduled_admission_date_helper: "Set this while the admission is still a reservation. Leave undecided if unknown."
       admission_date_helper: "Either this or the scheduled admission date above must be set."
       planned_days_label: "Planned Length of Stay (Days)"
@@ -915,7 +927,6 @@ en:
       new_patient_link: "New Patient"
       no_procedures_warning: "No procedure names found. Create a procedure master first, or open the new procedure screen."
       new_procedure_link: "New Procedure"
-      select_patient_prompt: "Select a patient"
       related_diagnoses_helper: "Select one or more diagnoses that correspond to this surgery."
       no_diagnoses_for_selected_patient: "No diagnoses are registered for the selected patient."
       no_diagnoses_available: "No diagnoses available. Register diagnoses for a patient first."
@@ -1171,6 +1182,8 @@ en:
       next: "Next"
       page_of: "Page %{page} of %{total}"
     diagnosis_modal:
+      loading: "Loading..."
+    patient_picker_modal:
       loading: "Loading..."
 
   # Stage 3 group 4b: Operations Calendar, Dashboard, and cross-Search

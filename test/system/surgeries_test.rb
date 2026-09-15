@@ -8,13 +8,13 @@ class SurgeriesTest < ApplicationSystemTestCase
     assert_text "Hypertension"
     assert_text "Bilateral Pneumonia"
 
-    select "H001 - John Doe", from: "Patient"
+    choose_patient "H001 - John Doe"
 
     assert_text "Right Appendicitis"
     assert_text "Hypertension"
     assert_no_text "Bilateral Pneumonia"
 
-    select "H002 - Jane Smith", from: "Patient"
+    choose_patient "H002 - Jane Smith"
 
     assert_text "Bilateral Pneumonia"
     assert_no_text "Right Appendicitis"
@@ -24,7 +24,7 @@ class SurgeriesTest < ApplicationSystemTestCase
   test "user can create surgery from new surgery form" do
     visit new_surgery_path
 
-    select "H001 - John Doe", from: "Patient"
+    choose_patient "H001 - John Doe"
     check "Right Appendicitis"
     page.execute_script(<<~JS)
       const surgeryDateInput = document.querySelector("#surgery_surgery_date")
@@ -133,7 +133,7 @@ class SurgeriesTest < ApplicationSystemTestCase
   test "removed procedures do not reappear after validation error" do
     visit new_surgery_path
 
-    select "H001 - John Doe", from: "Patient"
+    choose_patient "H001 - John Doe"
     check "Right Appendicitis"
     page.execute_script(<<~JS)
       const surgeryDateInput = document.querySelector("#surgery_surgery_date")

@@ -39,6 +39,58 @@ class PatientsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "picker returns success with patient names" do
+    get picker_patients_url
+    assert_response :success
+    assert_match "John Doe", @response.body
+  end
+
+  test "picker filters by keyword" do
+    get picker_patients_url, params: { keyword: "H002" }
+    assert_response :success
+    assert_match "Jane Smith", @response.body
+    assert_no_match "John Doe", @response.body
+  end
+
+  test "picker renders inside the patient picker turbo-frame when requested as a frame" do
+    get picker_patients_url, headers: { "Turbo-Frame" => "patient_picker_frame" }
+    assert_response :success
+    assert_select "turbo-frame#patient_picker_frame"
+  end
+
+  test "create from the patient picker frame renders a turbo-stream success panel" do
+    assert_difference("Patient.count") do
+      post patients_url,
+        params: { patient: { date_of_birth: "1985-01-01", hospital_id: "H006", name: "Picker Patient" } },
+        headers: { "Turbo-Frame" => "patient_picker_frame" }
+    end
+
+    assert_response :success
+    assert_equal Mime[:turbo_stream], response.media_type
+    patient = Patient.order(:id).last
+    assert_match "data-patient-id=\"#{patient.id}\"", @response.body
+    assert_match patient.to_s, @response.body
+  end
+
+  test "create from the patient picker frame with invalid params renders turbo-stream errors" do
+    assert_no_difference("Patient.count") do
+      post patients_url,
+        params: { patient: { name: "No Hospital Id" } },
+        headers: { "Turbo-Frame" => "patient_picker_frame" }
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal Mime[:turbo_stream], response.media_type
+  end
+
+  test "create without the patient picker frame header still redirects as before" do
+    assert_difference("Patient.count") do
+      post patients_url, params: { patient: { date_of_birth: "1985-01-01", hospital_id: "H007", name: "Regular Patient" } }
+    end
+
+    assert_redirected_to patient_url(Patient.last)
+  end
+
   test "should create patient" do
     assert_difference("Patient.count") do
       post patients_url, params: { patient: { date_of_birth: "1985-01-01", hospital_id: "H004", name: "New Patient" } }

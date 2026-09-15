@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   end
 
   resources :patients do
+    collection do
+      get :picker
+    end
     resources :patient_diagnoses
   end
   resources :diagnoses
