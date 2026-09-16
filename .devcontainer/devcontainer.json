@@ -1,6 +1,13 @@
 {
   "name": "altocumulus",
   "image": "mcr.microsoft.com/devcontainers/universal:latest",
+  // Headless Chrome (system tests) shares rendering data via /dev/shm; Docker's
+  // default 64MB is too small and causes Chrome to crash on startup with
+  // Selenium::WebDriver::Error::SessionNotCreatedError ("DevToolsActivePort file
+  // doesn't exist"). --disable-dev-shm-usage in application_system_test_case.rb
+  // works around this by falling back to /tmp, but raising shm-size here avoids
+  // the slower fallback and the flakiness some Chrome versions still show with it.
+  "runArgs": [ "--shm-size=2gb" ],
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
   "customizations": {
     "vscode": {
@@ -12,8 +19,7 @@
         "GitHub.vscode-pull-request-github",
         "ms-ceintl.vscode-language-pack-ja",
         "Anthropic.claude-code",
-        "bobmagicii.theme-dark-og",
-        "google.google-antigravity"
+        "bobmagicii.theme-dark-og"
       ],
       // Mirrors .vscode/settings.json so a fresh devcontainer starts with the
       // same editor/Ruby LSP configuration without relying on workspace sync.
