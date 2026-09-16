@@ -194,7 +194,6 @@ en:
         incorrect: "is incorrect"
         not_a_valid_date: "is not a valid date"
         requires_discharge_date: "can only be set together with a discharge date"
-        must_include_linked_surgeries_within_period: "must include all linked surgeries within the hospitalization period"
         overlaps_another_hospitalization: "overlaps another hospitalization for this patient"
 
       models:
@@ -219,8 +218,6 @@ en:
               must_be_on_or_after_admission_date: "must be on or after the admission date"
             admission_date:
               or_scheduled_admission_date_required: "or a scheduled admission date must be present"
-            patient_id:
-              must_match_patient_of_linked_surgeries: "must match the patient of every linked surgery"
         surgery:
           attributes:
             patient_diagnoses:
@@ -230,10 +227,7 @@ en:
               too_many_procedure_selections: "must be five or fewer"
               no_duplicate_procedure_selections: "must not include duplicate procedures"
               cannot_swap_procedures_between_rows: "cannot swap procedures between existing rows in one save; change one row to a different procedure first"
-            hospitalization:
-              must_belong_to_same_patient_as_surgery: "must belong to the same patient as the surgery"
             surgery_date:
-              must_fall_within_hospitalization_period: "must fall within the linked hospitalization period"
               must_be_blank_when_undecided: "must be left blank when marked as undecided"
               must_be_entered_or_undecided: "must be entered, or choose Undecided"
             surgery_date_status:
@@ -770,8 +764,6 @@ en:
       admission_date_prefix: "Admission Date"
       deleted_badge: "Deleted"
       planned_length_of_stay_label: "Planned Length of Stay"
-      surgeries_divider: "Surgeries During This Hospitalization"
-      no_surgeries: "No surgeries are linked to this hospitalization."
       update_history_divider: "Update History"
       no_update_history: "No update history recorded for this hospitalization."
       audit_event_details_link: "Details"
@@ -898,7 +890,6 @@ en:
       diagnosis_header: "Diagnosis"
       slot_badge: "Slot %{number}"
       slot_badge_with_total: "Slot %{number} / %{total}"
-      standalone: "Standalone"
       empty_no_filter: "No surgeries found. Click \"New Surgery\" to get started."
       empty_filtered: "No surgeries match your search."
     show:
@@ -906,7 +897,6 @@ en:
       date_prefix: "Date"
       slot_badge: "Slot %{number}"
       slot_of_total: "Slot %{number} of %{total}"
-      standalone: "Standalone (not linked)"
       edit_button: "Edit Surgery"
       delete_button: "Delete Surgery"
     new:
@@ -956,8 +946,6 @@ en:
       slot_rules_heading: "Elective Slot Rules"
       manage_slot_rules_link: "Manage slot rules"
       no_slot_rules: "No elective slots are configured yet."
-      hospitalization_label: "Linked Hospitalization"
-      not_linked_option: "Not linked (outpatient / standalone)"
       procedures_helper: "Add up to 5 procedures for one surgery."
       procedure_row_helper: "If the right procedure is not listed, create a new one first."
       add_procedure_button: "Add Procedure"

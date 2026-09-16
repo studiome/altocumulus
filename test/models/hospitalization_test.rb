@@ -426,156 +426,6 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_includes discarded.errors[:admission_date], "overlaps another hospitalization for this patient"
   end
 
-  test "rejects moving admission_date after a linked surgery date" do
-    hospitalization = hospitalizations(:one)
-    Surgery.create!(
-      patient: patients(:one),
-      hospitalization: hospitalization,
-      surgery_date: Date.new(2026, 3, 3),
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
-
-    hospitalization.admission_date = Date.new(2026, 3, 4)
-
-    assert_not hospitalization.valid?
-    assert_includes hospitalization.errors[:admission_date], "must include all linked surgeries within the hospitalization period"
-  end
-
-  test "rejects moving discharge_date before a linked surgery date" do
-    hospitalization = hospitalizations(:one)
-    Surgery.create!(
-      patient: patients(:one),
-      hospitalization: hospitalization,
-      surgery_date: Date.new(2026, 3, 3),
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
-
-    hospitalization.discharge_date = Date.new(2026, 3, 2)
-
-    assert_not hospitalization.valid?
-    assert_includes hospitalization.errors[:discharge_date], "must include all linked surgeries within the hospitalization period"
-  end
-
-  test "rejects a shrunken discharge_date even when surgeries was cached before the surgery was linked" do
-    hospitalization = hospitalizations(:one)
-    hospitalization.valid? # caches an empty `surgeries` association on this instance
-
-    Surgery.create!(
-      patient: patients(:one),
-      hospitalization: hospitalization,
-      surgery_date: Date.new(2026, 3, 3),
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
-
-    hospitalization.discharge_date = Date.new(2026, 3, 2)
-
-    assert_not hospitalization.valid?
-    assert_includes hospitalization.errors[:discharge_date], "must include all linked surgeries within the hospitalization period"
-  end
-
-  test "reports the discharge_date message only once even with several out-of-range surgeries" do
-    hospitalization = hospitalizations(:one)
-    2.times do
-      Surgery.create!(
-        patient: patients(:one),
-        hospitalization: hospitalization,
-        surgery_date: Date.new(2026, 3, 3),
-        anesthesia_method: "General",
-        duration_hours: 1.0,
-        surgery_procedure_selections_attributes: [
-          { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-        ]
-      )
-    end
-
-    hospitalization.discharge_date = Date.new(2026, 3, 2)
-
-    assert_not hospitalization.valid?
-    assert_equal 1, hospitalization.errors[:discharge_date].count { |message| message == "must include all linked surgeries within the hospitalization period" }
-  end
-
-  test "linked surgeries must remain within the scheduled period when admission_date is not yet set" do
-    hospitalization = Hospitalization.create!(
-      patient: patients(:two),
-      scheduled_admission_date: Date.new(2026, 9, 10),
-      reason: "Planned surgery",
-      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
-    )
-    Surgery.create!(
-      patient: patients(:two),
-      hospitalization: hospitalization,
-      surgery_date: Date.new(2026, 9, 12),
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
-
-    hospitalization.scheduled_admission_date = Date.new(2026, 9, 13)
-
-    assert_not hospitalization.valid?
-    assert_includes hospitalization.errors[:scheduled_admission_date], "must include all linked surgeries within the hospitalization period"
-  end
-
-  test "linked_surgeries_must_remain_within_period ignores an undated linked surgery" do
-    hospitalization = hospitalizations(:one)
-    Surgery.create!(
-      patient: patients(:one),
-      hospitalization: hospitalization,
-      surgery_date: nil,
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
-
-    # Would fail with "must include all linked surgeries within the
-    # hospitalization period" if the undated surgery were counted.
-    hospitalization.discharge_date = Date.new(2026, 3, 2)
-
-    assert hospitalization.valid?
-  end
-
-  test "rejects reassigning the patient while a surgery is linked" do
-    hospitalization = hospitalizations(:one)
-    Surgery.create!(
-      patient: patients(:one),
-      hospitalization: hospitalization,
-      surgery_date: Date.new(2026, 3, 3),
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
-
-    hospitalization.patient_id = patients(:two).id
-
-    assert_not hospitalization.valid?
-    assert_includes hospitalization.errors[:patient_id], "must match the patient of every linked surgery"
-  end
-
-  test "allows reassigning the patient when no surgeries are linked" do
-    hospitalization = hospitalizations(:three)
-    hospitalization.patient_id = patients(:two).id
-
-    assert hospitalization.valid?
-  end
-
   test "discharged? and in_hospital?" do
     assert hospitalizations(:one).discharged?
     assert_not hospitalizations(:one).in_hospital?
@@ -730,24 +580,6 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_not_includes Hospitalization.discarded, hospitalizations(:two)
   end
 
-  test "discard! does not unlink surgeries" do
-    hospitalization = hospitalizations(:one)
-    surgery = Surgery.create!(
-      patient: patients(:one),
-      hospitalization: hospitalization,
-      surgery_date: Date.new(2026, 3, 3),
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
-
-    hospitalization.discard!
-
-    assert_equal hospitalization.id, surgery.reload.hospitalization_id
-  end
-
   test "filtered excludes discarded hospitalizations" do
     hospitalization = hospitalizations(:one)
     hospitalization.discard!
@@ -799,19 +631,9 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_equal original_snapshot, hospitalization.reload.patient_name_snapshot
   end
 
-  test "rebook creates a new requested/unconfirmed hospitalization without actuals, discharge info, or surgery links, but keeps diagnoses" do
+  test "rebook creates a new requested/unconfirmed hospitalization without actuals or discharge info, but keeps diagnoses" do
     original = hospitalizations(:two)
     original.update!(admin_status: "confirmed")
-    Surgery.create!(
-      patient: original.patient,
-      hospitalization: original,
-      surgery_date: Date.new(2026, 3, 6),
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
 
     copy = original.rebook(scheduled_admission_date: Date.new(2027, 1, 15))
 
@@ -827,7 +649,6 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_equal "unconfirmed", copy.admin_status
     assert_equal Date.current, copy.submitted_on
     assert_equal copy.diagnoses.ids.sort, original.diagnoses.ids.sort
-    assert_equal 0, copy.surgeries.count
   end
 
   test "rebook does not persist with a blank scheduled_admission_date" do
@@ -846,23 +667,6 @@ class HospitalizationTest < ActiveSupport::TestCase
 
     assert_not copy.persisted?
     assert_includes copy.errors[:scheduled_admission_date], "is not a valid date"
-  end
-
-  test "surgeries are nullified when the hospitalization is destroyed" do
-    surgery = Surgery.create!(
-      patient: patients(:one),
-      hospitalization: hospitalizations(:one),
-      surgery_date: Date.new(2026, 3, 3),
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
-
-    hospitalizations(:one).destroy!
-
-    assert_nil surgery.reload.hospitalization_id
   end
 
   test "filtered with no filters returns everything" do

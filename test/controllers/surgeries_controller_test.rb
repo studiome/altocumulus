@@ -88,27 +88,13 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Tuesday: 2\.5/, @response.body)
   end
 
-  test "new excludes discarded hospitalizations from the linked hospitalization dropdown" do
-    # :one and :three both belong to patient :one, so scoping to that patient
-    # keeps this a same-patient discarded-vs-active comparison.
-    hospitalizations(:one).discard!
-
-    get new_surgery_url(patient_id: patients(:one).id)
-
-    assert_response :success
-    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:one).id}']", count: 0
-    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:three).id}']", count: 1
-  end
-
-  test "new without a selected patient shows no patient diagnoses or hospitalizations from any patient" do
+  test "new without a selected patient shows no patient diagnoses from any patient" do
     get new_surgery_url
 
     assert_response :success
     assert_no_match(/Right Appendicitis/, @response.body)
     assert_no_match(/Hypertension/, @response.body)
     assert_no_match(/Bilateral Pneumonia/, @response.body)
-    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:one).id}']", count: 0
-    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:two).id}']", count: 0
   end
 
   test "new scoped to a patient shows only that patient's diagnoses" do
@@ -143,13 +129,6 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_match(/#{Regexp.escape(I18n.t("surgeries.form.select_patient_first"))}/, @response.body)
-  end
-
-  test "patient_fields excludes other patients' hospitalizations from the linked hospitalization dropdown" do
-    get patient_fields_surgeries_url(patient_id: patients(:one).id)
-
-    assert_response :success
-    assert_select "select#surgery_hospitalization_id option[value='#{hospitalizations(:two).id}']", count: 0
   end
 
   test "should create surgery" do
@@ -328,43 +307,6 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to surgery_url(Surgery.last)
     assert Surgery.last.elective?
-  end
-
-  test "should create surgery linked to a hospitalization" do
-    assert_difference("Surgery.count") do
-      post surgeries_url, params: { surgery: {
-        patient_id: patients(:one).id,
-        hospitalization_id: hospitalizations(:one).id,
-        patient_diagnosis_ids: [ patient_diagnoses(:appendicitis).id ],
-        surgery_date: "2026-03-03",
-        anesthesia_method: "General",
-        duration_hours: 2.0,
-        surgery_procedure_selections_attributes: {
-          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-        }
-      } }
-    end
-
-    assert_redirected_to surgery_url(Surgery.last)
-    assert_equal hospitalizations(:one), Surgery.last.hospitalization
-  end
-
-  test "should reject a surgery linked to another patient's hospitalization" do
-    assert_no_difference("Surgery.count") do
-      post surgeries_url, params: { surgery: {
-        patient_id: patients(:two).id,
-        hospitalization_id: hospitalizations(:one).id,
-        patient_diagnosis_ids: [ patient_diagnoses(:pneumonia).id ],
-        surgery_date: "2026-03-03",
-        anesthesia_method: "General",
-        duration_hours: 2.0,
-        surgery_procedure_selections_attributes: {
-          "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-        }
-      } }
-    end
-
-    assert_response :unprocessable_entity
   end
 
   test "should show surgery" do

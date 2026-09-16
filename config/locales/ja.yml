@@ -237,7 +237,6 @@ ja:
         anesthesia_method: "麻酔方法"
         assistant_name: "助手"
         duration_hours: "手術時間(時間)"
-        hospitalization_id: "入院"
         operation_order: "手術順"
         operator_name: "執刀医"
         patient_id: "患者"
@@ -274,7 +273,6 @@ ja:
         incorrect: "が正しくありません"
         not_a_valid_date: "は正しい日付ではありません"
         requires_discharge_date: "は退院日と併せて設定してください"
-        must_include_linked_surgeries_within_period: "は紐づく手術をすべて入院期間内に含めてください"
         overlaps_another_hospitalization: "が同じ患者の他の入院期間と重複しています"
 
       models:
@@ -299,8 +297,6 @@ ja:
               must_be_on_or_after_admission_date: "は入院日以降の日付にしてください"
             admission_date:
               or_scheduled_admission_date_required: "または入院予定日のいずれかを入力してください"
-            patient_id:
-              must_match_patient_of_linked_surgeries: "は紐づくすべての手術の患者と一致させてください"
         surgery:
           attributes:
             patient_diagnoses:
@@ -310,10 +306,7 @@ ja:
               too_many_procedure_selections: "は5件以下にしてください"
               no_duplicate_procedure_selections: "に重複を含めることはできません"
               cannot_swap_procedures_between_rows: "は既存の行同士で術式を入れ替えることができません。まず一方の行を別の術式に変更してください"
-            hospitalization:
-              must_belong_to_same_patient_as_surgery: "は手術と同じ患者のものにしてください"
             surgery_date:
-              must_fall_within_hospitalization_period: "は紐づく入院期間内の日付にしてください"
               must_be_blank_when_undecided: "は「未定」を選択している場合は空欄にしてください"
               must_be_entered_or_undecided: "を入力するか「未定」を選択してください"
             surgery_date_status:
@@ -734,8 +727,6 @@ ja:
       admission_date_prefix: "入院日"
       deleted_badge: "削除済み"
       planned_length_of_stay_label: "入院予定日数"
-      surgeries_divider: "この入院中の手術"
-      no_surgeries: "この入院に紐づく手術はありません。"
       update_history_divider: "更新履歴"
       no_update_history: "この入院の更新履歴はまだありません。"
       audit_event_details_link: "詳細"
@@ -833,7 +824,6 @@ ja:
       diagnosis_header: "診断名"
       slot_badge: "第%{number}枠"
       slot_badge_with_total: "第%{number}枠 / %{total}"
-      standalone: "単独"
       empty_no_filter: "手術記録が登録されていません。「新規手術」から作成してください。"
       empty_filtered: "検索条件に一致する手術がありません。"
     show:
@@ -841,7 +831,6 @@ ja:
       date_prefix: "日付"
       slot_badge: "第%{number}枠"
       slot_of_total: "第%{number}枠 / 全%{total}枠"
-      standalone: "単独(未連携)"
       edit_button: "手術を編集"
       delete_button: "手術を削除"
     new:
@@ -890,8 +879,6 @@ ja:
       slot_rules_heading: "予定手術枠ルール"
       manage_slot_rules_link: "枠ルールを管理"
       no_slot_rules: "手術枠がまだ設定されていません。"
-      hospitalization_label: "連携する入院"
-      not_linked_option: "連携なし(外来/単独)"
       procedures_helper: "1つの手術につき最大5件の術式を追加できます。"
       procedure_row_helper: "該当する術式がない場合は、先に新規作成してください。"
       add_procedure_button: "術式を追加"

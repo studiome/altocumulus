@@ -28,10 +28,6 @@ class Hospitalization < ApplicationRecord
   belongs_to :patient
   has_many :hospitalization_diagnoses, -> { order(:id) }, dependent: :destroy, inverse_of: :hospitalization
   has_many :diagnoses, through: :hospitalization_diagnoses
-  has_many :surgeries
-
-  before_destroy :unlink_surgeries
-
   accepts_nested_attributes_for :hospitalization_diagnoses,
                                 allow_destroy: true,
                                 reject_if: ->(attributes) { attributes["diagnosis_id"].blank? }
@@ -51,10 +47,6 @@ class Hospitalization < ApplicationRecord
   validate :outcome_required_when_discharged
   validate :discharge_fields_require_discharge_date
   validate :no_overlapping_hospitalization_period
-  validate :linked_surgeries_must_remain_within_period
-  validate :linked_surgeries_must_belong_to_same_patient
-
-  before_validation :reset_linked_surgeries_memo
 
   # A non-admin's update always drops back to "unconfirmed", regardless of
   # whether admin_status itself was touched (it is not even in the
@@ -197,9 +189,7 @@ class Hospitalization < ApplicationRecord
     deleted_at.present?
   end
 
-  # Logical delete only: surgeries stay linked so a restore puts everything
-  # back exactly as it was. Real destruction (see #unlink_surgeries) is a
-  # separate, physical-only path that this never calls.
+  # Logical delete only, so a restore puts everything back exactly as it was.
   def discard!
     update!(deleted_at: Time.current)
   end
@@ -300,17 +290,6 @@ class Hospitalization < ApplicationRecord
       self.patient_sex_snapshot = patient.sex
     end
 
-    # dependent: :nullify unlinks the surgeries with a single update_all, which
-    # skips callbacks and so leaves them missing from the audit log. Saving each
-    # record instead keeps the audit trail; validations stay skipped to match
-    # what :nullify did, so an already-invalid surgery cannot block the destroy.
-    def unlink_surgeries
-      surgeries.each do |surgery|
-        surgery.hospitalization_id = nil
-        surgery.save!(validate: false)
-      end
-    end
-
     def diagnosis_ids_in_use
       active_hospitalization_diagnoses.filter_map(&:diagnosis_id)
     end
@@ -388,38 +367,5 @@ class Hospitalization < ApplicationRecord
       ).exists?
 
       errors.add(effective_admission_date_field, :overlaps_another_hospitalization) if conflict
-    end
-
-    def linked_surgeries_must_remain_within_period
-      return if effective_admission_date.blank?
-
-      dates = linked_surgeries.filter_map(&:surgery_date)
-      return if dates.empty?
-
-      if dates.any? { |date| date < effective_admission_date }
-        errors.add(effective_admission_date_field, :must_include_linked_surgeries_within_period)
-      end
-
-      if discharge_date.present? && dates.any? { |date| date > discharge_date }
-        errors.add(:discharge_date, :must_include_linked_surgeries_within_period)
-      end
-    end
-
-    def linked_surgeries_must_belong_to_same_patient
-      return if patient_id.blank?
-      return if linked_surgeries.all? { |surgery| surgery.patient_id == patient_id }
-
-      errors.add(:patient_id, :must_match_patient_of_linked_surgeries)
-    end
-
-    def reset_linked_surgeries_memo
-      @linked_surgeries = nil
-    end
-
-    # An earlier validation pass may have cached this association (a new record
-    # caches an empty list), so re-read it once per validation run and share
-    # that read between both validations above.
-    def linked_surgeries
-      @linked_surgeries ||= persisted? ? surgeries.reload.to_a : surgeries.to_a
     end
 end

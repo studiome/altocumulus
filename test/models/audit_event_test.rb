@@ -101,20 +101,6 @@ class AuditEventTest < ActiveSupport::TestCase
     end
   end
 
-  test "records an update when a hospitalization destroy nullifies its surgeries" do
-    hospitalization = hospitalizations(:one)
-    surgery = surgeries(:one)
-    surgery.update_columns(hospitalization_id: hospitalization.id)
-
-    assert_difference("AuditEvent.where(auditable_type: 'Surgery', action: 'update').count", 1) do
-      hospitalization.destroy!
-    end
-
-    assert_nil surgery.reload.hospitalization_id
-    event = AuditEvent.where(auditable_type: "Surgery", auditable_id: surgery.id, action: "update").last
-    assert_equal [ hospitalization.id, nil ], event.change_data.fetch("hospitalization_id")
-  end
-
   test "records surgery procedure selection changes against its surgery" do
     surgery = surgeries(:two)
     selection = surgery.surgery_procedure_selections.create!(

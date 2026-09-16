@@ -281,33 +281,6 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ diagnoses(:fracture).id, diagnoses(:appendicitis).id ].sort, @hospitalization.diagnoses.ids.sort
   end
 
-  test "should reject reassigning the patient while a surgery is linked" do
-    other_patient = Patient.create!(hospital_id: "H999", name: "Unrelated Patient", date_of_birth: "1975-01-01")
-    surgery = Surgery.create!(
-      patient: patients(:one),
-      hospitalization: @hospitalization,
-      surgery_date: Date.new(2026, 3, 3),
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
-
-    patch hospitalization_url(@hospitalization), params: { hospitalization: {
-      patient_id: other_patient.id,
-      admission_date: @hospitalization.admission_date,
-      planned_days: @hospitalization.planned_days,
-      reason: @hospitalization.reason
-    } }
-
-    assert_response :unprocessable_entity
-    surgery.reload
-    assert_equal patients(:one).id, surgery.patient_id
-    assert_equal @hospitalization.id, surgery.hospitalization_id
-    assert_equal patients(:one).id, @hospitalization.reload.patient_id
-  end
-
   test "should record discharge information on update" do
     hospitalization = hospitalizations(:three)
 
@@ -474,23 +447,6 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
-  test "discarding a hospitalization does not unlink its surgeries" do
-    surgery = Surgery.create!(
-      patient: patients(:one),
-      hospitalization: @hospitalization,
-      surgery_date: Date.new(2026, 3, 3),
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
-
-    delete hospitalization_url(@hospitalization)
-
-    assert_equal @hospitalization.id, surgery.reload.hospitalization_id
-  end
-
   test "a general user update resets admin_status to unconfirmed" do
     @hospitalization.update!(admin_status: "confirmed")
     sign_out
@@ -611,59 +567,6 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_equal one_update_queries, many_updates_queries
-  end
-
-  test "show does not issue more queries as more surgeries are linked" do
-    patient_a = Patient.create!(hospital_id: "H901", name: "Patient A", date_of_birth: "1970-01-01")
-    patient_b = Patient.create!(hospital_id: "H902", name: "Patient B", date_of_birth: "1970-01-01")
-
-    one_surgery_hospitalization = Hospitalization.create!(
-      patient: patient_a,
-      admission_date: Date.new(2027, 5, 1),
-      discharge_date: Date.new(2027, 5, 10),
-      outcome: "recovered",
-      reason: "Observation",
-      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
-    )
-    Surgery.create!(
-      patient: patient_a,
-      hospitalization: one_surgery_hospitalization,
-      surgery_date: Date.new(2027, 5, 3),
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [
-        { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
-      ]
-    )
-
-    three_surgery_hospitalization = Hospitalization.create!(
-      patient: patient_b,
-      admission_date: Date.new(2027, 5, 1),
-      discharge_date: Date.new(2027, 5, 10),
-      outcome: "recovered",
-      reason: "Observation",
-      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
-    )
-    [ :appendectomy, :cholecystectomy, :knee_arthroscopy ].each do |procedure|
-      Surgery.create!(
-        patient: patient_b,
-        hospitalization: three_surgery_hospitalization,
-        surgery_date: Date.new(2027, 5, 3),
-        anesthesia_method: "General",
-        duration_hours: 1.0,
-        surgery_procedure_selections_attributes: [
-          { surgery_procedure_id: surgery_procedures(procedure).id, laterality: "right" }
-        ]
-      )
-    end
-
-    one_surgery_queries = count_sql_queries { get hospitalization_url(one_surgery_hospitalization) }
-    assert_response :success
-
-    three_surgery_queries = count_sql_queries { get hospitalization_url(three_surgery_hospitalization) }
-    assert_response :success
-
-    assert_equal one_surgery_queries, three_surgery_queries
   end
 
   private

@@ -9,7 +9,6 @@ class Surgery < ApplicationRecord
   SLOT_CATEGORY_KEYS = %w[regular simultaneous backup off_slot].freeze
 
   belongs_to :patient
-  belongs_to :hospitalization, optional: true
   has_many :surgery_diagnosis_links, dependent: :destroy
   has_many :patient_diagnoses, through: :surgery_diagnosis_links
   has_many :surgery_procedure_selections, -> { order(:id) }, dependent: :destroy, inverse_of: :surgery
@@ -27,8 +26,6 @@ class Surgery < ApplicationRecord
   validate :must_have_at_least_one_procedure_selection
   validate :no_more_than_five_procedure_selections
   validate :no_duplicate_procedure_selections
-  validate :hospitalization_must_belong_to_same_patient
-  validate :surgery_date_must_fall_within_hospitalization_period
   validate :valid_surgery_date_status
   validates :slot_number, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :operation_order, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
@@ -43,8 +40,6 @@ class Surgery < ApplicationRecord
   # the regular slots would keep claiming a partner department forever.
   before_validation :clear_fields_the_slot_category_does_not_use
 
-  scope :linked_to_hospitalization, -> { where.not(hospitalization_id: nil) }
-  scope :standalone, -> { where(hospitalization_id: nil) }
   scope :anesthesia_methods, -> { distinct.order(:anesthesia_method).pluck(:anesthesia_method).compact_blank }
   scope :elective, -> { where(scheduling_type: "elective") }
   scope :emergency, -> { where(scheduling_type: "emergency") }
@@ -250,22 +245,6 @@ class Surgery < ApplicationRecord
     return if procedure_names.uniq.size == procedure_names.size
 
     errors.add(:surgery_procedure_selections, :no_duplicate_procedure_selections)
-  end
-
-  def hospitalization_must_belong_to_same_patient
-    return if hospitalization.blank? || patient_id.blank?
-    return if hospitalization.patient_id == patient_id
-
-    errors.add(:hospitalization, :must_belong_to_same_patient_as_surgery)
-  end
-
-  def surgery_date_must_fall_within_hospitalization_period
-    return if hospitalization.blank? || surgery_date.blank?
-    return if hospitalization.effective_admission_date.blank?
-    return if surgery_date >= hospitalization.effective_admission_date &&
-              (hospitalization.discharge_date.blank? || surgery_date <= hospitalization.discharge_date)
-
-    errors.add(:surgery_date, :must_fall_within_hospitalization_period)
   end
 
   # Only checked when surgery_date_status is explicitly assigned (i.e. the

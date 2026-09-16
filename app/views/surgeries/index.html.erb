@@ -70,7 +70,6 @@
             <th class="bg-base-200"><%= t("surgeries.labels.duration") %></th>
             <th class="bg-base-200"><%= t("surgeries.labels.anesthesia") %></th>
             <th class="bg-base-200"><%= Surgery.human_attribute_name(:patient_id) %></th>
-            <th class="bg-base-200"><%= Surgery.human_attribute_name(:hospitalization_id) %></th>
             <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
@@ -122,13 +121,6 @@
                     <span class="text-base-content/50 text-sm font-mono ml-2"><%= surgery.patient.hospital_id %></span>
                   <% else %>
                     <span class="text-base-content/50 italic"><%= t("surgeries.labels.unknown_patient") %></span>
-                  <% end %>
-                </td>
-                <td>
-                  <% if surgery.hospitalization %>
-                    <%= link_to(surgery.hospitalization.admission_date ? l(surgery.hospitalization.admission_date, format: :default) : nil, surgery.hospitalization, class: "link link-primary") %>
-                  <% else %>
-                    <span class="text-base-content/50 italic"><%= t(".standalone") %></span>
                   <% end %>
                 </td>
                 <td class="text-right flex justify-end gap-2">

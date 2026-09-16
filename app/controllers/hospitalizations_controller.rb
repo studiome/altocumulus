@@ -18,9 +18,6 @@ class HospitalizationsController < ApplicationController
   end
 
   def show
-    @surgeries = @hospitalization.surgeries
-                                 .includes(surgery_procedure_selections: :surgery_procedure)
-                                 .order(surgery_date: :asc)
     @audit_events = AuditEvent.where(auditable_type: "Hospitalization", auditable_id: @hospitalization.id)
                                .includes(:user)
                                .recent_first

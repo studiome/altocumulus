@@ -40,9 +40,7 @@
   <%= render "patient_scoped_fields",
         patient_selected: surgery.patient_id.present?,
         patient_diagnoses: patient_diagnoses,
-        hospitalizations: hospitalizations,
-        selected_patient_diagnosis_ids: surgery.patient_diagnosis_ids,
-        selected_hospitalization_id: surgery.hospitalization_id %>
+        selected_patient_diagnosis_ids: surgery.patient_diagnosis_ids %>
 
   <div class="app-field">
     <span class="app-field-label"><%= t("surgeries.labels.surgery_date") %></span>

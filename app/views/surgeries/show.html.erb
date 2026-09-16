@@ -106,16 +106,6 @@
           <span class="text-lg font-medium"><%= @surgery.laterality_names_display %></span>
         </div>
         <div>
-          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Surgery.human_attribute_name(:hospitalization_id) %></span>
-          <% if @surgery.hospitalization %>
-            <span class="text-lg font-medium">
-              <%= link_to @surgery.hospitalization.to_s, @surgery.hospitalization, class: "link link-primary" %>
-            </span>
-          <% else %>
-            <span class="text-lg font-medium text-base-content/50 italic"><%= t(".standalone") %></span>
-          <% end %>
-        </div>
-        <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Surgery.human_attribute_name(:patient_id) %></span>
           <% if @surgery.patient %>
             <span class="text-lg font-medium">

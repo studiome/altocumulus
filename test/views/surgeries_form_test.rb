@@ -10,7 +10,6 @@ class SurgeriesFormTest < ActionView::TestCase
       patients: [],
       patient_diagnoses: [],
       surgery_procedures: [],
-      hospitalizations: [],
       elective_slot_rules: []
     }
 

@@ -1,5 +1,4 @@
-<%# locals: patient_selected, patient_diagnoses, hospitalizations,
-      selected_patient_diagnosis_ids, selected_hospitalization_id
+<%# locals: patient_selected, patient_diagnoses, selected_patient_diagnosis_ids
 
     Rendered both as part of the surgery form and as the standalone
     turbo-frame response from SurgeriesController#patient_fields, so it must
@@ -35,14 +34,5 @@
     <% end %>
 
     <p class="app-helper"><%= t("surgeries.form.diagnoses_helper") %></p>
-  </div>
-
-  <div class="app-field">
-    <%= label_tag "surgery_hospitalization_id", t("surgeries.form.hospitalization_label"), class: "app-field-label" %>
-    <%= select_tag "surgery[hospitalization_id]",
-          options_from_collection_for_select(hospitalizations, :id, :period_display, selected_hospitalization_id),
-          include_blank: t("surgeries.form.not_linked_option"),
-          id: "surgery_hospitalization_id",
-          class: "select w-full focus:select-primary" %>
   </div>
 <% end %>

@@ -24,7 +24,6 @@ class SurgeriesI18nTest < ActionDispatch::IntegrationTest
     assert_select "th", text: "手術時間"
     assert_select "th", text: "麻酔"
     assert_select "th", text: "患者"
-    assert_select "th", text: "入院"
     assert_select "th", text: "操作"
     assert_no_match(/[Tt]ranslation missing/, response.body)
   end
@@ -42,7 +41,6 @@ class SurgeriesI18nTest < ActionDispatch::IntegrationTest
     assert_select "th", text: "Duration"
     assert_select "th", text: "Anesthesia"
     assert_select "th", text: "Patient"
-    assert_select "th", text: "Hospitalization"
     assert_select "th", text: "Actions"
     assert_no_match(/手術/, response.body)
   end

@@ -4,7 +4,7 @@ class SurgeriesController < ApplicationController
   def index
     @surgery_procedures = SurgeryProcedure.alphabetical
     @anesthesia_methods = Surgery.anesthesia_methods
-    scope = Surgery.includes(:patient, :hospitalization, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure })
+    scope = Surgery.includes(:patient, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure })
                     .filtered(**filter_params)
                     .ordered_by_surgery_date
     @pagination = Pagination.new(scope, page: params[:page])
@@ -62,14 +62,12 @@ class SurgeriesController < ApplicationController
 
   # GET /surgeries/patient_fields?patient_id=123
   # Called from the surgery form's turbo-frame when the picked patient
-  # changes, so only that patient's diagnoses/hospitalizations are ever sent
-  # to the browser instead of every patient's.
+  # changes, so only that patient's diagnoses are ever sent to the browser
+  # instead of every patient's.
   def patient_fields
     @patient_id = params[:patient_id].presence
     @patient_diagnoses = patient_diagnoses_for(@patient_id)
-    @hospitalizations = hospitalizations_for(@patient_id)
     @selected_patient_diagnosis_ids = []
-    @selected_hospitalization_id = nil
   end
 
   def destroy
@@ -95,7 +93,6 @@ class SurgeriesController < ApplicationController
       @surgery_procedures = SurgeryProcedure.alphabetical
       @elective_slot_rules = ElectiveSlotRule.ordered
       @patient_diagnoses = patient_diagnoses_for(@surgery&.patient_id)
-      @hospitalizations = hospitalizations_for(@surgery&.patient_id)
     end
 
     # Patient not yet chosen: empty, rather than the old approach of loading
@@ -104,12 +101,6 @@ class SurgeriesController < ApplicationController
       return PatientDiagnosis.none if patient_id.blank?
 
       PatientDiagnosis.where(patient_id: patient_id).includes(:diagnosis).recent_first
-    end
-
-    def hospitalizations_for(patient_id)
-      return Hospitalization.none if patient_id.blank?
-
-      Hospitalization.active.where(patient_id: patient_id).order(admission_date: :desc)
     end
 
     # Nested selections are saved row by row, so exchanging procedures between
@@ -132,7 +123,7 @@ class SurgeriesController < ApplicationController
 
     def surgery_params
       params.expect(surgery: [
-        :surgery_date, :surgery_date_status, :duration_hours, :anesthesia_method, :patient_id, :hospitalization_id,
+        :surgery_date, :surgery_date_status, :duration_hours, :anesthesia_method, :patient_id,
         :scheduling_type, :slot_category, :target_department, :location, :start_time, :slot_number,
         :operator_name, :assistant_name, :operation_order,
         { patient_diagnosis_ids: [] },

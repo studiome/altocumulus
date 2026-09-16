@@ -121,19 +121,19 @@ class AuditEventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show resolves foreign key values to their referenced record's label" do
-    hospitalization = hospitalizations(:one)
+    other_patient = patients(:two)
     event = AuditEvent.create!(
       auditable_type: "Surgery",
       auditable_id: surgeries(:one).id,
       action: "update",
       record_label: surgeries(:one).to_s,
-      change_data: { "hospitalization_id" => [ nil, hospitalization.id ] }
+      change_data: { "patient_id" => [ patients(:one).id, other_patient.id ] }
     )
 
     get audit_event_url(event)
 
     assert_response :success
-    assert_match hospitalization.to_s, response.body
+    assert_match other_patient.to_s, response.body
   end
 
   test "show resolves an associated surgery_procedure_selection's surgery_procedure_id to its name" do

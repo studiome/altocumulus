@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_13_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_16_010118) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -154,7 +154,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_120000) do
     t.string "assistant_name"
     t.datetime "created_at", null: false
     t.float "duration_hours"
-    t.integer "hospitalization_id"
     t.string "location"
     t.integer "operation_order"
     t.string "operator_name"
@@ -166,7 +165,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_120000) do
     t.date "surgery_date"
     t.string "target_department"
     t.datetime "updated_at", null: false
-    t.index ["hospitalization_id"], name: "index_surgeries_on_hospitalization_id"
     t.index ["patient_id"], name: "index_surgeries_on_patient_id"
     t.index ["surgery_date", "scheduling_type"], name: "index_surgeries_on_surgery_date_and_scheduling_type"
     t.index ["surgery_date", "slot_number"], name: "index_surgeries_on_surgery_date_and_slot_number"
@@ -220,7 +218,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_120000) do
   add_foreign_key "hospitalizations", "patients"
   add_foreign_key "patient_diagnoses", "diagnoses"
   add_foreign_key "patient_diagnoses", "patients"
-  add_foreign_key "surgeries", "hospitalizations"
   add_foreign_key "surgeries", "patients"
   add_foreign_key "surgery_diagnosis_links", "patient_diagnoses"
   add_foreign_key "surgery_diagnosis_links", "surgeries"
