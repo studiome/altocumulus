@@ -1,0 +1,48 @@
+{
+  "name": "altocumulus",
+  "image": "mcr.microsoft.com/devcontainers/universal:latest",
+  "postCreateCommand": "bash .devcontainer/postCreate.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Shopify.ruby-lsp",
+        "KoichiSasada.vscode-rdbg",
+        "bradlc.vscode-tailwindcss",
+        "marcoroth.herb-lsp",
+        "GitHub.vscode-pull-request-github",
+        "ms-ceintl.vscode-language-pack-ja",
+        "Anthropic.claude-code",
+        "bobmagicii.theme-dark-og",
+        "google.google-antigravity"
+      ],
+      // Mirrors .vscode/settings.json so a fresh devcontainer starts with the
+      // same editor/Ruby LSP configuration without relying on workspace sync.
+      "settings": {
+        "workbench.colorTheme": "Dark OG",
+        "editor.fontFamily": "'SF Mono', Menlo, Monaco, 'Courier New', monospace",
+        "terminal.integrated.fontSize": 10,
+        "rubyLsp.rubyVersionManager": {
+          "identifier": "auto"
+        },
+        "rubyLsp.formatter": "rubocop_internal",
+        "rubyLsp.linters": [
+          "rubocop_internal"
+        ],
+        "[ruby]": {
+          "editor.defaultFormatter": "Shopify.ruby-lsp",
+          "editor.formatOnSave": true,
+          "editor.formatOnType": true,
+          "editor.tabSize": 2,
+          "editor.insertSpaces": true,
+          "editor.semanticHighlighting.enabled": true,
+          "files.trimTrailingWhitespace": true,
+          "files.insertFinalNewline": true
+        },
+        "[erb]": {
+          "editor.tabSize": 2,
+          "editor.insertSpaces": true
+        }
+      }
+    }
+  }
+}
