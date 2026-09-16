@@ -7,6 +7,12 @@
         <p class="app-page-kicker"><%= t(".kicker") %></p>
         <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
+      <%# Carries the current filters into the export, but not the page: the
+          CSV is always the full filtered result. %>
+      <%= link_to audit_events_path(request.query_parameters.except("page").merge(format: :csv)), class: "btn btn-outline" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+        <%= t(".export_csv") %>
+      <% end %>
     </div>
   </section>
 

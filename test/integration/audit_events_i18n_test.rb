@@ -1,4 +1,5 @@
 require "test_helper"
+require "csv"
 
 # Stage 3 (view text externalization), group 4a: the AuditEvents screens
 # (index/show), including the shared `common.field_header` /
@@ -102,5 +103,25 @@ class AuditEventsI18nTest < ActionDispatch::IntegrationTest
     get audit_events_url
     assert_select "a", text: "Next"
     assert_select "span", text: /Page 1 of 2/
+  end
+
+  test "csv export header row is Japanese" do
+    sign_in_as(users(:japanese_member))
+
+    get audit_events_url(format: :csv)
+
+    assert_response :success
+    rows = CSV.parse(response.body.delete_prefix("\xEF\xBB\xBF"))
+    assert_equal [ "日時", "対象種別", "対象ID", "操作", "対象", "操作者", "IPアドレス", "変更内容" ], rows.first
+  end
+
+  test "csv export header row is unchanged in English" do
+    sign_in_as(users(:member))
+
+    get audit_events_url(format: :csv)
+
+    assert_response :success
+    rows = CSV.parse(response.body.delete_prefix("\xEF\xBB\xBF"))
+    assert_equal [ "Time", "Record type", "Record ID", "Action", "Record", "Operator", "IP Address", "Changes" ], rows.first
   end
 end

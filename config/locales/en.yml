@@ -1123,6 +1123,8 @@ en:
     labels:
       time: "Time"
       record_type: "Record type"
+      record_id: "Record ID"
+      ip_address: "IP Address"
       operator: "Operator"
     index:
       title: "Audit Log"
@@ -1130,12 +1132,12 @@ en:
       all_option: "All"
       record_header: "Record"
       details_link: "Details"
+      changes_header: "Changes"
+      export_csv: "Export CSV"
       empty: "No audit events found."
     show:
       title: "Audit Event"
       kicker: "Audit Log"
-      record_id_label: "Record ID"
-      ip_address_label: "IP Address"
       no_changes: "No attribute changes recorded."
 
   accounts:

@@ -1,4 +1,5 @@
 require "test_helper"
+require "csv"
 
 class AuditEventsControllerTest < ActionDispatch::IntegrationTest
   setup do
@@ -170,6 +171,87 @@ class AuditEventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match link.patient_diagnosis.to_s, response.body
     assert_no_match(/PatientDiagnosis:0x/, response.body)
+  end
+
+  test "index links to the csv export carrying the current filters but not the page" do
+    get audit_events_url, params: { auditable_type: "Patient", audit_action: "update", page: 1 }
+
+    assert_response :success
+    assert_select "a[href*='format=csv'][href*='auditable_type=Patient'][href*='audit_action=update']"
+    assert_select "a[href*='format=csv'][href*='page=']", count: 0
+  end
+
+  test "csv export returns a csv file" do
+    get audit_events_url(format: :csv)
+
+    assert_response :success
+    assert_equal "text/csv", response.media_type
+    assert_match(/attachment/, response.headers["Content-Disposition"])
+    assert_match(/audit_log_/, response.headers["Content-Disposition"])
+  end
+
+  test "csv export has localized header row" do
+    get audit_events_url(format: :csv)
+
+    assert_response :success
+    rows = CSV.parse(response.body.delete_prefix("\xEF\xBB\xBF"))
+    assert_equal [
+      "Time", "Record type", "Record ID", "Action", "Record", "Operator", "IP Address", "Changes"
+    ], rows.first
+  end
+
+  test "csv export includes all listed audit events' record labels" do
+    get audit_events_url(format: :csv)
+
+    assert_response :success
+    assert_match @patient_event.record_label, response.body
+    assert_match @surgery_event.record_label, response.body
+  end
+
+  test "csv export respects the current filters" do
+    get audit_events_url(format: :csv), params: { auditable_type: "Patient" }
+
+    assert_response :success
+    assert_match @patient_event.record_label, response.body
+    assert_no_match "Surgery record", response.body
+  end
+
+  test "csv export ignores pagination and includes every matching record" do
+    (Pagination::DEFAULT_PER_PAGE + 1).times do |index|
+      AuditEvent.create!(
+        auditable_type: "Patient", auditable_id: patients(:one).id,
+        action: "destroy", record_label: "Bulk destroyed #{index}"
+      )
+    end
+
+    get audit_events_url(format: :csv)
+
+    assert_response :success
+    rows = CSV.parse(response.body.delete_prefix("\xEF\xBB\xBF"))
+    # header + 2 events from setup + (DEFAULT_PER_PAGE + 1) bulk events
+    assert_equal 1 + 2 + Pagination::DEFAULT_PER_PAGE + 1, rows.size
+  end
+
+  test "csv export formats change data instead of raw json" do
+    get audit_events_url(format: :csv)
+
+    assert_response :success
+    assert_match "Name: Old name -> #{patients(:one).name}", response.body
+    assert_no_match(/\{"name"/, response.body)
+  end
+
+  test "csv export includes a utf-8 bom" do
+    get audit_events_url(format: :csv)
+
+    assert_response :success
+    assert response.body.start_with?("\xEF\xBB\xBF")
+  end
+
+  test "csv export requires sign in" do
+    sign_out
+    get audit_events_url(format: :csv)
+
+    assert_redirected_to login_path
   end
 
   test "only read routes exist" do

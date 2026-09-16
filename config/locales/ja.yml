@@ -1011,6 +1011,8 @@ ja:
     labels:
       time: "日時"
       record_type: "対象種別"
+      record_id: "対象ID"
+      ip_address: "IPアドレス"
       operator: "操作者"
     index:
       title: "監査ログ"
@@ -1018,12 +1020,12 @@ ja:
       all_option: "すべて"
       record_header: "対象"
       details_link: "詳細"
+      changes_header: "変更内容"
+      export_csv: "CSVダウンロード"
       empty: "監査イベントが見つかりません。"
     show:
       title: "監査イベント"
       kicker: "監査ログ"
-      record_id_label: "レコードID"
-      ip_address_label: "IPアドレス"
       no_changes: "属性の変更は記録されていません。"
 
   accounts:
