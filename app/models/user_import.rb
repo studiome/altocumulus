@@ -25,6 +25,10 @@ class UserImport
   # multi-megabyte log) being parsed and inserted row by row.
   MAX_ROWS = 500
   MAX_FILE_SIZE = 1.megabyte
+  # Excel on a Japanese system reads a BOM-less UTF-8 CSV as Shift_JIS and
+  # renders mojibake, so the downloadable template leads with a BOM (which
+  # #parse_table strips again on the way back in).
+  UTF8_BOM = "\uFEFF".freeze
 
   # `line` is the line number the admin sees in their spreadsheet: the header
   # is line 1, so the first data row reports as line 2.
@@ -38,6 +42,13 @@ class UserImport
   end
 
   attr_accessor :file
+
+  # The starting point offered on the import screen: the header row alone,
+  # deliberately without example rows -- a filled-in template that still
+  # carries the samples would register them as real users.
+  def self.template_csv
+    UTF8_BOM + CSV.generate_line(REQUIRED_HEADERS + OPTIONAL_HEADERS)
+  end
 
   validate :file_is_a_readable_csv
 

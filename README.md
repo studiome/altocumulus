@@ -346,7 +346,10 @@ selects the newly created record on the row that opened the modal.
 
 `UserImport` takes a CSV an admin uploads on `/admin/user_import/new`. The header row must contain
 `login_id` and `password`; `name`, `role` and `locale` are optional, and a row with no name is
-registered under its login id.
+registered under its login id. The same screen offers a blank template to start from
+(`GET /admin/user_import/template`): the header row alone, led by a UTF-8 BOM so Excel on a Japanese
+system opens it correctly. It deliberately carries no example rows -- a template filled in around
+its samples would register them as real users.
 
 Rows are saved one at a time rather than in a single transaction, so one bad line does not throw
 away the rest of the file: every line comes back as registered, skipped, or failed with the

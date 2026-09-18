@@ -1143,6 +1143,7 @@ en:
         file_label: "CSV file"
         file_helper: "UTF-8 encoded, with a header row, up to %{max_rows} rows."
         format_heading: "File format"
+        download_template: "Download Template"
         format_example: |
           login_id,password,name,role,locale
           yamada@example.com,supersecret,Taro Yamada,user,ja

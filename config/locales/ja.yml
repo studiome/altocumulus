@@ -1034,6 +1034,7 @@ ja:
         file_label: "CSVファイル"
         file_helper: "UTF-8・ヘッダー行あり、最大%{max_rows}行まで。"
         format_heading: "ファイル形式"
+        download_template: "テンプレートをダウンロード"
         format_example: |
           login_id,password,name,role,locale
           yamada@example.com,supersecret,山田太郎,user,ja

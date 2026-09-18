@@ -33,7 +33,13 @@
         </div>
 
         <div class="rounded-box border border-base-200 bg-base-200/40 p-4 space-y-2">
-          <p class="text-sm font-semibold"><%= t(".format_heading") %></p>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <p class="text-sm font-semibold"><%= t(".format_heading") %></p>
+            <%= link_to template_admin_user_import_path, class: "btn btn-outline btn-sm" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              <%= t(".download_template") %>
+            <% end %>
+          </div>
           <pre class="text-xs overflow-x-auto"><%= t(".format_example") %></pre>
           <ul class="list-disc ml-5 text-sm text-base-content/70 space-y-1">
             <li><%= t(".format_required", headers: UserImport::REQUIRED_HEADERS.join(", ")) %></li>

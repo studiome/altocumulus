@@ -99,6 +99,26 @@ class UserImportTest < ActiveSupport::TestCase
     assert_not importer.valid?
   end
 
+  test "the template CSV is a header row of every supported column" do
+    csv = UserImport.template_csv
+
+    assert_equal(
+      (UserImport::REQUIRED_HEADERS + UserImport::OPTIONAL_HEADERS).join(","),
+      csv.delete_prefix(UserImport::UTF8_BOM).strip
+    )
+  end
+
+  test "the template CSV leads with a BOM so Excel reads it as UTF-8" do
+    assert UserImport.template_csv.start_with?(UserImport::UTF8_BOM)
+  end
+
+  test "the template CSV round-trips through the importer as an empty file" do
+    importer = UserImport.new(file: uploaded(UserImport.template_csv))
+
+    assert importer.valid?, importer.errors.full_messages.to_sentence
+    assert_equal 0, importer.run.rows.size
+  end
+
   private
 
     def import(csv)

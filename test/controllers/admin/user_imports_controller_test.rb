@@ -68,6 +68,30 @@ class Admin::UserImportsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
+  test "the import form links to the CSV template" do
+    get new_admin_user_import_url
+
+    assert_response :success
+    assert_select "a[href=?]", template_admin_user_import_path
+  end
+
+  test "admin can download the CSV template" do
+    get template_admin_user_import_url
+
+    assert_response :success
+    assert_equal "text/csv", @response.media_type
+    assert_match(/attachment; filename=/, @response.headers["Content-Disposition"])
+    assert_match "login_id,password", @response.body
+  end
+
+  test "member cannot download the CSV template" do
+    sign_out
+    sign_in_as(users(:member))
+
+    get template_admin_user_import_url
+    assert_redirected_to root_url
+  end
+
   private
 
     def csv_file(contents)
