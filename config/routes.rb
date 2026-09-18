@@ -13,6 +13,7 @@ Rails.application.routes.draw do
         patch :reset_password
       end
     end
+    resource :user_import, only: %i[ new create ]
     resources :announcements, only: %i[ index new create edit update destroy ]
     resources :admin_notes, only: %i[ index create destroy ]
     resource :settings, only: %i[ edit update ], controller: "settings"

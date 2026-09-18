@@ -1,0 +1,48 @@
+<% content_for :title, t(".title") %>
+
+<div class="max-w-2xl mx-auto w-full">
+  <div class="mb-8 flex items-center gap-4">
+    <%= link_to admin_users_path, class: "btn btn-circle btn-ghost" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+    <% end %>
+    <h1 class="font-bold text-4xl"><%= t(".title") %></h1>
+  </div>
+
+  <div role="alert" class="alert <%= @result.failed_count.zero? ? "alert-success" : "alert-warning" %> mb-6">
+    <span><%= t(".summary", created: @result.created_count, skipped: @result.skipped_count, failed: @result.failed_count) %></span>
+  </div>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200"><%= t(".line_header") %></th>
+            <th class="bg-base-200"><%= User.human_attribute_name(:login_id) %></th>
+            <th class="bg-base-200"><%= t(".status_header") %></th>
+            <th class="bg-base-200"><%= t(".detail_header") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @result.rows.each do |row| %>
+            <tr>
+              <td class="font-mono"><%= row.line %></td>
+              <td><%= row.login_id.presence || t("common.none") %></td>
+              <td>
+                <span class="badge <%= { created: "badge-success", skipped: "badge-ghost", failed: "badge-error" }[row.status] %>">
+                  <%= t(".statuses.#{row.status}") %>
+                </span>
+              </td>
+              <td class="text-sm text-base-content/70"><%= row.message %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="flex gap-3 pt-6">
+    <%= link_to t(".back_to_users"), admin_users_path, class: "btn btn-primary" %>
+    <%= link_to t(".import_another"), new_admin_user_import_path, class: "btn btn-outline" %>
+  </div>
+</div>

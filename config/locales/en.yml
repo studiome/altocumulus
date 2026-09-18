@@ -183,6 +183,22 @@ en:
   # here would catch (it already broke one audit-log test with "Date of
   # Birth" vs the expected "Date of birth" -- reverted). ja.yml defines the
   # full set for Japanese; English keeps relying on the humanize default.
+  # UserImport is a plain ActiveModel (no table), so its attribute name and
+  # its file-level error messages live here rather than under activerecord.
+  activemodel:
+    attributes:
+      user_import:
+        file: "CSV file"
+    errors:
+      models:
+        user_import:
+          attributes:
+            file:
+              unparsable: "could not be read as CSV"
+              missing_headers: "must have a header row containing %{headers}"
+              too_many_rows: "must not contain more than %{count} rows"
+              too_big: "must not be larger than %{count} MB"
+
   activerecord:
     errors:
       format: "%{attribute} %{message}"
@@ -1081,6 +1097,9 @@ en:
   #     `diagnoses.new.modal_description` and `common.close` rather than
   #     duplicating that group 1 text -- it is genuinely the same modal, just
   #     its pre-turbo-frame-load fallback markup.
+  user_import:
+    already_exists: "This login id is already registered."
+
   admin:
     settings:
       edit:
@@ -1098,6 +1117,7 @@ en:
       index:
         title: "Users"
         new_button: "New User"
+        import_csv_button: "Import from CSV"
         status_header: "Status"
         active_status: "Active"
         inactive_status: "Inactive"
@@ -1117,6 +1137,36 @@ en:
         success_notice: "User was successfully updated."
       reset_password:
         success_notice: "Password was reset. Temporary password: %{password}"
+    user_imports:
+      new:
+        title: "Import Users from CSV"
+        file_label: "CSV file"
+        file_helper: "UTF-8 encoded, with a header row, up to %{max_rows} rows."
+        format_heading: "File format"
+        format_example: |
+          login_id,password,name,role,locale
+          yamada@example.com,supersecret,Taro Yamada,user,ja
+          sato@example.com,supersecret,,admin,
+        format_required: "Required columns: %{headers}"
+        format_optional: "Optional columns: %{headers}"
+        format_name_fallback: "A row with no name is registered under its login id."
+        format_existing_skipped: "A login id that already exists is skipped, and its password is left untouched."
+        errors_heading:
+          one: "%{count} error prohibited this file from being imported:"
+          other: "%{count} errors prohibited this file from being imported:"
+        submit_button: "Import"
+      create:
+        title: "Import Result"
+        summary: "%{created} registered, %{skipped} skipped, %{failed} failed."
+        line_header: "Line"
+        status_header: "Result"
+        detail_header: "Detail"
+        statuses:
+          created: "Registered"
+          skipped: "Skipped"
+          failed: "Failed"
+        back_to_users: "Back to Users"
+        import_another: "Import Another File"
     announcements:
       index:
         title: "Announcements"

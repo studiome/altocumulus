@@ -142,6 +142,20 @@ ja:
       two_words_connector: "と"
       last_word_connector: "、"
 
+  activemodel:
+    attributes:
+      user_import:
+        file: "CSVファイル"
+    errors:
+      models:
+        user_import:
+          attributes:
+            file:
+              unparsable: "をCSVとして読み取れませんでした"
+              missing_headers: "には%{headers}を含むヘッダー行が必要です"
+              too_many_rows: "の行数が上限(%{count}行)を超えています"
+              too_big: "のサイズが上限(%{count}MB)を超えています"
+
   activerecord:
     models:
       access_log: "アクセスログ"
@@ -976,6 +990,9 @@ ja:
   # Stage 3 group 4a: Admin (Users / Announcements / AdminNotes), AuditEvents,
   # Accounts, Sessions, and the app-wide shared partials. See en.yml for the
   # design notes.
+  user_import:
+    already_exists: "このログインIDは既に登録されています。"
+
   admin:
     settings:
       edit:
@@ -992,6 +1009,7 @@ ja:
       index:
         title: "利用者"
         new_button: "新規利用者"
+        import_csv_button: "CSVで一括登録"
         status_header: "ステータス"
         active_status: "有効"
         inactive_status: "無効"
@@ -1010,6 +1028,35 @@ ja:
         success_notice: "利用者を更新しました。"
       reset_password:
         success_notice: "パスワードをリセットしました。仮パスワード: %{password}"
+    user_imports:
+      new:
+        title: "CSVで利用者を一括登録"
+        file_label: "CSVファイル"
+        file_helper: "UTF-8・ヘッダー行あり、最大%{max_rows}行まで。"
+        format_heading: "ファイル形式"
+        format_example: |
+          login_id,password,name,role,locale
+          yamada@example.com,supersecret,山田太郎,user,ja
+          sato@example.com,supersecret,,admin,
+        format_required: "必須の列: %{headers}"
+        format_optional: "任意の列: %{headers}"
+        format_name_fallback: "氏名が空の行は、ログインIDを氏名として登録します。"
+        format_existing_skipped: "既に存在するログインIDはスキップし、パスワードは変更しません。"
+        errors_heading:
+          other: "%{count}件のエラーによりこのファイルを取り込めませんでした:"
+        submit_button: "取り込む"
+      create:
+        title: "取り込み結果"
+        summary: "登録%{created}件、スキップ%{skipped}件、失敗%{failed}件。"
+        line_header: "行"
+        status_header: "結果"
+        detail_header: "詳細"
+        statuses:
+          created: "登録"
+          skipped: "スキップ"
+          failed: "失敗"
+        back_to_users: "利用者一覧へ戻る"
+        import_another: "別のファイルを取り込む"
     announcements:
       index:
         title: "お知らせ"

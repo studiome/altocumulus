@@ -52,6 +52,7 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Master data | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` | Diagnosis names, procedures, per-weekday slot rules (fractional slot counts supported), holidays / per-day comments |
 | Account settings | `/account` | Change your own name, login id, and password, and switch the display language |
 | User management (admin only) | `/admin/users` | Create, edit, and deactivate users and reset passwords. The last active admin can be neither deactivated nor demoted |
+| Bulk user registration (admin only) | `/admin/user_import/new` | Register users from a CSV of login ids and passwords. Existing login ids are skipped, and every line is reported back as registered / skipped / failed |
 | Announcement management (admin only) | `/admin/announcements` | Create announcements shown on the operations calendar and toggle their visibility |
 | Admin notes (admin only) | `/admin/admin_notes` | Free-text handover notes shared between administrators |
 | Application settings (admin only) | `/admin/settings` | Change the application title shown in the navigation bar, the browser tab, and the installable app |
@@ -340,6 +341,18 @@ The field itself is a hidden input plus a read-only display that the picked reco
 A new diagnosis name or procedure can also be created from inside that same modal, without leaving
 the form being filled in: on success the picker frame is replaced by a confirmation that immediately
 selects the newly created record on the row that opened the modal.
+
+### Bulk user registration from CSV
+
+`UserImport` takes a CSV an admin uploads on `/admin/user_import/new`. The header row must contain
+`login_id` and `password`; `name`, `role` and `locale` are optional, and a row with no name is
+registered under its login id.
+
+Rows are saved one at a time rather than in a single transaction, so one bad line does not throw
+away the rest of the file: every line comes back as registered, skipped, or failed with the
+validation message (never with the password in it). A login id that already exists is **skipped and
+left untouched** -- overwriting a colleague's password from a stale spreadsheet is the mistake this
+screen is built to avoid.
 
 ### Application title
 

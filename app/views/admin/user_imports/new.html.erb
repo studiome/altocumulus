@@ -1,0 +1,52 @@
+<% content_for :title, t(".title") %>
+
+<div class="max-w-xl mx-auto w-full">
+  <div class="mb-8 flex items-center gap-4">
+    <%= link_to admin_users_path, class: "btn btn-circle btn-ghost" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+    <% end %>
+    <h1 class="font-bold text-4xl"><%= t(".title") %></h1>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <%= form_with(model: @user_import, url: admin_user_import_path, scope: :user_import, class: "app-form",
+              data: { turbo: false }) do |form| %>
+        <% if @user_import.errors.any? %>
+          <div role="alert" class="alert alert-error mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div>
+              <h3 class="font-bold"><%= t(".errors_heading", count: @user_import.errors.count) %></h3>
+              <ul class="list-disc ml-6">
+                <% @user_import.errors.each do |error| %>
+                  <li><%= error.full_message %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        <% end %>
+
+        <div class="app-field">
+          <%= form.label :file, t(".file_label"), class: "app-field-label" %>
+          <%= form.file_field :file, accept: ".csv,text/csv", class: "file-input file-input-bordered w-full" %>
+          <p class="app-helper"><%= t(".file_helper", max_rows: UserImport::MAX_ROWS) %></p>
+        </div>
+
+        <div class="rounded-box border border-base-200 bg-base-200/40 p-4 space-y-2">
+          <p class="text-sm font-semibold"><%= t(".format_heading") %></p>
+          <pre class="text-xs overflow-x-auto"><%= t(".format_example") %></pre>
+          <ul class="list-disc ml-5 text-sm text-base-content/70 space-y-1">
+            <li><%= t(".format_required", headers: UserImport::REQUIRED_HEADERS.join(", ")) %></li>
+            <li><%= t(".format_optional", headers: UserImport::OPTIONAL_HEADERS.join(", ")) %></li>
+            <li><%= t(".format_name_fallback") %></li>
+            <li><%= t(".format_existing_skipped") %></li>
+          </ul>
+        </div>
+
+        <div class="pt-4">
+          <%= form.submit t(".submit_button"), class: "btn btn-primary w-full" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

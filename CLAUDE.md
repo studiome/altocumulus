@@ -52,6 +52,10 @@ Because Rails' `params.expect` only treats purely numeric keys as nested-attribu
 
 Controllers rescue `ActiveRecord::RecordNotUnique` around the save of these nested rows (see `HospitalizationsController#save_hospitalization`) and turn it into a validation error, since swapping two existing rows' values can transiently hit a unique index mid-save even though the end state is valid.
 
+### Bulk user registration
+
+`UserImport` (`app/models/user_import.rb`) is a plain ActiveModel wrapping the CSV an admin uploads on `/admin/user_import/new`. It validates the file (headers, row count, size) before `#run` saves row by row -- deliberately not in one transaction -- and returns a `Result` of per-line `Row`s (`:created` / `:skipped` / `:failed`). Existing login ids are skipped rather than updated. The form sets `data: { turbo: false }`, since the result page is a 200 render, not a redirect.
+
 ### Picker modals
 
 Anything picked from a master list (patient, diagnosis, surgery procedure, and a surgery's related patient diagnoses) is chosen in a `<dialog>` holding a lazily loaded turbo-frame, not in a `<select>`. The patient picker has its own `patient_picker_*` controllers; everything else shares `picker_modal` (open/close), `picker_field` (the hidden input + read-only display that a `#picker` action's results fill, via a `<name>:picked` window event) and `picker_result` (turns a click on a result row — or the "record created" frame — into that event). Because one modal serves many rows, `picker_field#activate` records which field opened it and the others ignore the event.

@@ -1,0 +1,5 @@
+login_id,password,name,role,locale
+imported-one@example.com,supersecret,Imported One,user,en
+imported-two@example.com,supersecret,,admin,ja
+member@example.com,supersecret,Duplicate,user,en
+broken@example.com,hunter7,Too Short,user,en
