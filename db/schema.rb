@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_16_010118) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_18_005213) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -36,6 +36,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_010118) do
     t.datetime "created_at", null: false
     t.boolean "published", default: true, null: false
     t.string "title", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "app_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "title"
     t.datetime "updated_at", null: false
   end
 

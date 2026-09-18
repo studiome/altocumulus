@@ -133,6 +133,7 @@ en:
     users: "Users"
     announcements: "Announcements"
     admin_notes: "Admin Notes"
+    settings: "Settings"
     account: "Account"
     sign_out: "Sign Out"
 
@@ -1081,6 +1082,17 @@ en:
   #     duplicating that group 1 text -- it is genuinely the same modal, just
   #     its pre-turbo-frame-load fallback markup.
   admin:
+    settings:
+      edit:
+        title: "Settings"
+        description: "These settings apply to the whole installation."
+        title_helper: "Shown in the navigation bar, the browser tab and the installable app. Leave the default (%{default_title}) unless this installation needs its own name."
+        submit_button: "Save Settings"
+        errors_heading:
+          one: "%{count} error prohibited these settings from being saved:"
+          other: "%{count} errors prohibited these settings from being saved:"
+      update:
+        success_notice: "Settings were successfully updated."
     kicker: "Administration"
     users:
       index:

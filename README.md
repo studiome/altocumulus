@@ -54,6 +54,7 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | User management (admin only) | `/admin/users` | Create, edit, and deactivate users and reset passwords. The last active admin can be neither deactivated nor demoted |
 | Announcement management (admin only) | `/admin/announcements` | Create announcements shown on the operations calendar and toggle their visibility |
 | Admin notes (admin only) | `/admin/admin_notes` | Free-text handover notes shared between administrators |
+| Application settings (admin only) | `/admin/settings` | Change the application title shown in the navigation bar, the browser tab, and the installable app |
 
 **Authentication, user management, role separation (user/admin), access logging, and
 idle timeout are implemented.** Every application screen requires a logged-in user; the
@@ -127,6 +128,7 @@ The following environment variables tune runtime behavior (`config/application.r
 | `ACCOUNT_IDENTIFIER` | Whether an account logs in with an `email` address or a `username`. **Decide this when first setting up the server and do not change it afterward** -- switching modes later makes existing login ids fail the new format validation. | `email` |
 | `SESSION_IDLE_TIMEOUT_MINUTES` | Session idle timeout, in minutes | `10` |
 | `ADMISSION_WARNING_THRESHOLD` | Admissions per day above which the operations calendar flags congestion | `5` |
+| `APP_TITLE` | Application title used before an administrator sets one on `/admin/settings`. Useful for branding a fresh deploy without signing in first | `Altocumulus` |
 
 ## Development commands
 
@@ -329,10 +331,22 @@ An update that swaps the values of two existing rows can transiently violate a u
 mid-save, so the controllers rescue `ActiveRecord::RecordNotUnique` and turn it into a validation
 error.
 
-### Creating master records from a modal
+### Picker modals
 
-Diagnosis names and procedures can be created from a modal without leaving the form being filled
-in. On success, a Turbo Stream splices the new option into the relevant `<select>`.
+Patients, diagnosis names, procedures, and a surgery's related patient diagnoses are all chosen in a
+modal holding a lazily loaded turbo-frame -- searchable and paginated -- rather than in a `<select>`.
+The field itself is a hidden input plus a read-only display that the picked record fills in.
+
+A new diagnosis name or procedure can also be created from inside that same modal, without leaving
+the form being filled in: on success the picker frame is replaced by a confirmation that immediately
+selects the newly created record on the row that opened the modal.
+
+### Application title
+
+The name in the navigation bar, the browser tab, and the PWA manifest comes from `AppSetting`, which
+an administrator edits on `/admin/settings`. When nothing has been saved there, it falls back to the
+`APP_TITLE` environment variable read at boot, and then to the built-in name -- so a fresh deploy can
+be branded with an environment variable alone.
 
 ### Audit log
 

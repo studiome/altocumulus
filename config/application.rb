@@ -55,6 +55,12 @@ module Altocumulus
     # applied to an unrecognized value.
     config.x.account_identifier = (ENV["ACCOUNT_IDENTIFIER"].presence || "email")
 
+    # The name shown in the navigation bar, the browser tab and the PWA
+    # manifest. This is only the default: an administrator can override it
+    # from the settings screen (see AppSetting), which is why a deploy can
+    # brand itself with APP_TITLE alone before anyone has signed in.
+    config.x.app_title = (ENV["APP_TITLE"].presence || "Altocumulus")
+
     # The operations calendar flags a day whose admission count exceeds this
     # as a "congestion" warning. Display-only: it never blocks a save (see
     # OperationsCalendar). Overridable per-environment via ENV.

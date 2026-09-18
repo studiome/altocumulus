@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || t("nav.app_name") %></title>
+    <title><%= content_for(:title) || app_title %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Altocumulus">
+    <meta name="application-name" content="<%= app_title %>">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -55,6 +55,7 @@
                 <li><%= link_to t("nav.users"), admin_users_path %></li>
                 <li><%= link_to t("nav.announcements"), admin_announcements_path %></li>
                 <li><%= link_to t("nav.admin_notes"), admin_admin_notes_path %></li>
+                <li><%= link_to t("nav.settings"), edit_admin_settings_path %></li>
               <% end %>
               <li class="menu-title"><%= current_user.name %></li>
               <li><%= link_to t("nav.account"), account_path %></li>
@@ -65,7 +66,7 @@
           </ul>
         </div>
 
-        <%= link_to t("nav.app_name"), root_path, class: "btn btn-ghost text-xl font-bold text-primary" %>
+        <%= link_to app_title, root_path, class: "btn btn-ghost text-xl font-bold text-primary" %>
       </div>
 
       <%# Desktop menu: the same links, grouped into a handful of dropdowns
@@ -103,6 +104,7 @@
                 <li><%= link_to t("nav.users"), admin_users_path %></li>
                 <li><%= link_to t("nav.announcements"), admin_announcements_path %></li>
                 <li><%= link_to t("nav.admin_notes"), admin_admin_notes_path %></li>
+                <li><%= link_to t("nav.settings"), edit_admin_settings_path %></li>
               </ul>
             </li>
           <% end %>

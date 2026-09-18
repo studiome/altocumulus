@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     end
     resources :announcements, only: %i[ index new create edit update destroy ]
     resources :admin_notes, only: %i[ index create destroy ]
+    resource :settings, only: %i[ edit update ], controller: "settings"
   end
 
   resources :patients do

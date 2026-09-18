@@ -88,6 +88,7 @@ ja:
     users: "利用者"
     announcements: "お知らせ"
     admin_notes: "管理者メモ"
+    settings: "設定"
     account: "アカウント"
     sign_out: "サインアウト"
 
@@ -144,6 +145,7 @@ ja:
   activerecord:
     models:
       access_log: "アクセスログ"
+      app_setting: "アプリ設定"
       admin_note: "管理者メモ"
       announcement: "お知らせ"
       audit_event: "監査イベント"
@@ -161,6 +163,8 @@ ja:
       user: "利用者"
 
     attributes:
+      app_setting:
+        title: "アプリ名"
       access_log:
         event: "イベント"
         ip_address: "IPアドレス"
@@ -973,6 +977,16 @@ ja:
   # Accounts, Sessions, and the app-wide shared partials. See en.yml for the
   # design notes.
   admin:
+    settings:
+      edit:
+        title: "設定"
+        description: "この設定はシステム全体に適用されます。"
+        title_helper: "ナビゲーションバー・ブラウザのタブ・インストール時のアプリ名に表示されます。この環境専用の名称が必要な場合以外は既定値(%{default_title})のままで構いません。"
+        submit_button: "設定を保存"
+        errors_heading:
+          other: "%{count}件のエラーにより設定を保存できませんでした:"
+      update:
+        success_notice: "設定を更新しました。"
     kicker: "管理"
     users:
       index:
