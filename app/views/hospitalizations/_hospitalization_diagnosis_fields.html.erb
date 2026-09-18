@@ -4,10 +4,16 @@
     <%= diagnosis_fields.hidden_field :id %>
   <% end %>
 
-  <div class="app-field">
-    <%= diagnosis_fields.label :diagnosis_id, HospitalizationDiagnosis.human_attribute_name(:diagnosis_id), class: "app-field-label" %>
-    <%= diagnosis_fields.collection_select :diagnosis_id, diagnosis_options, :id, :name, { prompt: t(".select_diagnosis_prompt") }, class: "select w-full focus:select-primary hospitalization-diagnosis-select" %>
-  </div>
+  <%= render "shared/picker_field",
+        form: diagnosis_fields,
+        attribute: :diagnosis_id,
+        label: HospitalizationDiagnosis.human_attribute_name(:diagnosis_id),
+        selected_label: diagnosis_fields.object.diagnosis&.name,
+        placeholder: t("diagnoses.picker.unselected"),
+        picker_path: picker_diagnoses_path,
+        picker_frame: "diagnosis_picker_frame",
+        choose_label: t("diagnoses.picker.choose_button"),
+        event_name: "diagnosis:picked" %>
 
   <div class="flex justify-end">
     <button type="button" class="btn btn-ghost btn-sm" data-action="hospitalization-diagnosis-fields#remove"><%= t(".remove_button") %></button>

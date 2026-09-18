@@ -1,6 +1,8 @@
 <% content_for :title, t(".title") %>
 
-<% if turbo_frame_request? %>
+<% if picker_frame_request? %>
+  <%= render "picker_form_frame", diagnosis: @diagnosis %>
+<% elsif turbo_frame_request? %>
   <%= turbo_frame_tag "diagnosis_modal_frame", data: { action: "turbo:frame-load->diagnosis-modal#open" } do %>
     <div class="p-6">
       <div class="flex items-start justify-between gap-4 mb-6">

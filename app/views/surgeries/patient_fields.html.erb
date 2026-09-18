@@ -1,4 +1,5 @@
 <%= render "patient_scoped_fields",
       patient_selected: @patient_id.present?,
+      patient_id: @patient_id,
       patient_diagnoses: @patient_diagnoses,
       selected_patient_diagnosis_ids: @selected_patient_diagnosis_ids %>

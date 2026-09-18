@@ -28,7 +28,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
       <div class="flex items-center justify-between w-full gap-4">
         <span><%= t(".no_procedures_warning") %></span>
-        <%= link_to t(".new_procedure_link"), new_surgery_procedure_path, class: "btn btn-sm btn-outline", data: { turbo_frame: "surgery_procedure_modal_frame" } %>
+        <%= link_to t(".new_procedure_link"), new_surgery_procedure_path, class: "btn btn-sm btn-outline", data: { turbo_frame: "surgery_procedure_picker_frame" } %>
       </div>
     </div>
   <% end %>
@@ -39,6 +39,7 @@
 
   <%= render "patient_scoped_fields",
         patient_selected: surgery.patient_id.present?,
+        patient_id: surgery.patient_id,
         patient_diagnoses: patient_diagnoses,
         selected_patient_diagnosis_ids: surgery.patient_diagnosis_ids %>
 
@@ -144,24 +145,23 @@
     </div>
   </div>
 
-  <div class="space-y-4" data-controller="surgery-procedure-fields" data-surgery-procedure-fields-max-items-value="5" data-action="procedure:created@window->surgery-procedure-fields#addProcedureOption">
+  <div class="space-y-4" data-controller="surgery-procedure-fields" data-surgery-procedure-fields-max-items-value="5">
     <div class="flex items-center justify-between gap-3">
       <div>
         <span class="app-field-label"><%= t("surgeries.labels.procedures") %></span>
         <p class="app-helper"><%= t(".procedures_helper") %></p>
       </div>
-      <%= link_to t(".new_procedure_link"), new_surgery_procedure_path, class: "app-inline-link text-sm", data: { turbo_frame: "surgery_procedure_modal_frame" } %>
     </div>
 
     <div class="space-y-3" data-surgery-procedure-fields-target="list">
       <%= form.fields_for :surgery_procedure_selections do |selection_fields| %>
-        <%= render "surgery_procedure_selection_fields", form: form, selection_fields: selection_fields, procedure_options: surgery_procedures %>
+        <%= render "surgery_procedure_selection_fields", selection_fields: selection_fields %>
       <% end %>
     </div>
 
     <template data-surgery-procedure-fields-target="template">
       <%= form.fields_for :surgery_procedure_selections, SurgeryProcedureSelection.new, child_index: "NEW_RECORD" do |selection_fields| %>
-        <%= render "surgery_procedure_selection_fields", form: form, selection_fields: selection_fields, procedure_options: surgery_procedures %>
+        <%= render "surgery_procedure_selection_fields", selection_fields: selection_fields %>
       <% end %>
     </template>
 

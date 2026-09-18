@@ -1,38 +1,69 @@
 require "application_system_test_case"
 
 class SurgeriesTest < ApplicationSystemTestCase
-  test "diagnosis options are filtered by selected patient" do
+  test "the related-diagnosis picker offers only the selected patient's diagnoses" do
     visit new_surgery_path
 
-    assert_no_text "Right Appendicitis"
-    assert_no_text "Hypertension"
-    assert_no_text "Bilateral Pneumonia"
+    assert_text "Select a patient first."
 
     choose_patient "H001 - John Doe"
+    await_surgery_diagnosis_fields
+    click_on "Select Diagnosis", match: :first
+    within("turbo-frame#surgery_diagnosis_picker_frame") do
+      assert_text "Right Appendicitis"
+      assert_text "Hypertension"
+      assert_no_text "Bilateral Pneumonia"
+      click_on "Close"
+    end
 
-    assert_text "Right Appendicitis"
-    assert_text "Hypertension"
-    assert_no_text "Bilateral Pneumonia"
+    choose_patient "H002 - Jane Smith"
+    await_surgery_diagnosis_fields
+    click_on "Select Diagnosis", match: :first
+    within("turbo-frame#surgery_diagnosis_picker_frame") do
+      assert_text "Bilateral Pneumonia"
+      assert_no_text "Right Appendicitis"
+      assert_no_text "Hypertension"
+    end
+  end
+
+  test "a picked related diagnosis is dropped when the patient changes" do
+    visit new_surgery_path
+
+    choose_patient "H001 - John Doe"
+    await_surgery_diagnosis_fields
+    choose_related_diagnosis "Right Appendicitis (2026-03-20)"
+    assert_selector "[data-surgery-diagnosis-fields-target='item']", count: 1
 
     choose_patient "H002 - Jane Smith"
 
-    assert_text "Bilateral Pneumonia"
-    assert_no_text "Right Appendicitis"
-    assert_no_text "Hypertension"
+    assert_selector "[data-surgery-diagnosis-fields-target='item']", count: 0
+    assert_text "No diagnoses selected yet."
+  end
+
+  test "the same related diagnosis cannot be picked twice" do
+    visit new_surgery_path
+
+    choose_patient "H001 - John Doe"
+    await_surgery_diagnosis_fields
+    choose_related_diagnosis "Right Appendicitis (2026-03-20)"
+    choose_related_diagnosis "Right Appendicitis (2026-03-20)"
+
+    assert_selector "[data-surgery-diagnosis-fields-target='item']", count: 1
   end
 
   test "user can create surgery from new surgery form" do
     visit new_surgery_path
 
     choose_patient "H001 - John Doe"
-    check "Right Appendicitis"
+    await_surgery_diagnosis_fields
+    choose_related_diagnosis "Right Appendicitis (2026-03-20)"
     page.execute_script(<<~JS)
       const surgeryDateInput = document.querySelector("#surgery_surgery_date")
       surgeryDateInput.value = "2026-04-17"
       surgeryDateInput.dispatchEvent(new Event("input", { bubbles: true }))
       surgeryDateInput.dispatchEvent(new Event("change", { bubbles: true }))
     JS
-    select "Cholecystectomy", from: "Procedure"
+    choose_procedure "Cholecystectomy"
     select "Bilateral", from: "Laterality"
     fill_in "Duration (hours)", with: "2.5"
     fill_in "Anesthesia Method", with: "General anesthesia"
@@ -46,95 +77,56 @@ class SurgeriesTest < ApplicationSystemTestCase
     assert_text "Right Appendicitis"
   end
 
-  test "user can dynamically add a new surgery procedure and select it" do
+  test "user can search the procedure picker" do
     visit new_surgery_path
 
-    # Open procedure modal
-    click_on "New Procedure", match: :first
+    choose_procedure "Cholecystectomy", keyword: "cystect"
 
-    within("turbo-frame#surgery_procedure_modal_frame") do
+    within(procedure_rows.first) { assert_text "Cholecystectomy" }
+  end
+
+  test "a procedure created from the picker modal is selected right away" do
+    visit new_surgery_path
+
+    click_on "Select Procedure", match: :first
+    within("turbo-frame#surgery_procedure_picker_frame") do
+      click_on "Register New Procedure"
       fill_in "Procedure Name", with: "Laparoscopic surgery"
       click_on "Create Surgery procedure"
+
+      assert_text "Surgery procedure was successfully created."
     end
 
-    # Wait for the modal dialog to close/disappear and check option selection
-    assert_selector ".surgery-procedure-select option:checked", text: "Laparoscopic surgery"
-
-    # Click "Add Procedure" to add a new row
-    click_on "Add Procedure"
-
-    # Verify that the new row (from the template) also contains the new option
-    selects = all(".surgery-procedure-select")
-    assert_equal 2, selects.size
-    selects.each do |select|
-      assert select.has_selector?("option", text: "Laparoscopic surgery")
-    end
-
-    click_on "New Procedure", match: :first
-    assert_selector "#surgery_procedure_modal[open]"
-
-    within("turbo-frame#surgery_procedure_modal_frame") do
-      assert_field "Procedure Name"
-    end
+    assert_no_selector "dialog#surgery_procedure_picker_modal[open]"
+    within(procedure_rows.first) { assert_text "Laparoscopic surgery" }
   end
 
-  test "new surgery procedure is assigned to only one blank row" do
+  test "a procedure created from the picker modal lands only on the row that opened it" do
     visit new_surgery_path
 
     click_on "Add Procedure"
-    assert_selector ".surgery-procedure-select", count: 2
+    assert_selector "[data-surgery-procedure-fields-target='item']", count: 2
 
-    click_on "New Procedure", match: :first
-
-    within("turbo-frame#surgery_procedure_modal_frame") do
+    within(procedure_rows.last) { click_on "Select Procedure" }
+    within("turbo-frame#surgery_procedure_picker_frame") do
+      click_on "Register New Procedure"
       fill_in "Procedure Name", with: "Laser ablation"
       click_on "Create Surgery procedure"
+
+      assert_text "Surgery procedure was successfully created."
     end
 
-    # Wait for the option to be selected before reading the selects; `all` does
-    # not retry, so without this it samples the DOM before Turbo has replaced it.
-    assert_selector ".surgery-procedure-select option:checked", text: "Laser ablation"
-
-    selected_values = all(".surgery-procedure-select").map(&:value)
-
-    assert_equal 1, selected_values.count(SurgeryProcedure.find_by!(name: "Laser ablation").id.to_s)
-    assert_includes selected_values, ""
-  end
-
-  test "new surgery procedure is assigned to visible blank row after removing another row" do
-    visit new_surgery_path
-
-    click_on "Add Procedure"
-    assert_selector ".surgery-procedure-select", count: 2
-
-    within(all("[data-surgery-procedure-fields-target='item']").first) do
-      click_on "Remove"
-    end
-
-    # Wait for the first row to be hidden (only 1 visible row should remain)
-    assert_selector "[data-surgery-procedure-fields-target='item']", count: 1
-
-    click_on "New Procedure", match: :first
-
-    within("turbo-frame#surgery_procedure_modal_frame") do
-      fill_in "Procedure Name", with: "Endoscopic repair"
-      click_on "Create Surgery procedure"
-    end
-
-    # Wait for the option to be selected
-    assert_selector ".surgery-procedure-select option:checked", text: "Endoscopic repair"
-
-    selected_options = all(".surgery-procedure-select option:checked").map(&:text)
-
-
-    assert_equal [ "Endoscopic repair" ], selected_options
+    assert_no_selector "dialog#surgery_procedure_picker_modal[open]"
+    within(procedure_rows.last) { assert_text "Laser ablation" }
+    within(procedure_rows.first) { assert_text "No procedure selected" }
   end
 
   test "removed procedures do not reappear after validation error" do
     visit new_surgery_path
 
     choose_patient "H001 - John Doe"
-    check "Right Appendicitis"
+    await_surgery_diagnosis_fields
+    choose_related_diagnosis "Right Appendicitis (2026-03-20)"
     page.execute_script(<<~JS)
       const surgeryDateInput = document.querySelector("#surgery_surgery_date")
       surgeryDateInput.value = "2026-04-17"
@@ -142,21 +134,17 @@ class SurgeriesTest < ApplicationSystemTestCase
       surgeryDateInput.dispatchEvent(new Event("change", { bubbles: true }))
     JS
 
-    # Select primary procedure
-    select "Cholecystectomy", from: "Procedure"
+    # Pick the primary procedure
+    choose_procedure "Cholecystectomy"
 
     # Add a second procedure
     click_on "Add Procedure"
+    assert_selector "[data-surgery-procedure-fields-target='item']", count: 2
 
-    # Wait until 2 select inputs are present
-    assert_selector ".surgery-procedure-select", count: 2
-
-    # Select procedure in the newly added dropdown
-    second_select = all(".surgery-procedure-select").last
-    second_select.select "Appendectomy"
+    choose_procedure "Appendectomy", scope: procedure_rows.last
 
     # Remove the second procedure
-    within(all("[data-surgery-procedure-fields-target='item']").last) do
+    within(procedure_rows.last) do
       click_on "Remove"
     end
 
@@ -170,9 +158,9 @@ class SurgeriesTest < ApplicationSystemTestCase
     # Verify that only 1 visible procedure row exists now
     assert_selector "[data-surgery-procedure-fields-target='item']", count: 1
 
-    # Verify that the remaining visible row contains "Cholecystectomy"
+    # Verify that the remaining visible row still shows "Cholecystectomy"
     within("[data-surgery-procedure-fields-target='item']") do
-      assert_selector ".surgery-procedure-select option:checked", text: "Cholecystectomy"
+      assert_text "Cholecystectomy"
     end
   end
 
@@ -239,4 +227,10 @@ class SurgeriesTest < ApplicationSystemTestCase
   ensure
     page.driver.browser.manage.window.resize_to(1400, 1400)
   end
+
+  private
+
+    def procedure_rows
+      all("[data-surgery-procedure-fields-target='item']")
+    end
 end

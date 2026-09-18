@@ -1,0 +1,12 @@
+<%# locals: entry (nil when rendered into the <template> the picker clones) %>
+<div class="flex items-center justify-between gap-3 rounded-box border border-base-200 bg-base-100 px-4 py-3"
+     data-surgery-diagnosis-fields-target="item"
+     data-patient-diagnosis-id="<%= entry&.id %>">
+  <%= hidden_field_tag "surgery[patient_diagnosis_ids][]", entry&.id, id: nil, data: { picker_input: true } %>
+  <span data-picker-label>
+    <% if entry %>
+      <%= t("surgeries.labels.diagnosis_with_date", diagnosis: entry.display_name, date: l(entry.diagnosed_on, format: :default)) %>
+    <% end %>
+  </span>
+  <button type="button" class="btn btn-ghost btn-sm" data-action="surgery-diagnosis-fields#remove"><%= t("surgeries.form.remove_diagnosis_button") %></button>
+</div>

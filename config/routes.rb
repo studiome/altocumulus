@@ -23,11 +23,20 @@ Rails.application.routes.draw do
     end
     resources :patient_diagnoses
   end
-  resources :diagnoses
-  resources :surgery_procedures
+  resources :diagnoses do
+    collection do
+      get :picker
+    end
+  end
+  resources :surgery_procedures do
+    collection do
+      get :picker
+    end
+  end
   resources :surgeries do
     collection do
       get :patient_fields
+      get :diagnosis_picker
     end
   end
   resources :hospitalizations do

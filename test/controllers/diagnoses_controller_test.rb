@@ -97,4 +97,48 @@ class DiagnosesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to diagnosis_url(@diagnosis)
   end
+
+  test "should get picker" do
+    get picker_diagnoses_url
+
+    assert_response :success
+    assert_match "diagnosis_picker_frame", response.body
+    assert_match diagnoses(:pneumonia).name, response.body
+  end
+
+  test "picker narrows the list by keyword" do
+    get picker_diagnoses_url, params: { keyword: "neumon" }
+
+    assert_response :success
+    assert_match diagnoses(:pneumonia).name, response.body
+    assert_no_match(/#{diagnoses(:hypertension).name}/, response.body)
+  end
+
+  test "should respond with the picker turbo stream after create from the picker frame" do
+    assert_difference("Diagnosis.count") do
+      post diagnoses_url, params: { diagnosis: { name: "Gastritis" } },
+                           headers: { "Accept" => TURBO_STREAM_ACCEPT, "Turbo-Frame" => "diagnosis_picker_frame" }
+    end
+
+    assert_response :success
+    assert_equal Mime[:turbo_stream].to_s, response.media_type
+    assert_match "diagnosis_picker_frame", response.body
+  end
+
+  test "should respond with the picker turbo stream on validation failure from the picker frame" do
+    assert_no_difference("Diagnosis.count") do
+      post diagnoses_url, params: { diagnosis: { name: "" } },
+                           headers: { "Accept" => TURBO_STREAM_ACCEPT, "Turbo-Frame" => "diagnosis_picker_frame" }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match "diagnosis_picker_frame", response.body
+  end
+
+  test "should get new inside the picker frame" do
+    get new_diagnosis_url, headers: { "Turbo-Frame" => "diagnosis_picker_frame" }
+
+    assert_response :success
+    assert_match "diagnosis_picker_frame", response.body
+  end
 end

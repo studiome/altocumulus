@@ -6,6 +6,12 @@ class Diagnosis < ApplicationRecord
 
   scope :alphabetical, -> { order(:name) }
 
+  def self.filtered(keyword: nil)
+    return all if keyword.blank?
+
+    where("name LIKE ?", "%#{sanitize_sql_like(keyword)}%")
+  end
+
   def to_s
     name
   end

@@ -97,12 +97,16 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Bilateral Pneumonia/, @response.body)
   end
 
-  test "new scoped to a patient shows only that patient's diagnoses" do
+  # Nothing is linked yet on a brand new surgery, so the form itself carries no
+  # diagnosis at all: they are fetched, patient-scoped, by the picker modal.
+  test "new scoped to a patient offers that patient's diagnosis picker without listing any diagnosis" do
     get new_surgery_url(patient_id: patients(:one).id)
 
     assert_response :success
-    assert_match(/Right Appendicitis/, @response.body)
-    assert_match(/Hypertension/, @response.body)
+    assert_select "a[data-turbo-frame='surgery_diagnosis_picker_frame'][href=?]",
+                  diagnosis_picker_surgeries_path(patient_id: patients(:one).id)
+    assert_no_match(/Right Appendicitis/, @response.body)
+    assert_no_match(/Hypertension/, @response.body)
     assert_no_match(/Bilateral Pneumonia/, @response.body)
   end
 
@@ -114,13 +118,13 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Bilateral Pneumonia/, @response.body)
   end
 
-  test "patient_fields returns only the requested patient's diagnoses in the turbo frame" do
+  test "patient_fields returns the picker link scoped to the requested patient" do
     get patient_fields_surgeries_url(patient_id: patients(:one).id)
 
     assert_response :success
     assert_select "turbo-frame#surgery_patient_scoped_fields"
-    assert_match(/Right Appendicitis/, @response.body)
-    assert_match(/Hypertension/, @response.body)
+    assert_select "a[data-turbo-frame='surgery_diagnosis_picker_frame'][href=?]",
+                  diagnosis_picker_surgeries_path(patient_id: patients(:one).id)
     assert_no_match(/Bilateral Pneumonia/, @response.body)
   end
 
@@ -478,4 +482,20 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
       ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
       count
     end
+
+  test "diagnosis picker lists only the given patient's diagnoses" do
+    get diagnosis_picker_surgeries_url, params: { patient_id: patients(:one).id }
+
+    assert_response :success
+    assert_match "surgery_diagnosis_picker_frame", response.body
+    assert_match patient_diagnoses(:appendicitis).display_name, response.body
+    assert_no_match(/#{patient_diagnoses(:pneumonia).display_name}/, response.body)
+  end
+
+  test "diagnosis picker without a patient renders an empty state" do
+    get diagnosis_picker_surgeries_url
+
+    assert_response :success
+    assert_no_match(/#{patient_diagnoses(:appendicitis).display_name}/, response.body)
+  end
 end

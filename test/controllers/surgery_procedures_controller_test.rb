@@ -34,10 +34,10 @@ class SurgeryProceduresControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to surgery_procedure_url(SurgeryProcedure.last)
   end
 
-  test "should respond with turbo stream after create when submitted from the modal frame" do
+  test "should respond with turbo stream after create when submitted from the picker frame" do
     assert_difference("SurgeryProcedure.count") do
       post surgery_procedures_url, params: { surgery_procedure: { name: "Laparoscopy" } },
-                                    headers: { "Accept" => TURBO_STREAM_ACCEPT, "Turbo-Frame" => "surgery_procedure_modal_frame" }
+                                    headers: { "Accept" => TURBO_STREAM_ACCEPT, "Turbo-Frame" => "surgery_procedure_picker_frame" }
     end
 
     assert_response :success
@@ -57,7 +57,7 @@ class SurgeryProceduresControllerTest < ActionDispatch::IntegrationTest
   test "should respond with turbo stream on validation failure from the modal frame" do
     assert_no_difference("SurgeryProcedure.count") do
       post surgery_procedures_url, params: { surgery_procedure: { name: "" } },
-                                    headers: { "Accept" => TURBO_STREAM_ACCEPT, "Turbo-Frame" => "surgery_procedure_modal_frame" }
+                                    headers: { "Accept" => TURBO_STREAM_ACCEPT, "Turbo-Frame" => "surgery_procedure_picker_frame" }
     end
 
     assert_response :unprocessable_entity
@@ -98,5 +98,32 @@ class SurgeryProceduresControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to surgery_procedure_url(@surgery_procedure)
     assert_not_nil flash[:alert]
+  end
+
+  test "should get picker" do
+    get picker_surgery_procedures_url
+
+    assert_response :success
+    assert_match "surgery_procedure_picker_frame", response.body
+    assert_match surgery_procedures(:appendectomy).name, response.body
+  end
+
+  test "picker narrows the list by keyword" do
+    get picker_surgery_procedures_url, params: { keyword: "endect" }
+
+    assert_response :success
+    assert_match surgery_procedures(:appendectomy).name, response.body
+    assert_no_match(/#{surgery_procedures(:cholecystectomy).name}/, response.body)
+  end
+
+  test "should respond with the picker turbo stream after create from the picker frame" do
+    assert_difference("SurgeryProcedure.count") do
+      post surgery_procedures_url, params: { surgery_procedure: { name: "Laparoscopy" } },
+                                    headers: { "Accept" => TURBO_STREAM_ACCEPT, "Turbo-Frame" => "surgery_procedure_picker_frame" }
+    end
+
+    assert_response :success
+    assert_equal Mime[:turbo_stream].to_s, response.media_type
+    assert_match "surgery_procedure_picker_frame", response.body
   end
 end

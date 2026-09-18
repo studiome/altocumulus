@@ -33,6 +33,40 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # would: open the modal, optionally narrow the results with a keyword,
   # then click the matching result row (whose visible text is the patient's
   # `to_s`, e.g. "H001 - John Doe").
+  # Same interaction for the diagnosis / procedure / related-diagnosis
+  # pickers: click the field's "choose" button (optionally scoped to one row
+  # of a multi-row form), then click the result inside the modal's frame.
+  def choose_from_picker(button_label, frame:, dialog:, result:, keyword: nil, scope: nil)
+    (scope || page).click_on button_label, match: :first
+    within("turbo-frame##{frame}") do
+      fill_in "Keyword", with: keyword if keyword
+      click_on result
+    end
+    assert_no_selector "dialog##{dialog}[open]"
+  end
+
+  def choose_diagnosis(name, scope: nil, keyword: nil)
+    choose_from_picker "Select Diagnosis", frame: "diagnosis_picker_frame",
+                       dialog: "diagnosis_picker_modal", result: name, keyword: keyword, scope: scope
+  end
+
+  def choose_procedure(name, scope: nil, keyword: nil)
+    choose_from_picker "Select Procedure", frame: "surgery_procedure_picker_frame",
+                       dialog: "surgery_procedure_picker_modal", result: name, keyword: keyword, scope: scope
+  end
+
+  # Changing the patient re-renders the surgery form's diagnosis section (and
+  # with it the picker link, which carries the patient id), so tests must let
+  # that turbo-frame land before opening the picker.
+  def await_surgery_diagnosis_fields
+    assert_text "No diagnoses selected yet."
+  end
+
+  def choose_related_diagnosis(label)
+    choose_from_picker "Select Diagnosis", frame: "surgery_diagnosis_picker_frame",
+                       dialog: "surgery_diagnosis_picker_modal", result: label
+  end
+
   def choose_patient(label, keyword: nil)
     click_on "Select Patient", match: :first
     within("turbo-frame#patient_picker_frame") do

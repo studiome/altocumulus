@@ -26,4 +26,14 @@ class DiagnosisTest < ActiveSupport::TestCase
   test "to_s renders the diagnosis name" do
     assert_equal "Pneumonia", diagnoses(:pneumonia).to_s
   end
+
+  test "filtered narrows the list by a case-insensitive partial name" do
+    names = Diagnosis.filtered(keyword: "neumon").pluck(:name)
+
+    assert_equal [ "Pneumonia" ], names
+  end
+
+  test "filtered returns every diagnosis when no keyword is given" do
+    assert_equal Diagnosis.count, Diagnosis.filtered(keyword: nil).count
+  end
 end

@@ -1,0 +1,15 @@
+<%= turbo_stream.replace "diagnosis_picker_frame" do %>
+  <%= turbo_frame_tag "diagnosis_picker_frame", data: { action: "turbo:frame-load->picker-modal#open" } do %>
+    <div class="p-6 text-center"
+         data-controller="picker-result"
+         data-picker-result-event-value="diagnosis:picked"
+         data-picker-autoselect="true"
+         data-picker-id="<%= @diagnosis.id %>"
+         data-picker-label="<%= @diagnosis.name %>">
+      <div class="alert alert-success justify-start mb-4">
+        <span><%= t(".success_notice") %></span>
+      </div>
+      <p class="text-sm text-base-content/60"><%= t(".added_helper_text") %></p>
+    </div>
+  <% end %>
+<% end %>

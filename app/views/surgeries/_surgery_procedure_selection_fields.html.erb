@@ -10,10 +10,16 @@
       <%= selection_fields.select :laterality, SurgeryProcedureSelection.laterality_form_options, {}, class: "select w-full focus:select-primary" %>
     </div>
 
-    <div class="app-field">
-      <%= selection_fields.label :surgery_procedure_id, t(".procedure_label"), class: "app-field-label" %>
-      <%= selection_fields.collection_select :surgery_procedure_id, procedure_options, :id, :name, { prompt: t(".procedure_prompt") }, class: "select w-full focus:select-primary surgery-procedure-select" %>
-    </div>
+    <%= render "shared/picker_field",
+          form: selection_fields,
+          attribute: :surgery_procedure_id,
+          label: t(".procedure_label"),
+          selected_label: selection_fields.object.surgery_procedure&.name,
+          placeholder: t("surgery_procedures.picker.unselected"),
+          picker_path: picker_surgery_procedures_path,
+          picker_frame: "surgery_procedure_picker_frame",
+          choose_label: t("surgery_procedures.picker.choose_button"),
+          event_name: "procedure:picked" %>
   </div>
 
   <div class="flex justify-end">

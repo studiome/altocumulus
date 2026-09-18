@@ -5,6 +5,12 @@ class SurgeryProceduresController < ApplicationController
     @surgery_procedures = SurgeryProcedure.alphabetical
   end
 
+  # GET /surgery_procedures/picker
+  def picker
+    @pagination = Pagination.new(SurgeryProcedure.filtered(**filter_params).alphabetical, page: params[:page])
+    @surgery_procedures = @pagination.records
+  end
+
   def show
   end
 
@@ -57,5 +63,9 @@ class SurgeryProceduresController < ApplicationController
 
     def surgery_procedure_params
       params.expect(surgery_procedure: [ :name ])
+    end
+
+    def filter_params
+      params.permit(:keyword).to_h.symbolize_keys
     end
 end

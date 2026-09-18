@@ -70,6 +70,14 @@ class SurgeriesController < ApplicationController
     @selected_patient_diagnosis_ids = []
   end
 
+  # GET /surgeries/diagnosis_picker?patient_id=123
+  # Feeds the surgery form's related-diagnoses picker modal with just the
+  # picked patient's diagnoses, for the same reason as #patient_fields.
+  def diagnosis_picker
+    @patient_id = params[:patient_id].presence
+    @patient_diagnoses = patient_diagnoses_for(@patient_id)
+  end
+
   def destroy
     respond_to do |format|
       if @surgery.destroy

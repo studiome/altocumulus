@@ -1,4 +1,4 @@
-<%# locals: patient_selected, patient_diagnoses, selected_patient_diagnosis_ids
+<%# locals: patient_selected, patient_id, patient_diagnoses, selected_patient_diagnosis_ids
 
     Rendered both as part of the surgery form and as the standalone
     turbo-frame response from SurgeriesController#patient_fields, so it must
@@ -10,29 +10,41 @@
     form, since this partial is also rendered under surgeries/patient_fields,
     which would otherwise resolve lazy lookups against the wrong scope. %>
 <%= turbo_frame_tag "surgery_patient_scoped_fields", data: { surgery_patient_fields_target: "frame" } do %>
-  <div class="space-y-3">
+  <div class="space-y-3" data-controller="surgery-diagnosis-fields"
+       data-action="patient_diagnosis:picked@window->surgery-diagnosis-fields#add">
     <div>
-      <%= label_tag "surgery_patient_diagnosis_ids", t("surgeries.labels.related_diagnoses"), class: "app-field-label" %>
+      <span class="app-field-label"><%= t("surgeries.labels.related_diagnoses") %></span>
       <p class="app-helper"><%= t("surgeries.form.related_diagnoses_helper") %></p>
     </div>
 
     <%= hidden_field_tag "surgery[patient_diagnosis_ids][]", "" %>
 
-    <% if !patient_selected %>
-      <div class="app-empty-state"><%= t("surgeries.form.select_patient_first") %></div>
-    <% elsif patient_diagnoses.any? %>
-      <div class="space-y-3 rounded-box border border-base-200 bg-base-100 p-4">
-        <% patient_diagnoses.each do |entry| %>
-          <label class="label cursor-pointer justify-start gap-3 rounded-xl border border-base-200 px-4 py-3 has-checked:border-primary has-checked:bg-primary/5">
-            <%= check_box_tag "surgery[patient_diagnosis_ids][]", entry.id, selected_patient_diagnosis_ids.include?(entry.id), class: "checkbox checkbox-primary", id: "surgery_patient_diagnosis_ids_#{entry.id}" %>
-            <span><%= entry.display_name %> (<%= l(entry.diagnosed_on, format: :default) %>)</span>
-          </label>
-        <% end %>
-      </div>
-    <% else %>
-      <div class="app-empty-state"><%= t("surgeries.form.no_diagnoses_for_selected_patient") %></div>
-    <% end %>
+    <% selected_entries = patient_diagnoses.select { |entry| selected_patient_diagnosis_ids.include?(entry.id) } %>
 
-    <p class="app-helper"><%= t("surgeries.form.diagnoses_helper") %></p>
+    <div class="space-y-2" data-surgery-diagnosis-fields-target="list">
+      <% selected_entries.each do |entry| %>
+        <%= render "surgery_diagnosis_row", entry: entry %>
+      <% end %>
+    </div>
+
+    <template data-surgery-diagnosis-fields-target="template">
+      <%= render "surgery_diagnosis_row", entry: nil %>
+    </template>
+
+    <div class="app-empty-state" data-surgery-diagnosis-fields-target="empty" <%= "hidden" if selected_entries.any? %>>
+      <% if patient_selected %>
+        <%= t("surgeries.form.no_diagnoses_selected") %>
+      <% else %>
+        <%= t("surgeries.form.select_patient_first") %>
+      <% end %>
+    </div>
+
+    <div class="flex items-center justify-between gap-3">
+      <span class="app-helper"><%= t("surgeries.form.diagnoses_helper") %></span>
+      <% if patient_selected %>
+        <%= link_to t("surgeries.form.choose_diagnosis_button"), diagnosis_picker_surgeries_path(patient_id: patient_id),
+            class: "btn btn-outline btn-sm", data: { turbo_frame: "surgery_diagnosis_picker_frame" } %>
+      <% end %>
+    </div>
   </div>
 <% end %>

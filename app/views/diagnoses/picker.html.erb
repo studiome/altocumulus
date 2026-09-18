@@ -1,0 +1,52 @@
+<% content_for :title, t(".title") %>
+
+<%= turbo_frame_tag "diagnosis_picker_frame", data: { action: "turbo:frame-load->picker-modal#open" } do %>
+  <div class="p-6 space-y-4">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold"><%= t(".title") %></h2>
+        <p class="text-sm text-base-content/60"><%= t(".description") %></p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-action="picker-modal#close"><%= t("common.close") %></button>
+    </div>
+
+    <%= form_with url: picker_diagnoses_path, method: :get, local: true, class: "app-filter-bar" do |f| %>
+      <div class="app-filter-field">
+        <%= f.label :keyword, t(".keyword_label"), class: "app-filter-label" %>
+        <%= f.text_field :keyword, value: params[:keyword], placeholder: t(".keyword_placeholder"), class: "input input-sm" %>
+      </div>
+      <%= f.submit t("common.search"), class: "btn btn-primary btn-sm" %>
+      <% if params[:keyword].present? %>
+        <%= link_to t("common.clear"), picker_diagnoses_path, class: "btn btn-ghost btn-sm" %>
+      <% end %>
+    <% end %>
+
+    <div class="space-y-2" data-controller="picker-result" data-picker-result-event-value="diagnosis:picked">
+      <% if @diagnoses.any? %>
+        <% @diagnoses.each do |diagnosis| %>
+          <button type="button"
+                  class="w-full text-left rounded-box border border-base-200 px-4 py-3 hover:border-primary hover:bg-primary/5"
+                  data-action="picker-result#select"
+                  data-picker-id="<%= diagnosis.id %>"
+                  data-picker-label="<%= diagnosis.name %>">
+            <span class="font-semibold"><%= diagnosis.name %></span>
+          </button>
+        <% end %>
+      <% else %>
+        <div class="app-empty-state">
+          <% if params[:keyword].present? %>
+            <%= t(".empty_filtered") %>
+          <% else %>
+            <%= t(".empty_no_filter") %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <%= render "shared/pagination", pagination: @pagination %>
+
+    <div class="pt-2 text-center">
+      <%= link_to t(".new_diagnosis_link"), new_diagnosis_path, class: "app-inline-link text-sm", data: { turbo_frame: "diagnosis_picker_frame" } %>
+    </div>
+  </div>
+<% end %>

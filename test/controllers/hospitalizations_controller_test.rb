@@ -167,11 +167,19 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#hospitalization_scheduled_admission_date[value='2027-02-01']"
   end
 
-  test "new renders the diagnosis modal frame and turbo-frame New Diagnosis links" do
+  test "new renders the diagnosis picker frame and turbo-frame links into it" do
     get new_hospitalization_url
     assert_response :success
-    assert_select "turbo-frame#diagnosis_modal_frame"
-    assert_select "a[data-turbo-frame='diagnosis_modal_frame']", text: "New Diagnosis"
+    assert_select "turbo-frame#diagnosis_picker_frame"
+    assert_select "a[data-turbo-frame='diagnosis_picker_frame'][href=?]", picker_diagnoses_path
+  end
+
+  test "new renders the diagnosis picker field instead of a diagnosis dropdown" do
+    get new_hospitalization_url
+
+    assert_response :success
+    assert_select "select[name^='hospitalization[hospitalization_diagnoses_attributes]']", count: 0
+    assert_select "input[type=hidden][name=?]", "hospitalization[hospitalization_diagnoses_attributes][0][diagnosis_id]"
   end
 
   test "new renders the patient picker field instead of a patient dropdown" do
@@ -251,11 +259,11 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "edit renders the diagnosis modal frame and turbo-frame New Diagnosis links" do
+  test "edit renders the diagnosis picker frame and turbo-frame links into it" do
     get edit_hospitalization_url(@hospitalization)
     assert_response :success
-    assert_select "turbo-frame#diagnosis_modal_frame"
-    assert_select "a[data-turbo-frame='diagnosis_modal_frame']", text: "New Diagnosis"
+    assert_select "turbo-frame#diagnosis_picker_frame"
+    assert_select "a[data-turbo-frame='diagnosis_picker_frame'][href=?]", picker_diagnoses_path
   end
 
   test "should update hospitalization" do

@@ -482,6 +482,20 @@ ja:
       modal_description: "この診断名入力フォームを離れずに診断名マスタを作成できます。"
     edit:
       title: "診断名を編集"
+    picker:
+      title: "診断名を選択"
+      description: "診断名マスタを名称で検索してください。"
+      keyword_label: "キーワード"
+      keyword_placeholder: "診断名"
+      empty_filtered: "該当する診断名が見つかりません。"
+      empty_no_filter: "診断名がまだ登録されていません。"
+      choose_button: "診断名を選択"
+      unselected: "診断名が選択されていません"
+      new_diagnosis_link: "新規診断名を登録"
+      back_to_search: "検索に戻る"
+    picker_create:
+      success_notice: "診断名を作成しました。"
+      added_helper_text: "作成した診断名を選択しました。"
     create:
       success_notice: "診断名を作成しました。"
       added_helper_text: "新しい診断名が診断名入力フォームに追加されました。"
@@ -512,9 +526,20 @@ ja:
       modal_description: "この手術フォームを離れずに術式マスタを作成できます。"
     edit:
       title: "術式を編集"
+    picker:
+      title: "術式を選択"
+      description: "術式マスタを名称で検索してください。"
+      keyword_label: "キーワード"
+      keyword_placeholder: "術式名"
+      empty_filtered: "該当する術式が見つかりません。"
+      empty_no_filter: "術式がまだ登録されていません。"
+      choose_button: "術式を選択"
+      unselected: "術式が選択されていません"
+      new_procedure_link: "新規術式を登録"
+      back_to_search: "検索に戻る"
     create:
       success_notice: "術式を作成しました。"
-      added_helper_text: "新しい術式が手術フォームに追加されました。"
+      added_helper_text: "作成した術式を選択しました。"
     update:
       success_notice: "術式を更新しました。"
     destroy:
@@ -779,7 +804,6 @@ ja:
       room_preference_placeholder: "例: 個室"
       comments_heading: "コメント"
     hospitalization_diagnosis_fields:
-      select_diagnosis_prompt: "診断名を選択してください"
       remove_button: "削除"
     labels:
       kicker: "入退院"
@@ -854,6 +878,9 @@ ja:
       select_patient_first: "先に患者を選択してください。"
       no_diagnoses_for_selected_patient: "選択した患者に登録された診断名がありません。"
       diagnoses_helper: "選択した患者の診断名のみ保存できます。"
+      no_diagnoses_selected: "診断名がまだ選択されていません。"
+      choose_diagnosis_button: "診断名を選択"
+      remove_diagnosis_button: "削除"
       surgery_date_helper: "日程が決まるまでは「未定」を選択して日付を空欄にしてください。"
       scheduling_type_label: "予定区分"
       slot_category_label: "枠区分"
@@ -891,12 +918,10 @@ ja:
       operation_order_placeholder: "例: 1"
     surgery_procedure_selection_fields:
       procedure_label: "術式"
-      procedure_prompt: "術式を選択してください"
       remove_button: "削除"
-    surgery_procedure_modal:
-      title: "新規術式"
-      description: "この手術フォームを離れずに術式マスタを作成できます。"
-      loading: "読み込み中..."
+    diagnosis_picker:
+      title: "診断名を選択"
+      description: "選択中の患者に登録された診断名から選んでください。"
     labels:
       surgery_date: "手術日"
       start_time: "開始時刻"
@@ -907,6 +932,7 @@ ja:
       assistant: "助手"
       operation_order: "手術順"
       related_diagnoses: "関連する診断名"
+      diagnosis_with_date: "%{diagnosis}(%{date})"
       procedures: "術式"
       slot_category: "枠区分"
       target_department: "相手先診療科"
@@ -1061,6 +1087,8 @@ ja:
     diagnosis_modal:
       loading: "読み込み中..."
     patient_picker_modal:
+      loading: "読み込み中..."
+    picker_modal:
       loading: "読み込み中..."
 
   # Stage 3 group 4b. See en.yml for the design notes.

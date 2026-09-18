@@ -1,0 +1,31 @@
+<% content_for :title, t(".title") %>
+
+<%= turbo_frame_tag "surgery_diagnosis_picker_frame", data: { action: "turbo:frame-load->picker-modal#open" } do %>
+  <div class="p-6 space-y-4">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold"><%= t(".title") %></h2>
+        <p class="text-sm text-base-content/60"><%= t(".description") %></p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-action="picker-modal#close"><%= t("common.close") %></button>
+    </div>
+
+    <div class="space-y-2" data-controller="picker-result" data-picker-result-event-value="patient_diagnosis:picked">
+      <% if @patient_id.blank? %>
+        <div class="app-empty-state"><%= t("surgeries.form.select_patient_first") %></div>
+      <% elsif @patient_diagnoses.any? %>
+        <% @patient_diagnoses.each do |entry| %>
+          <button type="button"
+                  class="w-full text-left rounded-box border border-base-200 px-4 py-3 hover:border-primary hover:bg-primary/5"
+                  data-action="picker-result#select"
+                  data-picker-id="<%= entry.id %>"
+                  data-picker-label="<%= t("surgeries.labels.diagnosis_with_date", diagnosis: entry.display_name, date: l(entry.diagnosed_on, format: :default)) %>">
+            <span class="font-semibold"><%= t("surgeries.labels.diagnosis_with_date", diagnosis: entry.display_name, date: l(entry.diagnosed_on, format: :default)) %></span>
+          </button>
+        <% end %>
+      <% else %>
+        <div class="app-empty-state"><%= t("surgeries.form.no_diagnoses_for_selected_patient") %></div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

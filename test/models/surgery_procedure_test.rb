@@ -34,4 +34,14 @@ class SurgeryProcedureTest < ActiveSupport::TestCase
   test "to_s renders the surgery procedure name" do
     assert_equal "Appendectomy", surgery_procedures(:appendectomy).to_s
   end
+
+  test "filtered narrows the list by a case-insensitive partial name" do
+    names = SurgeryProcedure.filtered(keyword: "endect").pluck(:name)
+
+    assert_equal [ "Appendectomy" ], names
+  end
+
+  test "filtered returns every procedure when no keyword is given" do
+    assert_equal SurgeryProcedure.count, SurgeryProcedure.filtered(keyword: nil).count
+  end
 end

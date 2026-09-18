@@ -14,6 +14,9 @@
     </div>
   </div>
 
-  <%= render "surgery_procedure_modal" %>
+  <%= render "shared/picker_modal", dialog_id: "surgery_procedure_picker_modal", frame_id: "surgery_procedure_picker_frame",
+        title: t("surgery_procedures.picker.title"), description: t("surgery_procedures.picker.description") %>
+  <%= render "shared/picker_modal", dialog_id: "surgery_diagnosis_picker_modal", frame_id: "surgery_diagnosis_picker_frame",
+        title: t("surgeries.diagnosis_picker.title"), description: t("surgeries.diagnosis_picker.description") %>
   <%= render "shared/patient_picker_modal" %>
 </div>

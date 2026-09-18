@@ -456,6 +456,20 @@ en:
       modal_description: "Create a diagnosis master without leaving this diagnosis entry form."
     edit:
       title: "Edit Diagnosis"
+    picker:
+      title: "Select a Diagnosis"
+      description: "Search the diagnosis master by name."
+      keyword_label: "Keyword"
+      keyword_placeholder: "Diagnosis name"
+      empty_filtered: "No diagnoses match your search."
+      empty_no_filter: "No diagnoses registered yet."
+      choose_button: "Select Diagnosis"
+      unselected: "No diagnosis selected"
+      new_diagnosis_link: "Register New Diagnosis"
+      back_to_search: "Back to search"
+    picker_create:
+      success_notice: "Diagnosis was successfully created."
+      added_helper_text: "The new diagnosis has been selected."
     create:
       success_notice: "Diagnosis was successfully created."
       added_helper_text: "The new diagnosis has been added to the diagnosis entry form."
@@ -487,9 +501,20 @@ en:
       modal_description: "Create a procedure master without leaving this surgery form."
     edit:
       title: "Edit Surgery Procedure"
+    picker:
+      title: "Select a Procedure"
+      description: "Search the procedure master by name."
+      keyword_label: "Keyword"
+      keyword_placeholder: "Procedure name"
+      empty_filtered: "No procedures match your search."
+      empty_no_filter: "No procedures registered yet."
+      choose_button: "Select Procedure"
+      unselected: "No procedure selected"
+      new_procedure_link: "Register New Procedure"
+      back_to_search: "Back to search"
     create:
       success_notice: "Surgery procedure was successfully created."
-      added_helper_text: "The new procedure has been added to the surgery form."
+      added_helper_text: "The new procedure has been selected."
     update:
       success_notice: "Surgery procedure was successfully updated."
     destroy:
@@ -817,7 +842,6 @@ en:
       room_preference_placeholder: "e.g. Private room"
       comments_heading: "Comments"
     hospitalization_diagnosis_fields:
-      select_diagnosis_prompt: "Select a diagnosis"
       remove_button: "Remove"
     # Shared across more than one action within this resource (see design
     # note above).
@@ -921,6 +945,9 @@ en:
       select_patient_first: "Select a patient first."
       no_diagnoses_for_selected_patient: "No diagnoses are registered for the selected patient."
       diagnoses_helper: "Only diagnoses belonging to the selected patient can be saved."
+      no_diagnoses_selected: "No diagnoses selected yet."
+      choose_diagnosis_button: "Select Diagnosis"
+      remove_diagnosis_button: "Remove"
       surgery_date_helper: "Choose Undecided to leave the date blank until it is scheduled."
       scheduling_type_label: "Scheduling Type"
       slot_category_label: "Slot Category"
@@ -958,12 +985,10 @@ en:
       operation_order_placeholder: "e.g. 1"
     surgery_procedure_selection_fields:
       procedure_label: "Procedure"
-      procedure_prompt: "Select a procedure"
       remove_button: "Remove"
-    surgery_procedure_modal:
-      title: "New Surgery Procedure"
-      description: "Create a procedure master without leaving this surgery form."
-      loading: "Loading..."
+    diagnosis_picker:
+      title: "Select a Diagnosis"
+      description: "Pick one of the diagnoses registered for the selected patient."
     # Shared across more than one action within this resource (see design
     # note above).
     labels:
@@ -976,6 +1001,7 @@ en:
       assistant: "Assistant"
       operation_order: "Operation Order"
       related_diagnoses: "Related Diagnoses"
+      diagnosis_with_date: "%{diagnosis} (%{date})"
       procedures: "Procedures"
       slot_category: "Slot Category"
       target_department: "Partner Department"
@@ -1174,6 +1200,8 @@ en:
     diagnosis_modal:
       loading: "Loading..."
     patient_picker_modal:
+      loading: "Loading..."
+    picker_modal:
       loading: "Loading..."
 
   # Stage 3 group 4b: Operations Calendar, Dashboard, and cross-Search

@@ -1,0 +1,25 @@
+<%# locals: form, attribute, label, selected_label (nilable), placeholder,
+    picker_path, picker_frame, choose_label, event_name
+
+    The read-only counterpart of a <select>: the value is picked in the modal
+    that `picker_path` fills, which announces the pick as `event_name` on the
+    window. Several of these can share one modal (one per diagnosis/procedure
+    row), so picker-field#activate marks which one is waiting for the event. %>
+<div class="app-field" data-controller="picker-field"
+     data-action="<%= event_name %>@window->picker-field#receive"
+     data-picker-field-placeholder-value="<%= placeholder %>">
+  <span class="app-field-label"><%= label %></span>
+  <div class="flex flex-wrap items-center gap-3">
+    <div class="flex-1 min-w-0 rounded-box border border-base-200 bg-base-100 px-4 py-3"
+         data-picker-field-target="display">
+      <% if selected_label.present? %>
+        <%= selected_label %>
+      <% else %>
+        <span class="text-base-content/50"><%= placeholder %></span>
+      <% end %>
+    </div>
+    <%= link_to choose_label, picker_path, class: "btn btn-outline",
+        data: { turbo_frame: picker_frame, action: "picker-field#activate" } %>
+  </div>
+  <%= form.hidden_field attribute, data: { picker_field_target: "input" } %>
+</div>
