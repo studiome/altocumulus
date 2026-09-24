@@ -40,10 +40,15 @@ class UserTest < ActiveSupport::TestCase
     assert_includes user.errors[:password], "is too short (minimum is 8 characters)"
   end
 
-  test "role must be user or admin" do
+  test "role must be one of ROLES" do
     user = User.new(login_id: "role@example.com", name: "Role", password: "password", role: "superuser")
     assert_not user.valid?
     assert_includes user.errors[:role], "is not included in the list"
+  end
+
+  test "accepts data_manager as a role" do
+    user = User.new(login_id: "dm@example.com", name: "Data Manager", password: "password", role: "data_manager")
+    assert user.valid?
   end
 
   test "defaults locale to en" do
@@ -65,6 +70,21 @@ class UserTest < ActiveSupport::TestCase
   test "admin? reflects role" do
     assert @admin.admin?
     assert_not @member.admin?
+    assert_not users(:data_manager).admin?
+  end
+
+  # data_manager is a peer value of user/admin in the same single-role
+  # column, so it carries no admin privileges of its own (yet): only the
+  # predicate and the localized label distinguish it.
+  test "data_manager? reflects role" do
+    assert users(:data_manager).data_manager?
+    assert_not @admin.data_manager?
+    assert_not @member.data_manager?
+  end
+
+  test "role_options covers every role and role_label uses it" do
+    assert_equal User::ROLES.sort, User.role_options.keys.sort
+    assert_equal User.role_options["data_manager"], users(:data_manager).role_label
   end
 
   test "active scope only returns active users" do

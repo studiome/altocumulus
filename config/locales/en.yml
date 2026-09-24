@@ -342,6 +342,7 @@ en:
     user:
       role_options:
         user: "User"
+        data_manager: "Data Manager"
         admin: "Admin"
       # Label for :login_id, chosen per config.x.account_identifier (see
       # User.human_attribute_name).

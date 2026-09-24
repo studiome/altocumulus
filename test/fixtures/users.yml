@@ -34,3 +34,10 @@ japanese_admin:
   role: admin
   active: true
   locale: ja
+
+data_manager:
+  login_id: data-manager@example.com
+  name: Data Manager User
+  password_digest: <%= BCrypt::Password.create("password") %>
+  role: data_manager
+  active: true

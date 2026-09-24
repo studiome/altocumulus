@@ -418,6 +418,7 @@ ja:
     user:
       role_options:
         user: "利用者"
+        data_manager: "データ管理者"
         admin: "管理者"
       login_id_labels:
         email: "メールアドレス"

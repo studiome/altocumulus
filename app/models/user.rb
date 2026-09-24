@@ -1,7 +1,11 @@
 class User < ApplicationRecord
   has_secure_password
 
-  ROLES = %w[user admin].freeze
+  # Peer values of a single `role` column (a user has exactly one). Only
+  # "admin" currently grants extra privileges -- "data_manager" is a label
+  # for staff who look after the records, carrying the same access as
+  # "user" until specific permissions are attached to it.
+  ROLES = %w[user data_manager admin].freeze
   LOCALES = %w[en ja].freeze
 
   # Which shape a login_id must take, server-configured via
@@ -73,6 +77,10 @@ class User < ApplicationRecord
 
   def admin?
     role == "admin"
+  end
+
+  def data_manager?
+    role == "data_manager"
   end
 
   def active?
