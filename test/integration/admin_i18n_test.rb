@@ -25,7 +25,9 @@ class AdminI18nTest < ActionDispatch::IntegrationTest
       admin_announcements_url,
       new_admin_announcement_url,
       edit_admin_announcement_url(announcement),
-      admin_admin_notes_url
+      admin_admin_notes_url,
+      edit_admin_settings_url,
+      new_admin_user_import_url
     ].each do |url|
       get url
       assert_response :success, "expected #{url} to render successfully in ja"
@@ -242,6 +244,96 @@ class AdminI18nTest < ActionDispatch::IntegrationTest
   end
 
   # ---------------------------------------------------------------------
+  # Settings
+  # ---------------------------------------------------------------------
+
+  test "settings screen renders in Japanese" do
+    sign_in_as(users(:japanese_admin))
+
+    get edit_admin_settings_url
+    assert_select "h1", text: "設定"
+    assert_select "input[type=submit][value='設定を保存']"
+  end
+
+  test "settings screen renders unchanged in English" do
+    sign_in_as(users(:admin))
+
+    get edit_admin_settings_url
+    assert_select "h1", text: "Settings"
+    assert_select "input[type=submit][value='Save Settings']"
+  end
+
+  test "settings update flash message renders in Japanese" do
+    sign_in_as(users(:japanese_admin))
+
+    patch admin_settings_url, params: { app_setting: { title: "新アプリ名" } }
+    follow_redirect!
+    assert_match "設定を更新しました。", response.body
+  end
+
+  test "settings update flash message renders unchanged in English" do
+    sign_in_as(users(:admin))
+
+    patch admin_settings_url, params: { app_setting: { title: "New Title" } }
+    follow_redirect!
+    assert_match "Settings were successfully updated.", response.body
+  end
+
+  # ---------------------------------------------------------------------
+  # User Imports
+  # ---------------------------------------------------------------------
+
+  test "user import screen renders in Japanese" do
+    sign_in_as(users(:japanese_admin))
+
+    get new_admin_user_import_url
+    assert_select "h1", text: "CSVで利用者を一括登録"
+    assert_select "a", text: /テンプレートをダウンロード/
+    assert_select "input[type=submit][value='取り込む']"
+  end
+
+  test "user import screen renders unchanged in English" do
+    sign_in_as(users(:admin))
+
+    get new_admin_user_import_url
+    assert_select "h1", text: "Import Users from CSV"
+    assert_select "a", text: /Download Template/
+    assert_select "input[type=submit][value='Import']"
+  end
+
+  test "user import result screen renders in Japanese" do
+    sign_in_as(users(:japanese_admin))
+
+    csv_data = <<~CSV
+      login_id,password,name
+      import-ja@example.com,supersecret,山田テスト
+    CSV
+    post admin_user_import_url, params: { user_import: { file: Rack::Test::UploadedFile.new(StringIO.new(csv_data), "text/csv", original_filename: "users.csv") } }
+
+    assert_response :success
+    assert_select "h1", text: "取り込み結果"
+    assert_match "登録1件、スキップ0件、失敗0件。", response.body
+    assert_select "span.badge-success", text: "登録"
+    assert_select "a", text: "利用者一覧へ戻る"
+  end
+
+  test "user import result screen renders unchanged in English" do
+    sign_in_as(users(:admin))
+
+    csv_data = <<~CSV
+      login_id,password,name
+      import-en@example.com,supersecret,English Test
+    CSV
+    post admin_user_import_url, params: { user_import: { file: Rack::Test::UploadedFile.new(StringIO.new(csv_data), "text/csv", original_filename: "users.csv") } }
+
+    assert_response :success
+    assert_select "h1", text: "Import Result"
+    assert_match "1 registered, 0 skipped, 0 failed.", response.body
+    assert_select "span.badge-success", text: "Registered"
+    assert_select "a", text: "Back to Users"
+  end
+
+  # ---------------------------------------------------------------------
   # form validation error headings
   # ---------------------------------------------------------------------
 
@@ -261,5 +353,41 @@ class AdminI18nTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_match(/errors? prohibited this user from being saved:/, response.body)
+  end
+
+  test "settings form validation errors heading renders in Japanese" do
+    sign_in_as(users(:japanese_admin))
+
+    patch admin_settings_url, params: { app_setting: { title: "" } }
+
+    assert_response :unprocessable_entity
+    assert_match(/件のエラーにより設定を保存できませんでした:/, response.body)
+  end
+
+  test "settings form validation errors heading renders in English" do
+    sign_in_as(users(:admin))
+
+    patch admin_settings_url, params: { app_setting: { title: "" } }
+
+    assert_response :unprocessable_entity
+    assert_match(/errors? prohibited these settings from being saved:/, response.body)
+  end
+
+  test "user import form validation errors heading renders in Japanese" do
+    sign_in_as(users(:japanese_admin))
+
+    post admin_user_import_url, params: { user_import: { file: "" } }
+
+    assert_response :unprocessable_entity
+    assert_match(/件のエラーによりこのファイルを取り込めませんでした:/, response.body)
+  end
+
+  test "user import form validation errors heading renders in English" do
+    sign_in_as(users(:admin))
+
+    post admin_user_import_url, params: { user_import: { file: "" } }
+
+    assert_response :unprocessable_entity
+    assert_match(/errors? prohibited this file from being imported:/, response.body)
   end
 end
