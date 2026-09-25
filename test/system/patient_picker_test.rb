@@ -33,9 +33,13 @@ class PatientPickerTest < ApplicationSystemTestCase
         dateOfBirthInput.dispatchEvent(new Event("change", { bubbles: true }))
       JS
       click_on "Create Patient"
-
-      assert_text "Patient was successfully created."
     end
+
+    # The create response replaces the whole frame element, so re-find it
+    # here instead of asserting inside the `within` above, whose node goes
+    # stale. The success frame closes the modal as soon as it connects,
+    # hence visible: :all.
+    assert_selector "turbo-frame#patient_picker_frame", text: "Patient was successfully created.", visible: :all
 
     assert_no_selector "dialog#patient_picker_modal[open]"
     assert_text "H999"

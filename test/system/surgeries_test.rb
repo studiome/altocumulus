@@ -93,9 +93,13 @@ class SurgeriesTest < ApplicationSystemTestCase
       click_on "Register New Procedure"
       fill_in "Procedure Name", with: "Laparoscopic surgery"
       click_on "Create Surgery procedure"
-
-      assert_text "Surgery procedure was successfully created."
     end
+
+    # The create response replaces the whole frame element, so re-find it
+    # here instead of asserting inside the `within` above, whose node goes
+    # stale. The success frame closes the modal as soon as it connects,
+    # hence visible: :all.
+    assert_selector "turbo-frame#surgery_procedure_picker_frame", text: "Surgery procedure was successfully created.", visible: :all
 
     assert_no_selector "dialog#surgery_procedure_picker_modal[open]"
     within(procedure_rows.first) { assert_text "Laparoscopic surgery" }
@@ -112,9 +116,13 @@ class SurgeriesTest < ApplicationSystemTestCase
       click_on "Register New Procedure"
       fill_in "Procedure Name", with: "Laser ablation"
       click_on "Create Surgery procedure"
-
-      assert_text "Surgery procedure was successfully created."
     end
+
+    # The create response replaces the whole frame element, so re-find it
+    # here instead of asserting inside the `within` above, whose node goes
+    # stale. The success frame closes the modal as soon as it connects,
+    # hence visible: :all.
+    assert_selector "turbo-frame#surgery_procedure_picker_frame", text: "Surgery procedure was successfully created.", visible: :all
 
     assert_no_selector "dialog#surgery_procedure_picker_modal[open]"
     within(procedure_rows.last) { assert_text "Laser ablation" }

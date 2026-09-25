@@ -58,9 +58,13 @@ class HospitalizationsTest < ApplicationSystemTestCase
       click_on "Register New Diagnosis"
       fill_in "Diagnosis Name", with: "Acute gastritis"
       click_on "Create Diagnosis"
-
-      assert_text "Diagnosis was successfully created."
     end
+
+    # The create response replaces the whole frame element, so re-find it
+    # here instead of asserting inside the `within` above, whose node goes
+    # stale. The success frame closes the modal as soon as it connects,
+    # hence visible: :all.
+    assert_selector "turbo-frame#diagnosis_picker_frame", text: "Diagnosis was successfully created.", visible: :all
 
     assert_no_selector "dialog#diagnosis_picker_modal[open]"
     within(diagnosis_rows.first) { assert_text "Acute gastritis" }
