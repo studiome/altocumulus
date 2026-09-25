@@ -21,7 +21,12 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     # Wait for the post-login redirect to fully land before the test's own
     # navigation runs; otherwise a `visit` immediately after this can race
     # the in-flight redirect from the login form's full-page submit.
-    assert_text "Signed in successfully."
+    # Waits on the sign-out form, which only signed-in pages render, rather
+    # than the success toast: the toast auto-dismisses after 3s, so under a
+    # loaded parallel run it can fade before the assertion looks, or the
+    # redirect can outlast Capybara's default wait. `visible: :all` because
+    # the nav's sign-out buttons can be collapsed out of view.
+    assert_selector "form[action='#{logout_path}']", visible: :all, wait: 10
   end
 
   setup do
