@@ -50,7 +50,7 @@ class OperationsCalendarTest < ActiveSupport::TestCase
   end
 
   test "admission_count_for excludes discarded hospitalizations" do
-    date = Date.current + 5
+    date = admission_free_date
     create_hospitalization(scheduled_admission_date: date)
     deleted = create_hospitalization(scheduled_admission_date: date)
     deleted.discard!
@@ -67,8 +67,8 @@ class OperationsCalendarTest < ActiveSupport::TestCase
   # same rule: one hospitalization contributes to exactly one day's count,
   # never two, even when the scheduled and actual dates differ.
   test "admission_count_for counts a hospitalization once, at its effective (actual) date, not its superseded scheduled date" do
-    scheduled_date = Date.current + 5
-    actual_date = Date.current + 6
+    scheduled_date = admission_free_date(span: 2)
+    actual_date = scheduled_date + 1
     create_hospitalization(scheduled_admission_date: scheduled_date, admission_date: actual_date)
 
     calendar = OperationsCalendar.build(start: scheduled_date - 1, days: 5)
@@ -81,7 +81,7 @@ class OperationsCalendarTest < ActiveSupport::TestCase
   # was scheduled (the ordinary, common case) must still count as one
   # admission for that day, not two.
   test "admission_count_for counts a hospitalization once when the actual admission date matches the scheduled date" do
-    date = Date.current + 5
+    date = admission_free_date
     create_hospitalization(scheduled_admission_date: date, admission_date: date)
 
     calendar = OperationsCalendar.build(start: date - 1, days: 3)
@@ -90,7 +90,7 @@ class OperationsCalendarTest < ActiveSupport::TestCase
   end
 
   test "admission_warning? is driven by the configured threshold" do
-    date = Date.current + 5
+    date = admission_free_date
     3.times { create_hospitalization(scheduled_admission_date: date) }
 
     default_calendar = OperationsCalendar.build(start: date - 1, days: 3)
@@ -103,7 +103,7 @@ class OperationsCalendarTest < ActiveSupport::TestCase
   end
 
   test "exceeding the admission threshold does not block saving a hospitalization for that date" do
-    date = Date.current + 5
+    date = admission_free_date
 
     with_admission_warning_threshold(1) do
       create_hospitalization(scheduled_admission_date: date)
@@ -163,7 +163,7 @@ class OperationsCalendarTest < ActiveSupport::TestCase
   end
 
   test "upcoming excludes a soft-deleted hospitalization even though its date is in the future" do
-    date = Date.current + 10
+    date = admission_free_date(from: Date.current + 10)
     deleted = create_hospitalization(scheduled_admission_date: date)
     deleted.discard!
 
@@ -258,6 +258,16 @@ class OperationsCalendarTest < ActiveSupport::TestCase
       yield
     ensure
       Rails.application.config.x.admission_warning_threshold = original
+    end
+
+    # The first future date (on/after `from`) starting a run of `span` days on
+    # which no fixture hospitalization is admitted. Fixtures carry hard-coded
+    # dates, so a plain `Date.current + n` eventually lands on one of them
+    # (e.g. hospitalizations(:four) on 2026-10-01) and skews the counts.
+    def admission_free_date(from: Date.current + 5, span: 1)
+      date = from
+      date += 1 while Hospitalization.admitted_between(date, date + span - 1).exists?
+      date
     end
 
     # The first date on/after Date.current that falls on the given wday
