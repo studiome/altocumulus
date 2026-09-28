@@ -235,6 +235,11 @@ en:
               must_be_on_or_after_admission_date: "must be on or after the admission date"
             admission_date:
               or_scheduled_admission_date_required: "or a scheduled admission date must be present"
+        case_database_entry:
+          attributes:
+            field_values:
+              invalid_number: "%{field} must be a number"
+              invalid_option: "%{field} is not one of the allowed options"
         surgery:
           attributes:
             patient_diagnoses:
@@ -349,6 +354,11 @@ en:
       login_id_labels:
         email: "Email"
         username: "Username"
+    case_database_field:
+      field_type_options:
+        text: "Text"
+        number: "Number"
+        select: "Select"
     audit_event:
       # AUDITABLE_TYPES itself (Patient/Surgery/Hospitalization) is not
       # listed here -- it reuses activerecord.models.* via

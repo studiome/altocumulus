@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_18_005213) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_18_010000) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -59,6 +59,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_005213) do
     t.index ["auditable_type", "auditable_id"], name: "index_audit_events_on_auditable_type_and_auditable_id"
     t.index ["created_at"], name: "index_audit_events_on_created_at"
     t.index ["user_id"], name: "index_audit_events_on_user_id"
+  end
+
+  create_table "case_database_entries", force: :cascade do |t|
+    t.integer "case_database_id", null: false
+    t.datetime "created_at", null: false
+    t.json "field_values", default: {}, null: false
+    t.integer "patient_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["case_database_id", "patient_id"], name: "index_case_database_entries_on_case_database_id_and_patient_id", unique: true
+    t.index ["case_database_id"], name: "index_case_database_entries_on_case_database_id"
+    t.index ["patient_id"], name: "index_case_database_entries_on_patient_id"
+  end
+
+  create_table "case_database_fields", force: :cascade do |t|
+    t.integer "case_database_id", null: false
+    t.datetime "created_at", null: false
+    t.string "field_type", null: false
+    t.string "label", null: false
+    t.text "options"
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["case_database_id", "label"], name: "index_case_database_fields_on_case_database_id_and_label", unique: true
+    t.index ["case_database_id"], name: "index_case_database_fields_on_case_database_id"
+  end
+
+  create_table "case_databases", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_case_databases_on_name", unique: true
   end
 
   create_table "diagnoses", force: :cascade do |t|
@@ -219,6 +250,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_005213) do
   add_foreign_key "access_logs", "users"
   add_foreign_key "admin_notes", "users"
   add_foreign_key "audit_events", "users"
+  add_foreign_key "case_database_entries", "case_databases"
+  add_foreign_key "case_database_entries", "patients"
+  add_foreign_key "case_database_fields", "case_databases"
   add_foreign_key "hospitalization_diagnoses", "diagnoses"
   add_foreign_key "hospitalization_diagnoses", "hospitalizations"
   add_foreign_key "hospitalizations", "patients"

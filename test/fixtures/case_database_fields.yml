@@ -1,0 +1,21 @@
+notes:
+  case_database: registry
+  label: "Notes"
+  field_type: "text"
+  position: 0
+
+ejection_fraction:
+  case_database: registry
+  label: "Ejection Fraction"
+  field_type: "number"
+  position: 1
+
+outcome:
+  case_database: registry
+  label: "Outcome"
+  field_type: "select"
+  options: |
+    Good
+    Fair
+    Poor
+  position: 2

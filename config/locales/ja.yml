@@ -163,6 +163,9 @@ ja:
       admin_note: "管理者メモ"
       announcement: "お知らせ"
       audit_event: "監査イベント"
+      case_database: "症例データベース"
+      case_database_field: "症例データベース項目"
+      case_database_entry: "症例データベース登録患者"
       diagnosis: "診断名"
       elective_slot_rule: "手術枠ルール"
       holiday: "休日"
@@ -200,6 +203,18 @@ ja:
         ip_address: "IPアドレス"
         record_label: "対象"
         user_id: "操作者"
+      case_database:
+        name: "名称"
+        description: "説明"
+      case_database_field:
+        label: "項目名"
+        field_type: "種別"
+        options: "選択肢"
+        position: "表示順"
+      case_database_entry:
+        case_database_id: "症例データベース"
+        patient_id: "患者"
+        field_values: "項目値"
       diagnosis:
         name: "病名"
       elective_slot_rule:
@@ -315,6 +330,11 @@ ja:
               must_be_on_or_after_admission_date: "は入院日以降の日付にしてください"
             admission_date:
               or_scheduled_admission_date_required: "または入院予定日のいずれかを入力してください"
+        case_database_entry:
+          attributes:
+            field_values:
+              invalid_number: "%{field}は数値で入力してください"
+              invalid_option: "%{field}は選択肢の中から選んでください"
         surgery:
           attributes:
             patient_diagnoses:
@@ -423,6 +443,11 @@ ja:
       login_id_labels:
         email: "メールアドレス"
         username: "ユーザー名"
+    case_database_field:
+      field_type_options:
+        text: "テキスト"
+        number: "数値"
+        select: "選択肢"
     audit_event:
       # AUDITABLE_TYPES itself (Patient/Surgery/Hospitalization) is not
       # listed here -- it reuses activerecord.models.* via

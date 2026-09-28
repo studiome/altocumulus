@@ -1,0 +1,3 @@
+registry:
+  name: "Cardiac Surgery Registry"
+  description: "Tracks cardiac surgery patients and outcomes."

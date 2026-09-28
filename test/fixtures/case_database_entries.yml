@@ -1,0 +1,3 @@
+one:
+  case_database: registry
+  patient: one

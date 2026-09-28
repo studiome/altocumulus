@@ -1,6 +1,6 @@
 class AuditEvent < ApplicationRecord
   ACTIONS = %w[create update destroy].freeze
-  AUDITABLE_TYPES = %w[Patient Surgery Hospitalization].freeze
+  AUDITABLE_TYPES = %w[Patient Surgery Hospitalization CaseDatabase].freeze
 
   belongs_to :user, optional: true
 
