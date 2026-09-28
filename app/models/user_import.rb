@@ -5,9 +5,11 @@ require "csv"
 #
 # The CSV needs a header row with `login_id` and `password`; `name`, `role`
 # and `locale` are optional and fall back to the login id / the defaults a
-# manually created user gets. Rows are imported one by one rather than in a
-# single transaction, so one bad line does not throw away the rest of the
-# file -- what happened to every line is reported back instead.
+# manually created user gets. `role` may list several roles separated by
+# `;` (or `|`, or plain whitespace), e.g. "admin;data_manager"; a blank
+# value falls back to a plain "user". Rows are imported one by one rather
+# than in a single transaction, so one bad line does not throw away the rest
+# of the file -- what happened to every line is reported back instead.
 #
 # The form that posts here submits without Turbo: the result page is a plain
 # 200 rather than a redirect (it is too big to carry through the session), and
@@ -84,10 +86,17 @@ class UserImport
         password: password,
         password_confirmation: password,
         name: row["name"].presence || login_id,
-        role: row["role"].presence || "user",
+        roles: parse_roles(row["role"]),
         locale: row["locale"].presence || I18n.default_locale.to_s,
         active: true
       )
+    end
+
+    # Splits on `;`, `|`, or whitespace, so "admin;data_manager",
+    # "admin|data_manager", and "admin data_manager" are all accepted.
+    def parse_roles(value)
+      roles = value.to_s.split(/[;|\s]+/).map(&:strip).reject(&:blank?)
+      roles.presence || %w[user]
     end
 
     def file_is_a_readable_csv

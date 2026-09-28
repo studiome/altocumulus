@@ -10,7 +10,7 @@ class UserImportTest < ActiveSupport::TestCase
     assert_equal 1, result.created_count
     user = User.find_by(login_id: "newbie@example.com")
     assert user.authenticate("supersecret")
-    assert_equal "user", user.role
+    assert_equal %w[user], user.roles
     assert user.active?
   end
 
@@ -31,8 +31,41 @@ class UserImportTest < ActiveSupport::TestCase
 
     user = User.find_by(login_id: "boss@example.com")
     assert_equal "Big Boss", user.name
-    assert_equal "admin", user.role
+    assert_equal %w[admin], user.roles
     assert_equal "ja", user.locale
+  end
+
+  test "role column accepts several roles separated by a semicolon" do
+    import(<<~CSV)
+      login_id,password,role
+      multi@example.com,supersecret,admin;data_manager
+    CSV
+
+    user = User.find_by(login_id: "multi@example.com")
+    assert user.admin?
+    assert user.data_manager?
+  end
+
+  test "role column also accepts a pipe or whitespace separator" do
+    import(<<~CSV)
+      login_id,password,role
+      piperole@example.com,supersecret,admin|data_manager
+    CSV
+
+    user = User.find_by(login_id: "piperole@example.com")
+    assert user.admin?
+    assert user.data_manager?
+  end
+
+  test "an invalid role fails that row without importing it" do
+    result = import(<<~CSV)
+      login_id,password,role
+      badrole@example.com,supersecret,superuser
+    CSV
+
+    assert_equal 0, result.created_count
+    assert_equal 1, result.failed_count
+    assert_not User.exists?(login_id: "badrole@example.com")
   end
 
   test "skips a login id that already exists without touching it" do

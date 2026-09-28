@@ -58,6 +58,16 @@ class CaseDatabasesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
+  test "a user holding both admin and data_manager roles can create a case database" do
+    sign_out
+    sign_in_as(users(:admin_data_manager))
+
+    assert_difference("CaseDatabase.count", 1) do
+      post case_databases_url, params: { case_database: { name: "Admin DM Registry", description: "desc" } }
+    end
+    assert_redirected_to case_database_url(CaseDatabase.last)
+  end
+
   test "data manager can create a case database" do
     sign_out
     sign_in_as(users(:data_manager))

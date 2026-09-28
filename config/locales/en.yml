@@ -1159,11 +1159,12 @@ en:
         format_example: |
           login_id,password,name,role,locale
           yamada@example.com,supersecret,Taro Yamada,user,ja
-          sato@example.com,supersecret,,admin,
+          sato@example.com,supersecret,,admin;data_manager,
         format_required: "Required columns: %{headers}"
         format_optional: "Optional columns: %{headers}"
         format_name_fallback: "A row with no name is registered under its login id."
         format_existing_skipped: "A login id that already exists is skipped, and its password is left untouched."
+        format_role_multi: "The role column can list several roles separated by \";\" (e.g. admin;data_manager). A blank value becomes user."
         errors_heading:
           one: "%{count} error prohibited this file from being imported:"
           other: "%{count} errors prohibited this file from being imported:"

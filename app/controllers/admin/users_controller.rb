@@ -4,11 +4,11 @@ module Admin
     before_action :set_user, only: %i[ edit update reset_password ]
 
     def index
-      @users = User.order(:login_id)
+      @users = User.includes(:user_roles).order(:login_id)
     end
 
     def new
-      @user = User.new(role: "user", active: true)
+      @user = User.new(roles: %w[user], active: true)
     end
 
     def create
@@ -49,11 +49,11 @@ module Admin
     end
 
     def user_params
-      params.expect(user: [ :name, :login_id, :password, :password_confirmation, :role, :active ])
+      params.expect(user: [ :name, :login_id, :password, :password_confirmation, :active, roles: [] ])
     end
 
     def user_update_params
-      params.expect(user: [ :name, :login_id, :role, :active ])
+      params.expect(user: [ :name, :login_id, :active, roles: [] ])
     end
   end
 end

@@ -36,8 +36,15 @@
   <% end %>
 
   <div class="app-field">
-    <%= form.label :role, class: "app-field-label" %>
-    <%= form.select :role, User.role_form_options, {}, class: "select w-full" %>
+    <span class="app-field-label"><%= User.human_attribute_name(:roles) %></span>
+    <div class="flex flex-wrap gap-4">
+      <%= form.collection_check_boxes :roles, User.role_options.to_a, :first, :last do |b| %>
+        <label class="flex items-center gap-2">
+          <%= b.check_box(class: "checkbox checkbox-primary") %>
+          <%= b.text %>
+        </label>
+      <% end %>
+    </div>
   </div>
 
   <div class="app-field">

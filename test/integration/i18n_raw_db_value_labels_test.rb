@@ -21,9 +21,9 @@ class I18nRawDbValueLabelsTest < ActionDispatch::IntegrationTest
     assert_select "span.badge", text: "利用者"
 
     get edit_admin_user_url(users(:member))
-    assert_select "select#user_role option[value=user]", text: "利用者"
-    assert_select "select#user_role option[value=admin]", text: "管理者"
-    assert_select "select#user_role option[value=data_manager]", text: "データ管理者"
+    assert_select "label", text: "利用者"
+    assert_select "label", text: "管理者"
+    assert_select "label", text: "データ管理者"
 
     sign_out
     sign_in_as(users(:admin))
@@ -33,9 +33,9 @@ class I18nRawDbValueLabelsTest < ActionDispatch::IntegrationTest
     assert_select "span.badge", text: "User"
     assert_select "span.badge", text: "Data Manager"
 
-    assert_equal "data_manager", users(:data_manager).role
-    assert_equal "user", users(:member).role
-    assert_equal "admin", users(:admin).role
+    assert_equal %w[data_manager], users(:data_manager).roles
+    assert_equal %w[user], users(:member).roles
+    assert_equal %w[admin], users(:admin).roles
   end
 
   # ---------------------------------------------------------------------

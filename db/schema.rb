@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_18_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_18_020000) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -235,6 +235,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_010000) do
     t.index ["name"], name: "index_surgery_procedures_on_name", unique: true
   end
 
+  create_table "user_roles", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "role", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id", "role"], name: "index_user_roles_on_user_id_and_role", unique: true
+    t.index ["user_id"], name: "index_user_roles_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -242,7 +251,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_010000) do
     t.string "login_id", null: false
     t.string "name", null: false
     t.string "password_digest", null: false
-    t.string "role", default: "user", null: false
     t.datetime "updated_at", null: false
     t.index ["login_id"], name: "index_users_on_login_id", unique: true
   end
@@ -263,4 +271,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_010000) do
   add_foreign_key "surgery_diagnosis_links", "surgeries"
   add_foreign_key "surgery_procedure_selections", "surgeries"
   add_foreign_key "surgery_procedure_selections", "surgery_procedures"
+  add_foreign_key "user_roles", "users"
 end

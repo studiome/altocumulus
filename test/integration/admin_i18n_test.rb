@@ -74,12 +74,12 @@ class AdminI18nTest < ActionDispatch::IntegrationTest
   test "user create/update flash messages render in Japanese" do
     sign_in_as(users(:japanese_admin))
 
-    post admin_users_url, params: { user: { name: "New User", login_id: "new-ja@example.com", password: "password", password_confirmation: "password", role: "user", active: true } }
+    post admin_users_url, params: { user: { name: "New User", login_id: "new-ja@example.com", password: "password", password_confirmation: "password", roles: [ "user" ], active: true } }
     follow_redirect!
     assert_match "利用者を作成しました。", response.body
 
     user = users(:member)
-    patch admin_user_url(user), params: { user: { name: user.name, login_id: user.login_id, role: "admin", active: true } }
+    patch admin_user_url(user), params: { user: { name: user.name, login_id: user.login_id, roles: [ "admin" ], active: true } }
     follow_redirect!
     assert_match "利用者を更新しました。", response.body
   end
@@ -87,12 +87,12 @@ class AdminI18nTest < ActionDispatch::IntegrationTest
   test "user create/update flash messages render unchanged in English" do
     sign_in_as(users(:admin))
 
-    post admin_users_url, params: { user: { name: "New User", login_id: "new-en@example.com", password: "password", password_confirmation: "password", role: "user", active: true } }
+    post admin_users_url, params: { user: { name: "New User", login_id: "new-en@example.com", password: "password", password_confirmation: "password", roles: [ "user" ], active: true } }
     follow_redirect!
     assert_match "User was successfully created.", response.body
 
     user = users(:member)
-    patch admin_user_url(user), params: { user: { name: user.name, login_id: user.login_id, role: "admin", active: true } }
+    patch admin_user_url(user), params: { user: { name: user.name, login_id: user.login_id, roles: [ "admin" ], active: true } }
     follow_redirect!
     assert_match "User was successfully updated.", response.body
   end
@@ -340,7 +340,7 @@ class AdminI18nTest < ActionDispatch::IntegrationTest
   test "user form validation errors heading renders in Japanese" do
     sign_in_as(users(:japanese_admin))
 
-    post admin_users_url, params: { user: { name: "", login_id: "", password: "", password_confirmation: "", role: "user", active: true } }
+    post admin_users_url, params: { user: { name: "", login_id: "", password: "", password_confirmation: "", roles: [ "user" ], active: true } }
 
     assert_response :unprocessable_entity
     assert_match(/件のエラーによりこの利用者を保存できませんでした:/, response.body)
@@ -349,7 +349,7 @@ class AdminI18nTest < ActionDispatch::IntegrationTest
   test "user form validation errors heading renders in English" do
     sign_in_as(users(:admin))
 
-    post admin_users_url, params: { user: { name: "", login_id: "", password: "", password_confirmation: "", role: "user", active: true } }
+    post admin_users_url, params: { user: { name: "", login_id: "", password: "", password_confirmation: "", roles: [ "user" ], active: true } }
 
     assert_response :unprocessable_entity
     assert_match(/errors? prohibited this user from being saved:/, response.body)

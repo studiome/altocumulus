@@ -159,7 +159,7 @@ class LocaleI18nTest < ActionDispatch::IntegrationTest
   test "custom validation error messages render in Japanese" do
     I18n.with_locale(:ja) do
       user = users(:admin)
-      User.where(role: "admin").where.not(id: user.id).update_all(active: false)
+      User.admins.where.not(id: user.id).update_all(active: false)
       user.active = false
 
       assert_not user.valid?

@@ -294,7 +294,7 @@ ja:
         name: "氏名"
         password: "パスワード"
         password_confirmation: "パスワード(確認)"
-        role: "権限"
+        roles: "権限"
 
     errors:
       format: "%{attribute}%{message}"
@@ -1065,11 +1065,12 @@ ja:
         format_example: |
           login_id,password,name,role,locale
           yamada@example.com,supersecret,山田太郎,user,ja
-          sato@example.com,supersecret,,admin,
+          sato@example.com,supersecret,,admin;data_manager,
         format_required: "必須の列: %{headers}"
         format_optional: "任意の列: %{headers}"
         format_name_fallback: "氏名が空の行は、ログインIDを氏名として登録します。"
         format_existing_skipped: "既に存在するログインIDはスキップし、パスワードは変更しません。"
+        format_role_multi: "role列は複数の権限を「;」区切りで指定できます（例: admin;data_manager）。空欄はuserになります。"
         errors_heading:
           other: "%{count}件のエラーによりこのファイルを取り込めませんでした:"
         submit_button: "取り込む"

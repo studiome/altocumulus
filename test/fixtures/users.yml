@@ -2,28 +2,24 @@ admin:
   login_id: admin@example.com
   name: Admin User
   password_digest: <%= BCrypt::Password.create("password") %>
-  role: admin
   active: true
 
 member:
   login_id: member@example.com
   name: Member User
   password_digest: <%= BCrypt::Password.create("password") %>
-  role: user
   active: true
 
 inactive:
   login_id: inactive@example.com
   name: Inactive User
   password_digest: <%= BCrypt::Password.create("password") %>
-  role: user
   active: false
 
 japanese_member:
   login_id: ja-member@example.com
   name: Japanese Member
   password_digest: <%= BCrypt::Password.create("password") %>
-  role: user
   active: true
   locale: ja
 
@@ -31,7 +27,6 @@ japanese_admin:
   login_id: ja-admin@example.com
   name: Japanese Admin
   password_digest: <%= BCrypt::Password.create("password") %>
-  role: admin
   active: true
   locale: ja
 
@@ -39,5 +34,10 @@ data_manager:
   login_id: data-manager@example.com
   name: Data Manager User
   password_digest: <%= BCrypt::Password.create("password") %>
-  role: data_manager
+  active: true
+
+admin_data_manager:
+  login_id: admin-dm@example.com
+  name: Admin Data Manager User
+  password_digest: <%= BCrypt::Password.create("password") %>
   active: true

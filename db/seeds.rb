@@ -21,7 +21,7 @@ if bootstrap_admin_login_id.present? && bootstrap_admin_password.present?
   User.find_or_create_by!(login_id: bootstrap_admin_login_id) do |user|
     user.name = "Administrator"
     user.password = bootstrap_admin_password
-    user.role = "admin"
+    user.roles = %w[admin]
     user.active = true
   end
 end
@@ -32,7 +32,7 @@ if Rails.env.development?
   User.find_or_create_by!(login_id: demo_admin_login_id) do |user|
     user.name = "Demo Admin"
     user.password = "password"
-    user.role = "admin"
+    user.roles = %w[admin data_manager]
     user.active = true
   end
 end

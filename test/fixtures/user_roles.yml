@@ -1,0 +1,31 @@
+admin_role:
+  user: admin
+  role: admin
+
+member_role:
+  user: member
+  role: user
+
+inactive_role:
+  user: inactive
+  role: user
+
+japanese_member_role:
+  user: japanese_member
+  role: user
+
+japanese_admin_role:
+  user: japanese_admin
+  role: admin
+
+data_manager_role:
+  user: data_manager
+  role: data_manager
+
+admin_data_manager_admin_role:
+  user: admin_data_manager
+  role: admin
+
+admin_data_manager_data_manager_role:
+  user: admin_data_manager
+  role: data_manager
