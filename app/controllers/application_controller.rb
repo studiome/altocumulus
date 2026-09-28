@@ -20,7 +20,7 @@ class ApplicationController < ActionController::Base
   before_action :require_login
   before_action :set_current_attributes
 
-  helper_method :current_user, :admin?
+  helper_method :current_user, :admin?, :data_manager?
 
   private
 
@@ -47,6 +47,10 @@ class ApplicationController < ActionController::Base
     current_user&.admin? || false
   end
 
+  def data_manager?
+    current_user&.data_manager? || false
+  end
+
   # These two run as a before_action shared by every controller, so they
   # cannot use lazy `t(".key")` lookup -- the resolved scope would depend on
   # whichever controller/action happened to trigger the redirect. Fixed
@@ -59,6 +63,12 @@ class ApplicationController < ActionController::Base
 
   def require_admin
     return if admin?
+
+    redirect_to root_path, alert: t("common.not_authorized")
+  end
+
+  def require_data_manager
+    return if data_manager?
 
     redirect_to root_path, alert: t("common.not_authorized")
   end
