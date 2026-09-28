@@ -63,7 +63,13 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # Changing the patient re-renders the surgery form's diagnosis section (and
   # with it the picker link, which carries the patient id), so tests must let
   # that turbo-frame land before opening the picker.
+  # Waits on the picker link for the patient now held in the hidden field,
+  # not just the empty-state text: that text is already on screen for the
+  # previously chosen patient, so it would pass before the reload lands and
+  # let the test click the stale link (opening the old patient's diagnoses).
   def await_surgery_diagnosis_fields
+    patient_id = find("input[name='surgery[patient_id]']", visible: :all).value
+    assert_selector "turbo-frame#surgery_patient_scoped_fields a[href$='patient_id=#{patient_id}']"
     assert_text "No diagnoses selected yet."
   end
 
