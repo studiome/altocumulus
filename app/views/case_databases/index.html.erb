@@ -1,0 +1,51 @@
+<% content_for :title, t(".title") %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
+      </div>
+      <% if data_manager? %>
+        <%= link_to new_case_database_path, class: "btn btn-primary" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+          <%= t(".new_button") %>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200"><%= CaseDatabase.human_attribute_name(:name) %></th>
+            <th class="bg-base-200"><%= CaseDatabase.human_attribute_name(:description) %></th>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @case_databases.any? %>
+            <% @case_databases.each do |case_database| %>
+              <tr class="row-hover">
+                <td class="font-semibold"><%= case_database.name %></td>
+                <td class="text-base-content/60 max-w-xs truncate"><%= case_database.description %></td>
+                <td class="text-right flex justify-end gap-2">
+                  <%= link_to t("common.view"), case_database, class: "btn btn-ghost btn-xs text-primary" %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="3" class="app-empty-state">
+                <%= t(".empty") %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

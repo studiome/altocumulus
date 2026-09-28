@@ -53,6 +53,10 @@ Rails.application.routes.draw do
       get :deleted
     end
   end
+  resources :case_databases do
+    resources :fields, controller: "case_database_fields", only: %i[ new create edit update destroy ]
+    resources :entries, controller: "case_database_entries", only: %i[ new create edit update destroy ]
+  end
   resources :elective_slot_rules
   resources :holidays
   resources :audit_events, only: %i[ index show ]

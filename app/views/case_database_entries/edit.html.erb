@@ -1,0 +1,57 @@
+<% content_for :title, t(".title") %>
+
+<div class="max-w-xl mx-auto w-full">
+  <div class="mb-8 flex items-center gap-4">
+    <%= link_to case_database_path(@case_database), class: "btn btn-circle btn-ghost" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+    <% end %>
+    <div>
+      <h1 class="font-bold text-4xl"><%= t(".title") %></h1>
+      <p class="text-base-content/60"><%= @entry.patient.hospital_id %> - <%= @entry.patient.name %></p>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl border border-base-200">
+    <div class="card-body">
+      <%= form_with model: @entry,
+                    scope: :case_database_entry,
+                    url: case_database_entry_path(@case_database, @entry),
+                    class: "app-form" do |form| %>
+        <% if @entry.errors.any? %>
+          <div role="alert" class="alert alert-error mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div>
+              <h3 class="font-bold"><%= t(".errors_heading", count: @entry.errors.count) %></h3>
+              <ul class="list-disc ml-6">
+                <% @entry.errors.each do |error| %>
+                  <li><%= error.full_message %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        <% end %>
+
+        <% @case_database.fields.each do |field| %>
+          <% field_name = "case_database_entry[field_values][#{field.id}]" %>
+          <% field_id = "case_database_entry_field_values_#{field.id}" %>
+          <% value = @entry.value_for(field) %>
+          <div class="app-field">
+            <%= label_tag field_id, field.label, class: "app-field-label" %>
+            <% case field.field_type %>
+            <% when "number" %>
+              <%= number_field_tag field_name, value, step: "any", id: field_id, class: "input w-full focus:input-primary" %>
+            <% when "select" %>
+              <%= select_tag field_name, options_for_select([ "" ] + field.option_list, value), id: field_id, class: "select w-full" %>
+            <% else %>
+              <%= text_field_tag field_name, value, id: field_id, class: "input w-full focus:input-primary" %>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="pt-4">
+          <%= form.submit t("common.save"), class: "btn btn-primary w-full" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

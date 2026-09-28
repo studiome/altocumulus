@@ -75,6 +75,7 @@ ja:
     surgeries: "手術"
     hospitalizations: "入院"
     search: "検索"
+    case_databases: "症例データベース"
     reports: "レポート"
     dashboard: "ダッシュボード"
     schedule: "スケジュール"
@@ -1250,3 +1251,68 @@ ja:
       no_reason: "(理由未登録)"
       undated: "未定"
       unknown_patient_name: "患者 #%{id}"
+
+  case_databases:
+    index:
+      title: "症例データベース"
+      new_button: "新規症例データベース"
+      empty: "症例データベースが登録されていません。「新規症例データベース」から作成してください。"
+    show:
+      kicker: "症例データベース"
+      add_patient_button: "患者を追加"
+      export_csv_button: "CSVエクスポート"
+      edit_values_link: "値を編集"
+      remove_button: "削除"
+      empty_entries: "まだ患者が追加されていません。"
+      fields_heading: "項目"
+      new_field_button: "新規項目"
+      empty_fields: "まだ項目が定義されていません。"
+    new:
+      title: "新規症例データベース"
+    edit:
+      title: "症例データベースを編集"
+    create:
+      success_notice: "症例データベースを作成しました。"
+    update:
+      success_notice: "症例データベースを更新しました。"
+    destroy:
+      success_notice: "症例データベースを削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーにより症例データベースを保存できませんでした:"
+
+  case_database_fields:
+    new:
+      title: "新規項目"
+    edit:
+      title: "項目を編集"
+    create:
+      success_notice: "項目を作成しました。"
+    update:
+      success_notice: "項目を更新しました。"
+    destroy:
+      success_notice: "項目を削除しました。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーにより項目を保存できませんでした:"
+      options_placeholder: "1行につき1つの選択肢"
+      options_helper: "選択肢型のときのみ使用します。1行に1つずつ入力してください。"
+
+  case_database_entries:
+    new:
+      title: "患者を追加"
+      keyword_label: "キーワード"
+      keyword_placeholder: "氏名または患者ID"
+      empty_no_filter: "患者が見つかりません。"
+      empty_filtered: "検索条件に一致する患者がいません。"
+      add_button: "追加"
+    edit:
+      title: "値を編集"
+      errors_heading:
+        other: "%{count}件のエラーにより値を保存できませんでした:"
+    create:
+      success_notice: "患者を症例データベースに追加しました。"
+    update:
+      success_notice: "値を更新しました。"
+    destroy:
+      success_notice: "患者を症例データベースから削除しました。"

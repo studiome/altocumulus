@@ -1,0 +1,94 @@
+<% content_for :title, @case_database.name %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker"><%= t(".kicker") %></p>
+        <h1 class="app-page-title"><%= @case_database.name %></h1>
+        <% if @case_database.description.present? %>
+          <p class="text-base-content/60"><%= @case_database.description %></p>
+        <% end %>
+      </div>
+      <div class="flex gap-2">
+        <%= link_to t(".add_patient_button"), new_case_database_entry_path(@case_database), class: "btn btn-primary" %>
+        <%= link_to t(".export_csv_button"), case_database_path(@case_database, format: :csv), class: "btn btn-outline" %>
+        <% if data_manager? %>
+          <%= link_to t("common.edit"), edit_case_database_path(@case_database), class: "btn btn-ghost" %>
+          <%= button_to t("common.delete"), case_database_path(@case_database), method: :delete, class: "btn btn-ghost text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200"><%= t("patients.labels.hospital_id") %></th>
+            <th class="bg-base-200"><%= Patient.human_attribute_name(:name) %></th>
+            <% @case_database.fields.each do |field| %>
+              <th class="bg-base-200"><%= field.label %></th>
+            <% end %>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @entries.any? %>
+            <% @entries.each do |entry| %>
+              <tr class="row-hover">
+                <td class="font-mono font-medium"><%= entry.patient.hospital_id %></td>
+                <td class="font-semibold"><%= entry.patient.name %></td>
+                <% @case_database.fields.each do |field| %>
+                  <td><%= entry.value_for(field) %></td>
+                <% end %>
+                <td class="text-right flex justify-end gap-2">
+                  <%= link_to t(".edit_values_link"), edit_case_database_entry_path(@case_database, entry), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <% if data_manager? %>
+                    <%= button_to t(".remove_button"), case_database_entry_path(@case_database, entry), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="<%= @case_database.fields.count + 3 %>" class="app-empty-state">
+                <%= t(".empty_entries") %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <% if data_manager? %>
+    <section class="app-panel">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold"><%= t(".fields_heading") %></h2>
+        <%= link_to t(".new_field_button"), new_case_database_field_path(@case_database), class: "btn btn-primary btn-sm" %>
+      </div>
+
+      <% if @case_database.fields.any? %>
+        <ul class="divide-y divide-base-200">
+          <% @case_database.fields.each do |field| %>
+            <li class="flex items-center justify-between py-2">
+              <div>
+                <span class="font-semibold"><%= field.label %></span>
+                <span class="badge badge-ghost badge-sm ml-2"><%= CaseDatabaseField.field_type_options[field.field_type] %></span>
+              </div>
+              <div class="flex gap-2">
+                <%= link_to t("common.edit"), edit_case_database_field_path(@case_database, field), class: "btn btn-ghost btn-xs text-secondary" %>
+                <%= button_to t("common.delete"), case_database_field_path(@case_database, field), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <div class="app-empty-state"><%= t(".empty_fields") %></div>
+      <% end %>
+    </section>
+  <% end %>
+</div>

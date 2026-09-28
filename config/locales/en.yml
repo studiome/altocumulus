@@ -120,6 +120,7 @@ en:
     surgeries: "Surgeries"
     hospitalizations: "Hospitalizations"
     search: "Search"
+    case_databases: "Case Databases"
     reports: "Reports"
     dashboard: "Dashboard"
     schedule: "Schedule"
@@ -1388,3 +1389,71 @@ en:
       no_reason: "(no reason)"
       undated: "Undated"
       unknown_patient_name: "Patient #%{id}"
+
+  case_databases:
+    index:
+      title: "Case Databases"
+      new_button: "New Case Database"
+      empty: "No case databases found. Click \"New Case Database\" to get started."
+    show:
+      kicker: "Case Database"
+      add_patient_button: "Add Patient"
+      export_csv_button: "Export CSV"
+      edit_values_link: "Edit Values"
+      remove_button: "Remove"
+      empty_entries: "No patients added yet."
+      fields_heading: "Fields"
+      new_field_button: "New Field"
+      empty_fields: "No fields defined yet."
+    new:
+      title: "New Case Database"
+    edit:
+      title: "Edit Case Database"
+    create:
+      success_notice: "Case database was successfully created."
+    update:
+      success_notice: "Case database was successfully updated."
+    destroy:
+      success_notice: "Case database was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this case database from being saved:"
+        other: "%{count} errors prohibited this case database from being saved:"
+
+  case_database_fields:
+    new:
+      title: "New Field"
+    edit:
+      title: "Edit Field"
+    create:
+      success_notice: "Field was successfully created."
+    update:
+      success_notice: "Field was successfully updated."
+    destroy:
+      success_notice: "Field was successfully destroyed."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this field from being saved:"
+        other: "%{count} errors prohibited this field from being saved:"
+      options_placeholder: "One option per line"
+      options_helper: "Only used for the Select field type. One choice per line."
+
+  case_database_entries:
+    new:
+      title: "Add Patient"
+      keyword_label: "Keyword"
+      keyword_placeholder: "Name or Hospital ID"
+      empty_no_filter: "No patients found."
+      empty_filtered: "No patients match your search."
+      add_button: "Add"
+    edit:
+      title: "Edit Values"
+      errors_heading:
+        one: "%{count} error prohibited these values from being saved:"
+        other: "%{count} errors prohibited these values from being saved:"
+    create:
+      success_notice: "Patient was successfully added to the case database."
+    update:
+      success_notice: "Values were successfully updated."
+    destroy:
+      success_notice: "Patient was successfully removed from the case database."

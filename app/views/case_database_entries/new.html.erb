@@ -1,0 +1,64 @@
+<% content_for :title, t(".title") %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
+        <p class="text-base-content/60"><%= @case_database.name %></p>
+      </div>
+      <%= link_to t("common.back"), case_database_path(@case_database), class: "btn btn-ghost" %>
+    </div>
+  </section>
+
+  <%= form_with url: new_case_database_entry_path(@case_database), method: :get, local: true, class: "app-filter-bar" do |f| %>
+    <div class="app-filter-field">
+      <%= f.label :keyword, t(".keyword_label"), class: "app-filter-label" %>
+      <%= f.text_field :keyword, value: params[:keyword], placeholder: t(".keyword_placeholder"), class: "input input-sm" %>
+    </div>
+    <%= f.submit t("common.search"), class: "btn btn-primary btn-sm" %>
+    <% if params[:keyword].present? %>
+      <%= link_to t("common.clear"), new_case_database_entry_path(@case_database), class: "btn btn-ghost btn-sm" %>
+    <% end %>
+  <% end %>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="bg-base-200"><%= t("patients.labels.hospital_id") %></th>
+            <th class="bg-base-200"><%= Patient.human_attribute_name(:name) %></th>
+            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @patients.any? %>
+            <% @patients.each do |patient| %>
+              <tr class="row-hover">
+                <td class="font-mono font-medium"><%= patient.hospital_id %></td>
+                <td class="font-semibold"><%= patient.name %></td>
+                <td class="text-right">
+                  <%= button_to t(".add_button"), case_database_entries_path(@case_database), params: { patient_id: patient.id }, class: "btn btn-primary btn-xs" %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="3" class="app-empty-state">
+                <% if params[:keyword].present? %>
+                  <%= t(".empty_filtered") %>
+                <% else %>
+                  <%= t(".empty_no_filter") %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <%= render "shared/pagination", pagination: @pagination %>
+</div>

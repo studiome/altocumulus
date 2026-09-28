@@ -1,0 +1,38 @@
+<%= form_with model: field,
+              scope: :case_database_field,
+              url: field.new_record? ? case_database_fields_path(case_database) : case_database_field_path(case_database, field),
+              class: "app-form" do |form| %>
+  <% if field.errors.any? %>
+    <div role="alert" class="alert alert-error mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <h3 class="font-bold"><%= t(".errors_heading", count: field.errors.count) %></h3>
+        <ul class="list-disc ml-6">
+          <% field.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="app-field">
+    <%= form.label :label, class: "app-field-label" %>
+    <%= form.text_field :label, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :field_type, class: "app-field-label" %>
+    <%= form.select :field_type, CaseDatabaseField.field_type_form_options, {}, class: "select w-full" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :options, class: "app-field-label" %>
+    <%= form.text_area :options, class: "textarea w-full focus:textarea-primary", rows: 4, placeholder: t(".options_placeholder") %>
+    <p class="app-helper"><%= t(".options_helper") %></p>
+  </div>
+
+  <div class="pt-4">
+    <%= form.submit class: "btn btn-primary w-full" %>
+  </div>
+<% end %>
