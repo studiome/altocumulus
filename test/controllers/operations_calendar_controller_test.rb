@@ -112,6 +112,15 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr.ledger-band-warning td", text: /past its/
   end
 
+  test "has no side pane: the ledger is the only content next to the announcements" do
+    get operations_calendar_url, params: { start: "2026-03-01", days: 3 }
+
+    assert_select "h3", text: Hospitalization.status_filter_options["waiting"], count: 0
+    assert_select "h3", text: "Undated Surgeries", count: 0
+    assert_select "h3", text: "Outside Regular Surgery Days", count: 0
+    assert_select ".lg\\:col-span-2", 0
+  end
+
   test "root routes to the operations calendar" do
     get root_url
     assert_response :success

@@ -41,83 +41,26 @@
     </div>
   <% end %>
 
-  <%# print:block turns the grid into a plain stacked flow so the 50-day
-      list prints at full page width instead of being squeezed into its
-      screen-only 2/3 column, with the summary sidebar printing in full
-      below it rather than being clipped alongside. %>
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start print:block">
-    <div class="lg:col-span-2 app-panel overflow-hidden">
-      <div class="overflow-x-auto">
-        <%# One ledger table for the whole range: each day is its own <tbody>
-            (see _day), so the day cell can span that day's surgery rows. %>
-        <table class="app-ledger oc-ledger">
-          <thead>
-            <tr>
-              <th><%= t("surgeries.labels.surgery_date") %></th>
-              <th><span class="block"><%= t("surgeries.labels.start_time") %></span><span class="block"><%= t(".slot_header") %></span></th>
-              <th><%= Surgery.human_attribute_name(:patient_id) %></th>
-              <th><span class="block"><%= t("surgeries.index.diagnosis_header") %></span><span class="block"><%= t("surgeries.labels.procedures") %></span></th>
-              <th><span class="block"><%= t("surgeries.labels.operator") %></span><span class="block"><%= t("surgeries.labels.assistant") %></span></th>
-              <th><span class="block"><%= t("surgeries.labels.duration") %></span><span class="block"><%= t("surgeries.labels.anesthesia") %></span></th>
-              <th><%= t("surgeries.index.type_label") %></th>
-            </tr>
-          </thead>
-          <% @calendar.dates.each_with_index do |date, index| %>
-            <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar, alternate: index.odd? %>
-          <% end %>
-        </table>
-      </div>
-    </div>
-
-    <div class="space-y-4">
-      <%= render "summary_list", title: Hospitalization.status_filter_options["waiting"], records: @calendar.waiting %>
-      <%= render "summary_list", title: Hospitalization.status_filter_options["upcoming"], records: @calendar.upcoming %>
-      <%= render "summary_list", title: Hospitalization.status_filter_options["unconfirmed"], records: @calendar.unconfirmed %>
-      <%= render "summary_list", title: Hospitalization.status_filter_options["recently_updated"], records: @calendar.recently_updated %>
-      <%= render "summary_list", title: Hospitalization.status_filter_options["referred"], records: @calendar.referred %>
-
-      <% @calendar.purpose_groups.each do |purpose, records| %>
-        <%= render "summary_list", title: Hospitalization.purpose_options[purpose], records: records %>
-      <% end %>
-
-      <div class="app-panel">
-        <div class="app-panel-body space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="font-bold"><%= t(".undated_surgeries_heading") %></h3>
-            <span class="badge badge-neutral"><%= @calendar.undated_surgeries.size %></span>
-          </div>
-          <% if @calendar.undated_surgeries.any? %>
-            <ul class="space-y-1 text-sm">
-              <% @calendar.undated_surgeries.each do |surgery| %>
-                <li><%= link_to surgery.patient&.name || t("operations_calendar.labels.unknown_patient_name", id: surgery.patient_id), surgery, class: "app-inline-link" %></li>
-              <% end %>
-            </ul>
-          <% else %>
-            <p class="text-base-content/40 italic text-sm"><%= t("operations_calendar.labels.empty_list") %></p>
-          <% end %>
-        </div>
-      </div>
-
-      <div class="app-panel">
-        <div class="app-panel-body space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="font-bold"><%= t(".outside_regular_days_heading") %></h3>
-            <span class="badge badge-neutral"><%= @calendar.outside_regular_day_surgeries.size %></span>
-          </div>
-          <% if @calendar.outside_regular_day_surgeries.any? %>
-            <ul class="space-y-1 text-sm">
-              <% @calendar.outside_regular_day_surgeries.each do |date, surgery| %>
-                <li class="flex items-center justify-between gap-2">
-                  <%= link_to surgery.patient&.name || t("operations_calendar.labels.unknown_patient_name", id: surgery.patient_id), surgery, class: "app-inline-link truncate" %>
-                  <span class="text-base-content/50 whitespace-nowrap"><%= l(date, format: :default) %></span>
-                </li>
-              <% end %>
-            </ul>
-          <% else %>
-            <p class="text-base-content/40 italic text-sm"><%= t("operations_calendar.labels.empty_list") %></p>
-          <% end %>
-        </div>
-      </div>
+  <div class="app-panel overflow-hidden print:overflow-visible">
+    <div class="overflow-x-auto">
+      <%# One ledger table for the whole range: each day is its own <tbody>
+          (see _day), so the day cell can span that day's surgery rows. %>
+      <table class="app-ledger oc-ledger">
+        <thead>
+          <tr>
+            <th><%= t("surgeries.labels.surgery_date") %></th>
+            <th><span class="block"><%= t("surgeries.labels.start_time") %></span><span class="block"><%= t(".slot_header") %></span></th>
+            <th><%= Surgery.human_attribute_name(:patient_id) %></th>
+            <th><span class="block"><%= t("surgeries.index.diagnosis_header") %></span><span class="block"><%= t("surgeries.labels.procedures") %></span></th>
+            <th><span class="block"><%= t("surgeries.labels.operator") %></span><span class="block"><%= t("surgeries.labels.assistant") %></span></th>
+            <th><span class="block"><%= t("surgeries.labels.duration") %></span><span class="block"><%= t("surgeries.labels.anesthesia") %></span></th>
+            <th><%= t("surgeries.index.type_label") %></th>
+          </tr>
+        </thead>
+        <% @calendar.dates.each_with_index do |date, index| %>
+          <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar, alternate: index.odd? %>
+        <% end %>
+      </table>
     </div>
   </div>
 </div>

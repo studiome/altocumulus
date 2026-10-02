@@ -1,7 +1,7 @@
 require "test_helper"
 
 # Stage 3 group 4b: locale coverage for the Operations Calendar screen
-# (OperationsCalendarController#index and its `_day` / `_summary_list`
+# (OperationsCalendarController#index and its `_day`
 # partials). Mirrors surgery_schedules_i18n_test.rb's structure -- a fixed
 # `start`/`days` window is passed as params so the exact fixture surgeries,
 # holidays, and slot rules that fall inside it are deterministic:
@@ -29,8 +29,8 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     assert_select "label.app-filter-label", text: "日数"
     assert_select "input[type=submit][value=?]", "適用"
     assert_select "a", text: "今日"
-    assert_select "h3", text: "日程未定の手術"
-    assert_select "h3", text: "通常の手術日以外の手術"
+    assert_select "th span", text: "術者"
+    assert_select "th span", text: "枠"
     assert_no_match(/[Tt]ranslation missing/, response.body)
   end
 
@@ -46,8 +46,8 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     assert_select "label.app-filter-label", text: "Days"
     assert_select "input[type=submit][value=?]", "Apply"
     assert_select "a", text: "Today"
-    assert_select "h3", text: "Undated Surgeries"
-    assert_select "h3", text: "Outside Regular Surgery Days"
+    assert_select "th span", text: "Operator"
+    assert_select "th span", text: "Slot"
     assert_no_match(/運用カレンダー/, response.body)
   end
 
@@ -71,24 +71,6 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     assert_match "March 01, 2026", response.body
     assert_match "March 10, 2026", response.body
     assert_match(/10 days/, response.body)
-  end
-
-  # Guards against re-defining a translation that already lives on the model
-  # (Hospitalization.status_filter_options) -- the summary headings must
-  # reuse it, not duplicate the Japanese string here in a second key.
-  test "summary headings reuse Hospitalization.status_filter_options rather than a duplicate translation" do
-    sign_in_as(users(:japanese_member))
-
-    get operations_calendar_url, params: WINDOW
-
-    assert_response :success
-    I18n.with_locale(:ja) do
-      assert_select "h3", text: Hospitalization.status_filter_options["waiting"]
-      assert_select "h3", text: Hospitalization.status_filter_options["upcoming"]
-      assert_select "h3", text: Hospitalization.status_filter_options["unconfirmed"]
-      assert_select "h3", text: Hospitalization.status_filter_options["recently_updated"]
-      assert_select "h3", text: Hospitalization.status_filter_options["referred"]
-    end
   end
 
   test "day partial renders weekday, holiday badge, and no-slots-holiday copy in Japanese" do
@@ -155,26 +137,6 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     assert_match(%r{2 / 3 slots}, response.body)
     assert_match(%r{\(420 / 720 min\)}, response.body)
     assert_match "No surgeries scheduled", response.body
-  end
-
-  test "outside-regular-day surgeries and undated-surgeries panels render in Japanese" do
-    sign_in_as(users(:japanese_member))
-
-    get operations_calendar_url, params: WINDOW
-
-    assert_response :success
-    assert_match "John Doe", response.body
-    assert_match "なし", response.body
-  end
-
-  test "outside-regular-day surgeries and undated-surgeries panels render in English unchanged" do
-    sign_in_as(users(:member))
-
-    get operations_calendar_url, params: WINDOW
-
-    assert_response :success
-    assert_match "John Doe", response.body
-    assert_match "None", response.body
   end
 
   test "invalid date range alert renders in Japanese" do
