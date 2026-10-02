@@ -2,9 +2,9 @@
 
 <div class="w-full">
 
-  <div class="flex justify-between items-center mb-8">
+  <div class="flex justify-between items-center mb-3">
     <div>
-      <h1 class="font-bold text-4xl mb-2"><%= t(".title") %></h1>
+      <h1 class="app-page-title"><%= t(".title") %></h1>
     </div>
     <%= link_to new_surgery_procedure_path, class: "btn btn-primary" do %>
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
@@ -12,7 +12,7 @@
     <% end %>
   </div>
 
-  <div class="card bg-base-100 shadow-xl border border-base-200 overflow-hidden">
+  <div class="app-panel overflow-hidden">
     <div class="overflow-x-auto">
       <table class="table table-zebra w-full">
         <thead>

@@ -2,11 +2,11 @@
 
 <div class="max-w-xl mx-auto w-full">
   <div class="mb-8">
-    <h1 class="font-bold text-4xl"><%= t(".title") %></h1>
+    <h1 class="app-page-title"><%= t(".title") %></h1>
     <p class="app-helper mt-2"><%= t(".description") %></p>
   </div>
 
-  <div class="card bg-base-100 shadow-xl border border-base-200">
+  <div class="app-panel">
     <div class="card-body">
       <%= form_with(model: @app_setting, url: admin_settings_path, method: :patch, class: "app-form") do |form| %>
         <% if @app_setting.errors.any? %>

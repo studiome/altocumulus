@@ -2,18 +2,18 @@
 
 <div class="max-w-2xl mx-auto w-full">
 
-  <div class="mb-8 flex items-center gap-4">
+  <div class="mb-3 flex items-center gap-3">
     <%= link_to elective_slot_rules_path, class: "btn btn-circle btn-ghost" do %>
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
     <% end %>
-    <h1 class="font-bold text-4xl"><%= t(".title") %></h1>
+    <h1 class="app-page-title"><%= t(".title") %></h1>
   </div>
 
-  <div class="card bg-base-100 shadow-xl border border-base-200">
+  <div class="app-panel">
     <div class="card-body">
       <div class="flex justify-between items-start mb-6">
         <div>
-          <h2 class="card-title text-3xl mb-1 text-primary"><%= @elective_slot_rule.day_name %></h2>
+          <h2 class="card-title text-xl mb-1 text-primary"><%= @elective_slot_rule.day_name %></h2>
           <p class="text-base-content/60 font-mono"><%= t(".subtitle") %></p>
         </div>
         <div class="badge badge-outline badge-lg p-4"><%= t(".badge") %></div>
