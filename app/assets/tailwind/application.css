@@ -143,24 +143,26 @@ html {
     color: var(--app-link);
   }
 
-  /* Dense bordered table shared by every list screen. Header cells are
+  /* Dense bordered table shared by every list screen. Scoped to .app-main
+     (not .app-panel): several screens still wrap their table in a plain
+     daisyUI .card, and they must look the same. Header cells are
      lavender, grid lines are visible, and related values are stacked inside
      one cell (.ledger-primary over .ledger-secondary) instead of each getting
      its own column. */
   .app-ledger,
-  .app-panel .table {
+  .app-main .table {
     @apply w-full border-collapse text-xs;
   }
 
   .app-ledger thead th,
-  .app-panel .table thead th {
+  .app-main .table thead th {
     @apply whitespace-nowrap px-1.5 py-1 font-bold text-primary;
     background-color: var(--ledger-head);
     border: 1px solid var(--ledger-line);
   }
 
   .app-ledger td,
-  .app-panel .table td {
+  .app-main .table td {
     @apply px-1.5 py-1 align-top;
     border: 1px solid var(--ledger-line);
   }
