@@ -86,4 +86,16 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
       assert_match(/Printed/, render_text(Date.new(2026, 3, 1)))
     end
   end
+
+  test "uses only black, white and grays so it prints cleanly on a monochrome printer" do
+    # 2026-03-01 holds an emergency case and 2026-03-04 is an empty day, so
+    # every colored element (header, day rows, emergency shading, placeholder)
+    # is on the page.
+    reader = PDF::Reader.new(StringIO.new(WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1)).render))
+    colors = reader.pages.flat_map { |page| page.raw_content.scan(/(-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (?:rg|RG|scn|SCN)\b/) }
+
+    assert_not_empty colors
+    tinted = colors.reject { |r, g, b| r == g && g == b }
+    assert_empty tinted, "non-gray colors in PDF: #{tinted.uniq.inspect}"
+  end
 end

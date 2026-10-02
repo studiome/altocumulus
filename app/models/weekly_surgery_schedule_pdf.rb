@@ -16,11 +16,15 @@ class WeeklySurgerySchedulePdf
   FIXED_COLUMN_WIDTHS = [ 44, 34, 108, 130, 168, 80, 46, 66 ].freeze
   COLUMN_KEYS = %i[time slot patient diagnosis procedure operator duration anesthesia category].freeze
 
-  HEAD_COLOR = "DFE3F2".freeze
-  DAY_COLOR = "E8E8F0".freeze
-  LINE_COLOR = "8A8AC0".freeze
-  TEXT_COLOR = "111133".freeze
-  EMERGENCY_COLOR = "FBE3E3".freeze
+  # Black, white and grays only: the sheet is meant for a monochrome printer, so
+  # nothing may depend on hue. Emergency cases are told apart by the "Emergency"
+  # label in the type column plus a light gray fill.
+  HEAD_COLOR = "D0D0D0".freeze
+  DAY_COLOR = "E6E6E6".freeze
+  LINE_COLOR = "666666".freeze
+  TEXT_COLOR = "000000".freeze
+  MUTED_TEXT_COLOR = "555555".freeze
+  EMERGENCY_COLOR = "F2F2F2".freeze
 
   attr_reader :start_date
 
@@ -83,7 +87,7 @@ class WeeklySurgerySchedulePdf
       pdf.table(rows, header: true, column_widths: widths,
                       cell_style: { size: 8, padding: [ 3, 4 ], border_width: 0.5, border_color: LINE_COLOR }) do |table|
         table.row(0).background_color = HEAD_COLOR
-        table.row(0).text_color = "000080"
+        table.row(0).text_color = TEXT_COLOR
       end
     end
 
@@ -96,7 +100,7 @@ class WeeklySurgerySchedulePdf
       rows = [ [ { content: day_heading(date, surgeries), colspan: COLUMN_KEYS.size, background_color: DAY_COLOR } ] ]
 
       if surgeries.empty?
-        rows << [ { content: I18n.t("surgery_schedules.pdf.no_surgeries"), colspan: COLUMN_KEYS.size, text_color: "777777" } ]
+        rows << [ { content: I18n.t("surgery_schedules.pdf.no_surgeries"), colspan: COLUMN_KEYS.size, text_color: MUTED_TEXT_COLOR } ]
       else
         surgeries.each { |surgery| rows << surgery_row(surgery) }
       end
