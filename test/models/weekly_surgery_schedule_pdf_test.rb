@@ -58,6 +58,23 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     assert_includes render_text(Date.new(2026, 3, 1), locale: :ja), "1.5時間"
   end
 
+  test "shows a holiday's name and note on the day heading" do
+    Holiday.create!(date: Date.new(2026, 3, 4), name: "Founders Day", note: "Ward closed")
+
+    text = render_text(Date.new(2026, 3, 1))
+
+    assert_includes text, "Founders Day"
+    assert_includes text, "Ward closed"
+  end
+
+  test "shows a comment-only day note that has no name" do
+    Holiday.create!(date: Date.new(2026, 3, 5), holiday: false, name: nil, note: "Staff meeting 15:00\nRoom 2")
+
+    text = render_text(Date.new(2026, 3, 1))
+
+    assert_includes text, "Staff meeting 15:00 Room 2"
+  end
+
   test "leaves out surgeries dated outside the week" do
     outside = surgeries(:one).dup
     outside.surgery_date = Date.new(2026, 3, 20)

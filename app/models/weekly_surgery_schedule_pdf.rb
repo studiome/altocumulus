@@ -109,7 +109,10 @@ class WeeklySurgerySchedulePdf
 
     def day_heading(date, surgeries)
       parts = [ "#{I18n.l(date, format: :default)} (#{I18n.l(date, format: :weekday)})" ]
-      parts << holidays[date].name if holidays[date]&.name.present?
+      holiday = holidays[date]
+      # A Holiday row is either a closed day (name) or a plain day comment
+      # (note); show whichever of the two it has, notes flattened to one line.
+      parts.concat([ holiday&.name, holiday&.note&.squish ].select(&:present?))
       parts << I18n.t("surgery_schedules.pdf.day_count", count: surgeries.size)
       parts.join("   ")
     end
