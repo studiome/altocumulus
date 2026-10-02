@@ -1,24 +1,22 @@
-<% content_for :title, t(".title") %>
+<div class="mb-4 text-center">
+  <h1 class="app-page-title"><%= t(".title") %></h1>
+</div>
+
+<%# Notices from admins, laid out like a ward notice board: a red-ruled box
+    above the sign-in form. Wider than the form on purpose, so longer notices
+    stay readable. %>
+<% if @announcements.any? %>
+  <section class="app-board">
+    <% @announcements.each do |announcement| %>
+      <div class="announcement">
+        <h3 class="app-board-title"><%= announcement.title %></h3>
+        <p class="app-board-body"><%= announcement.body %></p>
+      </div>
+    <% end %>
+  </section>
+<% end %>
 
 <div class="max-w-md mx-auto w-full">
-  <div class="mb-8 text-center">
-    <h1 class="app-page-title"><%= t(".title") %></h1>
-  </div>
-
-  <% if @announcements.any? %>
-    <div class="space-y-2 mb-4">
-      <% @announcements.each do |announcement| %>
-        <div role="alert" class="announcement alert alert-info items-start">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          <div>
-            <h3 class="font-bold"><%= announcement.title %></h3>
-            <p class="text-sm"><%= announcement.body %></p>
-          </div>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
-
   <div class="app-panel">
     <div class="app-panel-body">
       <%= form_with url: login_path, method: :post, scope: :session, local: true, class: "app-form" do |form| %>

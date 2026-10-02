@@ -225,4 +225,26 @@ html {
     @apply text-xs;
     background-color: color-mix(in oklab, var(--color-warning) 28%, var(--color-base-100));
   }
+
+  /* Notice board (sign-in page): a red-ruled box, red "■ title ■" headings and
+     generous line spacing, as on the ledger prototype's logon screen. */
+  .app-board {
+    @apply mx-auto mb-4 max-w-4xl space-y-2 border-2 border-error bg-base-100 px-4 py-2.5 leading-[1.85];
+  }
+
+  .app-board-title {
+    @apply text-sm font-bold text-error;
+  }
+
+  .app-board-title::before {
+    content: "■ ";
+  }
+
+  .app-board-title::after {
+    content: " ■";
+  }
+
+  .app-board-body {
+    @apply whitespace-pre-line;
+  }
 }

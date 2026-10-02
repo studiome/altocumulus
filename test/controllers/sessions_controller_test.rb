@@ -15,13 +15,27 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "the login page shows published announcements but not drafts" do
+  test "the login page shows published announcements on a board but not drafts" do
     get login_url
 
     assert_response :success
-    assert_select ".announcement h3", text: "Winter schedule notice"
-    assert_select ".announcement p", text: /year-end closure/
-    assert_select ".announcement h3", text: "Draft: new ward opening", count: 0
+    assert_select ".app-board" do
+      assert_select ".announcement .app-board-title", text: /Winter schedule notice/
+      assert_select ".announcement .app-board-body", text: /year-end closure/
+      assert_select ".announcement .app-board-title", text: /Draft: new ward opening/, count: 0
+    end
+    assert_select ".app-board .alert", 0
+  end
+
+  test "an announcement body keeps its line breaks on the board" do
+    announcements(:published_one).update!(body: "Line one\nLine two")
+
+    get login_url
+
+    # assert_select squeezes whitespace, so check the raw markup; the board's
+    # CSS (white-space: pre-line) is what turns that newline into a line break.
+    assert_includes response.body, "Line one\nLine two"
+    assert_select ".announcement .app-board-body"
   end
 
   test "the login page shows no announcement area when none are published" do
@@ -29,14 +43,14 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     get login_url
 
-    assert_select ".announcement", 0
+    assert_select ".app-board", 0
   end
 
   test "announcements are still shown when a failed sign-in re-renders the form" do
     post login_url, params: { session: { login_id: users(:admin).login_id, password: "wrong-password" } }
 
     assert_response :unprocessable_entity
-    assert_select ".announcement h3", text: "Winter schedule notice"
+    assert_select ".app-board .announcement .app-board-title", text: /Winter schedule notice/
   end
 
   test "signs in with correct credentials" do
