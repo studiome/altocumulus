@@ -1,5 +1,7 @@
 class SessionsController < ApplicationController
   skip_before_action :require_login, only: %i[ new create ]
+  # Both the form and the re-render after a failed sign-in show the notices.
+  before_action :load_announcements, only: %i[ new create ]
 
   def new
   end
@@ -42,6 +44,10 @@ class SessionsController < ApplicationController
   end
 
   private
+
+  def load_announcements
+    @announcements = Announcement.published.recent_first
+  end
 
   def session_params
     params.fetch(:session, {})

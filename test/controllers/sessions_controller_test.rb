@@ -15,6 +15,30 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "the login page shows published announcements but not drafts" do
+    get login_url
+
+    assert_response :success
+    assert_select ".announcement h3", text: "Winter schedule notice"
+    assert_select ".announcement p", text: /year-end closure/
+    assert_select ".announcement h3", text: "Draft: new ward opening", count: 0
+  end
+
+  test "the login page shows no announcement area when none are published" do
+    Announcement.update_all(published: false)
+
+    get login_url
+
+    assert_select ".announcement", 0
+  end
+
+  test "announcements are still shown when a failed sign-in re-renders the form" do
+    post login_url, params: { session: { login_id: users(:admin).login_id, password: "wrong-password" } }
+
+    assert_response :unprocessable_entity
+    assert_select ".announcement h3", text: "Winter schedule notice"
+  end
+
   test "signs in with correct credentials" do
     sign_in_as(users(:admin))
     assert_redirected_to root_url

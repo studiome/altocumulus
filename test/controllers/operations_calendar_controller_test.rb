@@ -35,11 +35,10 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     assert_select ".oc-day", 10
   end
 
-  test "shows a published announcement but not a draft one" do
+  test "announcements are shown on the login page, not on the calendar" do
     get operations_calendar_url
     assert_response :success
-    assert_match(/Winter schedule notice/, @response.body)
-    assert_no_match(/Draft: new ward opening/, @response.body)
+    assert_no_match(/Winter schedule notice/, @response.body)
   end
 
   test "each day links to a new hospitalization pre-filled with that scheduled admission date" do

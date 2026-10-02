@@ -1120,7 +1120,7 @@ ja:
       form:
         errors_heading:
           other: "%{count}件のエラーによりこのお知らせを保存できませんでした:"
-        published_helper: "公開されたお知らせのみ、運用カレンダーに表示されます。"
+        published_helper: "公開されたお知らせのみ、サインイン画面に表示されます。"
       create:
         success_notice: "お知らせを作成しました。"
       update:

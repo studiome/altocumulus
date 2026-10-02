@@ -1,6 +1,6 @@
 # Backs the operations calendar screen: a day-by-day view of elective slot
-# usage, admission load, holidays/comments and announcements, spanning a
-# configurable date range.
+# usage, admission load and holidays/comments, spanning a configurable date
+# range.
 #
 # Modeled after LedgerStatistics and ElectiveSlotUsage: a plain object built
 # once per request that resolves everything it needs up front in a fixed
@@ -15,7 +15,7 @@ class OperationsCalendar
   InvalidRangeError = Class.new(StandardError)
 
   attr_reader :start_date, :days, :dates, :slot_usages, :admission_counts,
-              :announcements, :admission_warning_threshold
+              :admission_warning_threshold
 
   # Parses the raw (and possibly invalid or crafted) request params into a
   # valid range before building the calendar, so a bad `start` or `days`
@@ -34,10 +34,6 @@ class OperationsCalendar
 
     @slot_usages = ElectiveSlotUsage.for_dates(@dates)
     @admission_counts = build_admission_counts
-
-    @announcements = Announcement.published.recent_first
-
-    load_lazy_associations!
   end
 
   def admission_count_for(date)
@@ -93,12 +89,5 @@ class OperationsCalendar
                                .count
 
       counts.transform_keys { |date| date.is_a?(Date) ? date : Date.parse(date.to_s) }
-    end
-
-    # Forces the announcements relation to execute now, so the total query
-    # count for one OperationsCalendar is fixed at construction time and does
-    # not depend on how many times the view happens to iterate it.
-    def load_lazy_associations!
-      announcements.load
     end
 end

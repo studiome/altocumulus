@@ -1216,7 +1216,7 @@ en:
         errors_heading:
           one: "%{count} error prohibited this announcement from being saved:"
           other: "%{count} errors prohibited this announcement from being saved:"
-        published_helper: "Only published announcements are visible on the operations calendar."
+        published_helper: "Only published announcements are shown on the sign-in page."
       create:
         success_notice: "Announcement was successfully created."
       update:

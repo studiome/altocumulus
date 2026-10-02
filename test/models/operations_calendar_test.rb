@@ -151,12 +151,6 @@ class OperationsCalendarTest < ActiveSupport::TestCase
     assert_equal 0, calendar.admission_count_for(date)
   end
 
-  test "announcements only include published ones" do
-    calendar = OperationsCalendar.build
-    assert_includes calendar.announcements, announcements(:published_one)
-    assert_not_includes calendar.announcements, announcements(:draft_one)
-  end
-
   test "issues a fixed number of queries regardless of the number of days" do
     small_count = count_queries { OperationsCalendar.build(days: 10) }
     large_count = count_queries { OperationsCalendar.build(days: 100) }
