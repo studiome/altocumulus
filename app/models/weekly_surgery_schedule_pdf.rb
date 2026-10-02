@@ -13,8 +13,8 @@ class WeeklySurgerySchedulePdf
   # Fixed widths for every column but the last, which takes whatever is left of
   # the printable width (A4 is 841.89pt wide, so a hard-coded total would be off
   # by a fraction of a point and Prawn refuses a table wider than the page).
-  FIXED_COLUMN_WIDTHS = [ 44, 34, 120, 150, 196, 46, 70 ].freeze
-  COLUMN_KEYS = %i[time slot patient diagnosis procedure duration anesthesia category].freeze
+  FIXED_COLUMN_WIDTHS = [ 44, 34, 108, 130, 168, 80, 46, 66 ].freeze
+  COLUMN_KEYS = %i[time slot patient diagnosis procedure operator duration anesthesia category].freeze
 
   HEAD_COLOR = "DFE3F2".freeze
   DAY_COLOR = "E8E8F0".freeze
@@ -117,11 +117,17 @@ class WeeklySurgerySchedulePdf
         "#{surgery.patient.hospital_id}\n#{surgery.patient.name.presence || I18n.t('surgery_schedules.labels.unknown_patient_name', id: surgery.patient_id)}",
         surgery.diagnosis_names_display,
         surgery.display_procedure_name,
+        operator_text(surgery),
         surgery.duration_minutes ? I18n.t("surgery_schedules.slot_surgery.duration_minutes_value", minutes: surgery.duration_minutes) : "-",
         surgery.anesthesia_method.to_s,
         category_text(surgery)
       ]
       surgery.emergency? ? cells.map { |content| { content: content, background_color: EMERGENCY_COLOR } } : cells
+    end
+
+    # Operator over assistant, mirroring the stacked cell on the surgery list.
+    def operator_text(surgery)
+      [ surgery.operator_name.presence || "-", surgery.assistant_name.presence ].compact.join("\n")
     end
 
     def category_text(surgery)

@@ -1023,6 +1023,7 @@ ja:
         patient: "患者"
         diagnosis: "診断名"
         procedure: "術式"
+        operator: "術者 / 助手"
         duration: "手術時間"
         anesthesia: "麻酔"
         category: "区分"

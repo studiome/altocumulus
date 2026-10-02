@@ -1076,6 +1076,7 @@ en:
         patient: "Patient"
         diagnosis: "Diagnosis"
         procedure: "Procedure"
+        operator: "Operator / Assistant"
         duration: "Duration"
         anesthesia: "Anesthesia"
         category: "Type"

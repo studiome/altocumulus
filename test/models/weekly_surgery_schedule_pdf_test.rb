@@ -37,6 +37,16 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     assert_includes text, surgeries(:three).display_procedure_name
   end
 
+  test "shows the operator and assistant under an Operator column" do
+    surgeries(:three).update!(operator_name: "Dr. Operator", assistant_name: "Dr. Assistant")
+
+    text = render_text(Date.new(2026, 3, 1))
+
+    assert_includes text, "Operator"
+    assert_includes text, "Dr. Operator"
+    assert_includes text, "Dr. Assistant"
+  end
+
   test "leaves out surgeries dated outside the week" do
     outside = surgeries(:one).dup
     outside.surgery_date = Date.new(2026, 3, 20)
