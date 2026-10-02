@@ -41,6 +41,11 @@ gem "kamal", require: false
 # Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
 gem "thruster", require: false
 
+# Server-side PDF generation (weekly surgery schedule). Prawn needs a TTF with
+# Japanese glyphs; IPAex Gothic ships in vendor/fonts.
+gem "prawn"
+gem "prawn-table"
+
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 2.1"
 gem "nokogiri", ">= 1.19.3"
@@ -68,6 +73,9 @@ group :development do
 end
 
 group :test do
+  # Reads generated PDFs back so tests can assert on their text and page size
+  gem "pdf-reader"
+
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
