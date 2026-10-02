@@ -15,6 +15,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # request-test version).
   def sign_in_as(user, password: SignInHelper::DEFAULT_PASSWORD)
     visit login_path
+    switch_to_english
     fill_in "Email", with: user.login_id
     fill_in "Password", with: password
     click_button "Sign In"
@@ -29,7 +30,28 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     assert_selector "form[action='#{logout_path}']", visible: :all, wait: 10
   end
 
+  # An anonymous visitor gets Japanese (ApplicationController's
+  # ANONYMOUS_DEFAULT_LOCALE), and the fixture users have no saved locale, so
+  # they would stay in Japanese after signing in too. The suite is written
+  # against the English copy, so pick English the way a visitor would: through
+  # the nav's language menu, which stores it in the session and survives the
+  # sign-in. Opened by its "言語" label because that is the Japanese page's.
+  # A no-op when the browser session already holds English (it can outlive a
+  # single test), so the page may open in either language.
+  def switch_to_english
+    return if page.has_button?("Sign In", wait: 0)
+
+    click_button "言語"
+    click_button "English"
+    assert_button "Sign In"
+  end
+
+  # The browser window outlives a single test, so a test that narrows it (e.g.
+  # the 375px navigation check) would otherwise leave every later test in the
+  # mobile layout, where the language menu sits behind the hamburger button.
+  # Start each test from the configured desktop size instead.
   setup do
+    page.driver.browser.manage.window.resize_to(1400, 1400)
     sign_in_as(users(:admin))
   end
 
