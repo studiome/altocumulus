@@ -25,6 +25,16 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index renders a ledger table with patient id and name stacked in one cell" do
+    get hospitalizations_url
+    assert_response :success
+    assert_select "table.app-ledger"
+    assert_select "table.app-ledger td.ledger-patient" do
+      assert_select ".ledger-primary"
+      assert_select ".ledger-secondary"
+    end
+  end
+
   test "index filters by keyword" do
     get hospitalizations_url, params: { keyword: "jane" }
     assert_response :success
@@ -112,7 +122,7 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     get hospitalizations_url
     assert_response :success
 
-    headers = Nokogiri::HTML(@response.body).css("thead th").map { |th| th.text.strip }
+    headers = Nokogiri::HTML(@response.body).css("thead th span").map { |span| span.text.strip }
     assert_includes headers, "Length of Stay"
     assert_not_includes headers, "LOS"
   end
@@ -579,17 +589,18 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
 
   private
 
-    # Reads the Length of Stay column from the index table for the row whose
-    # Reason cell matches `reason`. Looks up the column by the header's text
-    # rather than a hardcoded position, so reordering the table's columns
-    # doesn't silently break this helper.
+    # Reads the Length of Stay value from the index table for the row whose
+    # Reason (the secondary line of the diagnoses cell) matches `reason`.
+    # Looks up the column by the header's label rather than a hardcoded
+    # position, so reordering the table's columns doesn't silently break this
+    # helper. The cell stacks the value (primary) over the planned days.
     def length_of_stay_cell_for(html, reason)
       doc = Nokogiri::HTML(html)
-      headers = doc.css("table thead th").map { |th| th.text.strip }
-      column_index = headers.index("Length of Stay")
+      headers = doc.css("table thead th").map { |th| th.css("span").map { |s| s.text.strip } }
+      column_index = headers.index { |labels| labels.include?("Length of Stay") }
 
-      row = doc.css("table tbody tr").find { |tr| tr.css("td").any? { |td| td.text.strip == reason } }
-      row.css("td")[column_index].text.strip
+      row = doc.css("table tbody tr").find { |tr| tr.css("td .ledger-secondary").any? { |el| el.text.strip == reason } }
+      row.css("td")[column_index].at_css(".ledger-primary").text.strip
     end
 
     # Reads the Length of Stay value from the show page's field grid, found

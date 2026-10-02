@@ -15,6 +15,16 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index renders a ledger table with patient id and name stacked in one cell" do
+    get surgeries_url
+    assert_response :success
+    assert_select "table.app-ledger"
+    assert_select "table.app-ledger td.ledger-patient" do
+      assert_select ".ledger-primary"
+      assert_select ".ledger-secondary"
+    end
+  end
+
   test "index filters by keyword" do
     get surgeries_url, params: { keyword: "jane" }
     assert_response :success

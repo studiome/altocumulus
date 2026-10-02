@@ -59,46 +59,44 @@
 
   <div class="app-panel overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="table table-zebra w-full">
+      <table class="app-ledger">
         <thead>
           <tr>
-            <th class="bg-base-200"><%= t("surgeries.labels.surgery_date") %></th>
-            <th class="bg-base-200"><%= t(".type_label") %></th>
-            <th class="bg-base-200"><%= t("surgeries.labels.start_time") %></th>
-            <th class="bg-base-200"><%= t(".diagnosis_header") %></th>
-            <th class="bg-base-200"><%= t("surgeries.labels.procedures") %></th>
-            <th class="bg-base-200"><%= t("surgeries.labels.duration") %></th>
-            <th class="bg-base-200"><%= t("surgeries.labels.anesthesia") %></th>
-            <th class="bg-base-200"><%= Surgery.human_attribute_name(:patient_id) %></th>
-            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
+            <th><span class="block"><%= t("surgeries.labels.surgery_date") %></span><span class="block"><%= t("surgeries.labels.start_time") %></span></th>
+            <th><%= Surgery.human_attribute_name(:patient_id) %></th>
+            <th><span class="block"><%= t(".diagnosis_header") %></span><span class="block"><%= t("surgeries.labels.procedures") %></span></th>
+            <th><%= t(".type_label") %></th>
+            <th><span class="block"><%= t("surgeries.labels.duration") %></span><span class="block"><%= t("surgeries.labels.anesthesia") %></span></th>
+            <th class="text-center"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>
           <% if @surgeries.any? %>
             <% @surgeries.each do |surgery| %>
               <% slot_rule = @slot_rules[surgery.surgery_date&.wday] %>
-              <tr class="row-hover">
-                <td class="font-mono font-medium">
-                  <% if surgery.surgery_date %>
-                    <%= l(surgery.surgery_date, format: :default) %>
+              <tr class="row-hover <%= "ledger-row-urgent" if surgery.emergency? %>">
+                <td class="whitespace-nowrap">
+                  <span class="ledger-primary font-mono">
+                    <% if surgery.surgery_date %>
+                      <%= l(surgery.surgery_date, format: :default) %>
+                    <% else %>
+                      <span class="badge badge-ghost badge-sm"><%= t("models.surgery.surgery_date_display_undated") %></span>
+                    <% end %>
+                  </span>
+                  <span class="ledger-secondary font-mono"><%= surgery.start_time_display %></span>
+                </td>
+                <td class="ledger-patient">
+                  <% if surgery.patient %>
+                    <span class="ledger-secondary font-mono"><%= surgery.patient.hospital_id %></span>
+                    <%= link_to surgery.patient.name.presence || t("surgeries.labels.unknown_patient_name", id: surgery.patient_id), surgery.patient, class: "ledger-primary app-inline-link" %>
                   <% else %>
-                    <span class="badge badge-ghost badge-sm"><%= t("models.surgery.surgery_date_display_undated") %></span>
+                    <span class="ledger-secondary italic"><%= t("surgeries.labels.unknown_patient") %></span>
+                    <span class="ledger-primary"></span>
                   <% end %>
                 </td>
                 <td>
-                  <div class="flex flex-col gap-1 items-start">
-                    <span class="badge <%= surgery.emergency? ? "badge-error" : "badge-ghost" %>"><%= surgery.scheduling_type_label %></span>
-                    <% unless surgery.regular_slot? %>
-                      <span class="badge <%= surgery.slot_category_badge_class %> badge-xs whitespace-nowrap">
-                        <%= surgery.slot_category_label %><% if surgery.target_department.present? %>: <%= surgery.target_department %><% elsif surgery.location.present? %>: <%= surgery.location %><% end %>
-                      </span>
-                    <% end %>
-                  </div>
-                </td>
-                <td class="font-mono"><%= surgery.start_time_display %></td>
-                <td><%= surgery.diagnosis_names_display %></td>
-                <td>
-                  <div class="font-semibold leading-snug"><%= surgery.display_procedure_name %></div>
+                  <span class="ledger-secondary"><%= surgery.diagnosis_names_display %></span>
+                  <span class="ledger-primary leading-snug"><%= surgery.display_procedure_name %></span>
                   <% if surgery.elective? && surgery.regular_slot? %>
                     <% if surgery.slot_number %>
                       <span class="badge badge-ghost badge-sm mt-1">
@@ -113,26 +111,30 @@
                     <% end %>
                   <% end %>
                 </td>
-                <td><%= surgery.duration_hours.present? ? t("surgeries.labels.duration_value", hours: surgery.duration_hours) : t("common.none") %></td>
-                <td><%= surgery.anesthesia_method %></td>
                 <td>
-                  <% if surgery.patient %>
-                    <%= link_to surgery.patient.name.presence || t("surgeries.labels.unknown_patient_name", id: surgery.patient_id), surgery.patient, class: "link link-primary" %>
-                    <span class="text-base-content/50 text-sm font-mono ml-2"><%= surgery.patient.hospital_id %></span>
-                  <% else %>
-                    <span class="text-base-content/50 italic"><%= t("surgeries.labels.unknown_patient") %></span>
-                  <% end %>
+                  <div class="flex flex-col gap-1 items-start">
+                    <span class="badge badge-sm <%= surgery.emergency? ? "badge-error" : "badge-ghost" %>"><%= surgery.scheduling_type_label %></span>
+                    <% unless surgery.regular_slot? %>
+                      <span class="badge <%= surgery.slot_category_badge_class %> badge-xs whitespace-nowrap">
+                        <%= surgery.slot_category_label %><% if surgery.target_department.present? %>: <%= surgery.target_department %><% elsif surgery.location.present? %>: <%= surgery.location %><% end %>
+                      </span>
+                    <% end %>
+                  </div>
                 </td>
-                <td class="text-right flex justify-end gap-2">
-                  <%= link_to t("common.view"), surgery, class: "btn btn-ghost btn-xs text-primary" %>
-                  <%= link_to t("common.edit"), edit_surgery_path(surgery), class: "btn btn-ghost btn-xs text-secondary" %>
-                  <%= button_to t("common.delete"), surgery, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+                <td class="whitespace-nowrap">
+                  <span class="ledger-primary"><%= surgery.duration_hours.present? ? t("surgeries.labels.duration_value", hours: surgery.duration_hours) : t("common.none") %></span>
+                  <span class="ledger-secondary"><%= surgery.anesthesia_method %></span>
+                </td>
+                <td class="ledger-actions">
+                  <%= link_to t("common.view"), surgery, class: "app-inline-link" %>
+                  <%= link_to t("common.edit"), edit_surgery_path(surgery), class: "app-inline-link" %>
+                  <%= button_to t("common.delete"), surgery, method: :delete, class: "app-inline-link text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
                 </td>
               </tr>
             <% end %>
           <% else %>
             <tr>
-              <td colspan="10" class="text-center py-10 text-base-content/50 italic">
+              <td colspan="6" class="text-center py-10 text-base-content/50 italic">
                 <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type, :undated).any?(&:present?) %>
                   <%= t(".empty_filtered") %>
                 <% else %>

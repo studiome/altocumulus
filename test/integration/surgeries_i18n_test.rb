@@ -17,14 +17,14 @@ class SurgeriesI18nTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "手術"
     assert_select "a", text: "新規手術"
-    assert_select "th", text: "手術日"
-    assert_select "th", text: "開始時刻"
-    assert_select "th", text: "診断名"
-    assert_select "th", text: "術式"
-    assert_select "th", text: "手術時間"
-    assert_select "th", text: "麻酔"
-    assert_select "th", text: "患者"
-    assert_select "th", text: "操作"
+    assert_select "th, th span", text: "手術日"
+    assert_select "th, th span", text: "開始時刻"
+    assert_select "th, th span", text: "診断名"
+    assert_select "th, th span", text: "術式"
+    assert_select "th, th span", text: "手術時間"
+    assert_select "th, th span", text: "麻酔"
+    assert_select "th, th span", text: "患者"
+    assert_select "th, th span", text: "操作"
     assert_no_match(/[Tt]ranslation missing/, response.body)
   end
 
@@ -36,12 +36,12 @@ class SurgeriesI18nTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "Surgeries"
     assert_select "a", text: "New Surgery"
-    assert_select "th", text: "Surgery Date"
-    assert_select "th", text: "Start Time"
-    assert_select "th", text: "Duration"
-    assert_select "th", text: "Anesthesia"
-    assert_select "th", text: "Patient"
-    assert_select "th", text: "Actions"
+    assert_select "th, th span", text: "Surgery Date"
+    assert_select "th, th span", text: "Start Time"
+    assert_select "th, th span", text: "Duration"
+    assert_select "th, th span", text: "Anesthesia"
+    assert_select "th, th span", text: "Patient"
+    assert_select "th, th span", text: "Actions"
     assert_no_match(/手術/, response.body)
   end
 

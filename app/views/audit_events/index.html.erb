@@ -40,12 +40,12 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200"><%= t("audit_events.labels.time") %></th>
-            <th class="bg-base-200"><%= t("audit_events.labels.record_type") %></th>
-            <th class="bg-base-200"><%= AuditEvent.human_attribute_name(:action) %></th>
-            <th class="bg-base-200"><%= t(".record_header") %></th>
-            <th class="bg-base-200"><%= t("audit_events.labels.operator") %></th>
-            <th class="bg-base-200 text-right"><%= t(".details_link") %></th>
+            <th><%= t("audit_events.labels.time") %></th>
+            <th><%= t("audit_events.labels.record_type") %></th>
+            <th><%= AuditEvent.human_attribute_name(:action) %></th>
+            <th><%= t(".record_header") %></th>
+            <th><%= t("audit_events.labels.operator") %></th>
+            <th class="text-right"><%= t(".details_link") %></th>
           </tr>
         </thead>
         <tbody>

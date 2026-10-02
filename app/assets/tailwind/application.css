@@ -4,41 +4,100 @@
   exclude: calendar;
 }
 
+/* Look and feel: dense "ledger" style (navy bar, lavender table headers, small
+   type, square corners). daisyUI's corporate/business themes stay as the base
+   so every component keeps working; only their tokens are overridden here.
+   Unlayered on purpose: it must win over daisyUI's layered theme rules, in
+   light and in dark (prefers-color-scheme) mode. */
+html {
+  font-size: 13px;
+}
+
+:root {
+  --font-sans: "Meiryo", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "MS PGothic", sans-serif;
+  --radius-selector: 0.125rem;
+  --radius-field: 0.125rem;
+  --radius-box: 0.25rem;
+  --color-base-100: #fff;
+  --color-base-200: #f2f2f7;
+  --color-base-300: #d3d7ea;
+  --color-base-content: #111133;
+  --color-primary: #000080;
+  --color-primary-content: #fff;
+  --color-secondary: #3a55c8;
+  --color-secondary-content: #fff;
+  --color-error: #cc0000;
+  --color-error-content: #fff;
+  --app-bar-bg: #000080;
+  --app-bar-fg: #fff;
+  --app-link: #0000cc;
+  --ledger-head: #dfe3f2;
+  --ledger-line: #8a8ac0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-base-100: #14152e;
+    --color-base-200: #0e0f22;
+    --color-base-300: #2b2e58;
+    --color-base-content: #e4e6f7;
+    --color-primary: #9aa5ff;
+    --color-primary-content: #0a0a2a;
+    --color-secondary: #7f93ff;
+    --color-secondary-content: #0a0a2a;
+    --color-error: #ff6b6b;
+    --color-error-content: #2a0a0a;
+    --app-bar-bg: #1b1d52;
+    --app-bar-fg: #fff;
+    --app-link: #9aa5ff;
+    --ledger-head: #23265a;
+    --ledger-line: #4a4f90;
+  }
+}
+
 @layer components {
   .app-shell {
     @apply min-h-screen bg-base-200 text-base-content;
   }
 
   .app-navbar {
-    @apply navbar relative z-50 border-b border-base-300 bg-base-100/90 px-4 shadow-sm backdrop-blur sm:px-8;
+    @apply navbar relative z-50 min-h-0 border-b border-base-300 px-3 py-1 sm:px-6;
+    background-color: var(--app-bar-bg);
+    color: var(--app-bar-fg);
+  }
+
+  /* The bar is dark in both modes, but its dropdown panels are light/dark
+     surfaces of their own, so they must not inherit the bar's white text. */
+  .app-navbar .dropdown-content {
+    @apply text-base-content;
   }
 
   .app-main {
-    @apply mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-[96rem] flex-1 px-3 py-4 sm:px-4 lg:px-6;
   }
 
   .app-page {
-    @apply space-y-6;
+    @apply space-y-3;
   }
 
   .app-page-header {
-    @apply hero rounded-box border border-base-300 bg-base-100 shadow-sm;
+    @apply rounded-box border border-base-300 bg-base-200;
   }
 
   .app-page-header-body {
-    @apply hero-content w-full max-w-none flex-col gap-4 px-6 py-8 sm:flex-row sm:items-end sm:justify-between;
+    @apply flex w-full flex-col gap-2 px-4 py-2 sm:flex-row sm:items-center sm:justify-between;
   }
 
   .app-page-title {
-    @apply text-3xl font-bold tracking-normal sm:text-4xl;
+    @apply text-lg font-bold tracking-normal;
   }
 
   .app-page-kicker {
-    @apply text-sm font-medium uppercase tracking-wide text-primary;
+    @apply text-xs font-medium uppercase tracking-wide text-primary;
   }
 
   .app-panel {
-    @apply card border border-base-200 bg-base-100 shadow-xl print:break-inside-avoid print:shadow-none;
+    @apply card rounded-box border border-base-300 bg-base-100 print:break-inside-avoid;
   }
 
   .app-panel-body {
@@ -64,7 +123,7 @@
   /* daisyUI 5 removed .form-control/.label-text, and .app-panel is a .card,
      which pins flex-direction: column. Filter bars need their own row layout. */
   .app-filter-bar {
-    @apply flex flex-wrap items-end gap-3 rounded-box border border-base-200 bg-base-100 p-4 shadow-xl;
+    @apply flex flex-wrap items-end gap-2 rounded-box border border-base-300 bg-base-200 p-2;
   }
 
   .app-filter-field {
@@ -80,6 +139,57 @@
   }
 
   .app-inline-link {
-    @apply link link-primary no-underline hover:underline;
+    @apply link underline;
+    color: var(--app-link);
+  }
+
+  /* Dense bordered table shared by every list screen. Header cells are
+     lavender, grid lines are visible, and related values are stacked inside
+     one cell (.ledger-primary over .ledger-secondary) instead of each getting
+     its own column. */
+  .app-ledger,
+  .app-panel .table {
+    @apply w-full border-collapse text-xs;
+  }
+
+  .app-ledger thead th,
+  .app-panel .table thead th {
+    @apply whitespace-nowrap px-1.5 py-1 font-bold text-primary;
+    background-color: var(--ledger-head);
+    border: 1px solid var(--ledger-line);
+  }
+
+  .app-ledger td,
+  .app-panel .table td {
+    @apply px-1.5 py-1 align-top;
+    border: 1px solid var(--ledger-line);
+  }
+
+  .app-ledger tbody tr:nth-child(even) td {
+    background-color: color-mix(in oklab, var(--color-base-200) 60%, var(--color-base-100));
+  }
+
+  .app-ledger tbody tr.ledger-row-active td {
+    background-color: color-mix(in oklab, var(--color-success) 22%, var(--color-base-100));
+  }
+
+  .app-ledger tbody tr.ledger-row-urgent td {
+    background-color: color-mix(in oklab, var(--color-error) 14%, var(--color-base-100));
+  }
+
+  .ledger-primary {
+    @apply block font-semibold;
+  }
+
+  .ledger-secondary {
+    @apply block text-base-content/80;
+  }
+
+  .ledger-actions {
+    @apply whitespace-nowrap text-center;
+  }
+
+  .ledger-actions form {
+    @apply inline;
   }
 }

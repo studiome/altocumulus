@@ -20,9 +20,9 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200"><%= PatientDiagnosis.human_attribute_name(:diagnosis_id) %></th>
-            <th class="bg-base-200"><%= t("patient_diagnoses.labels.diagnosed_on") %></th>
-            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
+            <th><%= PatientDiagnosis.human_attribute_name(:diagnosis_id) %></th>
+            <th><%= t("patient_diagnoses.labels.diagnosed_on") %></th>
+            <th class="text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>

@@ -27,12 +27,12 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200"><%= t("patients.labels.hospital_id") %></th>
-            <th class="bg-base-200"><%= Patient.human_attribute_name(:name) %></th>
+            <th><%= t("patients.labels.hospital_id") %></th>
+            <th><%= Patient.human_attribute_name(:name) %></th>
             <% @case_database.fields.each do |field| %>
-              <th class="bg-base-200"><%= field.label %></th>
+              <th><%= field.label %></th>
             <% end %>
-            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
+            <th class="text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>

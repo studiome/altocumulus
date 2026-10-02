@@ -17,15 +17,15 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="bg-base-200"><%= t("hospitalizations.labels.reservation_status") %></th>
-            <th class="bg-base-200"><%= Hospitalization.human_attribute_name(:purpose) %></th>
-            <th class="bg-base-200"><%= t("hospitalizations.labels.diagnoses_header") %></th>
-            <th class="bg-base-200"><%= t("hospitalizations.labels.admission_date_header") %></th>
-            <th class="bg-base-200"><%= Hospitalization.human_attribute_name(:reason) %></th>
-            <th class="bg-base-200"><%= t("hospitalizations.labels.patient_id") %></th>
-            <th class="bg-base-200"><%= Hospitalization.human_attribute_name(:patient_id) %></th>
-            <th class="bg-base-200"><%= t(".deleted_at_header") %></th>
-            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
+            <th><%= t("hospitalizations.labels.reservation_status") %></th>
+            <th><%= Hospitalization.human_attribute_name(:purpose) %></th>
+            <th><%= t("hospitalizations.labels.diagnoses_header") %></th>
+            <th><%= t("hospitalizations.labels.admission_date_header") %></th>
+            <th><%= Hospitalization.human_attribute_name(:reason) %></th>
+            <th><%= t("hospitalizations.labels.patient_id") %></th>
+            <th><%= Hospitalization.human_attribute_name(:patient_id) %></th>
+            <th><%= t(".deleted_at_header") %></th>
+            <th class="text-right"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>

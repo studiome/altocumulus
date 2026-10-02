@@ -25,7 +25,7 @@
   <div class="app-panel overflow-hidden">
     <div class="overflow-x-auto">
       <table class="table table-zebra w-full">
-        <thead><tr><th class="bg-base-200"><%= t("common.field_header") %></th><th class="bg-base-200"><%= t("common.before_header") %></th><th class="bg-base-200"><%= t("common.after_header") %></th></tr></thead>
+        <thead><tr><th><%= t("common.field_header") %></th><th><%= t("common.before_header") %></th><th><%= t("common.after_header") %></th></tr></thead>
         <tbody>
           <% change_rows = audit_change_rows(@audit_event) %>
           <% if change_rows.any? %>

@@ -49,75 +49,77 @@
 
   <div class="app-panel overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="table table-zebra w-full">
+      <table class="app-ledger">
         <thead>
           <tr>
-            <th class="bg-base-200"><%= t(".status_filter_label") %></th>
-            <th class="bg-base-200"><%= t("hospitalizations.labels.reservation_status") %></th>
-            <th class="bg-base-200"><%= Hospitalization.human_attribute_name(:purpose) %></th>
-            <th class="bg-base-200"><%= t(".admin_status_header") %></th>
-            <th class="bg-base-200"><%= t("hospitalizations.labels.diagnoses_header") %></th>
-            <th class="bg-base-200"><%= t("hospitalizations.labels.admission_date_header") %></th>
-            <th class="bg-base-200"><%= t("hospitalizations.labels.discharge_date") %></th>
-            <th class="bg-base-200"><%= t("hospitalizations.labels.length_of_stay") %></th>
-            <th class="bg-base-200"><%= t(".planned_days_header") %></th>
-            <th class="bg-base-200"><%= Hospitalization.human_attribute_name(:reason) %></th>
-            <th class="bg-base-200"><%= t("hospitalizations.labels.preferred_room") %></th>
-            <th class="bg-base-200"><%= t("hospitalizations.labels.patient_id") %></th>
-            <th class="bg-base-200"><%= t(".patient_name_header") %></th>
-            <th class="bg-base-200 text-right"><%= t("common.actions") %></th>
+            <th><span class="block"><%= t(".status_filter_label") %></span><span class="block"><%= t(".admin_status_header") %></span></th>
+            <th><span class="block"><%= t("hospitalizations.labels.admission_date_header") %></span><span class="block"><%= t("hospitalizations.labels.discharge_date") %></span></th>
+            <th><span class="block"><%= t("hospitalizations.labels.patient_id") %></span><span class="block"><%= t(".patient_name_header") %></span></th>
+            <th><span class="block"><%= t("hospitalizations.labels.diagnoses_header") %></span><span class="block"><%= Hospitalization.human_attribute_name(:reason) %></span></th>
+            <th><span class="block"><%= Hospitalization.human_attribute_name(:purpose) %></span><span class="block"><%= t("hospitalizations.labels.reservation_status") %></span></th>
+            <th><span class="block"><%= t("hospitalizations.labels.length_of_stay") %></span><span class="block"><%= t(".planned_days_header") %></span></th>
+            <th><%= t("hospitalizations.labels.preferred_room") %></th>
+            <th class="text-center"><%= t("common.actions") %></th>
           </tr>
         </thead>
         <tbody>
           <% if @hospitalizations.any? %>
             <% @hospitalizations.each do |hospitalization| %>
-              <tr class="row-hover">
+              <tr class="row-hover <%= "ledger-row-active" if hospitalization.in_hospital? %>">
                 <td>
-                  <span class="badge <%= hospitalization.in_hospital? ? "badge-warning" : "badge-ghost" %>">
-                    <%= hospitalization.status_label %>
+                  <div class="flex flex-col gap-1 items-start">
+                    <span class="badge badge-sm <%= hospitalization.in_hospital? ? "badge-warning" : "badge-ghost" %>">
+                      <%= hospitalization.status_label %>
+                    </span>
+                    <span class="badge badge-sm <%= hospitalization.admin_status == "confirmed" ? "badge-success" : "badge-ghost" %>">
+                      <%= Hospitalization.admin_status_options[hospitalization.admin_status] %>
+                    </span>
+                  </div>
+                </td>
+                <td class="whitespace-nowrap font-mono">
+                  <span class="ledger-primary">
+                    <% if hospitalization.admission_date.present? %>
+                      <%= l(hospitalization.admission_date, format: :default) %>
+                    <% elsif hospitalization.scheduled_admission_date.present? %>
+                      <%= l(hospitalization.scheduled_admission_date, format: :default) %> <span class="text-base-content/50 italic font-sans"><%= t(".scheduled_suffix") %></span>
+                    <% else %>
+                      -
+                    <% end %>
                   </span>
+                  <span class="ledger-secondary"><%= hospitalization.discharge_date ? l(hospitalization.discharge_date, format: :default) : "-" %></span>
                 </td>
-                <td><%= Hospitalization.reservation_status_options[hospitalization.reservation_status] %></td>
-                <td><%= Hospitalization.purpose_options[hospitalization.purpose] %></td>
-                <td>
-                  <span class="badge <%= hospitalization.admin_status == "confirmed" ? "badge-success" : "badge-ghost" %>">
-                    <%= Hospitalization.admin_status_options[hospitalization.admin_status] %>
-                  </span>
-                </td>
-                <td><%= hospitalization.diagnosis_names_display %></td>
-                <td class="font-mono font-medium">
-                  <% if hospitalization.admission_date.present? %>
-                    <%= l(hospitalization.admission_date, format: :default) %>
-                  <% elsif hospitalization.scheduled_admission_date.present? %>
-                    <%= l(hospitalization.scheduled_admission_date, format: :default) %> <span class="text-base-content/50 italic"><%= t(".scheduled_suffix") %></span>
-                  <% else %>
-                    -
-                  <% end %>
-                </td>
-                <td class="font-mono"><%= hospitalization.discharge_date ? l(hospitalization.discharge_date, format: :default) : "-" %></td>
-                <td class="whitespace-nowrap"><%= length_of_stay_display(hospitalization) %></td>
-                <td><%= hospitalization.planned_days.present? ? t("hospitalizations.labels.planned_days_value", count: hospitalization.planned_days) : "-" %></td>
-                <td><%= hospitalization.reason %></td>
-                <td><%= hospitalization.room_preference.presence || t("common.none") %></td>
-                <td class="font-mono"><%= hospitalization.patient_id %></td>
-                <td>
+                <td class="ledger-patient">
                   <% if hospitalization.patient %>
-                    <%= link_to hospitalization.patient.name.presence || t("hospitalizations.labels.unknown_patient_name", id: hospitalization.patient_id), hospitalization.patient, class: "link link-primary" %>
-                    <span class="text-base-content/50 text-sm font-mono ml-2"><%= hospitalization.patient.hospital_id %></span>
+                    <span class="ledger-secondary font-mono"><%= hospitalization.patient.hospital_id %></span>
+                    <%= link_to hospitalization.patient.name.presence || t("hospitalizations.labels.unknown_patient_name", id: hospitalization.patient_id), hospitalization.patient, class: "ledger-primary app-inline-link" %>
                   <% else %>
-                    <span class="text-base-content/50 italic"><%= t("hospitalizations.labels.unknown_patient") %></span>
+                    <span class="ledger-secondary italic"><%= t("hospitalizations.labels.unknown_patient") %></span>
+                    <span class="ledger-primary"></span>
                   <% end %>
                 </td>
-                <td class="text-right flex justify-end gap-2">
-                  <%= link_to t("common.view"), hospitalization, class: "btn btn-ghost btn-xs text-primary" %>
-                  <%= link_to t("common.edit"), edit_hospitalization_path(hospitalization), class: "btn btn-ghost btn-xs text-secondary" %>
-                  <%= button_to t("common.delete"), hospitalization, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+                <td>
+                  <span class="ledger-primary"><%= hospitalization.diagnosis_names_display %></span>
+                  <span class="ledger-secondary"><%= hospitalization.reason %></span>
+                </td>
+                <td>
+                  <span class="ledger-primary"><%= Hospitalization.purpose_options[hospitalization.purpose] %></span>
+                  <span class="ledger-secondary"><%= Hospitalization.reservation_status_options[hospitalization.reservation_status] %></span>
+                </td>
+                <td class="whitespace-nowrap">
+                  <span class="ledger-primary"><%= length_of_stay_display(hospitalization) %></span>
+                  <span class="ledger-secondary"><%= hospitalization.planned_days.present? ? t("hospitalizations.labels.planned_days_value", count: hospitalization.planned_days) : "-" %></span>
+                </td>
+                <td><%= hospitalization.room_preference.presence || t("common.none") %></td>
+                <td class="ledger-actions">
+                  <%= link_to t("common.view"), hospitalization, class: "app-inline-link" %>
+                  <%= link_to t("common.edit"), edit_hospitalization_path(hospitalization), class: "app-inline-link" %>
+                  <%= button_to t("common.delete"), hospitalization, method: :delete, class: "app-inline-link text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
                 </td>
               </tr>
             <% end %>
           <% else %>
             <tr>
-              <td colspan="14" class="text-center py-10 text-base-content/50 italic">
+              <td colspan="8" class="text-center py-10 text-base-content/50 italic">
                 <% if params.values_at(:keyword, :diagnosis_id, :status, :admitted_from, :admitted_to).any?(&:present?) %>
                   <%= t(".empty_filtered") %>
                 <% else %>

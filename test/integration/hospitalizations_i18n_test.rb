@@ -18,13 +18,13 @@ class HospitalizationsI18nTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "入院"
     assert_select "a", text: "新規入院"
-    assert_select "th", text: "予約ステータス"
-    assert_select "th", text: "入院日"
-    assert_select "th", text: "退院日"
-    assert_select "th", text: "入院日数"
-    assert_select "th", text: "希望病室"
-    assert_select "th", text: "患者ID"
-    assert_select "th", text: "操作"
+    assert_select "th, th span", text: "予約ステータス"
+    assert_select "th, th span", text: "入院日"
+    assert_select "th, th span", text: "退院日"
+    assert_select "th, th span", text: "入院日数"
+    assert_select "th, th span", text: "希望病室"
+    assert_select "th, th span", text: "患者ID"
+    assert_select "th, th span", text: "操作"
     assert_no_match(/[Tt]ranslation missing/, response.body)
   end
 
@@ -36,13 +36,13 @@ class HospitalizationsI18nTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "Hospitalizations"
     assert_select "a", text: "New Hospitalization"
-    assert_select "th", text: "Reservation Status"
-    assert_select "th", text: "Admission Date"
-    assert_select "th", text: "Discharge Date"
-    assert_select "th", text: "Length of Stay"
-    assert_select "th", text: "Preferred Room"
-    assert_select "th", text: "Patient ID"
-    assert_select "th", text: "Actions"
+    assert_select "th, th span", text: "Reservation Status"
+    assert_select "th, th span", text: "Admission Date"
+    assert_select "th, th span", text: "Discharge Date"
+    assert_select "th, th span", text: "Length of Stay"
+    assert_select "th, th span", text: "Preferred Room"
+    assert_select "th, th span", text: "Patient ID"
+    assert_select "th, th span", text: "Actions"
     assert_no_match(/入院/, response.body)
   end
 
@@ -155,7 +155,7 @@ class HospitalizationsI18nTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", text: "削除済み入院一覧"
-    assert_select "th", text: "削除日時"
+    assert_select "th, th span", text: "削除日時"
     assert_select "a", text: "詳細"
     assert_select "button", text: "復元"
     assert_no_match(/[Tt]ranslation missing/, response.body)
@@ -169,7 +169,7 @@ class HospitalizationsI18nTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", text: "Deleted Hospitalizations"
-    assert_select "th", text: "Deleted At"
+    assert_select "th, th span", text: "Deleted At"
     assert_select "button", text: "Restore"
   end
 
