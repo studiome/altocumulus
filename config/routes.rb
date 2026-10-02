@@ -61,6 +61,7 @@ Rails.application.routes.draw do
   resources :holidays
   resources :audit_events, only: %i[ index show ]
   get "surgery_schedule" => "surgery_schedules#index", as: :surgery_schedule
+  get "surgery_schedule/pdf" => "surgery_schedules#pdf", as: :surgery_schedule_pdf
   get "operations_calendar" => "operations_calendar#index", as: :operations_calendar
   get "dashboard" => "dashboard#index"
   get "search" => "searches#index", as: :search

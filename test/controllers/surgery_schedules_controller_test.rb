@@ -155,4 +155,48 @@ class SurgerySchedulesControllerTest < ActionDispatch::IntegrationTest
         surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
       )
     end
+
+  test "pdf returns an inline PDF named after the start date" do
+    get surgery_schedule_pdf_url, params: { start_date: "2026-03-03" }
+
+    assert_response :success
+    assert_equal "application/pdf", response.media_type
+    assert_match(/\Ainline;.*surgery_schedule_2026-03-03\.pdf/, response.headers["Content-Disposition"])
+    assert response.body.start_with?("%PDF")
+  end
+
+  test "pdf starts on the given date even when it is not a Monday" do
+    get surgery_schedule_pdf_url, params: { start_date: "2026-03-04" }
+
+    text = PDF::Reader.new(StringIO.new(response.body)).pages.map(&:text).join
+    assert_match(/2026-03-04/, text)
+    assert_match(/2026-03-10/, text)
+    assert_no_match(/2026-03-03/, text)
+  end
+
+  test "pdf falls back to today when start_date is missing or invalid" do
+    travel_to Date.new(2026, 3, 4) do
+      [ {}, { start_date: "nonsense" }, { start_date: [ "2026-03-01" ] } ].each do |params|
+        get surgery_schedule_pdf_url, params: params
+
+        assert_response :success
+        assert_match(/surgery_schedule_2026-03-04\.pdf/, response.headers["Content-Disposition"])
+      end
+    end
+  end
+
+  test "pdf requires login" do
+    delete logout_url
+
+    get surgery_schedule_pdf_url
+    assert_redirected_to login_url
+  end
+
+  test "index offers a start date form that targets the pdf" do
+    get surgery_schedule_url
+
+    assert_select "form[action=?][method=get]", surgery_schedule_pdf_path do
+      assert_select "input[type=date][name=start_date]"
+    end
+  end
 end

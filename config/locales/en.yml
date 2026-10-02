@@ -1062,6 +1062,23 @@ en:
       off_slot_heading: "Off-slot (Cath Lab, Procedure Room)"
       no_slot_available: "No slot available"
       no_emergency_surgeries: "None"
+      pdf_start_date_label: "PDF start date"
+      pdf_button: "Download PDF (landscape)"
+    pdf:
+      title: "Weekly Surgery Schedule"
+      period: "%{from} - %{to}"
+      printed_at: "Printed %{time}"
+      day_count: "%{count} case(s)"
+      no_surgeries: "No surgeries scheduled"
+      columns:
+        time: "Time"
+        slot: "Slot"
+        patient: "Patient"
+        diagnosis: "Diagnosis"
+        procedure: "Procedure"
+        duration: "Duration"
+        anesthesia: "Anesthesia"
+        category: "Type"
     slot_surgery:
       duration_minutes_value: "%{minutes} min"
     # Shared between index.html.erb's emergency-surgeries loop and the

@@ -11,7 +11,14 @@
           <%= t(".week_of", date: l(@week_start, format: :long)) %>
         </p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
+        <%# A plain (non-Turbo) GET opened in a new tab: the response is a PDF,
+            which Turbo cannot render into the page. %>
+        <%= form_with url: surgery_schedule_pdf_path, method: :get, local: true, class: "flex items-center gap-1", data: { turbo: false }, html: { target: "_blank" } do |f| %>
+          <%= f.label :start_date, t(".pdf_start_date_label"), class: "text-xs font-semibold whitespace-nowrap" %>
+          <%= f.date_field :start_date, value: @week_start, class: "input input-sm" %>
+          <%= f.submit t(".pdf_button"), class: "btn btn-sm btn-primary" %>
+        <% end %>
         <%= link_to t(".prev_week_link"), surgery_schedule_path(week_of: @previous_week), class: "btn btn-sm" %>
         <%= link_to t(".this_week_link"), surgery_schedule_path, class: "btn btn-sm btn-ghost" %>
         <%= link_to t(".next_week_link"), surgery_schedule_path(week_of: @next_week), class: "btn btn-sm" %>

@@ -1009,6 +1009,23 @@ ja:
       off_slot_heading: "別室・枠外(カテ室・処置室等)"
       no_slot_available: "利用可能な枠なし"
       no_emergency_surgeries: "なし"
+      pdf_start_date_label: "PDF開始日"
+      pdf_button: "PDF出力(横向き)"
+    pdf:
+      title: "週間手術予定表"
+      period: "%{from} ~ %{to}"
+      printed_at: "出力日時 %{time}"
+      day_count: "%{count}件"
+      no_surgeries: "手術予定なし"
+      columns:
+        time: "開始時刻"
+        slot: "枠"
+        patient: "患者"
+        diagnosis: "診断名"
+        procedure: "術式"
+        duration: "手術時間"
+        anesthesia: "麻酔"
+        category: "区分"
     slot_surgery:
       duration_minutes_value: "%{minutes}分"
     labels:
