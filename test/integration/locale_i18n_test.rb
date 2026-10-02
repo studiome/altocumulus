@@ -38,6 +38,13 @@ class LocaleI18nTest < ActionDispatch::IntegrationTest
     assert_equal :en, I18n.default_locale
   end
 
+  test "an anonymous visitor who has not picked a locale sees Japanese" do
+    get patients_url
+
+    follow_redirect!
+    assert_match "続行するにはサインインしてください。", response.body
+  end
+
   test "a user with locale ja sees the nav rendered in Japanese" do
     sign_in_as(users(:japanese_member))
 
@@ -183,6 +190,8 @@ class LocaleI18nTest < ActionDispatch::IntegrationTest
   end
 
   test "require_login flash renders unchanged in English for an anonymous visitor" do
+    patch locale_path(locale: "en"), headers: { "HTTP_REFERER" => login_url }
+
     get patients_url
 
     assert_redirected_to login_url

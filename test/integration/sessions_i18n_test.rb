@@ -11,6 +11,16 @@ class SessionsI18nTest < ActionDispatch::IntegrationTest
     patch locale_path(locale: "ja"), headers: { "HTTP_REFERER" => login_url }
   end
 
+  def switch_to_english
+    patch locale_path(locale: "en"), headers: { "HTTP_REFERER" => login_url }
+  end
+
+  test "login screen renders in Japanese by default for an anonymous visitor" do
+    get login_url
+
+    assert_select "h1", text: "サインイン"
+  end
+
   test "no translation missing on the login screen rendered in Japanese" do
     switch_to_japanese
 
@@ -32,6 +42,8 @@ class SessionsI18nTest < ActionDispatch::IntegrationTest
   end
 
   test "login screen renders unchanged in English" do
+    switch_to_english
+
     get login_url
 
     assert_select "h1", text: "Sign In"
@@ -50,6 +62,8 @@ class SessionsI18nTest < ActionDispatch::IntegrationTest
   end
 
   test "invalid credentials alert renders unchanged in English" do
+    switch_to_english
+
     post login_url, params: { session: { login_id: users(:admin).login_id, password: "wrong-password" } }
 
     assert_response :unprocessable_entity
@@ -67,6 +81,8 @@ class SessionsI18nTest < ActionDispatch::IntegrationTest
   end
 
   test "sign in success flash renders unchanged in English" do
+    switch_to_english
+
     post login_url, params: { session: { login_id: users(:admin).login_id, password: "password" } }
 
     assert_redirected_to root_url

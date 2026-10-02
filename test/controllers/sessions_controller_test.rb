@@ -78,6 +78,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "inactive user with correct password gets the same error message as a failed login" do
+    patch locale_path(locale: "en")
     post login_url, params: { session: { login_id: users(:inactive).login_id, password: "password" } }
     assert_response :unprocessable_entity
     assert_nil session[:user_id]
@@ -169,6 +170,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
   test "invalid credentials alert mentions username in username mode" do
     with_account_identifier("username") do
+      patch locale_path(locale: "en")
       post login_url, params: { session: { login_id: "nobody", password: "password" } }
       assert_response :unprocessable_entity
       assert_equal "Invalid username or password.", flash[:alert]

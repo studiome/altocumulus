@@ -25,16 +25,20 @@ class ApplicationController < ActionController::Base
   private
 
   # Locale precedence: a signed-in user's saved preference, then whatever
-  # was picked before signing in (or by an anonymous visitor), then the
-  # app default. Scoped with I18n.with_locale (not a bare `I18n.locale =`
+  # was picked before signing in (or by an anonymous visitor), then
+  # Japanese -- the sign-in screen opens in Japanese unless the visitor
+  # switches it. I18n.default_locale stays English as the translation
+  # fallback. Scoped with I18n.with_locale (not a bare `I18n.locale =`
   # assignment) so the change never leaks into another request handled by
   # the same thread/worker.
+  ANONYMOUS_DEFAULT_LOCALE = :ja
+
   def switch_locale(&action)
     I18n.with_locale(resolve_locale, &action)
   end
 
   def resolve_locale
-    current_user&.locale || session[:locale] || I18n.default_locale
+    current_user&.locale || session[:locale] || ANONYMOUS_DEFAULT_LOCALE
   end
 
   def current_user
