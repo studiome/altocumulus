@@ -1,66 +1,90 @@
-<%# One day row of the operations calendar. `oc-day` is a structural hook
-    used only by tests to count the rendered range, not for styling. %>
-<div class="app-panel oc-day">
-  <div class="app-panel-body space-y-3">
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        <p class="text-xs font-bold uppercase text-base-content/40"><%= l(date, format: :weekday) %></p>
-        <%= link_to l(date, format: :default), new_hospitalization_path(scheduled_admission_date: date), class: "text-lg font-semibold app-inline-link" %>
-        <div class="flex flex-wrap gap-1 mt-1">
-          <% if usage.holiday? %>
-            <span class="badge badge-secondary badge-sm"><%= t(".closed_badge", name: usage.holiday.name) %></span>
-          <% elsif usage.holiday&.note.present? %>
-            <span class="badge badge-ghost badge-sm"><%= t(".note_badge") %></span>
-          <% end %>
-          <% if calendar.admission_warning?(date) %>
-            <span class="badge badge-warning badge-sm"><%= t(".congestion_badge") %></span>
-          <% end %>
-        </div>
-        <% if usage.holiday&.note.present? %>
-          <p class="text-sm text-base-content/60 italic mt-1"><%= usage.holiday.note %></p>
-        <% end %>
-      </div>
+<%# One day of the operations calendar, as its own <tbody> of the ledger table.
+    `oc-day` is a structural hook used by tests to count the rendered range.
+    The day cell (date, admissions, slot usage) spans every surgery row of the
+    day; closed-day and warning messages sit above them as full-width bands. %>
+<% surgeries = usage.elective_surgeries + usage.emergency_surgeries %>
+<% columns = 7 %>
+<tbody class="oc-day <%= "oc-day-alt" if alternate %>">
+  <% if usage.holiday? %>
+    <tr class="ledger-band"><td colspan="<%= columns %>"><%= t(".closed_badge", name: usage.holiday.name) %><% if usage.holiday.note.present? %> &ndash; <%= usage.holiday.note %><% end %></td></tr>
+  <% elsif usage.holiday&.note.present? %>
+    <tr class="ledger-band"><td colspan="<%= columns %>"><%= t(".note_badge") %>: <%= usage.holiday.note %></td></tr>
+  <% end %>
+  <% usage.warnings.each do |warning| %>
+    <tr class="ledger-band-warning"><td colspan="<%= columns %>"><%= warning %></td></tr>
+  <% end %>
 
-      <div class="text-sm text-right space-y-1">
-        <div>
-          <%= t(".admissions_label") %>
-          <span class="font-mono <%= "text-warning font-bold" if calendar.admission_warning?(date) %>">
-            <%= calendar.admission_count_for(date) %>
+  <% day_cell = capture do %>
+    <td class="ledger-day" rowspan="<%= [ surgeries.size, 1 ].max %>">
+      <span class="ledger-primary"><%= l(date, format: :weekday) %></span>
+      <%= link_to l(date, format: :default), new_hospitalization_path(scheduled_admission_date: date), class: "ledger-primary app-inline-link" %>
+      <span class="ledger-secondary <%= "text-warning font-bold" if calendar.admission_warning?(date) %>">
+        <%= t(".admissions_label") %> <span class="font-mono"><%= calendar.admission_count_for(date) %></span>
+      </span>
+      <span class="ledger-secondary">
+        <% if usage.configured? %>
+          <%= t(".slots_summary", used: usage.used_slots, total: usage.total_slots) %>
+          <%= t(".minutes_summary", used: usage.used_minutes, capacity: usage.capacity_minutes) %>
+        <% elsif usage.holiday? %>
+          <%= t(".no_slots_holiday") %>
+        <% else %>
+          <%= t(".no_slots_configured") %>
+        <% end %>
+      </span>
+      <% if calendar.admission_warning?(date) %>
+        <span class="badge badge-warning badge-sm mt-1"><%= t(".congestion_badge") %></span>
+      <% end %>
+    </td>
+  <% end %>
+
+  <% if surgeries.empty? %>
+    <tr class="oc-empty">
+      <%= day_cell %>
+      <td colspan="<%= columns - 1 %>" class="text-base-content/50 italic"><%= t(".no_surgeries") %></td>
+    </tr>
+  <% else %>
+    <% surgeries.each_with_index do |surgery, row| %>
+      <tr class="oc-surgery row-hover <%= "ledger-row-urgent" if surgery.emergency? %>">
+        <%= day_cell if row.zero? %>
+        <td class="whitespace-nowrap">
+          <span class="ledger-primary font-mono"><%= surgery.start_time_display %></span>
+          <span class="ledger-secondary">
+            <% if surgery.regular_slot? %>
+              <%= surgery.slot_number ? t("surgery_schedules.index.slot_number_label", number: surgery.slot_number) : t("common.none") %>
+            <% else %>
+              <%= surgery.slot_category_label %>
+            <% end %>
           </span>
-        </div>
-        <div class="text-base-content/60">
-          <% if usage.configured? %>
-            <%= t(".slots_summary", used: usage.used_slots, total: usage.total_slots) %>
-            <%= t(".minutes_summary", used: usage.used_minutes, capacity: usage.capacity_minutes) %>
-          <% elsif usage.holiday? %>
-            <%= t(".no_slots_holiday") %>
-          <% else %>
-            <%= t(".no_slots_configured") %>
+        </td>
+        <td class="ledger-patient">
+          <span class="ledger-secondary font-mono"><%= surgery.patient&.hospital_id %></span>
+          <%= link_to surgery.patient&.name.presence || t("operations_calendar.labels.unknown_patient_name", id: surgery.patient_id), surgery, class: "ledger-primary app-inline-link" %>
+        </td>
+        <td>
+          <span class="ledger-secondary"><%= surgery.diagnosis_names_display %></span>
+          <span class="ledger-primary leading-snug"><%= surgery.display_procedure_name %></span>
+        </td>
+        <td class="ledger-operator">
+          <span class="ledger-primary"><%= surgery.operator_name.presence || t("common.none") %></span>
+          <% if surgery.assistant_name.present? %>
+            <span class="ledger-secondary"><%= surgery.assistant_name %></span>
           <% end %>
-        </div>
-      </div>
-    </div>
-
-    <% usage.warnings.each do |warning| %>
-      <div role="alert" class="alert alert-warning py-1.5 text-xs"><span><%= warning %></span></div>
-    <% end %>
-
-    <% if usage.elective_surgeries.any? || usage.emergency_surgeries.any? %>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <% usage.elective_surgeries.each do |surgery| %>
-          <div class="rounded border border-base-200 bg-base-100 p-2 text-sm">
-            <%= render "surgery_schedules/slot_surgery", surgery: surgery %>
+        </td>
+        <td class="whitespace-nowrap">
+          <span class="ledger-primary"><%= surgery.duration_hours.present? ? t("surgeries.labels.duration_value", hours: surgery.duration_hours) : t("common.none") %></span>
+          <span class="ledger-secondary"><%= surgery.anesthesia_method %></span>
+        </td>
+        <td>
+          <div class="flex flex-col gap-1 items-start">
+            <span class="badge badge-sm <%= surgery.emergency? ? "badge-error" : "badge-ghost" %>"><%= surgery.scheduling_type_label %></span>
+            <% unless surgery.regular_slot? %>
+              <span class="badge <%= surgery.slot_category_badge_class %> badge-xs whitespace-nowrap">
+                <%= surgery.slot_category_label %><% if surgery.target_department.present? %>: <%= surgery.target_department %><% elsif surgery.location.present? %>: <%= surgery.location %><% end %>
+              </span>
+            <% end %>
           </div>
-        <% end %>
-        <% usage.emergency_surgeries.each do |surgery| %>
-          <div class="rounded border border-error/40 bg-error/5 p-2 text-sm">
-            <span class="badge badge-error badge-xs mb-1"><%= Surgery.scheduling_type_options["emergency"] %></span>
-            <%= render "surgery_schedules/slot_surgery", surgery: surgery %>
-          </div>
-        <% end %>
-      </div>
-    <% else %>
-      <p class="text-base-content/40 italic text-sm"><%= t(".no_surgeries") %></p>
+        </td>
+      </tr>
     <% end %>
-  </div>
-</div>
+  <% end %>
+</tbody>

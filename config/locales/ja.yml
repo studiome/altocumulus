@@ -1213,6 +1213,7 @@ ja:
       undated_surgeries_heading: "日程未定の手術"
       outside_regular_days_heading: "通常の手術日以外の手術"
       alert: "指定された日付範囲が正しくありません。既定の範囲を表示します。"
+      slot_header: "枠"
     day:
       closed_badge: "休診: %{name}"
       note_badge: "メモ"

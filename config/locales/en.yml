@@ -1349,6 +1349,7 @@ en:
       undated_surgeries_heading: "Undated Surgeries"
       outside_regular_days_heading: "Outside Regular Surgery Days"
       alert: "The requested date range was invalid. Showing the default range instead."
+      slot_header: "Slot"
     day:
       closed_badge: "Closed: %{name}"
       note_badge: "Note"

@@ -167,7 +167,7 @@ html {
     border: 1px solid var(--ledger-line);
   }
 
-  .app-ledger tbody tr:nth-child(even) td {
+  .app-ledger:not(.oc-ledger) tbody tr:nth-child(even) td {
     background-color: color-mix(in oklab, var(--color-base-200) 60%, var(--color-base-100));
   }
 
@@ -193,5 +193,36 @@ html {
 
   .ledger-actions form {
     @apply inline;
+  }
+
+  /* Operations calendar: one <tbody> per day. Zebra by day (not by row), a
+     day cell that spans the day's rows, and full-width bands for closed days
+     and slot warnings. Declared after the generic cell rules on purpose: they
+     share a specificity, so order decides. */
+  .oc-ledger tbody.oc-day-alt td {
+    background-color: color-mix(in oklab, var(--color-base-200) 60%, var(--color-base-100));
+  }
+
+  .app-ledger tbody td.ledger-day {
+    @apply whitespace-nowrap text-center align-middle;
+    background-color: color-mix(in oklab, var(--color-primary) 7%, var(--color-base-100));
+  }
+
+  .app-ledger tbody td.ledger-day .ledger-primary {
+    @apply text-sm;
+  }
+
+  .oc-ledger tbody tr.oc-surgery.ledger-row-urgent td:not(.ledger-day) {
+    background-color: color-mix(in oklab, var(--color-error) 14%, var(--color-base-100));
+  }
+
+  .app-ledger tr.ledger-band td {
+    @apply font-bold;
+    background-color: var(--ledger-head);
+  }
+
+  .app-ledger tr.ledger-band-warning td {
+    @apply text-xs;
+    background-color: color-mix(in oklab, var(--color-warning) 28%, var(--color-base-100));
   }
 }

@@ -45,11 +45,28 @@
       list prints at full page width instead of being squeezed into its
       screen-only 2/3 column, with the summary sidebar printing in full
       below it rather than being clipped alongside. %>
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start print:block">
-    <div class="lg:col-span-2 space-y-4 print:space-y-2">
-      <% @calendar.dates.each do |date| %>
-        <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar %>
-      <% end %>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start print:block">
+    <div class="lg:col-span-2 app-panel overflow-hidden">
+      <div class="overflow-x-auto">
+        <%# One ledger table for the whole range: each day is its own <tbody>
+            (see _day), so the day cell can span that day's surgery rows. %>
+        <table class="app-ledger oc-ledger">
+          <thead>
+            <tr>
+              <th><%= t("surgeries.labels.surgery_date") %></th>
+              <th><span class="block"><%= t("surgeries.labels.start_time") %></span><span class="block"><%= t(".slot_header") %></span></th>
+              <th><%= Surgery.human_attribute_name(:patient_id) %></th>
+              <th><span class="block"><%= t("surgeries.index.diagnosis_header") %></span><span class="block"><%= t("surgeries.labels.procedures") %></span></th>
+              <th><span class="block"><%= t("surgeries.labels.operator") %></span><span class="block"><%= t("surgeries.labels.assistant") %></span></th>
+              <th><span class="block"><%= t("surgeries.labels.duration") %></span><span class="block"><%= t("surgeries.labels.anesthesia") %></span></th>
+              <th><%= t("surgeries.index.type_label") %></th>
+            </tr>
+          </thead>
+          <% @calendar.dates.each_with_index do |date, index| %>
+            <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar, alternate: index.odd? %>
+          <% end %>
+        </table>
+      </div>
     </div>
 
     <div class="space-y-4">
