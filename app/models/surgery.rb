@@ -82,7 +82,8 @@ class Surgery < ApplicationRecord
     if keyword.present?
       pattern = "%#{sanitize_sql_like(keyword)}%"
       scope = scope.joins(:patient).where(
-        "patients.name LIKE :pattern OR patients.hospital_id LIKE :pattern", pattern: pattern
+        "patients.name LIKE :pattern OR patients.hospital_id LIKE :pattern OR surgeries.operator_name LIKE :pattern",
+        pattern: pattern
       )
     end
 

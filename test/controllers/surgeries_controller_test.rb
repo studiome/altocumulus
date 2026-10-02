@@ -32,6 +32,28 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/John Doe/, @response.body)
   end
 
+  test "index shows the operator and assistant of each surgery" do
+    surgeries(:one).update!(operator_name: "Dr. Operator", assistant_name: "Dr. Assistant")
+
+    get surgeries_url
+
+    assert_select "th span", text: "Operator"
+    assert_select "td.ledger-operator" do
+      assert_select ".ledger-primary", text: "Dr. Operator"
+      assert_select ".ledger-secondary", text: "Dr. Assistant"
+    end
+  end
+
+  test "index finds surgeries by operator name through the keyword filter" do
+    surgeries(:two).update!(operator_name: "Dr. Zeta")
+
+    get surgeries_url, params: { keyword: "zeta" }
+
+    assert_response :success
+    assert_match(/Jane Smith/, @response.body)
+    assert_no_match(/John Doe/, @response.body)
+  end
+
   test "index filters by anesthesia_method" do
     get surgeries_url, params: { anesthesia_method: "Spinal" }
     assert_response :success

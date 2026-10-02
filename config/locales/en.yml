@@ -933,7 +933,7 @@ en:
       new_button: "New Surgery"
       kicker: "Operations"
       keyword_label: "Keyword"
-      keyword_placeholder: "Patient name or Hospital ID"
+      keyword_placeholder: "Patient name, Hospital ID or Operator"
       procedure_label: "Procedure"
       type_label: "Type"
       performed_from_label: "Performed From"

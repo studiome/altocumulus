@@ -65,6 +65,7 @@
             <th><span class="block"><%= t("surgeries.labels.surgery_date") %></span><span class="block"><%= t("surgeries.labels.start_time") %></span></th>
             <th><%= Surgery.human_attribute_name(:patient_id) %></th>
             <th><span class="block"><%= t(".diagnosis_header") %></span><span class="block"><%= t("surgeries.labels.procedures") %></span></th>
+            <th><span class="block"><%= t("surgeries.labels.operator") %></span><span class="block"><%= t("surgeries.labels.assistant") %></span></th>
             <th><%= t(".type_label") %></th>
             <th><span class="block"><%= t("surgeries.labels.duration") %></span><span class="block"><%= t("surgeries.labels.anesthesia") %></span></th>
             <th class="text-center"><%= t("common.actions") %></th>
@@ -111,6 +112,12 @@
                     <% end %>
                   <% end %>
                 </td>
+                <td class="ledger-operator">
+                  <span class="ledger-primary"><%= surgery.operator_name.presence || t("common.none") %></span>
+                  <% if surgery.assistant_name.present? %>
+                    <span class="ledger-secondary"><%= surgery.assistant_name %></span>
+                  <% end %>
+                </td>
                 <td>
                   <div class="flex flex-col gap-1 items-start">
                     <span class="badge badge-sm <%= surgery.emergency? ? "badge-error" : "badge-ghost" %>"><%= surgery.scheduling_type_label %></span>
@@ -134,7 +141,7 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="6" class="text-center py-10 text-base-content/50 italic">
+              <td colspan="7" class="text-center py-10 text-base-content/50 italic">
                 <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type, :undated).any?(&:present?) %>
                   <%= t(".empty_filtered") %>
                 <% else %>

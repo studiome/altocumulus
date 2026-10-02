@@ -292,6 +292,12 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_equal [ surgeries(:one), surgeries(:three), surgeries(:five), surgeries(:emergency_one) ].sort_by(&:id), Surgery.filtered(keyword: "H001").sort_by(&:id)
   end
 
+  test "filtered by keyword also matches the operator name" do
+    surgeries(:two).update!(operator_name: "Dr. Zeta")
+
+    assert_equal [ surgeries(:two) ], Surgery.filtered(keyword: "zeta").to_a
+  end
+
   test "filtered by keyword escapes LIKE wildcards" do
     assert_equal [], Surgery.filtered(keyword: "%").to_a
   end
