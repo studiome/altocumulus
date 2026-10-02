@@ -1,6 +1,6 @@
 # Backs the operations calendar screen: a day-by-day view of elective slot
-# usage, admission load, holidays/comments, and cross-cutting summary lists,
-# spanning a configurable date range.
+# usage, admission load, holidays/comments and announcements, spanning a
+# configurable date range.
 #
 # Modeled after LedgerStatistics and ElectiveSlotUsage: a plain object built
 # once per request that resolves everything it needs up front in a fixed
@@ -15,8 +15,6 @@ class OperationsCalendar
   InvalidRangeError = Class.new(StandardError)
 
   attr_reader :start_date, :days, :dates, :slot_usages, :admission_counts,
-              :waiting, :upcoming, :unconfirmed, :recently_updated, :referred,
-              :undated_surgeries, :purpose_groups, :outside_regular_day_surgeries,
               :announcements, :admission_warning_threshold
 
   # Parses the raw (and possibly invalid or crafted) request params into a
@@ -36,15 +34,7 @@ class OperationsCalendar
 
     @slot_usages = ElectiveSlotUsage.for_dates(@dates)
     @admission_counts = build_admission_counts
-    @outside_regular_day_surgeries = build_outside_regular_day_surgeries
 
-    @waiting = Hospitalization.active.waiting.includes(:patient).order(effective_date_order)
-    @upcoming = Hospitalization.active.upcoming.includes(:patient).order(effective_date_order)
-    @unconfirmed = Hospitalization.active.unconfirmed.includes(:patient)
-    @recently_updated = Hospitalization.active.recently_updated.includes(:patient)
-    @referred = Hospitalization.active.referred.includes(:patient)
-    @undated_surgeries = Surgery.undated.includes(:patient)
-    @purpose_groups = build_purpose_groups
     @announcements = Announcement.published.recent_first
 
     load_lazy_associations!
@@ -105,51 +95,10 @@ class OperationsCalendar
       counts.transform_keys { |date| date.is_a?(Date) ? date : Date.parse(date.to_s) }
     end
 
-    # Every purpose other than the model's own default is treated as a
-    # distinct workload to call out separately (today: Examination/Procedure
-    # and Chemotherapy). Reading the default off the column itself, rather
-    # than naming "surgery" here, means adding a new purpose to
-    # Hospitalization::PURPOSE_KEYS is the only change needed to add it to
-    # this breakdown too.
-    def build_purpose_groups
-      default_purpose = Hospitalization.column_defaults["purpose"]
-
-      Hospitalization::PURPOSE_KEYS.excluding(default_purpose).index_with do |purpose|
-        Hospitalization.active.where(purpose: purpose).includes(:patient)
-      end
-    end
-
-    # Reuses the ElectiveSlotUsage objects already built for the day range
-    # instead of a separate query: `rule` (unlike `effective_rule`) reflects
-    # only the weekday's own configuration, so a holiday that happens to fall
-    # on a normally-configured weekday is correctly excluded from this list
-    # (it is already called out as a holiday).
-    #
-    # Only regular-slot surgeries can be "outside the regular surgery days":
-    # a cath lab or partner-department case never wanted one of this
-    # department's slots, so flagging it here would be the same false alarm
-    # ElectiveSlotUsage#warnings already declines to raise for it.
-    def build_outside_regular_day_surgeries
-      dates.flat_map do |date|
-        usage = slot_usages[date]
-        next [] if usage.rule.present?
-
-        usage.regular_surgeries.map { |surgery| [ date, surgery ] }
-      end
-    end
-
-    # Forces every relation built above to execute now, so the total query
-    # count for one OperationsCalendar is fixed at construction time and
-    # does not depend on how many times (or in what order) the view happens
-    # to iterate them afterward.
+    # Forces the announcements relation to execute now, so the total query
+    # count for one OperationsCalendar is fixed at construction time and does
+    # not depend on how many times the view happens to iterate it.
     def load_lazy_associations!
-      waiting.load
-      upcoming.load
-      unconfirmed.load
-      recently_updated.load
-      referred.load
-      undated_surgeries.load
-      purpose_groups.each_value(&:load)
       announcements.load
     end
 end

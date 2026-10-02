@@ -142,78 +142,13 @@ class OperationsCalendarTest < ActiveSupport::TestCase
     assert usage.holiday?
   end
 
-  test "waiting mirrors Hospitalization.active.waiting" do
-    calendar = OperationsCalendar.build
-    assert_equal Hospitalization.active.waiting.to_a.sort_by(&:id), calendar.waiting.to_a.sort_by(&:id)
-  end
-
-  test "unconfirmed mirrors Hospitalization.active.unconfirmed" do
-    calendar = OperationsCalendar.build
-    assert_equal Hospitalization.active.unconfirmed.to_a.sort_by(&:id), calendar.unconfirmed.to_a.sort_by(&:id)
-  end
-
-  test "recently_updated mirrors Hospitalization.active.recently_updated" do
-    calendar = OperationsCalendar.build
-    assert_equal Hospitalization.active.recently_updated.to_a.sort_by(&:id), calendar.recently_updated.to_a.sort_by(&:id)
-  end
-
-  test "referred mirrors Hospitalization.active.referred" do
-    calendar = OperationsCalendar.build
-    assert_equal Hospitalization.active.referred.to_a.sort_by(&:id), calendar.referred.to_a.sort_by(&:id)
-  end
-
-  test "upcoming excludes a soft-deleted hospitalization even though its date is in the future" do
+  test "admission_count_for excludes a soft-deleted hospitalization even though its date is in the future" do
     date = admission_free_date(from: Date.current + 10)
     deleted = create_hospitalization(scheduled_admission_date: date)
     deleted.discard!
 
     calendar = OperationsCalendar.build
-    assert_not_includes calendar.upcoming, deleted
     assert_equal 0, calendar.admission_count_for(date)
-  end
-
-  test "undated_surgeries lists surgeries with no surgery_date" do
-    calendar = OperationsCalendar.build
-    assert_equal Surgery.undated.to_a.sort_by(&:id), calendar.undated_surgeries.to_a.sort_by(&:id)
-  end
-
-  test "purpose_groups covers every non-default purpose without hardcoding the list" do
-    calendar = OperationsCalendar.build
-    expected = Hospitalization::PURPOSE_KEYS - [ Hospitalization.column_defaults["purpose"] ]
-    assert_equal expected.sort, calendar.purpose_groups.keys.sort
-  end
-
-  test "purpose_groups groups active hospitalizations by purpose" do
-    date = Date.current + 3
-    exam = create_hospitalization(scheduled_admission_date: date, purpose: "examination")
-
-    calendar = OperationsCalendar.build
-    assert_includes calendar.purpose_groups["examination"], exam
-    assert_not_includes calendar.purpose_groups["chemotherapy"], exam
-  end
-
-  test "outside_regular_day_surgeries lists elective surgeries on a weekday with no ElectiveSlotRule" do
-    # 2026-03-01 is a Sunday; the fixtures only configure rules for Tue/Wed/Fri.
-    calendar = OperationsCalendar.build(start: Date.new(2026, 3, 1), days: 1)
-
-    assert_includes calendar.outside_regular_day_surgeries.map(&:last), surgeries(:one)
-  end
-
-  test "outside_regular_day_surgeries excludes days that do have a configured rule" do
-    calendar = OperationsCalendar.build(start: Date.new(2026, 3, 3), days: 1)
-
-    assert_empty calendar.outside_regular_day_surgeries
-  end
-
-  test "outside_regular_day_surgeries ignores surgeries booked outside the regular slots" do
-    # 2026-03-01 is a Sunday with no ElectiveSlotRule. A cath lab case that
-    # never wanted a regular slot is not "outside the regular surgery days" in
-    # any useful sense, so it must not be called out alongside surgeries(:one).
-    surgeries(:one).update!(slot_category: "off_slot", location: "Cath Lab 1")
-
-    calendar = OperationsCalendar.build(start: Date.new(2026, 3, 1), days: 1)
-
-    assert_empty calendar.outside_regular_day_surgeries
   end
 
   test "announcements only include published ones" do

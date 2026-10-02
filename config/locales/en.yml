@@ -1308,16 +1308,7 @@ en:
   #     `surgeries.labels.unknown_patient_name` despite carrying the same
   #     English text and (for the kicker) the same Japanese translation --
   #     same "no cross-resource sharing" rule earlier groups followed. The
-  #     summary-list headings (Waiting/Upcoming/Unconfirmed/Recently Updated/
-  #     Referred) are the one deliberate exception: they call
-  #     `Hospitalization.status_filter_options` directly (stage 2), the same
-  #     way the purpose-group headings already did, rather than adding a
-  #     second, redundant translation of the same status word.
-  #   - `operations_calendar.labels.unknown_patient_name` /
-  #     `.empty_list` are shared across `index` and the `_summary_list`
-  #     partial's own scope (two different lazy-lookup scopes rendering the
-  #     identical text), referenced with the full path from both, mirroring
-  #     `common.field_header`'s promotion in group 4a.
+  #     (The side pane's summary lists were removed; its headings are gone.)
   #   - The "Emergency" badge in `_day.html.erb` reuses
   #     `Surgery.scheduling_type_options["emergency"]` (stage 2) rather than
   #     a new key, same as the Surgery Schedule board in group 3b.
@@ -1346,8 +1337,6 @@ en:
       days_label: "Days"
       apply_submit: "Apply"
       today_link: "Today"
-      undated_surgeries_heading: "Undated Surgeries"
-      outside_regular_days_heading: "Outside Regular Surgery Days"
       alert: "The requested date range was invalid. Showing the default range instead."
       slot_header: "Slot"
     day:
@@ -1360,13 +1349,8 @@ en:
       no_slots_holiday: "No elective slots (holiday)"
       no_slots_configured: "No slots configured"
       no_surgeries: "No surgeries scheduled"
-    summary_list:
-      undated: "Undated"
-    # Shared across `index` and the `_summary_list` partial (see design note
-    # above `shared:`).
     labels:
       unknown_patient_name: "Patient #%{id}"
-      empty_list: "None"
 
   dashboard:
     index:
