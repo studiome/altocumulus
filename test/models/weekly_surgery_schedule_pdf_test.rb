@@ -47,6 +47,17 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     assert_includes text, "Dr. Assistant"
   end
 
+  test "shows the surgery duration in hours like the surgery list, not minutes" do
+    text = render_text(Date.new(2026, 3, 1)) # surgeries(:one) runs 1.5 hours
+
+    assert_includes text, "1.5 h"
+    assert_no_match(/\d min\b/, text)
+  end
+
+  test "shows the surgery duration in hours in Japanese" do
+    assert_includes render_text(Date.new(2026, 3, 1), locale: :ja), "1.5時間"
+  end
+
   test "leaves out surgeries dated outside the week" do
     outside = surgeries(:one).dup
     outside.surgery_date = Date.new(2026, 3, 20)

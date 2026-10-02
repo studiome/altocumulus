@@ -118,7 +118,7 @@ class WeeklySurgerySchedulePdf
         surgery.diagnosis_names_display,
         surgery.display_procedure_name,
         operator_text(surgery),
-        surgery.duration_minutes ? I18n.t("surgery_schedules.slot_surgery.duration_minutes_value", minutes: surgery.duration_minutes) : "-",
+        surgery.duration_hours ? I18n.t("surgeries.labels.duration_value", hours: surgery.duration_hours) : "-",
         surgery.anesthesia_method.to_s,
         category_text(surgery)
       ]
