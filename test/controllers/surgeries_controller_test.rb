@@ -80,6 +80,14 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Cath Lab Suite/, @response.body)
   end
 
+  test "index shows empty filtered message when filtering by slot_category matches nothing" do
+    Surgery.where(slot_category: "off_slot").destroy_all
+
+    get surgeries_url, params: { slot_category: "off_slot" }
+    assert_response :success
+    assert_select "td", text: I18n.t("surgeries.index.empty_filtered")
+  end
+
   test "index shows the assigned slot, and flags elective surgeries without one" do
     get surgeries_url
     assert_response :success
