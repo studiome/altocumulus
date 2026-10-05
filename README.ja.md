@@ -69,6 +69,7 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 | CSS | Tailwind CSS + daisyUI（`tailwindcss-rails`） |
 | フロントエンド | Hotwire（Turbo Drive / Turbo Streams / Stimulus） |
 | テスト | Minitest + fixtures、システムテストは Capybara + Selenium |
+| PDF 出力 | Prawn + prawn-table（週間手術予定表。IPAex ゴシックを同梱） |
 | 静的解析 | RuboCop（`rubocop-rails-omakase`）、Brakeman、bundler-audit、importmap audit |
 | デプロイ | Kamal + Thruster（Dockerfile 同梱） |
 

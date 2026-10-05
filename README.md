@@ -72,6 +72,7 @@ exceptions are `/login`, the language switcher (`PATCH /locale`), and the `/up` 
 | CSS | Tailwind CSS + daisyUI (`tailwindcss-rails`) |
 | Front end | Hotwire (Turbo Drive / Turbo Streams / Stimulus) |
 | Testing | Minitest + fixtures; system tests with Capybara + Selenium |
+| PDF output | Prawn + prawn-table (weekly surgery schedule; bundled IPAex Gothic font) |
 | Static analysis | RuboCop (`rubocop-rails-omakase`), Brakeman, bundler-audit, importmap audit |
 | Deployment | Kamal + Thruster (Dockerfile included) |
 
