@@ -11,6 +11,13 @@ class OperationsCalendarTest < ActiveSupport::TestCase
     assert_equal Date.current + 42, calendar.dates.last
   end
 
+  test "default_range spans the default calendar" do
+    range = OperationsCalendar.default_range
+
+    assert_equal Date.current - 7, range.first
+    assert_equal Date.current + 42, range.last
+  end
+
   test "honors an explicit start and days" do
     calendar = OperationsCalendar.build(start: "2026-01-01", days: 10)
 

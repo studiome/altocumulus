@@ -70,7 +70,30 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
 
     assert_select "tr.oc-surgery td.ledger-patient" do
       assert_select ".ledger-secondary", text: "H001"
-      assert_select "a.ledger-primary[href=?]", surgery_path(surgeries(:three)), text: "John Doe"
+      assert_select "a.ledger-primary[href=?]", surgery_path(surgeries(:three), from: "calendar", start: "2026-03-03", days: 1), text: "John Doe"
+    end
+  end
+
+  test "each day body has a stable id for anchors" do
+    get operations_calendar_url, params: { start: "2026-03-03", days: 2 }
+
+    assert_select "tbody.oc-day#day-2026-03-03"
+    assert_select "tbody.oc-day#day-2026-03-04"
+  end
+
+  test "the highlighted day is marked and gets the highlight controller" do
+    get operations_calendar_url, params: { start: "2026-03-03", days: 2, highlight: "2026-03-04" }
+
+    assert_select "tbody#day-2026-03-04.oc-day-highlight[data-controller='calendar-highlight']"
+    assert_select "tbody#day-2026-03-03.oc-day-highlight", count: 0
+  end
+
+  test "an invalid highlight is ignored" do
+    [ "nope", "2026-13-45", [ "2026-03-03" ] ].each do |value|
+      get operations_calendar_url, params: { start: "2026-03-03", days: 2, highlight: value }
+
+      assert_response :success
+      assert_select ".oc-day-highlight", count: 0
     end
   end
 

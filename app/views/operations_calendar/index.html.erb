@@ -44,7 +44,7 @@
           </tr>
         </thead>
         <% @calendar.dates.each_with_index do |date, index| %>
-          <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar, alternate: index.odd? %>
+          <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
         <% end %>
       </table>
     </div>

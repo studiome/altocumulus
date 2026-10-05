@@ -4,7 +4,7 @@
     day; closed-day and warning messages sit above them as full-width bands. %>
 <% surgeries = usage.elective_surgeries + usage.emergency_surgeries %>
 <% columns = 7 %>
-<tbody class="oc-day <%= "oc-day-alt" if alternate %>">
+<tbody id="day-<%= date.iso8601 %>" class="oc-day <%= "oc-day-alt" if alternate %> <%= "oc-day-highlight" if highlight %>"<% if highlight %> data-controller="calendar-highlight"<% end %>>
   <% if usage.holiday? %>
     <tr class="ledger-band"><td colspan="<%= columns %>"><%= t(".closed_badge", name: usage.holiday.name) %><% if usage.holiday.note.present? %> &ndash; <%= usage.holiday.note %><% end %></td></tr>
   <% elsif usage.holiday&.note.present? %>
@@ -58,7 +58,7 @@
         </td>
         <td class="ledger-patient">
           <span class="ledger-secondary font-mono"><%= surgery.patient&.hospital_id %></span>
-          <%= link_to surgery.patient&.name.presence || t("operations_calendar.labels.unknown_patient_name", id: surgery.patient_id), surgery, class: "ledger-primary app-inline-link" %>
+          <%= link_to surgery.patient&.name.presence || t("operations_calendar.labels.unknown_patient_name", id: surgery.patient_id), surgery_path(surgery, from: "calendar", start: calendar.start_date.iso8601, days: calendar.days), class: "ledger-primary app-inline-link" %>
           <% referred_from = calendar.referred_from_for(surgery) %>
           <% if referred_from.present? %>
             <span class="ledger-secondary"><%= t("hospitalizations.labels.referred_from") %>: <%= referred_from %></span>

@@ -220,6 +220,18 @@ html {
     background-color: color-mix(in oklab, var(--color-base-200) 60%, var(--color-base-100));
   }
 
+  /* The day just saved, briefly emphasized after a redirect from the surgery
+     form (see calendar_highlight_controller.js, which drops the class so the
+     colour fades out). Neutral accent so it reads in light and dark. */
+  .oc-ledger tbody td {
+    transition: background-color 1s ease;
+  }
+
+  .oc-ledger tbody.oc-day-highlight td,
+  .oc-ledger tbody.oc-day-highlight td.ledger-day {
+    background-color: color-mix(in oklab, var(--color-warning) 30%, var(--color-base-100));
+  }
+
   .app-ledger tbody td.ledger-day {
     @apply whitespace-nowrap text-center align-middle;
     background-color: color-mix(in oklab, var(--color-primary) 7%, var(--color-base-100));

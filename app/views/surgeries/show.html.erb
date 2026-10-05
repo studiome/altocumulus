@@ -3,7 +3,7 @@
 <div class="max-w-2xl mx-auto w-full">
 
   <div class="mb-3 flex items-center gap-3">
-    <%= link_to surgeries_path, class: "btn btn-circle btn-ghost" do %>
+    <%= link_to calendar_back_path(@surgery.surgery_date), class: "btn btn-circle btn-ghost" do %>
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
     <% end %>
     <h1 class="app-page-title"><%= t(".title") %></h1>
@@ -119,7 +119,7 @@
       </div>
 
       <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">
-        <%= link_to t(".edit_button"), edit_surgery_path(@surgery), class: "btn btn-secondary" %>
+        <%= link_to t(".edit_button"), edit_surgery_path(@surgery, calendar_return_params), class: "btn btn-secondary" %>
         <%= button_to t(".delete_button"), @surgery, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: t("common.confirm_delete") } %>
       </div>
     </div>

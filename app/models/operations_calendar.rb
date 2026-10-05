@@ -14,6 +14,15 @@ class OperationsCalendar
 
   InvalidRangeError = Class.new(StandardError)
 
+  # The range shown when no start/days are given.
+  def self.default_start
+    Date.current - DEFAULT_LOOKBACK_DAYS
+  end
+
+  def self.default_range
+    default_start..(default_start + DEFAULT_DAYS - 1)
+  end
+
   attr_reader :start_date, :days, :dates, :slot_usages, :admission_counts,
               :admission_warning_threshold
 
@@ -54,7 +63,7 @@ class OperationsCalendar
   private
 
     def self.parse_start(value)
-      return Date.current - DEFAULT_LOOKBACK_DAYS if value.blank?
+      return default_start if value.blank?
 
       Date.parse(value.to_s)
     rescue ArgumentError, TypeError

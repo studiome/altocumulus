@@ -1,4 +1,6 @@
 class SurgeriesController < ApplicationController
+  include CalendarReturn
+
   DEFAULT_LOOKBACK_DAYS = 7
 
   before_action :set_surgery, only: %i[ edit update destroy ]
@@ -40,7 +42,7 @@ class SurgeriesController < ApplicationController
 
     respond_to do |format|
       if save_surgery { @surgery.save }
-        format.html { redirect_to @surgery, notice: t(".success_notice") }
+        format.html { redirect_after_save(t(".success_notice")) }
         format.json { render :show, status: :created, location: @surgery }
       else
         set_form_collections
@@ -54,7 +56,7 @@ class SurgeriesController < ApplicationController
   def update
     respond_to do |format|
       if save_surgery { @surgery.update(surgery_params) }
-        format.html { redirect_to @surgery, notice: t(".success_notice"), status: :see_other }
+        format.html { redirect_after_save(t(".success_notice"), status: :see_other) }
         format.json { render :show, status: :ok, location: @surgery }
       else
         set_form_collections
@@ -96,6 +98,16 @@ class SurgeriesController < ApplicationController
   end
 
   private
+
+    # A dated surgery is best seen in its place on the operations calendar;
+    # the notice links on to its detail page. An undated one has no day to
+    # show, so it goes straight to its detail page.
+    def redirect_after_save(notice, **options)
+      return redirect_to(@surgery, notice: notice, **options) if @surgery.surgery_date.blank?
+
+      flash[:notice_link] = { "path" => surgery_path(@surgery), "label" => t("common.view_details") }
+      redirect_to calendar_path_for_saved(@surgery.surgery_date), notice: notice, **options
+    end
 
     def set_surgery
       @surgery = Surgery.find(params.expect(:id))

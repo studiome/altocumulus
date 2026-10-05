@@ -2,6 +2,11 @@
   <div class="toast toast-top toast-end z-50 print:hidden" data-controller="flash-toast">
     <div class="alert alert-success">
       <span><%= notice %></span>
+      <%# The path is one our own controller put in the flash; still, only ever render a local path. %>
+      <% notice_link = flash[:notice_link] %>
+      <% if notice_link.is_a?(Hash) && notice_link["path"].to_s.match?(%r{\A/(?!/)}) %>
+        <%= link_to notice_link["label"], notice_link["path"], class: "link font-semibold" %>
+      <% end %>
     </div>
   </div>
 <% end %>

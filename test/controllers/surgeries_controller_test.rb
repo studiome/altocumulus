@@ -305,6 +305,116 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/#{Regexp.escape(I18n.t("surgeries.form.select_patient_first"))}/, @response.body)
   end
 
+  test "show back button goes to the surgery list by default" do
+    get surgery_url(@surgery)
+
+    assert_select "a.btn-circle[href=?]", surgeries_path
+  end
+
+  test "show back button returns to the calendar day when opened from the calendar" do
+    get surgery_url(@surgery, from: "calendar", start: "2026-02-20", days: 30)
+
+    assert_select "a.btn-circle[href=?]", operations_calendar_path(start: "2026-02-20", days: 30, anchor: "day-2026-03-01")
+  end
+
+  test "show carries the calendar origin over to the edit link" do
+    get surgery_url(@surgery, from: "calendar", start: "2026-02-20", days: 30)
+
+    assert_select "a[href=?]", edit_surgery_path(@surgery, from: "calendar", start: "2026-02-20", days: 30)
+  end
+
+  test "edit back button returns to the calendar when opened from the calendar" do
+    get edit_surgery_url(@surgery, from: "calendar", start: "2026-02-20", days: 30)
+
+    assert_select "a.btn-circle[href=?]", operations_calendar_path(start: "2026-02-20", days: 30, anchor: "day-2026-03-01")
+  end
+
+  test "new back button returns to the calendar when opened from the calendar" do
+    get new_surgery_url(from: "calendar", start: "2026-02-20", days: 30)
+
+    assert_select "a.btn-circle[href=?]", operations_calendar_path(start: "2026-02-20", days: 30)
+  end
+
+  test "invalid calendar origin params are ignored" do
+    [
+      { from: "calendar", start: "not-a-date", days: 30 },
+      { from: "calendar", start: "2026-02-20", days: 9999 },
+      { from: "calendar", start: [ "2026-02-20" ], days: [ "5" ] },
+      { from: "https://evil.example/", start: "2026-02-20", days: 30 },
+      { from: "//evil.example", start: "//evil.example", days: 30 }
+    ].each do |params|
+      get surgery_url(@surgery, **params)
+
+      assert_response :success
+      assert_select "a.btn-circle[href*=?]", "evil", count: 0
+      assert_select "a.btn-circle[href*=?]", "not-a-date", count: 0
+      assert_select "a.btn-circle[href*=?]", "9999", count: 0
+    end
+  end
+
+  test "an unknown from value keeps the back button on the surgery list" do
+    get surgery_url(@surgery, from: "elsewhere", start: "2026-02-20", days: 30)
+
+    assert_select "a.btn-circle[href=?]", surgeries_path
+  end
+
+  test "create redirects to the calendar with the day anchored and highlighted" do
+    travel_to Date.new(2026, 10, 5) do
+      post surgeries_url, params: { surgery: valid_surgery_params(surgery_date: "2026-10-12") }
+
+      assert_redirected_to operations_calendar_path(highlight: "2026-10-12", anchor: "day-2026-10-12")
+    end
+  end
+
+  test "create redirects to a calendar starting a week before an out-of-range date" do
+    travel_to Date.new(2026, 10, 5) do
+      post surgeries_url, params: { surgery: valid_surgery_params(surgery_date: "2027-03-03") }
+
+      assert_redirected_to operations_calendar_path(start: "2027-02-24", highlight: "2027-03-03", anchor: "day-2027-03-03")
+    end
+  end
+
+  test "create for an undated surgery redirects to the surgery" do
+    post surgeries_url, params: { surgery: valid_surgery_params(surgery_date: "", surgery_date_status: "undecided") }
+
+    assert_redirected_to surgery_url(Surgery.order(:id).last)
+  end
+
+  test "create flash links to the surgery details" do
+    post surgeries_url, params: { surgery: valid_surgery_params(surgery_date: "2026-03-03") }
+    follow_redirect!
+
+    assert_select ".alert-success a[href=?]", surgery_path(Surgery.order(:id).last), text: I18n.t("common.view_details")
+  end
+
+  test "update redirects to the calendar with the highlighted day" do
+    patch surgery_url(@surgery), params: { surgery: { surgery_date: "2026-03-05" } }
+
+    assert_redirected_to calendar_url_for(Date.new(2026, 3, 5))
+    assert_response :see_other
+  end
+
+  test "update to an undated surgery redirects to the surgery" do
+    patch surgery_url(@surgery), params: { surgery: { surgery_date: "", surgery_date_status: "undecided" } }
+
+    assert_redirected_to surgery_url(@surgery)
+  end
+
+  test "hospitalization surgery follow-up ends on the calendar" do
+    post hospitalizations_url, params: { hospitalization: {
+      patient_id: patients(:two).id, purpose: "surgery", scheduled_admission_date: "2026-10-10",
+      scheduled_surgery_date: "2026-10-12", planned_days: 3,
+      hospitalization_diagnoses_attributes: { "0" => { diagnosis_id: diagnoses(:pneumonia).id } }
+    } }
+    assert_redirected_to new_surgery_url(patient_id: patients(:two).id, surgery_date: "2026-10-12")
+
+    travel_to Date.new(2026, 10, 5) do
+      post surgeries_url, params: { surgery: valid_surgery_params(surgery_date: "2026-10-12") }
+
+      assert_redirected_to operations_calendar_path(highlight: "2026-10-12", anchor: "day-2026-10-12")
+    end
+  end
+
   test "should create surgery" do
     assert_difference("Surgery.count") do
       post surgeries_url, params: { surgery: {
@@ -320,7 +430,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
       } }
     end
 
-    assert_redirected_to surgery_url(Surgery.last)
+    assert_redirected_to calendar_url_for(Surgery.last.surgery_date)
   assert_equal [ patient_diagnoses(:appendicitis).id, patient_diagnoses(:hypertension).id ].sort, Surgery.last.patient_diagnoses.ids.sort
     assert_equal [ "Cholecystectomy", "Appendectomy" ], Surgery.last.procedure_names
     assert_equal [ "bilateral", "left" ], Surgery.last.surgery_procedure_selections.order(:id).pluck(:laterality)
@@ -342,7 +452,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
       } }
     end
 
-    assert_redirected_to surgery_url(Surgery.last)
+    assert_redirected_to calendar_url_for(Surgery.last.surgery_date)
     created = Surgery.last
     assert_equal "simultaneous", created.slot_category
     assert_equal "Gynecology", created.target_department
@@ -364,7 +474,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
       } }
     end
 
-    assert_redirected_to surgery_url(Surgery.last)
+    assert_redirected_to calendar_url_for(Surgery.last.surgery_date)
     created = Surgery.last
     assert_equal "off_slot", created.slot_category
     assert_equal "Cath Lab 1", created.location
@@ -459,7 +569,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
       } }
     end
 
-    assert_redirected_to surgery_url(Surgery.last)
+    assert_redirected_to calendar_url_for(Surgery.last.surgery_date)
     assert Surgery.last.emergency?
     assert_equal "02:15", Surgery.last.start_time_display
   end
@@ -479,7 +589,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
       } }
     end
 
-    assert_redirected_to surgery_url(Surgery.last)
+    assert_redirected_to calendar_url_for(Surgery.last.surgery_date)
     assert Surgery.last.elective?
   end
 
@@ -579,7 +689,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
       }
     } }
 
-    assert_redirected_to surgery_url(@surgery)
+    assert_redirected_to calendar_url_for(@surgery.surgery_date)
     @surgery.reload
     assert_equal [ patient_diagnoses(:appendicitis).id, patient_diagnoses(:hypertension).id ].sort, @surgery.patient_diagnoses.ids.sort
     assert_equal [ "Updated Procedure", "Appendectomy" ], @surgery.procedure_names
@@ -677,6 +787,21 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+    # What the app redirects to after saving a surgery on `date` (today being
+    # the real date, so only dates outside the default range start a week back).
+    def calendar_url_for(date)
+      range = OperationsCalendar.default_range
+      start = range.cover?(date) ? nil : (date - 7).iso8601
+      operations_calendar_url(start: start, highlight: date.iso8601, anchor: "day-#{date.iso8601}")
+    end
+
+    def valid_surgery_params(overrides = {})
+      {
+        patient_id: patients(:one).id, anesthesia_method: "General", duration_hours: 1.0,
+        surgery_procedure_selections_attributes: { "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id } }
+      }.merge(overrides)
+    end
 
     def create_surgery(surgery_date:, operator_name: nil)
       Surgery.create!(
