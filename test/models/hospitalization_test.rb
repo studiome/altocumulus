@@ -67,50 +67,28 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_nil hospitalization.effective_admission_date
   end
 
-  test "reservation_status must be one of the allowed options" do
-    hospitalization = hospitalizations(:one)
-    hospitalization.reservation_status = "not_a_real_status"
-    assert_not hospitalization.valid?
-
-    hospitalization.reservation_status = "waiting"
-    assert hospitalization.valid?
-  end
-
-  test "purpose must be one of the allowed options" do
-    hospitalization = hospitalizations(:one)
-    hospitalization.purpose = "not_a_real_purpose"
-    assert_not hospitalization.valid?
-
-    hospitalization.purpose = "examination"
-    assert hospitalization.valid?
-  end
-
-  test "reservation_status and purpose default to requested and surgery" do
+  test "reservation_status and purpose default to requested and surgery, admin_status to unconfirmed" do
     hospitalization = Hospitalization.new
     assert_equal "requested", hospitalization.reservation_status
     assert_equal "surgery", hospitalization.purpose
+    assert_equal "unconfirmed", hospitalization.admin_status
   end
 
-  test "reservation_status_form_options and purpose_form_options mirror the option constants" do
-    assert_equal Hospitalization.reservation_status_options.map { |k, v| [ v, k ] }, Hospitalization.reservation_status_form_options
-    assert_equal Hospitalization.purpose_options.map { |k, v| [ v, k ] }, Hospitalization.purpose_form_options
-  end
+  test "choice attributes must be one of the allowed options" do
+    {
+      reservation_status: [ "not_a_real_status", "waiting" ],
+      purpose: [ "not_a_real_purpose", "examination" ],
+      admin_status: [ "not_a_real_status", "confirmed" ],
+      outcome: [ "not_a_real_outcome", "recovered" ],
+      discharge_destination: [ "not_a_real_destination", "home" ]
+    }.each do |attribute, (invalid, valid)|
+      hospitalization = Hospitalization.find(hospitalizations(:one).id)
+      hospitalization[attribute] = invalid
+      assert_not hospitalization.valid?, "Expected #{attribute}=#{invalid} to be invalid"
 
-  test "admin_status defaults to unconfirmed" do
-    assert_equal "unconfirmed", Hospitalization.new.admin_status
-  end
-
-  test "admin_status must be one of the allowed options" do
-    hospitalization = hospitalizations(:one)
-    hospitalization.admin_status = "not_a_real_status"
-    assert_not hospitalization.valid?
-
-    hospitalization.admin_status = "confirmed"
-    assert hospitalization.valid?
-  end
-
-  test "admin_status_form_options mirrors the option constant" do
-    assert_equal Hospitalization.admin_status_options.map { |k, v| [ v, k ] }, Hospitalization.admin_status_form_options
+      hospitalization[attribute] = valid
+      assert hospitalization.valid?, "Expected #{attribute}=#{valid} to be valid"
+    end
   end
 
   test "saving as a non-admin user resets admin_status to unconfirmed" do
@@ -186,9 +164,54 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert hospitalization.valid?
   end
 
-  test "other is a valid purpose with a localized label" do
+  test "option labels are English by default and Japanese under ja, and *_form_options mirror them" do
     assert_includes Hospitalization::PURPOSE_KEYS, "other"
     assert_equal "Other", Hospitalization.purpose_options["other"]
+    assert_equal "Recovered", Hospitalization.outcome_options["recovered"]
+    assert_equal "Died", Hospitalization.outcome_options["died"]
+    assert_equal "Another Hospital", Hospitalization.discharge_destination_options["hospital"]
+    assert_equal "Admitted (Other Dept.)", Hospitalization.reservation_status_options["admitted_other_dept"]
+    assert_equal "Examination / Procedure", Hospitalization.purpose_options["examination"]
+    assert_equal "Unconfirmed", Hospitalization.admin_status_options["unconfirmed"]
+    assert_equal "Recently Updated", Hospitalization.status_filter_options["recently_updated"]
+    assert_includes Hospitalization.outcome_form_options, [ "Recovered", "recovered" ]
+
+    I18n.with_locale(:ja) do
+      assert_equal "治癒", Hospitalization.outcome_options["recovered"]
+      assert_equal "他院", Hospitalization.discharge_destination_options["hospital"]
+      assert_equal "入院済み(他科)", Hospitalization.reservation_status_options["admitted_other_dept"]
+      assert_equal "検査・処置", Hospitalization.purpose_options["examination"]
+      assert_equal "未確認", Hospitalization.admin_status_options["unconfirmed"]
+      assert_equal "最近更新", Hospitalization.status_filter_options["recently_updated"]
+      assert_includes Hospitalization.outcome_form_options, [ "治癒", "recovered" ]
+    end
+
+    %w[reservation_status purpose admin_status].each do |name|
+      assert_equal Hospitalization.public_send("#{name}_options").map { |k, v| [ v, k ] }, Hospitalization.public_send("#{name}_form_options")
+    end
+  end
+
+  test "enum-like columns store their English key even when created/updated under the ja locale" do
+    I18n.with_locale(:ja) do
+      hospitalization = Hospitalization.create!(
+        patient: patients(:two),
+        scheduled_admission_date: Date.new(2026, 9, 1),
+        reason: "Planned surgery",
+        purpose: "chemotherapy",
+        admin_status: "confirmed",
+        hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
+      )
+
+      assert_equal "chemotherapy", hospitalization.reload.purpose
+      assert_equal "confirmed", hospitalization.admin_status
+      assert_equal "requested", hospitalization.reservation_status
+
+      hospitalization.update!(outcome: "recovered", discharge_date: Date.current, discharge_destination: "home")
+      assert_equal "recovered", hospitalization.reload.outcome
+      assert_equal "home", hospitalization.discharge_destination
+
+      assert_equal Hospitalization::PURPOSE_KEYS, Hospitalization.purpose_options.keys
+    end
   end
 
   test "planned_days should be a positive integer when present" do
@@ -269,24 +292,6 @@ class HospitalizationTest < ActiveSupport::TestCase
     I18n.with_locale(:ja) do
       assert_equal "Pneumonia、Hypertension", hospitalization.diagnosis_names_display
     end
-  end
-
-  test "outcome must be one of the allowed options" do
-    hospitalization = hospitalizations(:one)
-    hospitalization.outcome = "not_a_real_outcome"
-    assert_not hospitalization.valid?
-
-    hospitalization.outcome = "recovered"
-    assert hospitalization.valid?
-  end
-
-  test "discharge_destination must be one of the allowed options" do
-    hospitalization = hospitalizations(:one)
-    hospitalization.discharge_destination = "not_a_real_destination"
-    assert_not hospitalization.valid?
-
-    hospitalization.discharge_destination = "home"
-    assert hospitalization.valid?
   end
 
   test "discharge_date must be on or after admission_date" do
@@ -493,6 +498,11 @@ class HospitalizationTest < ActiveSupport::TestCase
   test "status_label reflects discharge state" do
     assert_equal "Discharged", hospitalizations(:one).status_label
     assert_equal "In Hospital", hospitalizations(:three).status_label
+
+    I18n.with_locale(:ja) do
+      assert_equal "退院済み", hospitalizations(:one).status_label
+      assert_equal "入院中", hospitalizations(:three).status_label
+    end
   end
 
   test "in_hospital?, status_label, and length_of_stay stay safe when admission_date is nil" do
@@ -553,6 +563,11 @@ class HospitalizationTest < ActiveSupport::TestCase
   test "to_s renders patient and admission/discharge period" do
     assert_equal "H001 - John Doe (2026-03-01 - 2026-03-06)", hospitalizations(:one).to_s
     assert_equal "H001 - John Doe (2026-06-01 - in hospital)", hospitalizations(:three).to_s
+
+    I18n.with_locale(:ja) do
+      assert_match(/日付未定/, Hospitalization.new(patient: patients(:one)).to_s)
+      assert_match(/入院中/, hospitalizations(:three).to_s)
+    end
   end
 
   test "period_display renders the admission/discharge period without the patient" do

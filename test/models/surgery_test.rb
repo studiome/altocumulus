@@ -68,14 +68,6 @@ class SurgeryTest < ActiveSupport::TestCase
     assert surgery.valid?
   end
 
-  test "rejects an invalid surgery_date_status value" do
-    surgery = surgeries(:one)
-    surgery.surgery_date_status = "someday"
-
-    assert_not surgery.valid?
-    assert_includes surgery.errors[:surgery_date_status], "is not valid"
-  end
-
   test "does not enforce the surgery_date contradiction check unless surgery_date_status is explicitly assigned" do
     # dup does not carry over the has_many procedure selections, so the
     # duplicate is invalid for an unrelated reason; what matters here is that
@@ -349,17 +341,30 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_equal "elective", surgeries(:one).scheduling_type
   end
 
-  test "scheduling_type must be elective or emergency" do
-    surgery = surgeries(:one)
+  test "choice attributes reject values outside their allowed options" do
+    surgery = Surgery.find(surgeries(:one).id)
+    surgery.surgery_date_status = "someday"
+    assert_not surgery.valid?
+    assert_includes surgery.errors[:surgery_date_status], "is not valid"
 
+    surgery = Surgery.find(surgeries(:one).id)
+    surgery.slot_category = "invalid_category"
+    assert_not surgery.valid?
+    assert_includes surgery.errors[:slot_category], "is not included in the list"
+
+    surgery = Surgery.find(surgeries(:one).id)
     surgery.scheduling_type = "urgent"
     assert_not surgery.valid?
-
     surgery.scheduling_type = nil
     assert_not surgery.valid?
-
     surgery.scheduling_type = "emergency"
     assert surgery.valid?
+
+    surgery = Surgery.find(surgeries(:one).id)
+    %w[regular simultaneous backup off_slot].each do |category|
+      surgery.slot_category = category
+      assert surgery.valid?, "Expected #{category} to be valid"
+    end
   end
 
   test "elective? and emergency? and scheduling_type_label" do
@@ -370,6 +375,28 @@ class SurgeryTest < ActiveSupport::TestCase
     assert surgeries(:emergency_one).emergency?
     assert_not surgeries(:emergency_one).elective?
     assert_equal "Emergency", surgeries(:emergency_one).scheduling_type_label
+  end
+
+  test "option labels are English by default and Japanese under ja, with English DB keys" do
+    assert_equal "Elective", Surgery.scheduling_type_options["elective"]
+    assert_equal "Date Specified", Surgery.surgery_date_status_options["scheduled"]
+
+    I18n.with_locale(:ja) do
+      assert_equal "予定", Surgery.scheduling_type_options["elective"]
+      assert_equal "日付指定", Surgery.surgery_date_status_options["scheduled"]
+      assert_equal Surgery::SCHEDULING_TYPE_KEYS, Surgery.scheduling_type_options.keys
+    end
+  end
+
+  test "surgery_date_display and to_s fallback text follow the locale" do
+    surgery = Surgery.new(patient: patients(:one), surgery_date: nil)
+    assert_equal "Undated", surgery.surgery_date_display
+    assert_match(/\ADate not set - /, surgery.to_s)
+
+    I18n.with_locale(:ja) do
+      assert_equal "未定", surgery.surgery_date_display
+      assert_match(/\A日付未定 - /, surgery.to_s)
+    end
   end
 
   test "elective and emergency scopes" do
@@ -482,21 +509,6 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_not surgery.simultaneous_slot?
     assert_not surgery.backup_slot?
     assert_not surgery.off_slot?
-  end
-
-  test "rejects an invalid slot_category" do
-    surgery = surgeries(:one)
-    surgery.slot_category = "invalid_category"
-    assert_not surgery.valid?
-    assert_includes surgery.errors[:slot_category], "is not included in the list"
-  end
-
-  test "accepts valid slot_categories" do
-    surgery = surgeries(:one)
-    %w[regular simultaneous backup off_slot].each do |category|
-      surgery.slot_category = category
-      assert surgery.valid?, "Expected #{category} to be valid"
-    end
   end
 
   test "switching slot_category away from regular clears slot_number" do

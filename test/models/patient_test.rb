@@ -79,4 +79,13 @@ class PatientTest < ActiveSupport::TestCase
     patient.sex = "female"
     assert patient.valid?
   end
+
+  test "sex_options are English by default and Japanese under ja, with English DB keys" do
+    assert_equal "Male", Patient.sex_options["male"]
+
+    I18n.with_locale(:ja) do
+      assert_equal "男性", Patient.sex_options["male"]
+      assert_equal Patient::SEX_KEYS, Patient.sex_options.keys
+    end
+  end
 end

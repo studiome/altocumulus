@@ -11,10 +11,6 @@ class UserTest < ActiveSupport::TestCase
     assert user.valid?
   end
 
-  test "a new user defaults to the Japanese locale" do
-    assert_equal "ja", User.new.locale
-  end
-
   test "requires email" do
     user = User.new(name: "No Email", password: "password")
     assert_not user.valid?
@@ -89,20 +85,19 @@ class UserTest < ActiveSupport::TestCase
     assert_equal %w[user admin], user.roles
   end
 
-  test "a persisted new user defaults to the Japanese locale" do
+  test "locale defaults to ja and must be en or ja" do
+    assert_equal "ja", User.new.locale
     user = User.create!(login_id: "default-locale@example.com", name: "Default Locale", password: "password")
     assert_equal "ja", user.reload.locale
-  end
 
-  test "locale must be en or ja" do
+    %w[en ja].each do |locale|
+      user = User.new(login_id: "locale@example.com", name: "Locale", password: "password", locale: locale)
+      assert user.valid?, "Expected #{locale} to be valid"
+    end
+
     user = User.new(login_id: "locale@example.com", name: "Locale", password: "password", locale: "de")
     assert_not user.valid?
     assert_includes user.errors[:locale], "is not included in the list"
-  end
-
-  test "accepts ja as a locale" do
-    user = User.new(login_id: "ja-locale@example.com", name: "JA Locale", password: "password", locale: "ja")
-    assert user.valid?
   end
 
   test "admin? reflects role" do

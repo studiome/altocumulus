@@ -222,6 +222,31 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_includes usage.warnings, "No elective slots are configured for Sunday."
   end
 
+  test "warnings are Japanese under the ja locale" do
+    rule = elective_slot_rules(:wednesday) # 2 slots x 180 min
+    holiday = holidays(:national_holiday)
+
+    I18n.with_locale(:ja) do
+      assert_includes ElectiveSlotUsage.for_dates([ SUNDAY ])[SUNDAY].warnings, "日曜日には手術枠が設定されていません。"
+
+      unscheduled = ->(*numbers) { numbers.map { |n| Surgery.new(scheduling_type: "elective", slot_number: n, duration_hours: 1.0) } }
+      usage_one = ElectiveSlotUsage.new(date: Date.new(2026, 3, 4), rule: rule, elective_surgeries: unscheduled.(9), emergency_surgeries: [])
+      assert_includes usage_one.warnings, "1件の予定手術が利用可能な枠に割り当てられていません。"
+      usage_two = ElectiveSlotUsage.new(date: Date.new(2026, 3, 4), rule: rule, elective_surgeries: unscheduled.(9, 10), emergency_surgeries: [])
+      assert_includes usage_two.warnings, "2件の予定手術が利用可能な枠に割り当てられていません。"
+
+      usage_holiday = ElectiveSlotUsage.new(
+        date: holiday.date, rule: elective_slot_rules(:tuesday), elective_surgeries: unscheduled.(1),
+        emergency_surgeries: [], holiday: holiday
+      )
+      assert_equal [ "#{holiday.name}は休日のため、利用できる手術枠がありません。" ], usage_holiday.warnings
+
+      over = Surgery.new(scheduling_type: "elective", slot_number: 2, duration_hours: 5.0) # 300 min, over the 240 min slot
+      usage_over = ElectiveSlotUsage.new(date: Date.new(2026, 3, 3), rule: elective_slot_rules(:tuesday), elective_surgeries: [ over ], emergency_surgeries: [])
+      assert_includes usage_over.warnings, "第2枠は上限240分を60分超過しています。"
+    end
+  end
+
   test "warnings does not flag an unconfigured weekday with only emergency surgeries" do
     usage = ElectiveSlotUsage.new(
       date: SUNDAY,

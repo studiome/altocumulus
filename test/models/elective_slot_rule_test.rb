@@ -74,6 +74,12 @@ class ElectiveSlotRuleTest < ActiveSupport::TestCase
 
   test "day_name returns the weekday name" do
     assert_equal "Tuesday", elective_slot_rules(:tuesday).day_name
+    assert_equal %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday], ElectiveSlotRule.day_names
+
+    I18n.with_locale(:ja) do
+      assert_equal %w[日曜日 月曜日 火曜日 水曜日 木曜日 金曜日 土曜日], ElectiveSlotRule.day_names
+      assert_equal "火曜日", elective_slot_rules(:tuesday).day_name
+    end
   end
 
   test "slot_duration_hours rounds to one decimal place" do
@@ -127,6 +133,10 @@ class ElectiveSlotRuleTest < ActiveSupport::TestCase
 
   test "to_s summarizes the rule" do
     assert_equal "Tuesday - 3 slots x 240 min", elective_slot_rules(:tuesday).to_s
+
+    I18n.with_locale(:ja) do
+      assert_equal "火曜日 - 3枠 x 240分", elective_slot_rules(:tuesday).to_s
+    end
   end
 
   test "to_s shows a fractional slot_count without a trailing .0 artifact" do
