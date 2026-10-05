@@ -133,4 +133,23 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     get operations_calendar_url
     assert_response :success
   end
+
+  test "shows the referral source in the patient column when the surgery day is covered by a hospitalization" do
+    surgery = surgeries(:one)
+    hospitalizations(:one).update_columns(referred_from: "Riverside Clinic")
+
+    get operations_calendar_url, params: { start: surgery.surgery_date.to_s, days: 1 }
+
+    assert_response :success
+    assert_select ".ledger-patient .ledger-secondary", text: /Referred From.*Riverside Clinic/m
+  end
+
+  test "shows no referral line when there is no referral source" do
+    surgery = surgeries(:one)
+
+    get operations_calendar_url, params: { start: surgery.surgery_date.to_s, days: 1 }
+
+    assert_response :success
+    assert_select ".ledger-patient .ledger-secondary", text: /Referred From/, count: 0
+  end
 end

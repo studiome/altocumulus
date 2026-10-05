@@ -158,6 +158,43 @@ class OperationsCalendarTest < ActiveSupport::TestCase
     assert_equal small_count, large_count
   end
 
+  test "referred_from_for returns the referral source of the hospitalization covering the surgery date" do
+    date = admission_free_date
+    patient = new_patient
+    create_hospitalization(patient: patient, scheduled_admission_date: date - 1, discharge_date: date + 3,
+                           outcome: "recovered", referred_from: "City Clinic")
+    surgery = create_surgery(patient, date)
+
+    calendar = OperationsCalendar.build(start: date - 1, days: 3)
+
+    assert_equal "City Clinic", calendar.referred_from_for(surgery)
+  end
+
+  test "referred_from_for ignores hospitalizations that do not cover the date, are discarded or have no referral" do
+    date = admission_free_date(span: 30)
+    outside = new_patient
+    create_hospitalization(patient: outside, scheduled_admission_date: date + 10, referred_from: "Later Clinic")
+    discarded = new_patient
+    create_hospitalization(patient: discarded, scheduled_admission_date: date - 1, referred_from: "Gone").discard!
+    blank = new_patient
+    create_hospitalization(patient: blank, scheduled_admission_date: date - 1)
+
+    surgeries = [ outside, discarded, blank ].map { |patient| create_surgery(patient, date) }
+    calendar = OperationsCalendar.build(start: date - 1, days: 3)
+
+    surgeries.each { |surgery| assert_nil calendar.referred_from_for(surgery) }
+  end
+
+  test "referred_from_for adds no queries per surgery" do
+    date = admission_free_date(span: 3)
+    create_surgery(new_patient, date)
+    one = count_queries { OperationsCalendar.build(start: date, days: 2) }
+    3.times { create_surgery(new_patient, date) }
+    many = count_queries { OperationsCalendar.build(start: date, days: 2) }
+
+    assert_equal one, many
+  end
+
   private
 
     # A fresh, hospitalization-free patient, so a new reservation can never
@@ -169,6 +206,13 @@ class OperationsCalendarTest < ActiveSupport::TestCase
       Patient.create!(
         name: "Calendar Test Patient #{@patient_sequence}", hospital_id: "CAL#{@patient_sequence}",
         date_of_birth: Date.new(1980, 1, 1)
+      )
+    end
+
+    def create_surgery(patient, date)
+      Surgery.create!(
+        patient: patient, surgery_date: date, anesthesia_method: "General",
+        surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
       )
     end
 

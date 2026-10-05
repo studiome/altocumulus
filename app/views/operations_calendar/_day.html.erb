@@ -59,6 +59,10 @@
         <td class="ledger-patient">
           <span class="ledger-secondary font-mono"><%= surgery.patient&.hospital_id %></span>
           <%= link_to surgery.patient&.name.presence || t("operations_calendar.labels.unknown_patient_name", id: surgery.patient_id), surgery, class: "ledger-primary app-inline-link" %>
+          <% referred_from = calendar.referred_from_for(surgery) %>
+          <% if referred_from.present? %>
+            <span class="ledger-secondary"><%= t("hospitalizations.labels.referred_from") %>: <%= referred_from %></span>
+          <% end %>
         </td>
         <td>
           <span class="ledger-secondary"><%= surgery.diagnosis_names_display %></span>

@@ -34,6 +34,15 @@ class OperationsCalendar
 
     @slot_usages = ElectiveSlotUsage.for_dates(@dates)
     @admission_counts = build_admission_counts
+    @referrals_by_patient = build_referrals_by_patient
+  end
+
+  # The referral source of the patient's hospitalization whose period covers
+  # the surgery date, or nil when there is none (or it has no referral).
+  def referred_from_for(surgery)
+    @referrals_by_patient.fetch(surgery.patient_id, []).find { |hospitalization|
+      covers?(hospitalization, surgery.surgery_date)
+    }&.referred_from
   end
 
   def admission_count_for(date)
@@ -89,5 +98,24 @@ class OperationsCalendar
                                .count
 
       counts.transform_keys { |date| date.is_a?(Date) ? date : Date.parse(date.to_s) }
+    end
+
+    # One query for every surgery on the calendar, narrowed by the range as a
+    # whole; which hospitalization belongs to which surgery is then decided
+    # in Ruby (see #covers?). Only referred hospitalizations are loaded, as
+    # that is all the calendar shows.
+    def build_referrals_by_patient
+      patient_ids = slot_usages.values.flat_map { |usage| (usage.elective_surgeries + usage.emergency_surgeries).map(&:patient_id) }.uniq
+
+      Hospitalization.active.referred
+                     .where(patient_id: patient_ids)
+                     .where("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date) <= ?", dates.last)
+                     .where("hospitalizations.discharge_date IS NULL OR hospitalizations.discharge_date >= ?", dates.first)
+                     .group_by(&:patient_id)
+    end
+
+    def covers?(hospitalization, date)
+      start = hospitalization.effective_admission_date
+      start.present? && start <= date && (hospitalization.discharge_date.nil? || hospitalization.discharge_date >= date)
     end
 end
