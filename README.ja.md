@@ -38,23 +38,26 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 
 | 機能 | 画面 | 概要 |
 | --- | --- | --- |
-| ログイン | `/login` | ログインID（`ACCOUNT_IDENTIFIER` によりメールアドレスまたはユーザー名） + パスワードによる認証。無操作が一定時間続くと自動的にセッションが失効 |
-| 運用カレンダー（トップ） | `/operations_calendar` | 既定 50 日分の日別ビュー。手術・入院件数、混雑注意、休日/日別コメント、待機・直近更新・要確認などのサマリー、お知らせを一覧表示 |
+| ログイン | `/login` | ログインID（`ACCOUNT_IDENTIFIER` によりメールアドレスまたはユーザー名） + パスワードによる認証。無操作が一定時間続くと自動的にセッションが失効。公開中のお知らせをこの画面に表示し、未ログインの訪問者には日本語で表示 |
+| 運用カレンダー（トップ） | `/operations_calendar` | 既定 50 日分を日付ごとにまとめた台帳形式の表（開始日と日数は変更可）。日別に、枠ごとの手術と紹介元、入院件数、混雑注意、休日/日別コメントを表示。日付見出しのリンクから、その日付を入力済みにした入院・手術の新規登録へ移動 |
 | 患者台帳 | `/patients` | 患者基本情報の管理。氏名・患者 ID でのキーワード検索、ページネーション対応 |
 | 患者診断 | `/patients/:id/patient_diagnoses` | 診断マスタを参照した患者ごとの診断履歴。診断日と左右区分（laterality）を保持 |
-| 手術記録 | `/surgeries` | 手術日（「未定」も選択可）・術式（最大 5 件）・麻酔法・所要時間・予定/緊急区分・術者/助手/手術順。患者診断および入院と紐付け |
-| 入院記録 | `/hospitalizations` | 予約段階（予定入院日）から実入院（実績入院日）・退院までのライフサイクル、入院目的、管理者確認、論理削除/復元、再予約（コピー）に対応 |
-| 手術枠スケジュール | `/surgery_schedule` | 週表示のカレンダー。枠ごとの手術一覧と使用時間、枠の時間超過・未割当手術・祝日を警告表示 |
+| 手術記録 | `/surgeries` | 手術日（「未定」も選択可）・術式（最大 5 件）・麻酔法・所要時間・予定/緊急区分・術者/助手/手術順。枠区分（通常枠・同時手術・待機・枠外）。患者診断と紐付け。術者で検索可能 |
+| 入院記録 | `/hospitalizations` | 予約段階（予定入院日・予定手術日）から実入院（実績入院日）・退院までのライフサイクル、入院目的（手術/検査・処置/化学療法/その他。その他は理由必須）、紹介元、管理者確認、論理削除/復元、再予約（コピー）に対応 |
+| 手術枠スケジュール | `/surgery_schedule` | 週表示のカレンダー。枠ごとの手術一覧と使用時間、枠の時間超過・未割当手術・祝日を警告表示。同じ週を横向き A4 の白黒 PDF として印刷可能（`/surgery_schedule/pdf?start_date=YYYY-MM-DD`、開始日は任意。術者/助手・紹介元・休日名・日別メモを掲載） |
 | ダッシュボード | `/dashboard` | 年次で絞り込める統計（患者数・在院患者数・月別件数・平均在院日数・術式ランキング） |
 | 横断検索 | `/search` | キーワード 1 つで患者・入院・手術を横断的に検索 |
-| 監査ログ | `/audit_events` | 患者・手術・入院の作成/更新/削除を、操作者・IP アドレス・変更前後の値つきで記録・閲覧 |
+| 監査ログ | `/audit_events` | 患者・手術・入院・症例データベースの作成/更新/削除を、操作者・IP アドレス・変更前後の値つきで記録・閲覧 |
 | マスタ管理 | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` | 診断名・術式・曜日別の手術枠ルール（枠数は小数対応）・休日/日別コメント |
+| 症例データベース | `/case_databases` | データ管理者が定義した独自項目（テキスト/数値/選択）を持つ、名前付きの患者レジストリ。ログイン済みなら誰でも患者の追加・値の入力・CSV 出力ができ、データベース・項目・患者エントリの作成/編集/削除はデータ管理者のみ |
 | アカウント設定 | `/account` | 自分の氏名・ログインID・パスワードの変更、表示言語の切り替え |
 | 利用者管理（管理者専用） | `/admin/users` | 利用者の作成・編集・無効化、パスワード初期化。最後の有効な管理者は無効化・降格できない |
-| お知らせ管理（管理者専用） | `/admin/announcements` | 運用カレンダーに表示するお知らせの作成・公開/非公開切り替え |
+| 一括利用者登録（管理者専用） | `/admin/user_import/new` | ログインIDとパスワードの CSV から利用者を一括登録。既存のログインIDはスキップし、全行を登録/スキップ/失敗で報告 |
+| お知らせ管理（管理者専用） | `/admin/announcements` | ログイン画面に表示するお知らせの作成・公開/非公開切り替え |
 | 管理者メモ（管理者専用） | `/admin/admin_notes` | 管理者間の申し送り用フリーテキストメモ |
+| アプリ設定（管理者専用） | `/admin/settings` | ナビゲーションバー・ブラウザのタブ・インストール可能アプリに表示するアプリケーション名の変更 |
 
-**認証・利用者管理・権限分離（一般/管理者）・アクセスログ・無操作タイムアウトを実装済みです。**
+**認証・利用者管理・権限分離（一般/データ管理者/管理者）・アクセスログ・無操作タイムアウトを実装済みです。**
 アプリケーションの画面はログインしたユーザーのみアクセスできます（`/login`、
 言語切り替え（`PATCH /locale`）、ヘルスチェック `/up` を除く）。
 
@@ -62,14 +65,14 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 
 | 領域 | 採用技術 |
 | --- | --- |
-| 言語 / フレームワーク | Ruby 4.0.6 / Rails 8.1 |
+| 言語 / フレームワーク | Ruby 4.0.7 / Rails 8.1 |
 | データベース | SQLite（アプリ本体・Solid Queue・Solid Cache・Solid Cable の 4 スキーマ） |
 | バックグラウンド処理 | Solid Queue / Solid Cache / Solid Cable |
 | アセット | Propshaft + importmap-rails（**Node / JS バンドラ不使用**） |
 | CSS | Tailwind CSS + daisyUI（`tailwindcss-rails`） |
 | フロントエンド | Hotwire（Turbo Drive / Turbo Streams / Stimulus） |
 | テスト | Minitest + fixtures、システムテストは Capybara + Selenium |
-| PDF 出力 | Prawn + prawn-table（週間手術予定表。IPAex ゴシックを同梱） |
+| PDF 出力 | Prawn + prawn-table（週間手術予定表。IPAex ゴシックを `vendor/fonts` に同梱） |
 | 静的解析 | RuboCop（`rubocop-rails-omakase`）、Brakeman、bundler-audit、importmap audit |
 | デプロイ | Kamal + Thruster（Dockerfile 同梱） |
 
@@ -101,8 +104,9 @@ http://localhost:3000 でアクセスできます。ルートパスは運用カ�
 （`OperationsCalendarController#index`）です。未ログインの場合はログイン画面へ
 リダイレクトされます。
 
-`bin/setup`（開発環境）は seed も実行し、以下のデモ管理者アカウントでログインできます
-（`db/seeds.rb` 参照）。
+`bin/setup`（開発環境）は seed も実行し、以下のデモアカウント（`admin` と `data_manager` の
+両ロールを保持）でログインできます（`db/seeds.rb` 参照）。未ログインの訪問者にはログイン画面が
+日本語で表示されます。ログイン後はナビゲーションから英語に切り替えられます。
 
 | ログインID | パスワード |
 | --- | --- |
@@ -127,6 +131,7 @@ http://localhost:3000 でアクセスできます。ルートパスは運用カ�
 | `ACCOUNT_IDENTIFIER` | ログインIDを `email`（メールアドレス）にするか `username`（ユーザー名）にするか。**サーバ構築時に決定し、以後は変更しないこと**（後から切り替えると既存のログインIDが新しい書式バリデーションに通らなくなる） | `email` |
 | `SESSION_IDLE_TIMEOUT_MINUTES` | セッションの無操作タイムアウト（分） | `10` |
 | `ADMISSION_WARNING_THRESHOLD` | 運用カレンダーで「混雑注意」とする 1 日あたりの入院件数 | `5` |
+| `APP_TITLE` | 管理者が `/admin/settings` で設定するまでの間に使うアプリケーション名。ログインせずに新規デプロイへ名前を付けたいときに使う | `Altocumulus` |
 
 ## 開発コマンド
 
@@ -157,12 +162,15 @@ erDiagram
     Diagnosis        ||--o{ PatientDiagnosis        : "参照"
     Diagnosis        ||--o{ HospitalizationDiagnosis: "参照"
     Hospitalization  ||--o{ HospitalizationDiagnosis: ""
-    Hospitalization  ||--o{ Surgery                 : "入院中の手術"
     Surgery          ||--o{ SurgeryDiagnosisLink    : ""
     PatientDiagnosis ||--o{ SurgeryDiagnosisLink    : ""
     Surgery          ||--o{ SurgeryProcedureSelection : ""
     SurgeryProcedure ||--o{ SurgeryProcedureSelection : "参照"
     User             ||--o{ AuditEvent              : "操作者"
+    User             ||--o{ UserRole                : "ロール"
+    CaseDatabase     ||--o{ CaseDatabaseField       : "独自項目"
+    CaseDatabase     ||--o{ CaseDatabaseEntry       : "患者ごとの値"
+    Patient          ||--o{ CaseDatabaseEntry       : ""
 
     Patient {
         string hospital_id UK
@@ -179,6 +187,7 @@ erDiagram
         float  duration_hours
         string anesthesia_method
         string scheduling_type "elective/emergency"
+        string slot_category "regular/simultaneous/backup/off_slot"
         int    slot_number "入る枠の番号 / 未割当は null"
         int    operation_order "同日内の手術順"
         string operator_name "術者"
@@ -186,10 +195,12 @@ erDiagram
     }
     Hospitalization {
         date   scheduled_admission_date "予定入院日（予約段階）"
+        date   scheduled_surgery_date "予定手術日"
         date   admission_date "実績入院日"
         date   discharge_date
         string reservation_status "requested/waiting/date_fixed/.../discharged"
-        string purpose "surgery/examination/chemotherapy"
+        string purpose "surgery/examination/chemotherapy/other"
+        string referred_from "紹介元"
         string admin_status "unconfirmed/confirmed"
         string outcome
         string discharge_destination
@@ -202,12 +213,11 @@ erDiagram
     }
     User {
         string login_id UK
-        string role "user/admin"
-        string locale "en/ja"
+        string locale "en/ja（既定は ja）"
         boolean active
     }
     AuditEvent {
-        string auditable_type "Patient/Surgery/Hospitalization"
+        string auditable_type "Patient/Surgery/Hospitalization/CaseDatabase"
         string action "create/update/destroy"
         string ip_address
         json   change_data
@@ -216,7 +226,10 @@ erDiagram
 
 上記に加えて、`ElectiveSlotRule`（曜日別の枠数と 1 枠あたりの分数。枠数は小数可）、
 `Holiday`（休日 / 日別コメント兼用）、`Announcement`（お知らせ）、`AdminNote`（管理者メモ）、
-`AccessLog`（ログイン/ログアウト/タイムアウト/認証失敗の記録）があります。
+`AppSetting`（アプリ設定）、`AccessLog`（ログイン/ログアウト/タイムアウト/認証失敗の記録）があります。
+`UserRole` は利用者が持つロールを 1 行ずつ保持するため（`user` / `data_manager` / `admin`）、複数の
+ロールを同時に持てます。`CaseDatabase` / `CaseDatabaseField` / `CaseDatabaseEntry` は症例データベース
+を支え、エントリの値は項目 ID をキーとする JSON ハッシュとして保存されます。
 
 主な制約:
 
@@ -228,10 +241,19 @@ erDiagram
   予定入院日どちらか（実効入院日）を基準に、同一患者の入院期間の重複を禁止しています。
 - `Hospitalization` の削除は論理削除（`deleted_at`）で、復元できます。一般利用者による更新は
   `admin_status` を強制的に `unconfirmed` に戻し、管理者のみが確認（`confirmed`）にできます。
-- `Surgery` を入院に紐付ける場合、同一患者かつ手術日が入院期間内である必要があります。
+- `Surgery` と `Hospitalization` は互いに紐付けません。入院は独自に `scheduled_surgery_date`
+  （`scheduled_admission_date` より前は不可）を持ち、運用カレンダーと週間予定表 PDF は、入院期間が
+  手術日を含む場合にその `referred_from`（紹介元）を手術の横に表示します。
+- `purpose` が `other` の `Hospitalization` は、自由記述の `reason`（理由）が必須です。
+- `Surgery#slot_category` は `regular` / `simultaneous` / `backup` / `off_slot` のいずれかです。
+  手術枠を消費し「未割当」になり得るのは通常枠（`regular`）の手術のみで、それ以外は枠の上限とは
+  別に表示されます。
 - `Surgery#slot_number` / `#operation_order` は 1 以上の整数（未割当は `null`）。枠数の超過や
   枠時間の超過は保存をブロックせず、スケジュール盤・運用カレンダーの警告として表示されます。
-- `User` は最後の有効な管理者を無効化・一般利用者へ降格できません（`cannot_deactivate_or_demote_last_admin`）。
+- `User` は既知のロールを 1 つ以上持つ必要があり、最後の有効な管理者を無効化・降格できません
+  （`cannot_deactivate_or_demote_last_admin`）。
+- `CaseDatabase` の名前は一意で、同じ患者は 1 つのデータベースに 1 回だけ登録できます。`number` 項目
+  は数値、`select` 項目は選択肢のいずれかである必要があります。
 
 ## 設計上のポイント
 
@@ -268,10 +290,13 @@ erDiagram
 
 ### 認証・権限・セッション管理
 
-`has_secure_password`（bcrypt）によるログインで、ロールは `user` / `admin` の 2 種類です。
+`has_secure_password`（bcrypt）によるログインで、ロールは `user_roles` テーブルで保持する `user` / `data_manager` / `admin` の 3 種類で、
+`admin` と `data_manager` のように複数を同時に持てます。
 `ApplicationController` は全アクションの前に `require_login` を強制し（`/login` などログイン前
 の画面のみ `skip_before_action` で除外）、`require_admin` を通した先だけが管理者専用の画面
-（利用者管理・お知らせ管理・管理者メモ・入院の確認/復元/再予約）にアクセスできます。
+（利用者管理・一括登録・お知らせ管理・管理者メモ・アプリ設定・入院の確認/復元/再予約）に
+アクセスできます。さらに `require_data_manager` が、症例データベースとその項目の作成・編集・
+削除、および患者エントリの削除を制限します。
 
 セッションには最終アクセス時刻を保持し、`config.x.session_idle_timeout`
 （既定 10 分、`SESSION_IDLE_TIMEOUT_MINUTES` で変更可）を超えて無操作だとセッションを
@@ -292,7 +317,8 @@ erDiagram
   （実績入院日）は未定でも構いません。両方とも空の場合のみ保存を拒否します。
 - `reservation_status`（requested/waiting/date_fixed/surgery_date_fixed/admitted/
   admitted_other_dept/on_hold/discharged）で予約の進行状況を、`purpose`
-  （surgery/examination/chemotherapy）で入院目的を表します。
+  （surgery/examination/chemotherapy/other）で入院目的を、`referred_from` で紹介元を、
+  `scheduled_surgery_date` で予定手術日を表します。
 - `admin_status`（unconfirmed/confirmed）は**一般利用者による更新のたびに強制的に
   unconfirmed へ戻り**、管理者だけが `confirm` アクションで confirmed にできます
   （`before_update :reset_admin_status_for_non_admin_update`）。コンソールや seed など
@@ -300,7 +326,7 @@ erDiagram
 - 削除は物理削除ではなく `deleted_at` による**論理削除**（`discard!` / `restore!`）で、
   削除済み一覧（`/hospitalizations/deleted`、管理者専用）から復元できます。
 - `#rebook` は「別の予定入院日で撮り直す」ための**再予約（コピー）**を行い、実績・退院情報・
-  管理者確認・手術の紐付けは引き継がず、診断だけを引き継いだ新規の `requested` レコードを
+  管理者確認・予定手術日は引き継がず、診断だけを引き継いだ新規の `requested` レコードを
   作成します（`/hospitalizations/:id/copy`）。
 - 登録時点の患者の氏名・年齢・性別を `patient_name_snapshot` などに**スナップショット**として
   保持し、後で患者情報が変わっても予約当時の記録が変わらないようにしています。
@@ -317,10 +343,34 @@ Rails の `params.expect` は**数値キーのみ**をネスト属性のイン�
 既存 2 行の値を入れ替えるような更新は、保存途中で一意インデックスに一時的に抵触し得るため、
 コントローラ側で `ActiveRecord::RecordNotUnique` を捕捉してバリデーションエラーに変換しています。
 
-### モーダルからのマスタ作成
+### ピッカーモーダル
 
-診断名・術式は、入力中のフォームを離れずにモーダルから新規作成できます。作成成功時は
-Turbo Stream で該当の `<select>` に新しい選択肢を差し込みます。
+患者・診断名・術式・手術に関連する患者診断は、`<select>` ではなく、遅延読み込みする
+turbo-frame を持つモーダルで選びます（検索・ページネーション対応）。入力欄そのものは hidden
+input と読み取り専用の表示で、選んだレコードがそこに入ります。
+
+新しい診断名や術式は、入力中のフォームを離れずに同じモーダルの中から作成できます。成功すると
+ピッカーのフレームが確認表示に置き換わり、モーダルを開いた行に新しいレコードがそのまま選択されます。
+
+### CSV による利用者の一括登録
+
+`UserImport` は管理者が `/admin/user_import/new` でアップロードする CSV を扱います。ヘッダー行には
+`login_id` と `password` が必須で、`name` / `role` / `locale` は任意です（名前のない行はログインIDを
+名前として登録）。`role` は `;` 区切りで複数指定でき（例: `admin;data_manager`）、空欄は `user` になります。
+同じ画面から空のテンプレート（`GET /admin/user_import/template`）を取得できます。ヘッダー行のみで、
+日本語環境の Excel でも文字化けしないよう UTF-8 BOM を付けており、サンプル行は意図的に含めません
+（サンプル入りのテンプレートは、そのまま実利用者として登録されてしまうため）。
+
+行は 1 件ずつ保存し、1 つの大きなトランザクションにはしないので、不正な 1 行でファイル全体が
+無駄になることはありません。各行は「登録 / スキップ / 失敗」で返り、失敗にはバリデーション
+メッセージ（パスワードは含めない）を付けます。既に存在するログインIDは**スキップして変更しません**。
+古いスプレッドシートで同僚のパスワードを上書きしてしまう事故を防ぐための仕様です。
+
+### アプリケーション名
+
+ナビゲーションバー・ブラウザのタブ・PWA マニフェストの名前は `AppSetting` から取得し、管理者が
+`/admin/settings` で編集します。何も保存されていなければ起動時に読み込む環境変数 `APP_TITLE`、
+それも無ければ組み込みの名前を使うため、環境変数だけで新規デプロイに名前を付けられます。
 
 ### 監査ログ
 
@@ -331,11 +381,13 @@ Turbo Stream で該当の `<select>` に新しい選択肢を差し込みます�
 あわせて保存されるため、「誰が」「どこから」変更したかまで追跡できます。
 
 監査イベントの記録に失敗した場合は保存全体がロールバックされ、記録漏れが起きないようになっています。
-`update_all` はコールバックを飛ばすため、入院削除時の手術の紐付け解除もレコード単位の保存で行っています。
+`CaseDatabase` も監査対象ですが、その項目とエントリは個別には記録しません。
 
 ### 日本語 / 英語の表示切り替え
 
-ナビゲーションから日本語・英語をいつでも切り替えられます（既定は英語）。ログイン中は
+ナビゲーションから日本語・英語をいつでも切り替えられます。新規利用者の既定（`users.locale`）と
+未ログインのログイン画面は日本語で、`I18n.default_locale` は翻訳のフォールバックとしてのみ英語の
+ままです。ログイン中は
 `users.locale` に切り替え結果が永続化され、次回以降のログインでも引き継がれます。未ログイン
 時は Cookie セッションに一時保存されます（`LocalesController`）。`params[:locale]` は
 `I18n.available_locales` に含まれる値だけを受け付け、任意の文字列がそのまま `I18n.locale=`

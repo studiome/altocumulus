@@ -39,25 +39,26 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 
 | Feature | Screen | Description |
 | --- | --- | --- |
-| Login | `/login` | Login id (email or username, per `ACCOUNT_IDENTIFIER`) + password authentication. Sessions expire automatically after a period of inactivity |
-| Operations calendar (home) | `/operations_calendar` | Day-by-day view spanning 50 days by default. Surgery and admission counts, congestion warnings, holidays / per-day comments, summaries (waiting, recently updated, needs attention), and announcements |
+| Login | `/login` | Login id (email or username, per `ACCOUNT_IDENTIFIER`) + password authentication. Sessions expire automatically after a period of inactivity. Published announcements are shown on this page, and it is displayed in Japanese for anonymous visitors |
+| Operations calendar (home) | `/operations_calendar` | Day-grouped ledger table spanning 50 days by default (start date and day count adjustable). Per day: surgeries by slot with the referral source, admission counts, congestion warnings, and holidays / per-day comments. The date heading links to a new hospitalization or surgery pre-filled with that day |
 | Patient ledger | `/patients` | Patient master data, with keyword search by name or hospital ID and pagination |
 | Patient diagnoses | `/patients/:id/patient_diagnoses` | Per-patient diagnosis history referencing the diagnosis master, holding the diagnosis date and laterality |
-| Surgery records | `/surgeries` | Surgery date (may be "undecided"), procedures (up to 5), anesthesia method, duration, elective/emergency type, operator/assistant/operation order. Linked to patient diagnoses and hospitalizations |
-| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission date) through actual admission and discharge, admission purpose, administrator confirmation, soft delete/restore, and rebooking (copy) |
-| Surgery slot schedule | `/surgery_schedule` | Weekly calendar showing the surgeries and used time per slot, warning about slot overruns, unassigned surgeries, and holidays |
+| Surgery records | `/surgeries` | Surgery date (may be "undecided"), procedures (up to 5), anesthesia method, duration, elective/emergency type, slot category (regular / joint / backup / off-slot), operator/assistant/operation order. Linked to patient diagnoses. Searchable by operator |
+| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / other, the last requiring a reason), referral source, administrator confirmation, soft delete/restore, and rebooking (copy) |
+| Surgery slot schedule | `/surgery_schedule` | Weekly calendar showing the surgeries and used time per slot, warning about slot overruns, unassigned surgeries, and holidays. The same week can be printed as a landscape A4 PDF (`/surgery_schedule/pdf?start_date=YYYY-MM-DD`, any start date) in black and white, with operator/assistant, referral source, holiday names, and day notes |
 | Dashboard | `/dashboard` | Statistics filterable by year (patient counts, inpatients, monthly counts, average length of stay, procedure ranking) |
 | Cross-entity search | `/search` | Search patients, hospitalizations, and surgeries with a single keyword |
-| Audit log | `/audit_events` | Records and displays create/update/delete of patients, surgeries, and hospitalizations with the operator, IP address, and before/after values |
+| Audit log | `/audit_events` | Records and displays create/update/delete of patients, surgeries, hospitalizations, and case databases with the operator, IP address, and before/after values |
 | Master data | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` | Diagnosis names, procedures, per-weekday slot rules (fractional slot counts supported), holidays / per-day comments |
+| Case databases | `/case_databases` | Named patient registries with custom fields (text / number / select) defined by a data manager. Any signed-in user can add patients, enter values, and export the registry as CSV; only a data manager can create, edit, or delete a database, its fields, or a patient entry |
 | Account settings | `/account` | Change your own name, login id, and password, and switch the display language |
 | User management (admin only) | `/admin/users` | Create, edit, and deactivate users and reset passwords. The last active admin can be neither deactivated nor demoted |
 | Bulk user registration (admin only) | `/admin/user_import/new` | Register users from a CSV of login ids and passwords. Existing login ids are skipped, and every line is reported back as registered / skipped / failed |
-| Announcement management (admin only) | `/admin/announcements` | Create announcements shown on the operations calendar and toggle their visibility |
+| Announcement management (admin only) | `/admin/announcements` | Create announcements shown on the sign-in page and toggle their visibility |
 | Admin notes (admin only) | `/admin/admin_notes` | Free-text handover notes shared between administrators |
 | Application settings (admin only) | `/admin/settings` | Change the application title shown in the navigation bar, the browser tab, and the installable app |
 
-**Authentication, user management, role separation (user/admin), access logging, and
+**Authentication, user management, role separation (user / data manager / admin), access logging, and
 idle timeout are implemented.** Every application screen requires a logged-in user; the
 exceptions are `/login`, the language switcher (`PATCH /locale`), and the `/up` health check.
 
@@ -72,7 +73,7 @@ exceptions are `/login`, the language switcher (`PATCH /locale`), and the `/up` 
 | CSS | Tailwind CSS + daisyUI (`tailwindcss-rails`) |
 | Front end | Hotwire (Turbo Drive / Turbo Streams / Stimulus) |
 | Testing | Minitest + fixtures; system tests with Capybara + Selenium |
-| PDF output | Prawn + prawn-table (weekly surgery schedule; bundled IPAex Gothic font) |
+| PDF output | Prawn + prawn-table (weekly surgery schedule; bundled IPAex Gothic font in `vendor/fonts`) |
 | Static analysis | RuboCop (`rubocop-rails-omakase`), Brakeman, bundler-audit, importmap audit |
 | Deployment | Kamal + Thruster (Dockerfile included) |
 
@@ -105,7 +106,9 @@ The app is available at http://localhost:3000. The root path is the operations c
 login screen.
 
 In development, `bin/setup` also runs the seeds, so you can log in with the following
-demo administrator account (see `db/seeds.rb`).
+demo account (see `db/seeds.rb`), which holds both the `admin` and `data_manager` roles. The sign-in
+screen is shown in Japanese for visitors who have not signed in; switch to English from the navigation
+after logging in.
 
 | Login ID | Password |
 | --- | --- |
@@ -161,12 +164,15 @@ erDiagram
     Diagnosis        ||--o{ PatientDiagnosis        : "reference"
     Diagnosis        ||--o{ HospitalizationDiagnosis: "reference"
     Hospitalization  ||--o{ HospitalizationDiagnosis: ""
-    Hospitalization  ||--o{ Surgery                 : "surgeries during stay"
     Surgery          ||--o{ SurgeryDiagnosisLink    : ""
     PatientDiagnosis ||--o{ SurgeryDiagnosisLink    : ""
     Surgery          ||--o{ SurgeryProcedureSelection : ""
     SurgeryProcedure ||--o{ SurgeryProcedureSelection : "reference"
     User             ||--o{ AuditEvent              : "operator"
+    User             ||--o{ UserRole                : "roles"
+    CaseDatabase     ||--o{ CaseDatabaseField       : "custom fields"
+    CaseDatabase     ||--o{ CaseDatabaseEntry       : "per-patient values"
+    Patient          ||--o{ CaseDatabaseEntry       : ""
 
     Patient {
         string hospital_id UK
@@ -183,6 +189,7 @@ erDiagram
         float  duration_hours
         string anesthesia_method
         string scheduling_type "elective/emergency"
+        string slot_category "regular/simultaneous/backup/off_slot"
         int    slot_number "slot it occupies / null when unassigned"
         int    operation_order "order within the day"
         string operator_name
@@ -190,10 +197,12 @@ erDiagram
     }
     Hospitalization {
         date   scheduled_admission_date "planned date (reservation stage)"
+        date   scheduled_surgery_date "planned surgery date"
         date   admission_date "actual date"
         date   discharge_date
         string reservation_status "requested/waiting/date_fixed/.../discharged"
-        string purpose "surgery/examination/chemotherapy"
+        string purpose "surgery/examination/chemotherapy/other"
+        string referred_from "referral source"
         string admin_status "unconfirmed/confirmed"
         string outcome
         string discharge_destination
@@ -206,12 +215,11 @@ erDiagram
     }
     User {
         string login_id UK
-        string role "user/admin"
-        string locale "en/ja"
+        string locale "en/ja (default ja)"
         boolean active
     }
     AuditEvent {
-        string auditable_type "Patient/Surgery/Hospitalization"
+        string auditable_type "Patient/Surgery/Hospitalization/CaseDatabase"
         string action "create/update/destroy"
         string ip_address
         json   change_data
@@ -220,7 +228,10 @@ erDiagram
 
 In addition to the above there are `ElectiveSlotRule` (per-weekday slot count and minutes
 per slot; the count may be fractional), `Holiday` (holidays and per-day comments),
-`Announcement`, `AdminNote`, and `AccessLog` (login/logout/timeout/failed authentication).
+`Announcement`, `AdminNote`, `AppSetting`, and `AccessLog` (login/logout/timeout/failed authentication).
+`UserRole` holds one row per role a user has (`user` / `data_manager` / `admin`), so a user can hold
+several at once. `CaseDatabase` / `CaseDatabaseField` / `CaseDatabaseEntry` back the case databases;
+an entry stores its values as a JSON hash keyed by field id.
 
 Key constraints:
 
@@ -234,13 +245,19 @@ Key constraints:
 - Deleting a `Hospitalization` is a soft delete (`deleted_at`) and can be undone. An update by a
   regular user forcibly resets `admin_status` to `unconfirmed`; only an administrator can set it
   to `confirmed`.
-- To link a `Surgery` to a hospitalization, both must belong to the same patient and the surgery
-  date must fall within the stay.
+- `Surgery` and `Hospitalization` are not linked to each other. A hospitalization carries its own
+  `scheduled_surgery_date` (never earlier than `scheduled_admission_date`); the calendar and the
+  schedule PDF show a hospitalization's `referred_from` beside the patient's surgeries it covers.
+- A `Hospitalization` whose `purpose` is `other` requires a free-text `reason`.
+- `Surgery#slot_category` is `regular`, `simultaneous`, `backup` or `off_slot`. Only regular surgeries
+  consume elective slots and can be "unassigned"; the other categories are shown outside the slot limits.
 - `Surgery#slot_number` / `#operation_order` are integers of 1 or more (`null` when unassigned).
   Exceeding the slot count or a slot's time budget does not block saving; it surfaces as a warning
   on the schedule board and the operations calendar.
-- A `User` cannot deactivate or demote the last active administrator
-  (`cannot_deactivate_or_demote_last_admin`).
+- A `User` must hold at least one known role, and cannot deactivate or demote the last active
+  administrator (`cannot_deactivate_or_demote_last_admin`).
+- A `CaseDatabase` name is unique; a patient appears at most once per database; `number` field values
+  must be numeric and `select` values must be one of the field's options.
 
 ## Design notes
 
@@ -280,11 +297,13 @@ slots, and the fraction means **only the last slot of the day is shorter**
 
 ### Authentication, authorization, and sessions
 
-Login uses `has_secure_password` (bcrypt), with two roles: `user` and `admin`.
+Login uses `has_secure_password` (bcrypt), with three roles held through the `user_roles` join table:
+`user`, `data_manager` and `admin`. A user may hold several (e.g. `admin` and `data_manager`).
 `ApplicationController` enforces `require_login` before every action (only pre-login screens such
 as `/login` opt out via `skip_before_action`), and `require_admin` gates the admin-only screens
-(user management, announcement management, admin notes, and hospitalization
-confirm/restore/rebook).
+(user management, bulk registration, announcement management, admin notes, application settings,
+and hospitalization confirm/restore/rebook). `require_data_manager` additionally gates creating,
+editing, and deleting case databases and their fields, and removing a patient entry.
 
 The session stores the time of last access; going longer than `config.x.session_idle_timeout`
 (10 minutes by default, configurable via `SESSION_IDLE_TIMEOUT_MINUTES`) without activity expires
@@ -305,7 +324,8 @@ and planned dates apart.
   undecided. Only when both are blank is the save rejected.
 - `reservation_status` (requested/waiting/date_fixed/surgery_date_fixed/admitted/
   admitted_other_dept/on_hold/discharged) tracks the reservation's progress, and `purpose`
-  (surgery/examination/chemotherapy) the reason for admission.
+  (surgery/examination/chemotherapy/other) the reason for admission. `referred_from` records where
+  the patient was referred from, and `scheduled_surgery_date` the planned surgery day.
 - `admin_status` (unconfirmed/confirmed) is **forced back to unconfirmed on every update by a
   regular user**; only an administrator can set it to confirmed via the `confirm` action
   (`before_update :reset_admin_status_for_non_admin_update`). Saves without a `Current.user`
@@ -314,7 +334,7 @@ and planned dates apart.
   one, and records can be restored from the deleted list (`/hospitalizations/deleted`, admin only).
 - `#rebook` performs a **rebooking (copy)** for "take this again on a different planned date": it
   creates a new `requested` record carrying over only the diagnoses, dropping the actual dates,
-  discharge information, administrator confirmation, and surgery links
+  discharge information, administrator confirmation, and planned surgery date
   (`/hospitalizations/:id/copy`).
 - The patient's name, age, and sex at the time of reservation are kept as a **snapshot**
   (`patient_name_snapshot` and friends), so later changes to the patient do not alter the record
@@ -347,7 +367,8 @@ selects the newly created record on the row that opened the modal.
 
 `UserImport` takes a CSV an admin uploads on `/admin/user_import/new`. The header row must contain
 `login_id` and `password`; `name`, `role` and `locale` are optional, and a row with no name is
-registered under its login id. The same screen offers a blank template to start from
+registered under its login id. `role` may list several roles separated by `;` (e.g. `admin;data_manager`);
+a blank value becomes `user`. The same screen offers a blank template to start from
 (`GET /admin/user_import/template`): the header row alone, led by a UTF-8 BOM so Excel on a Japanese
 system opens it correctly. It deliberately carries no example rows -- a template filled in around
 its samples would register them as real users.
@@ -374,13 +395,13 @@ deleted. The `Current.user` (operator) and `Current.ip_address` (request origin)
 change are stored as well, so it is clear "who" changed something and "from where".
 
 If recording an audit event fails, the whole save is rolled back, so nothing goes unrecorded.
-Because `update_all` skips callbacks, unlinking surgeries when a hospitalization is deleted is done
-with per-record saves.
+`CaseDatabase` is audited too; its entries and fields are not recorded individually.
 
 ### Switching between Japanese and English
 
-The language can be switched between Japanese and English at any time from the navigation
-(English is the default). While logged in, the choice is persisted to `users.locale` and carried
+The language can be switched between Japanese and English at any time from the navigation. New
+users default to Japanese (`users.locale`), as does the sign-in screen for anonymous visitors;
+`I18n.default_locale` stays English only as the translation fallback. While logged in, the choice is persisted to `users.locale` and carried
 over to later logins; when logged out it is kept temporarily in the cookie session
 (`LocalesController`). `params[:locale]` only accepts values contained in `I18n.available_locales`,
 so an arbitrary string is never passed straight to `I18n.locale=`.
