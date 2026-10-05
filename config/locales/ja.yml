@@ -386,6 +386,7 @@ ja:
         surgery: "手術"
         examination: "検査・処置"
         chemotherapy: "化学療法"
+        chemoradiotherapy: "化学放射線療法"
         other: "その他"
       admin_status_options:
         unconfirmed: "未確認"

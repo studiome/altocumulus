@@ -142,14 +142,22 @@ class HospitalizationTest < ActiveSupport::TestCase
     Current.user = nil
   end
 
-  test "reason is not required for a surgery, examination or chemotherapy purpose" do
+  test "reason is not required for a surgery, examination, chemotherapy or chemoradiotherapy purpose" do
     hospitalization = hospitalizations(:one)
     hospitalization.reason = nil
 
-    %w[surgery examination chemotherapy].each do |purpose|
+    %w[surgery examination chemotherapy chemoradiotherapy].each do |purpose|
       hospitalization.purpose = purpose
       assert hospitalization.valid?, "#{purpose}: #{hospitalization.errors.full_messages.to_sentence}"
     end
+  end
+
+  test "purpose options list chemoradiotherapy after chemotherapy with ja/en labels" do
+    assert_equal %w[surgery examination chemotherapy chemoradiotherapy other], Hospitalization::PURPOSE_KEYS
+    assert_equal Hospitalization::PURPOSE_KEYS, Hospitalization.purpose_options.keys
+
+    assert_equal "Chemoradiotherapy", I18n.with_locale(:en) { Hospitalization.purpose_options["chemoradiotherapy"] }
+    assert_equal "化学放射線療法", I18n.with_locale(:ja) { Hospitalization.purpose_options["chemoradiotherapy"] }
   end
 
   test "reason is required when the purpose is other" do

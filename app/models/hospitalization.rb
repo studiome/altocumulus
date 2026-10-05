@@ -10,7 +10,7 @@ class Hospitalization < ApplicationRecord
   RESERVATION_STATUS_KEYS = %w[
     requested waiting date_fixed surgery_date_fixed admitted admitted_other_dept on_hold discharged
   ].freeze
-  PURPOSE_KEYS = %w[surgery examination chemotherapy other].freeze
+  PURPOSE_KEYS = %w[surgery examination chemotherapy chemoradiotherapy other].freeze
   ADMIN_STATUS_KEYS = %w[unconfirmed confirmed].freeze
 
   # The index page's single "Status" filter mixes two kinds of condition: the

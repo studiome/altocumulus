@@ -293,6 +293,7 @@ en:
         surgery: "Surgery"
         examination: "Examination / Procedure"
         chemotherapy: "Chemotherapy"
+        chemoradiotherapy: "Chemoradiotherapy"
         other: "Other"
       admin_status_options:
         unconfirmed: "Unconfirmed"

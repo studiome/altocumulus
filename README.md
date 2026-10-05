@@ -44,7 +44,7 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Patient ledger | `/patients` | Patient master data, with keyword search by name or hospital ID and pagination |
 | Patient diagnoses | `/patients/:id/patient_diagnoses` | Per-patient diagnosis history referencing the diagnosis master, holding the diagnosis date and laterality |
 | Surgery records | `/surgeries` | Surgery date (may be "undecided"), procedures (up to 5), anesthesia method, duration, elective/emergency type, slot category (regular / joint / backup / off-slot), operator/assistant/operation order. Linked to patient diagnoses. Searchable by operator |
-| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / other, the last requiring a reason), referral source, administrator confirmation, soft delete/restore, and rebooking (copy) |
+| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / chemoradiotherapy / other, the last requiring a reason), referral source, administrator confirmation, soft delete/restore, and rebooking (copy) |
 | Surgery slot schedule | `/surgery_schedule` | Weekly calendar showing the surgeries and used time per slot, warning about slot overruns, unassigned surgeries, and holidays. The same week can be printed as a landscape A4 PDF (`/surgery_schedule/pdf?start_date=YYYY-MM-DD`, any start date) in black and white, with operator/assistant, referral source, holiday names, and day notes |
 | Dashboard | `/dashboard` | Statistics filterable by year (patient counts, inpatients, monthly counts, average length of stay, procedure ranking) |
 | Cross-entity search | `/search` | Search patients, hospitalizations, and surgeries with a single keyword |
@@ -201,7 +201,7 @@ erDiagram
         date   admission_date "actual date"
         date   discharge_date
         string reservation_status "requested/waiting/date_fixed/.../discharged"
-        string purpose "surgery/examination/chemotherapy/other"
+        string purpose "surgery/examination/chemotherapy/chemoradiotherapy/other"
         string referred_from "referral source"
         string admin_status "unconfirmed/confirmed"
         string outcome
@@ -324,7 +324,7 @@ and planned dates apart.
   undecided. Only when both are blank is the save rejected.
 - `reservation_status` (requested/waiting/date_fixed/surgery_date_fixed/admitted/
   admitted_other_dept/on_hold/discharged) tracks the reservation's progress, and `purpose`
-  (surgery/examination/chemotherapy/other) the reason for admission. `referred_from` records where
+  (surgery/examination/chemotherapy/chemoradiotherapy/other) the reason for admission. `referred_from` records where
   the patient was referred from, and `scheduled_surgery_date` the planned surgery day.
 - `admin_status` (unconfirmed/confirmed) is **forced back to unconfirmed on every update by a
   regular user**; only an administrator can set it to confirmed via the `confirm` action

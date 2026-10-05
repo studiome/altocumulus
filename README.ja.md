@@ -199,7 +199,7 @@ erDiagram
         date   admission_date "実績入院日"
         date   discharge_date
         string reservation_status "requested/waiting/date_fixed/.../discharged"
-        string purpose "surgery/examination/chemotherapy/other"
+        string purpose "surgery/examination/chemotherapy/chemoradiotherapy/other"
         string referred_from "紹介元"
         string admin_status "unconfirmed/confirmed"
         string outcome
@@ -317,7 +317,7 @@ erDiagram
   （実績入院日）は未定でも構いません。両方とも空の場合のみ保存を拒否します。
 - `reservation_status`（requested/waiting/date_fixed/surgery_date_fixed/admitted/
   admitted_other_dept/on_hold/discharged）で予約の進行状況を、`purpose`
-  （surgery/examination/chemotherapy/other）で入院目的を、`referred_from` で紹介元を、
+  （surgery/examination/chemotherapy/chemoradiotherapy/other）で入院目的を、`referred_from` で紹介元を、
   `scheduled_surgery_date` で予定手術日を表します。
 - `admin_status`（unconfirmed/confirmed）は**一般利用者による更新のたびに強制的に
   unconfirmed へ戻り**、管理者だけが `confirm` アクションで confirmed にできます
