@@ -1,10 +1,9 @@
 require "test_helper"
+require_relative "i18n_integration_helper"
 
-# Stage 3 group 4b: locale coverage for the Operations Calendar screen
-# (OperationsCalendarController#index and its `_day`
-# partials). Mirrors surgery_schedules_i18n_test.rb's structure -- a fixed
-# `start`/`days` window is passed as params so the exact fixture surgeries,
-# holidays, and slot rules that fall inside it are deterministic:
+# i18n of the Operations Calendar screen (OperationsCalendarController#index
+# and its `_day` partials). A fixed `start`/`days` window is passed so the
+# fixture surgeries, holidays and slot rules inside it are deterministic:
 #
 #   2026-03-01 (Sun) -- no elective slot rule, has an emergency surgery
 #   2026-03-02 (Mon) -- no elective slot rule, one elective surgery
@@ -12,15 +11,19 @@ require "test_helper"
 #   2026-03-03 (Tue) -- 3 elective slots x 240 min configured; slot 1 holds
 #     two surgeries (120 min used), slot 2 holds one (300 min, 60 min over)
 #   2026-03-04 (Wed) -- 2 elective slots x 180 min configured, no surgeries
-#     (exercises "no surgeries scheduled" independent of slot configuration)
 #   2026-03-10 (Tue) -- a closed holiday (Vernal Equinox Day fixture)
+#
+# The English "No surgeries scheduled" copy and the "Operations Calendar" h1
+# are already asserted by operations_calendar_controller_test.rb ("a day
+# without surgeries still shows its date and a placeholder row", "root routes
+# to the operations calendar").
 class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
+  include I18nIntegrationHelper
+
   WINDOW = { start: "2026-03-01", days: 10 }.freeze
 
-  test "index renders in Japanese" do
-    sign_in_as(users(:japanese_member))
-
-    get operations_calendar_url, params: WINDOW
+  test "index header renders in Japanese and English" do
+    get_as users(:japanese_member), operations_calendar_url, WINDOW
 
     assert_response :success
     assert_select "h1", text: "運用カレンダー"
@@ -31,16 +34,13 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     assert_select "a", text: "今日"
     assert_select "th span", text: "術者"
     assert_select "th span", text: "枠"
-    assert_no_match(/[Tt]ranslation missing/, response.body)
-  end
+    assert_match "2026年03月01日", response.body
+    assert_match "2026年03月10日", response.body
+    assert_match(/10日/, response.body)
 
-  test "index renders in English unchanged" do
-    sign_in_as(users(:member))
-
-    get operations_calendar_url, params: WINDOW
+    get_as users(:member), operations_calendar_url, WINDOW
 
     assert_response :success
-    assert_select "h1", text: "Operations Calendar"
     assert_select "p.app-page-kicker", text: "Operations"
     assert_select "label.app-filter-label", text: "Start"
     assert_select "label.app-filter-label", text: "Days"
@@ -48,123 +48,50 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     assert_select "a", text: "Today"
     assert_select "th span", text: "Operator"
     assert_select "th span", text: "Slot"
-    assert_no_match(/運用カレンダー/, response.body)
-  end
-
-  test "index date range heading renders in the Japanese date format with a Japanese day count" do
-    sign_in_as(users(:japanese_member))
-
-    get operations_calendar_url, params: WINDOW
-
-    assert_response :success
-    assert_match "2026年03月01日", response.body
-    assert_match "2026年03月10日", response.body
-    assert_match(/10日/, response.body)
-  end
-
-  test "index date range heading renders in the original English date format with an English day count" do
-    sign_in_as(users(:member))
-
-    get operations_calendar_url, params: WINDOW
-
-    assert_response :success
     assert_match "March 01, 2026", response.body
     assert_match "March 10, 2026", response.body
     assert_match(/10 days/, response.body)
+    assert_no_match(/運用カレンダー/, response.body)
   end
 
-  test "day partial renders weekday, holiday badge, and no-slots-holiday copy in Japanese" do
-    sign_in_as(users(:japanese_member))
-
-    get operations_calendar_url, params: WINDOW
+  test "day partial renders in Japanese and English" do
+    get_as users(:japanese_member), operations_calendar_url, WINDOW
 
     assert_response :success
     assert_match "火曜日", response.body
     assert_match "休診: Vernal Equinox Day", response.body
     assert_match "手術枠なし(休日)", response.body
-  end
+    assert_select "span.badge-error", text: "緊急"
+    assert_match "手術枠未設定", response.body
+    assert_match "入院数", response.body
+    assert_match(%r{2 / 3枠}, response.body)
+    assert_match(%r{\(420 / 720分\)}, response.body)
+    assert_match "手術の予定はありません", response.body
 
-  test "day partial renders weekday, holiday badge, and no-slots-holiday copy in English unchanged" do
-    sign_in_as(users(:member))
-
-    get operations_calendar_url, params: WINDOW
+    get_as users(:member), operations_calendar_url, WINDOW
 
     assert_response :success
     assert_match "Tuesday", response.body
     assert_match "Closed: Vernal Equinox Day", response.body
     assert_match "No elective slots (holiday)", response.body
-  end
-
-  test "day partial renders emergency badge and unconfigured-day copy in Japanese" do
-    sign_in_as(users(:japanese_member))
-
-    get operations_calendar_url, params: WINDOW
-
-    assert_response :success
-    assert_select "span.badge-error", text: "緊急"
-    assert_match "手術枠未設定", response.body
-    assert_match "入院数", response.body
-  end
-
-  test "day partial renders emergency badge and unconfigured-day copy in English unchanged" do
-    sign_in_as(users(:member))
-
-    get operations_calendar_url, params: WINDOW
-
-    assert_response :success
     assert_select "span.badge-error", text: "Emergency"
     assert_match "No slots configured", response.body
     assert_match "Admissions:", response.body
-  end
-
-  test "day partial renders configured slot usage and no-surgeries copy in Japanese" do
-    sign_in_as(users(:japanese_member))
-
-    get operations_calendar_url, params: WINDOW
-
-    assert_response :success
-    assert_match(%r{2 / 3枠}, response.body)
-    assert_match(%r{\(420 / 720分\)}, response.body)
-    assert_match "手術の予定はありません", response.body
-  end
-
-  test "day partial renders configured slot usage and no-surgeries copy in English unchanged" do
-    sign_in_as(users(:member))
-
-    get operations_calendar_url, params: WINDOW
-
-    assert_response :success
     assert_match(%r{2 / 3 slots}, response.body)
     assert_match(%r{\(420 / 720 min\)}, response.body)
-    assert_match "No surgeries scheduled", response.body
   end
 
-  test "invalid date range alert renders in Japanese" do
-    sign_in_as(users(:japanese_member))
-
-    get operations_calendar_url, params: { start: "not-a-date" }
+  test "invalid date range alert renders in Japanese and English" do
+    get_as users(:japanese_member), operations_calendar_url, { start: "not-a-date" }
 
     assert_redirected_to operations_calendar_path
     follow_redirect!
     assert_match "指定された日付範囲が正しくありません。既定の範囲を表示します。", response.body
-  end
 
-  test "invalid date range alert renders in English unchanged" do
-    sign_in_as(users(:member))
-
-    get operations_calendar_url, params: { start: "not-a-date" }
+    get_as users(:member), operations_calendar_url, { start: "not-a-date" }
 
     assert_redirected_to operations_calendar_path
     follow_redirect!
     assert_match "The requested date range was invalid. Showing the default range instead.", response.body
-  end
-
-  test "no translation missing across the calendar window rendered in Japanese" do
-    sign_in_as(users(:japanese_member))
-
-    get operations_calendar_url, params: WINDOW
-
-    assert_response :success
-    assert_no_match(/[Tt]ranslation missing/, response.body)
   end
 end

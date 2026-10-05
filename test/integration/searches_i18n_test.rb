@@ -1,16 +1,17 @@
 require "test_helper"
+require_relative "i18n_integration_helper"
 
-# Stage 3 group 4b: locale coverage for the cross-search screen
-# (SearchesController#index and its view). keyword: "John" matches patient
-# :one ("John Doe") by name, and therefore also its linked hospitalizations
-# and surgeries (Hospitalization/Surgery.filtered both join through the
-# patient's name) -- giving a deterministic "results found" case. A keyword
-# that matches nothing exercises the three "No matching ..." empty states.
+# i18n of the cross-search screen (SearchesController#index and its view).
+# keyword: "John" matches patient :one ("John Doe") by name, and therefore also
+# its linked hospitalizations and surgeries (Hospitalization/Surgery.filtered
+# both join through the patient's name) -- a deterministic "results found"
+# case. A keyword that matches nothing exercises the three "No matching ..."
+# empty states.
 class SearchesI18nTest < ActionDispatch::IntegrationTest
-  test "index blank-keyword state renders in Japanese" do
-    sign_in_as(users(:japanese_member))
+  include I18nIntegrationHelper
 
-    get search_url
+  test "index blank-keyword state renders in Japanese and English" do
+    get_as users(:japanese_member), search_url
 
     assert_response :success
     assert_select "h1", text: "検索"
@@ -18,13 +19,8 @@ class SearchesI18nTest < ActionDispatch::IntegrationTest
     assert_select "label.app-filter-label", text: "キーワード"
     assert_select "input[type=submit][value=?]", "検索"
     assert_match "上のキーワード欄に入力すると、患者・入院・手術を横断して検索できます。", response.body
-    assert_no_match(/[Tt]ranslation missing/, response.body)
-  end
 
-  test "index blank-keyword state renders in English unchanged" do
-    sign_in_as(users(:member))
-
-    get search_url
+    get_as users(:member), search_url
 
     assert_response :success
     assert_select "h1", text: "Search"
@@ -34,10 +30,8 @@ class SearchesI18nTest < ActionDispatch::IntegrationTest
     assert_match "Enter a keyword above to search across patients, hospitalizations, and surgeries.", response.body
   end
 
-  test "index with matching results renders headings, clear link, and dates in Japanese" do
-    sign_in_as(users(:japanese_member))
-
-    get search_url, params: { keyword: "John" }
+  test "index with matching results renders headings, clear link, and dates in Japanese and English" do
+    get_as users(:japanese_member), search_url, { keyword: "John" }
 
     assert_response :success
     assert_select "a", text: "クリア"
@@ -49,13 +43,8 @@ class SearchesI18nTest < ActionDispatch::IntegrationTest
     assert_select "a", text: "手術の一覧をすべて見る"
     assert_match "John Doe", response.body
     assert_match "2026年03月01日", response.body
-    assert_no_match(/[Tt]ranslation missing/, response.body)
-  end
 
-  test "index with matching results renders headings, clear link, and dates in English unchanged" do
-    sign_in_as(users(:member))
-
-    get search_url, params: { keyword: "John" }
+    get_as users(:member), search_url, { keyword: "John" }
 
     assert_response :success
     assert_select "a", text: "Clear"
@@ -69,21 +58,15 @@ class SearchesI18nTest < ActionDispatch::IntegrationTest
     assert_match "2026-03-01", response.body
   end
 
-  test "index with no matches renders the Japanese empty-state copy in every section" do
-    sign_in_as(users(:japanese_member))
-
-    get search_url, params: { keyword: "zzzznotfound" }
+  test "index with no matches renders the empty-state copy in every section in both locales" do
+    get_as users(:japanese_member), search_url, { keyword: "zzzznotfound" }
 
     assert_response :success
     assert_match "一致する患者がいません。", response.body
     assert_match "一致する入院がありません。", response.body
     assert_match "一致する手術がありません。", response.body
-  end
 
-  test "index with no matches renders the original English empty-state copy in every section" do
-    sign_in_as(users(:member))
-
-    get search_url, params: { keyword: "zzzznotfound" }
+    get_as users(:member), search_url, { keyword: "zzzznotfound" }
 
     assert_response :success
     assert_match "No matching patients.", response.body

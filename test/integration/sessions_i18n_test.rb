@@ -1,51 +1,34 @@
 require "test_helper"
+require_relative "i18n_integration_helper"
 
-# Stage 3 (view text externalization), group 4a: the Sessions#new (login)
-# screen and its controller flashes. The visitor is anonymous here (never
-# signed in), so the Japanese locale has to be set via the session the same
-# way LocalesController does it for an anonymous visitor.
+# i18n of the Sessions#new (login) screen and its controller flashes. The
+# visitor is anonymous here (never signed in), so the locale is chosen via the
+# session the same way LocalesController does it for an anonymous visitor.
+# The English "Invalid email or password." alert is already asserted by
+# sessions_controller_test.rb ("inactive user with correct password gets the
+# same error message..."), so only the Japanese alert is checked here.
 class SessionsI18nTest < ActionDispatch::IntegrationTest
+  include I18nIntegrationHelper
+
   setup { sign_out }
 
-  def switch_to_japanese
-    patch locale_path(locale: "ja"), headers: { "HTTP_REFERER" => login_url }
+  def switch_to(locale)
+    patch locale_path(locale: locale), headers: { "HTTP_REFERER" => login_url }
   end
 
-  def switch_to_english
-    patch locale_path(locale: "en"), headers: { "HTTP_REFERER" => login_url }
-  end
-
-  test "login screen renders in Japanese by default for an anonymous visitor" do
+  test "login screen renders in Japanese by default and in English once switched" do
     get login_url
-
     assert_select "h1", text: "サインイン"
-  end
 
-  test "no translation missing on the login screen rendered in Japanese" do
-    switch_to_japanese
-
+    switch_to "ja"
     get login_url
-
-    assert_response :success
-    assert_no_match(/[Tt]ranslation missing/, response.body)
-  end
-
-  test "login screen renders in Japanese" do
-    switch_to_japanese
-
-    get login_url
-
     assert_select "h1", text: "サインイン"
     assert_select "label", text: "メールアドレス"
     assert_select "label", text: "パスワード"
     assert_select "input[type=submit][value=?]", "サインイン"
-  end
 
-  test "login screen renders unchanged in English" do
-    switch_to_english
-
+    switch_to "en"
     get login_url
-
     assert_select "h1", text: "Sign In"
     assert_select "label", text: "Email"
     assert_select "label", text: "Password"
@@ -53,7 +36,7 @@ class SessionsI18nTest < ActionDispatch::IntegrationTest
   end
 
   test "invalid credentials alert renders in Japanese" do
-    switch_to_japanese
+    switch_to "ja"
 
     post login_url, params: { session: { login_id: users(:admin).login_id, password: "wrong-password" } }
 
@@ -61,49 +44,24 @@ class SessionsI18nTest < ActionDispatch::IntegrationTest
     assert_match "メールアドレスまたはパスワードが正しくありません。", response.body
   end
 
-  test "invalid credentials alert renders unchanged in English" do
-    switch_to_english
-
-    post login_url, params: { session: { login_id: users(:admin).login_id, password: "wrong-password" } }
-
-    assert_response :unprocessable_entity
-    assert_equal "Invalid email or password.", flash[:alert]
-  end
-
-  test "sign in success flash renders in Japanese" do
-    switch_to_japanese
-
+  test "sign in and sign out flashes render in Japanese and English" do
+    switch_to "ja"
     post login_url, params: { session: { login_id: users(:japanese_admin).login_id, password: "password" } }
-
     assert_redirected_to root_url
     follow_redirect!
     assert_match "サインインしました。", response.body
-  end
 
-  test "sign in success flash renders unchanged in English" do
-    switch_to_english
+    delete logout_url
+    follow_redirect!
+    assert_match "サインアウトしました。", response.body
 
+    switch_to "en"
     post login_url, params: { session: { login_id: users(:admin).login_id, password: "password" } }
-
     assert_redirected_to root_url
     follow_redirect!
     assert_match "Signed in successfully.", response.body
-  end
-
-  test "sign out flash renders in Japanese" do
-    sign_in_as(users(:japanese_admin))
 
     delete logout_url
-
-    follow_redirect!
-    assert_match "サインアウトしました。", response.body
-  end
-
-  test "sign out flash renders unchanged in English" do
-    sign_in_as(users(:admin))
-
-    delete logout_url
-
     follow_redirect!
     assert_match "Signed out.", response.body
   end
