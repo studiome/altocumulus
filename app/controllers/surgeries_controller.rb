@@ -9,6 +9,7 @@ class SurgeriesController < ApplicationController
                     .ordered_by_surgery_date
     @pagination = Pagination.new(scope, page: params[:page])
     @surgeries = @pagination.records
+    @holidays = Holiday.by_date(@surgeries.filter_map(&:surgery_date))
     @slot_rules = ElectiveSlotRule.by_day_of_week
   end
 
@@ -16,7 +17,8 @@ class SurgeriesController < ApplicationController
     @surgery = Surgery.includes(:patient, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure })
                        .find(params.expect(:id))
     @slot_rules = ElectiveSlotRule.by_day_of_week
-    @holiday = Holiday.find_by(date: @surgery.surgery_date)
+    @holidays = Holiday.by_date([ @surgery.surgery_date ].compact)
+    @holiday = @holidays[@surgery.surgery_date]
   end
 
   def new

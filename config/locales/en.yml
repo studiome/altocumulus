@@ -45,6 +45,8 @@ en:
       # than folding into `long` so `long`'s existing output (no weekday)
       # doesn't change for anything already using it.
       long_with_weekday: "%B %d, %Y (%A)"
+      # Compact date plus abbreviated weekday for list/detail pages.
+      with_weekday: "%Y-%m-%d (%a)"
       # Stage 3 group 3b (Surgery Schedule board): the weekday name on its
       # own, for the week board's per-day column header, which used to
       # hard-code `date.strftime("%A")`.

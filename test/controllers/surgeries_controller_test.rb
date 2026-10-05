@@ -25,6 +25,31 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "index shows the weekday next to each surgery date, coloured for Sundays" do
+    get surgeries_url, params: { performed_from: "2026-03-01", performed_to: "2026-03-02" }
+
+    assert_select "span.app-date-holiday", text: "2026-03-01 (Sun)"
+    assert_select "td span", text: "2026-03-02 (Mon)"
+  end
+
+  test "index marks a closed holiday date with the holiday colour" do
+    surgeries(:two).update!(surgery_date: holidays(:national_holiday).date)
+
+    get surgeries_url, params: { performed_from: "2026-03-10", performed_to: "2026-03-10" }
+
+    assert_select "span.app-date-holiday", text: "2026-03-10 (Tue)"
+  end
+
+  test "index does not query holidays once per surgery" do
+    holiday_queries = 0
+    counter = ->(*, payload) { holiday_queries += 1 if payload[:sql].match?(/FROM "holidays"/) }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      get surgeries_url, params: { performed_from: "2026-01-01" }
+    end
+
+    assert_equal 1, holiday_queries
+  end
+
   test "index filters by keyword" do
     get surgeries_url, params: { keyword: "jane" }
     assert_response :success
@@ -377,6 +402,12 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
   test "should show surgery" do
     get surgery_url(@surgery)
     assert_response :success
+  end
+
+  test "show displays the surgery date with its weekday" do
+    get surgery_url(@surgery)
+
+    assert_select "span.app-date-holiday", text: "2026-03-01 (Sun)"
   end
 
   test "show does not issue additional queries for extra patient_diagnoses or procedure selections" do

@@ -35,6 +35,47 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "index shows the weekday on the admission, discharge and scheduled surgery dates" do
+    @hospitalization.update!(purpose: "surgery", scheduled_surgery_date: "2026-03-03")
+
+    get hospitalizations_url, params: { admitted_from: "2026-03-01", admitted_to: "2026-03-01" }
+
+    assert_select "span.app-date-holiday", text: "2026-03-01 (Sun)"
+    assert_select "td span", text: "2026-03-06 (Fri)"
+    assert_select "td span", text: "2026-03-03 (Tue)"
+  end
+
+  test "index shows the weekday on a scheduled admission date" do
+    get hospitalizations_url, params: { admitted_from: "2026-10-01" }
+
+    assert_select "td span", text: "2026-10-01 (Thu)"
+  end
+
+  test "index does not query holidays once per hospitalization" do
+    holiday_queries = 0
+    counter = ->(*, payload) { holiday_queries += 1 if payload[:sql].match?(/FROM "holidays"/) }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      get hospitalizations_url, params: { admitted_from: "2026-01-01" }
+    end
+
+    assert_equal 1, holiday_queries
+  end
+
+  test "show displays every date with its weekday" do
+    get hospitalization_url(@hospitalization)
+
+    assert_select "span", text: "2026-03-01 (Sun)"
+    assert_select "span", text: "2026-03-06 (Fri)"
+  end
+
+  test "deleted list shows the admission date with its weekday" do
+    @hospitalization.discard!
+
+    get deleted_hospitalizations_url
+
+    assert_select "td span", text: "2026-03-01 (Sun)"
+  end
+
   test "index filters by keyword" do
     get hospitalizations_url, params: { keyword: "jane" }
     assert_response :success

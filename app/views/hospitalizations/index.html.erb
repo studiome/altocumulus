@@ -79,14 +79,14 @@
                 <td class="whitespace-nowrap font-mono">
                   <span class="ledger-primary">
                     <% if hospitalization.admission_date.present? %>
-                      <%= l(hospitalization.admission_date, format: :default) %>
+                      <%= date_with_weekday(hospitalization.admission_date, holidays: @holidays) %>
                     <% elsif hospitalization.scheduled_admission_date.present? %>
-                      <%= l(hospitalization.scheduled_admission_date, format: :default) %> <span class="text-base-content/50 italic font-sans"><%= t(".scheduled_suffix") %></span>
+                      <%= date_with_weekday(hospitalization.scheduled_admission_date, holidays: @holidays) %> <span class="text-base-content/50 italic font-sans"><%= t(".scheduled_suffix") %></span>
                     <% else %>
                       -
                     <% end %>
                   </span>
-                  <span class="ledger-secondary"><%= hospitalization.discharge_date ? l(hospitalization.discharge_date, format: :default) : "-" %></span>
+                  <span class="ledger-secondary"><%= hospitalization.discharge_date ? date_with_weekday(hospitalization.discharge_date, holidays: @holidays) : "-" %></span>
                 </td>
                 <td class="ledger-patient">
                   <% if hospitalization.patient %>
@@ -104,7 +104,7 @@
                 <td>
                   <span class="ledger-primary"><%= Hospitalization.purpose_options[hospitalization.purpose] %></span>
                   <% if hospitalization.scheduled_surgery_date.present? %>
-                    <span class="ledger-secondary"><%= t("hospitalizations.labels.scheduled_surgery_date") %>: <%= l(hospitalization.scheduled_surgery_date, format: :default) %></span>
+                    <span class="ledger-secondary"><%= t("hospitalizations.labels.scheduled_surgery_date") %>: <%= date_with_weekday(hospitalization.scheduled_surgery_date, holidays: @holidays) %></span>
                   <% end %>
                   <span class="ledger-secondary"><%= Hospitalization.reservation_status_options[hospitalization.reservation_status] %></span>
                 </td>

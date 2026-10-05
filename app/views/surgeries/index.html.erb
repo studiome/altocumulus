@@ -79,7 +79,7 @@
                 <td class="whitespace-nowrap">
                   <span class="ledger-primary font-mono">
                     <% if surgery.surgery_date %>
-                      <%= l(surgery.surgery_date, format: :default) %>
+                      <%= date_with_weekday(surgery.surgery_date, holidays: @holidays) %>
                     <% else %>
                       <span class="badge badge-ghost badge-sm"><%= t("models.surgery.surgery_date_display_undated") %></span>
                     <% end %>

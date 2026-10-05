@@ -144,6 +144,17 @@ html {
     @apply text-sm text-base-content/60;
   }
 
+  /* Weekday colouring for dates (see date_with_weekday): Saturday blue,
+     Sunday and closed days red. Theme tokens keep both readable in light
+     and dark. */
+  .app-date-sat {
+    @apply text-info;
+  }
+
+  .app-date-holiday {
+    @apply text-error;
+  }
+
   .app-inline-link {
     @apply link underline;
     color: var(--app-link);

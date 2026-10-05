@@ -110,16 +110,16 @@ class SurgeriesI18nTest < ActionDispatch::IntegrationTest
     get surgery_url(@surgery)
 
     assert_response :success
-    assert_match(/2026年03月01日/, response.body)
+    assert_match(/2026年03月01日\(日\)/, response.body)
   end
 
-  test "show renders the surgery date in the original English long date format" do
+  test "show renders the surgery date with its weekday in English" do
     sign_in_as(users(:member))
 
     get surgery_url(@surgery)
 
     assert_response :success
-    assert_match(/March 01, 2026/, response.body)
+    assert_match(/2026-03-01 \(Sun\)/, response.body)
   end
 
   test "show renders the slot badge in Japanese" do

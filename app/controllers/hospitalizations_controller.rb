@@ -15,9 +15,11 @@ class HospitalizationsController < ApplicationController
                             .order(Arel.sql("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date) DESC"), created_at: :desc)
     @pagination = Pagination.new(scope, page: params[:page])
     @hospitalizations = @pagination.records
+    @holidays = holidays_for(@hospitalizations)
   end
 
   def show
+    @holidays = holidays_for([ @hospitalization ])
     @audit_events = AuditEvent.where(auditable_type: "Hospitalization", auditable_id: @hospitalization.id)
                                .includes(:user)
                                .recent_first
@@ -88,6 +90,7 @@ class HospitalizationsController < ApplicationController
     scope = Hospitalization.discarded.includes(:patient, hospitalization_diagnoses: :diagnosis).order(updated_at: :desc)
     @pagination = Pagination.new(scope, page: params[:page])
     @hospitalizations = @pagination.records
+    @holidays = holidays_for(@hospitalizations)
   end
 
   def copy
@@ -104,6 +107,15 @@ class HospitalizationsController < ApplicationController
 
     def set_hospitalization
       @hospitalization = Hospitalization.find(params.expect(:id))
+    end
+
+    # One query for every date the page shows, so rendering the weekday
+    # colours (see date_with_weekday) costs nothing per row.
+    def holidays_for(hospitalizations)
+      dates = hospitalizations.flat_map do |h|
+        [ h.admission_date, h.scheduled_admission_date, h.discharge_date, h.scheduled_surgery_date, h.submitted_on ]
+      end
+      Holiday.by_date(dates.compact.uniq)
     end
 
     def set_form_collections

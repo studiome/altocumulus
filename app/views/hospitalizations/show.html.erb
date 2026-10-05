@@ -16,9 +16,9 @@
           <h2 class="card-title text-xl mb-1 text-primary"><%= (@hospitalization.purpose == "other" && @hospitalization.reason.presence) || Hospitalization.purpose_options[@hospitalization.purpose] %></h2>
           <p class="text-base-content/60 font-mono">
             <% if @hospitalization.admission_date.present? %>
-              <%= t(".admission_date_prefix") %>: <%= l(@hospitalization.admission_date, format: :default) %>
+              <%= t(".admission_date_prefix") %>: <%= date_with_weekday(@hospitalization.admission_date, holidays: @holidays) %>
             <% elsif @hospitalization.scheduled_admission_date.present? %>
-              <%= t("hospitalizations.labels.scheduled_admission_date") %>: <%= l(@hospitalization.scheduled_admission_date, format: :default) %>
+              <%= t("hospitalizations.labels.scheduled_admission_date") %>: <%= date_with_weekday(@hospitalization.scheduled_admission_date, holidays: @holidays) %>
             <% end %>
           </p>
         </div>
@@ -42,11 +42,11 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.scheduled_admission_date") %></span>
-          <span class="text-lg font-medium"><%= @hospitalization.scheduled_admission_date ? l(@hospitalization.scheduled_admission_date, format: :long) : "-" %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.scheduled_admission_date ? date_with_weekday(@hospitalization.scheduled_admission_date, holidays: @holidays) : "-" %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.admission_date_actual") %></span>
-          <span class="text-lg font-medium"><%= @hospitalization.admission_date ? l(@hospitalization.admission_date, format: :long) : "-" %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.admission_date ? date_with_weekday(@hospitalization.admission_date, holidays: @holidays) : "-" %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.reservation_status") %></span>
@@ -54,7 +54,7 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.scheduled_surgery_date") %></span>
-          <span class="text-lg font-medium"><%= @hospitalization.scheduled_surgery_date ? l(@hospitalization.scheduled_surgery_date, format: :long) : "-" %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.scheduled_surgery_date ? date_with_weekday(@hospitalization.scheduled_surgery_date, holidays: @holidays) : "-" %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:purpose) %></span>
@@ -94,7 +94,7 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.submitted_on") %></span>
-          <span class="text-lg font-medium"><%= @hospitalization.submitted_on ? l(@hospitalization.submitted_on, format: :long) : "-" %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.submitted_on ? date_with_weekday(@hospitalization.submitted_on, holidays: @holidays) : "-" %></span>
         </div>
         <div class="sm:col-span-2">
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.clinical_comment") %></span>
@@ -102,7 +102,7 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.discharge_date") %></span>
-          <span class="text-lg font-medium"><%= @hospitalization.discharge_date ? l(@hospitalization.discharge_date, format: :long) : "-" %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.discharge_date ? date_with_weekday(@hospitalization.discharge_date, holidays: @holidays) : "-" %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:outcome) %></span>

@@ -15,7 +15,7 @@
         <div>
           <h2 class="card-title text-xl mb-1 text-primary"><%= @surgery.display_procedure_name %></h2>
           <p class="text-base-content/60 font-mono">
-            <%= t(".date_prefix") %>: <%= @surgery.surgery_date_display %>
+            <%= t(".date_prefix") %>: <%= @surgery.surgery_date ? date_with_weekday(@surgery.surgery_date, holidays: @holidays) : @surgery.surgery_date_display %>
           </p>
         </div>
         <div class="flex flex-col items-end gap-2">
@@ -67,7 +67,7 @@
         <% end %>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.surgery_date") %></span>
-          <span class="text-lg font-medium"><%= @surgery.surgery_date ? l(@surgery.surgery_date, format: :long) : t("models.surgery.surgery_date_display_undated") %></span>
+          <span class="text-lg font-medium"><%= @surgery.surgery_date ? date_with_weekday(@surgery.surgery_date, holidays: @holidays) : t("models.surgery.surgery_date_display_undated") %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.duration") %></span>

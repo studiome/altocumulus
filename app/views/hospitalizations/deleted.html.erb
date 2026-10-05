@@ -35,7 +35,7 @@
                 <td><%= Hospitalization.reservation_status_options[hospitalization.reservation_status] %></td>
                 <td><%= Hospitalization.purpose_options[hospitalization.purpose] %></td>
                 <td><%= hospitalization.diagnosis_names_display %></td>
-                <td class="font-mono"><%= hospitalization.effective_admission_date ? l(hospitalization.effective_admission_date, format: :default) : "-" %></td>
+                <td class="font-mono"><%= hospitalization.effective_admission_date ? date_with_weekday(hospitalization.effective_admission_date, holidays: @holidays) : "-" %></td>
                 <td><%= hospitalization.reason %></td>
                 <td class="font-mono"><%= hospitalization.patient_id %></td>
                 <td>
