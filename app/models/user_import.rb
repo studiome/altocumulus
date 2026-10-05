@@ -87,7 +87,7 @@ class UserImport
         password_confirmation: password,
         name: row["name"].presence || login_id,
         roles: parse_roles(row["role"]),
-        locale: row["locale"].presence || I18n.default_locale.to_s,
+        locale: row["locale"].presence || User.column_defaults["locale"],
         active: true
       )
     end

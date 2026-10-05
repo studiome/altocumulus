@@ -14,6 +14,15 @@ class UserImportTest < ActiveSupport::TestCase
     assert user.active?
   end
 
+  test "defaults the locale to Japanese when the column is absent" do
+    import(<<~CSV)
+      login_id,password
+      ja-default@example.com,supersecret
+    CSV
+
+    assert_equal "ja", User.find_by!(login_id: "ja-default@example.com").locale
+  end
+
   test "falls back to the login id when no name is given" do
     import(<<~CSV)
       login_id,password
