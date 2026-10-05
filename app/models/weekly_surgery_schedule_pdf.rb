@@ -63,6 +63,12 @@ class WeeklySurgerySchedulePdf
                                     .transform_values { |list| list.sort_by { |surgery| sort_key(surgery) } }
     end
 
+    def referral_lookup
+      @referral_lookup ||= SurgeryReferralLookup.new(
+        patient_ids: surgeries_by_date.values.flatten.map(&:patient_id), dates: dates
+      )
+    end
+
     def holidays
       @holidays ||= Holiday.by_date(dates)
     end
@@ -121,7 +127,7 @@ class WeeklySurgerySchedulePdf
       cells = [
         surgery.start_time_display,
         surgery.regular_slot? ? surgery.slot_number.to_s.presence || "-" : "-",
-        "#{surgery.patient.hospital_id}\n#{surgery.patient.name.presence || I18n.t('surgery_schedules.labels.unknown_patient_name', id: surgery.patient_id)}",
+        patient_text(surgery),
         surgery.diagnosis_names_display,
         surgery.display_procedure_name,
         operator_text(surgery),
@@ -130,6 +136,15 @@ class WeeklySurgerySchedulePdf
         category_text(surgery)
       ]
       surgery.emergency? ? cells.map { |content| { content: content, background_color: EMERGENCY_COLOR } } : cells
+    end
+
+    # Hospital id over name, then the referral source when there is one.
+    def patient_text(surgery)
+      name = surgery.patient.name.presence || I18n.t("surgery_schedules.labels.unknown_patient_name", id: surgery.patient_id)
+      referred_from = referral_lookup.referred_from_for(surgery)
+      lines = [ surgery.patient.hospital_id, name ]
+      lines << "#{I18n.t('hospitalizations.labels.referred_from')}: #{referred_from}" if referred_from.present?
+      lines.join("\n")
     end
 
     # Operator over assistant, mirroring the stacked cell on the surgery list.

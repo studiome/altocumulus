@@ -34,15 +34,13 @@ class OperationsCalendar
 
     @slot_usages = ElectiveSlotUsage.for_dates(@dates)
     @admission_counts = build_admission_counts
-    @referrals_by_patient = build_referrals_by_patient
+    @referral_lookup = build_referral_lookup
   end
 
   # The referral source of the patient's hospitalization whose period covers
   # the surgery date, or nil when there is none (or it has no referral).
   def referred_from_for(surgery)
-    @referrals_by_patient.fetch(surgery.patient_id, []).find { |hospitalization|
-      covers?(hospitalization, surgery.surgery_date)
-    }&.referred_from
+    @referral_lookup.referred_from_for(surgery)
   end
 
   def admission_count_for(date)
@@ -101,29 +99,10 @@ class OperationsCalendar
     end
 
     # One query for every surgery on the calendar, narrowed by the range as a
-    # whole; which hospitalization belongs to which surgery is then decided
-    # in Ruby (see #covers?). Only referred hospitalizations are loaded, as
-    # that is all the calendar shows.
-    def build_referrals_by_patient
+    # whole (see SurgeryReferralLookup).
+    def build_referral_lookup
       patient_ids = slot_usages.values.flat_map { |usage| (usage.elective_surgeries + usage.emergency_surgeries).map(&:patient_id) }.uniq
 
-      Hospitalization.active.referred
-                     .where(patient_id: patient_ids)
-                     .where(
-                       "(COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date) <= :last " \
-                       "AND (hospitalizations.discharge_date IS NULL OR hospitalizations.discharge_date >= :first)) " \
-                       "OR hospitalizations.scheduled_surgery_date BETWEEN :first AND :last",
-                       first: dates.first, last: dates.last
-                     )
-                     .group_by(&:patient_id)
-    end
-
-    # A hospitalization belongs to a surgery's day when its period spans the
-    # day, or when that day is the surgery date it was booked for.
-    def covers?(hospitalization, date)
-      return true if hospitalization.scheduled_surgery_date == date
-
-      start = hospitalization.effective_admission_date
-      start.present? && start <= date && (hospitalization.discharge_date.nil? || hospitalization.discharge_date >= date)
+      SurgeryReferralLookup.new(patient_ids: patient_ids, dates: dates)
     end
 end

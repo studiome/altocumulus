@@ -115,4 +115,77 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     tinted = colors.reject { |r, g, b| r == g && g == b }
     assert_empty tinted, "non-gray colors in PDF: #{tinted.uniq.inspect}"
   end
+
+  test "shows the referral source under the patient when a referred hospitalization covers the surgery date" do
+    date = Date.new(2030, 1, 8)
+    patient = new_patient
+    create_hospitalization(patient, scheduled_admission_date: date - 1, discharge_date: date + 3,
+                                    outcome: "recovered", referred_from: "City Clinic")
+    create_surgery(patient, date)
+
+    assert_includes render_text(Date.new(2030, 1, 7)), "Referred From: City Clinic"
+    assert_includes render_text(Date.new(2030, 1, 7), locale: :ja), "紹介元: City Clinic"
+  end
+
+  test "leaves out the referral line when no referred hospitalization covers the surgery" do
+    date = Date.new(2030, 1, 8)
+    create_surgery(new_patient, date)
+    other = new_patient
+    create_hospitalization(other, scheduled_admission_date: date + 10, referred_from: "Later Clinic")
+    create_surgery(other, date)
+
+    text = render_text(Date.new(2030, 1, 7))
+
+    assert_not_includes text, "Referred From"
+    assert_not_includes text, "Later Clinic"
+  end
+
+  test "referral lookup adds no queries per surgery" do
+    date = Date.new(2030, 1, 8)
+    create_surgery(new_patient, date)
+    one = count_queries { WeeklySurgerySchedulePdf.new(Date.new(2030, 1, 7)).render }
+    3.times do
+      patient = new_patient
+      create_hospitalization(patient, scheduled_admission_date: date, referred_from: "Clinic")
+      create_surgery(patient, date)
+    end
+    many = count_queries { WeeklySurgerySchedulePdf.new(Date.new(2030, 1, 7)).render }
+
+    assert_equal one, many
+  end
+
+  private
+
+    def new_patient
+      @patient_sequence = (@patient_sequence || 0) + 1
+      Patient.create!(name: "Pdf Test Patient #{@patient_sequence}", hospital_id: "PDF#{@patient_sequence}",
+                      date_of_birth: Date.new(1980, 1, 1))
+    end
+
+    def create_surgery(patient, date)
+      Surgery.create!(
+        patient: patient, surgery_date: date, anesthesia_method: "General",
+        surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+      )
+    end
+
+    def create_hospitalization(patient, **attrs)
+      Hospitalization.create!(
+        { patient: patient, reason: "Pdf test reservation",
+          hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:appendicitis).id } ] }.merge(attrs)
+      )
+    end
+
+    def count_queries
+      count = 0
+      counter = ->(_name, _started, _finished, _unique_id, payload) do
+        count += 1 unless payload[:cached] || payload[:name] == "SCHEMA"
+      end
+
+      ActiveRecord::Base.lease_connection.materialize_transactions
+      ActiveRecord::Base.uncached do
+        ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
+      end
+      count
+    end
 end
