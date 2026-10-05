@@ -707,4 +707,22 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "span", text: /Scheduled Surgery Date/
     assert_match "2026", @response.body
   end
+
+  test "show displays the purpose name when purpose is not other even if reason is present" do
+    @hospitalization.update_columns(purpose: "surgery", reason: "Previous reason")
+
+    get hospitalization_url(@hospitalization)
+    assert_response :success
+
+    assert_select "h2.card-title", text: "Surgery"
+  end
+
+  test "show displays the reason as heading when purpose is other" do
+    @hospitalization.update_columns(purpose: "other", reason: "Social admission")
+
+    get hospitalization_url(@hospitalization)
+    assert_response :success
+
+    assert_select "h2.card-title", text: "Social admission"
+  end
 end

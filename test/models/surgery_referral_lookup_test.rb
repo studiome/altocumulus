@@ -51,6 +51,36 @@ class SurgeryReferralLookupTest < ActiveSupport::TestCase
     assert_nothing_raised { SurgeryReferralLookup.new(patient_ids: [], dates: []) }
   end
 
+  test "handles a set of dates containing nil without raising" do
+    assert_nothing_raised { SurgeryReferralLookup.new(patient_ids: [], dates: [ Date.today, nil ]) }
+  end
+
+  test "returns nil for an undated surgery" do
+    date = Date.new(2031, 5, 10)
+    patient = new_patient
+    create_hospitalization(patient, scheduled_admission_date: date, referred_from: "City Clinic")
+    surgery = Surgery.create!(
+      patient: patient, surgery_date: nil, surgery_date_status: "undecided", anesthesia_method: "General",
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+
+    lookup = SurgeryReferralLookup.new(patient_ids: [ patient.id ], dates: [ date ])
+    assert_nil lookup.referred_from_for(surgery)
+  end
+
+  test "returns nil for an undated surgery even when hospitalization has a scheduled surgery date" do
+    date = Date.new(2031, 5, 10)
+    patient = new_patient
+    create_hospitalization(patient, scheduled_admission_date: date, scheduled_surgery_date: date, referred_from: "City Clinic")
+    surgery = Surgery.create!(
+      patient: patient, surgery_date: nil, surgery_date_status: "undecided", anesthesia_method: "General",
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+
+    lookup = SurgeryReferralLookup.new(patient_ids: [ patient.id ], dates: [ date ])
+    assert_nil lookup.referred_from_for(surgery)
+  end
+
   private
 
     def lookup_for(*surgeries)

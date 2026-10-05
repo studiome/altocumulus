@@ -7,13 +7,16 @@
 # so the query count does not grow with the number of surgeries.
 class SurgeryReferralLookup
   def initialize(patient_ids:, dates:)
-    dates = dates.to_a
+    dates = dates.to_a.compact
     @referrals_by_patient = dates.empty? ? {} : load_referrals(patient_ids.to_a.uniq, dates.min, dates.max)
   end
 
   # The referral source of the patient's hospitalization whose period covers
-  # the surgery date, or nil when there is none (or it has no referral).
+  # the surgery date, or nil when there is none (or it has no referral). An
+  # undated surgery has no day to match, so it never has a referral source.
   def referred_from_for(surgery)
+    return nil if surgery.surgery_date.nil?
+
     @referrals_by_patient.fetch(surgery.patient_id, []).find { |hospitalization|
       covers?(hospitalization, surgery.surgery_date)
     }&.referred_from

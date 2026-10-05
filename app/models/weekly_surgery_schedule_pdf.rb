@@ -140,9 +140,9 @@ class WeeklySurgerySchedulePdf
 
     # Hospital id over name, then the referral source when there is one.
     def patient_text(surgery)
-      name = surgery.patient.name.presence || I18n.t("surgery_schedules.labels.unknown_patient_name", id: surgery.patient_id)
+      name = surgery.patient&.name.presence || I18n.t("surgery_schedules.labels.unknown_patient_name", id: surgery.patient_id)
       referred_from = referral_lookup.referred_from_for(surgery)
-      lines = [ surgery.patient.hospital_id, name ]
+      lines = [ surgery.patient&.hospital_id, name ].compact
       lines << "#{I18n.t('hospitalizations.labels.referred_from')}: #{referred_from}" if referred_from.present?
       lines.join("\n")
     end

@@ -140,6 +140,16 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     assert_not_includes text, "Later Clinic"
   end
 
+  test "handles a surgery whose patient is missing without raising" do
+    date = Date.new(2030, 1, 8)
+    patient = new_patient
+    surgery = create_surgery(patient, date)
+    ActiveRecord::Base.connection.disable_referential_integrity { surgery.update_column(:patient_id, -1) }
+
+    text = render_text(Date.new(2030, 1, 7))
+    assert_includes text, "Patient #-1"
+  end
+
   test "referral lookup adds no queries per surgery" do
     date = Date.new(2030, 1, 8)
     create_surgery(new_patient, date)
