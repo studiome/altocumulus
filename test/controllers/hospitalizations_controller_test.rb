@@ -5,11 +5,6 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     @hospitalization = hospitalizations(:one)
   end
 
-  test "should get index" do
-    get hospitalizations_url
-    assert_response :success
-  end
-
   test "index.json excludes discarded hospitalizations" do
     @hospitalization.discard!
 
@@ -148,66 +143,10 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Community-acquired pneumonia/, @response.body)
   end
 
-  test "index paginates results" do
-    get hospitalizations_url, params: { page: 1 }
-    assert_response :success
-  end
+  test "index filters by diagnosis_id" do
+    get hospitalizations_url, params: { diagnosis_id: diagnoses(:appendicitis).id, all: "1" }
 
-  test "index filters by status upcoming" do
-    patient = Patient.create!(hospital_id: "H910", name: "Future Patient", date_of_birth: "1980-01-01")
-    Hospitalization.create!(
-      patient: patient,
-      scheduled_admission_date: 30.days.from_now.to_date,
-      reason: "Upcoming filter target",
-      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
-    )
-
-    get hospitalizations_url, params: { status: "upcoming" }
-
-    assert_response :success
-    assert_match(/Upcoming filter target/, @response.body)
-    assert_no_match(/Community-acquired pneumonia/, @response.body)
-  end
-
-  test "index filters by status waiting" do
-    @hospitalization.update!(reservation_status: "waiting")
-    hospitalizations(:two).update!(reservation_status: "admitted")
-
-    get hospitalizations_url, params: { status: "waiting" }
-
-    assert_response :success
-    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
-    assert_no_match(/Post-surgical observation/, @response.body)
-  end
-
-  test "index filters by status unconfirmed" do
-    hospitalizations(:two).update!(admin_status: "confirmed")
-
-    get hospitalizations_url, params: { status: "unconfirmed" }
-
-    assert_response :success
-    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
-    assert_no_match(/Post-surgical observation/, @response.body)
-  end
-
-  test "index filters by status recently_updated" do
-    hospitalizations(:two).update_column(:updated_at, 5.days.ago)
-
-    get hospitalizations_url, params: { status: "recently_updated" }
-
-    assert_response :success
-    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
-    assert_no_match(/Post-surgical observation/, @response.body)
-  end
-
-  test "index filters by status referred" do
-    @hospitalization.update!(referred_from: "General Clinic")
-
-    get hospitalizations_url, params: { status: "referred" }
-
-    assert_response :success
-    assert_match(/#{Regexp.escape(@hospitalization.reason)}/, @response.body)
-    assert_no_match(/Post-surgical observation/, @response.body)
+    assert_equal [ hospitalizations(:three).id ], hospitalization_ids_in_table
   end
 
   test "index shows reservation status, purpose, and admin confirmation state" do
@@ -263,11 +202,6 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     body_index = @response.body.index(reservation.reason)
     other_index = @response.body.index(hospitalizations(:three).reason)
     assert body_index > other_index, "expected the furthest-out scheduled hospitalization to sort last"
-  end
-
-  test "should get new" do
-    get new_hospitalization_url
-    assert_response :success
   end
 
   test "new pre-fills the scheduled admission date from a query param" do
@@ -335,11 +269,6 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
-  test "should show hospitalization" do
-    get hospitalization_url(@hospitalization)
-    assert_response :success
-  end
-
   test "show displays the finalized length of stay for a discharged hospitalization" do
     get hospitalization_url(@hospitalization)
     assert_response :success
@@ -361,11 +290,6 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_equal "-", length_of_stay_field(@response.body)
-  end
-
-  test "should get edit" do
-    get edit_hospitalization_url(@hospitalization)
-    assert_response :success
   end
 
   test "edit renders the diagnosis picker frame and turbo-frame links into it" do

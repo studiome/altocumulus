@@ -5,11 +5,6 @@ class ElectiveSlotRulesControllerTest < ActionDispatch::IntegrationTest
     @elective_slot_rule = elective_slot_rules(:tuesday)
   end
 
-  test "should get index" do
-    get elective_slot_rules_url
-    assert_response :success
-  end
-
   test "index lists all seven days including unconfigured ones" do
     get elective_slot_rules_url
     assert_response :success
@@ -42,11 +37,6 @@ class ElectiveSlotRulesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-  end
-
-  test "should show elective_slot_rule" do
-    get elective_slot_rule_url(@elective_slot_rule)
-    assert_response :success
   end
 
   test "should get edit" do

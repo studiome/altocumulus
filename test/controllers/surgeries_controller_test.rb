@@ -5,11 +5,6 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     @surgery = surgeries(:one)
   end
 
-  test "should get index" do
-    get surgeries_url
-    assert_response :success
-  end
-
   test "index does not error out on a crafted Array page param" do
     get surgeries_url, params: { page: [ "1" ] }
     assert_response :success
@@ -163,30 +158,22 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/John Doe/, @response.body)
   end
 
-  test "index filters by anesthesia_method" do
-    get surgeries_url, params: { anesthesia_method: "Spinal" }
-    assert_response :success
-    assert_match(/Jane Smith/, @response.body)
-    assert_no_match(/John Doe/, @response.body)
-  end
-
-  test "index paginates results" do
-    get surgeries_url, params: { page: 1 }
-    assert_response :success
-  end
-
-  test "index filters by scheduling_type" do
-    get surgeries_url, params: { scheduling_type: "emergency" }
-    assert_response :success
-    assert_match(/Emergency/, @response.body)
-  end
-
-  test "index filters by slot_category" do
+  test "index passes each filter param through to the surgery scope" do
     surgeries(:one).update!(slot_category: "off_slot", location: "Cath Lab Suite")
+    undated = create_surgery(surgery_date: nil)
+    {
+      { anesthesia_method: "Spinal" } => [ surgeries(:two), surgeries(:one) ],
+      { scheduling_type: "emergency" } => [ surgeries(:emergency_one), surgeries(:two) ],
+      { slot_category: "off_slot" } => [ surgeries(:one), surgeries(:two) ],
+      { surgery_procedure_id: surgery_procedures(:appendectomy).id } => [ surgeries(:one), surgeries(:two) ],
+      { undated: "1" } => [ undated, surgeries(:one) ]
+    }.each do |filter, (included, excluded)|
+      get surgeries_url, params: filter
 
-    get surgeries_url, params: { slot_category: "off_slot" }
-    assert_response :success
-    assert_match(/Cath Lab Suite/, @response.body)
+      assert_response :success
+      assert_includes surgery_ids_in_table, included.id, "expected #{filter} to include surgery #{included.id}"
+      assert_not_includes surgery_ids_in_table, excluded.id, "expected #{filter} to exclude surgery #{excluded.id}"
+    end
   end
 
   test "index shows empty filtered message when filtering by slot_category matches nothing" do
@@ -211,11 +198,6 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(%r{Slot 1 / 3}, @response.body)
     assert_no_match(/2\.5/, @response.body)
-  end
-
-  test "should get new" do
-    get new_surgery_url
-    assert_response :success
   end
 
   test "new renders the patient picker field instead of a patient dropdown" do
@@ -538,21 +520,6 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, surgery.operation_order
   end
 
-  test "index filters by undated" do
-    Surgery.create!(
-      patient: patients(:one),
-      surgery_date: nil,
-      anesthesia_method: "General",
-      duration_hours: 1.0,
-      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
-    )
-
-    get surgeries_url, params: { undated: "1" }
-
-    assert_response :success
-    assert_match(/Undated/, @response.body)
-  end
-
   test "should create an emergency surgery on an unconfigured weekday at night" do
     assert_difference("Surgery.count") do
       post surgeries_url, params: { surgery: {
@@ -591,11 +558,6 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to calendar_url_for(Surgery.last.surgery_date)
     assert Surgery.last.elective?
-  end
-
-  test "should show surgery" do
-    get surgery_url(@surgery)
-    assert_response :success
   end
 
   test "show displays the surgery date with its weekday" do
@@ -661,11 +623,6 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(%r{Slot 1 of 3}, @response.body)
     assert_no_match(/2\.5/, @response.body)
-  end
-
-  test "should get edit" do
-    get edit_surgery_url(@surgery)
-    assert_response :success
   end
 
   test "should update surgery" do

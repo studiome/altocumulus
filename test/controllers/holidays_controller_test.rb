@@ -5,11 +5,6 @@ class HolidaysControllerTest < ActionDispatch::IntegrationTest
     @holiday = holidays(:national_holiday)
   end
 
-  test "should get index" do
-    get holidays_url
-    assert_response :success
-  end
-
   test "index does not error out on a crafted Array page param" do
     get holidays_url, params: { page: [ "1" ] }
     assert_response :success
@@ -88,11 +83,6 @@ class HolidaysControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-  end
-
-  test "should show holiday" do
-    get holiday_url(@holiday)
-    assert_response :success
   end
 
   test "show displays a comment-only day's note" do
