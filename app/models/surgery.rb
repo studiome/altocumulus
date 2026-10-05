@@ -51,6 +51,8 @@ class Surgery < ApplicationRecord
   # undated one, so ordering by it ascending first always pushes undated rows
   # to the very end regardless of the direction of the date sort that follows.
   scope :ordered_by_surgery_date, -> { order(Arel.sql("surgery_date IS NULL"), surgery_date: :desc, created_at: :desc) }
+  # The index reads like a schedule: soonest first, undated at the bottom.
+  scope :ascending_by_surgery_date, -> { order(Arel.sql("surgery_date IS NULL"), surgery_date: :asc, created_at: :asc) }
 
   def self.scheduling_type_options
     SCHEDULING_TYPE_KEYS.index_with { |key| I18n.t("models.surgery.scheduling_type_options.#{key}") }
@@ -76,7 +78,7 @@ class Surgery < ApplicationRecord
     slot_category_options.map { |k, v| [ v, k ] }
   end
 
-  def self.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil, scheduling_type: nil, slot_category: nil, undated: nil)
+  def self.filtered(keyword: nil, surgery_procedure_id: nil, anesthesia_method: nil, performed_from: nil, performed_to: nil, scheduling_type: nil, slot_category: nil, undated: nil, include_undated: false)
     scope = all
 
     if keyword.present?
@@ -96,7 +98,12 @@ class Surgery < ApplicationRecord
     scope = scope.where(anesthesia_method: anesthesia_method) if anesthesia_method.present?
     # A NULL surgery_date never satisfies either range comparison, so a
     # date-range search already excludes undated surgeries with no extra code.
-    scope = scope.where(surgery_date: performed_from..) if performed_from.present?
+    # include_undated keeps undated surgeries visible next to a performed_from
+    # bound (the index's default view), where they would otherwise vanish.
+    if performed_from.present?
+      dated_from = scope.where(surgery_date: performed_from..)
+      scope = include_undated ? dated_from.or(scope.undated) : dated_from
+    end
     scope = scope.where(surgery_date: ..performed_to) if performed_to.present?
     scope = scope.where(scheduling_type: scheduling_type) if scheduling_type.present?
     scope = scope.where(slot_category: slot_category) if slot_category.present?

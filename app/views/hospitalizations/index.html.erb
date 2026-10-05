@@ -35,14 +35,17 @@
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label"><%= t(".admitted_from_label") %></label>
-      <%= f.date_field :admitted_from, value: params[:admitted_from], class: "input input-sm" %>
+      <%= f.date_field :admitted_from, value: @admitted_from || params[:admitted_from], class: "input input-sm" %>
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label"><%= t(".admitted_to_label") %></label>
       <%= f.date_field :admitted_to, value: params[:admitted_to], class: "input input-sm" %>
     </div>
     <%= f.submit t("common.search"), class: "btn btn-primary btn-sm" %>
-    <% if params.values_at(:keyword, :diagnosis_id, :status, :admitted_from, :admitted_to).any?(&:present?) %>
+    <% unless params[:all].present? %>
+      <%= link_to t(".show_all_link"), hospitalizations_path(all: 1), class: "btn btn-ghost btn-sm" %>
+    <% end %>
+    <% unless @default_range %>
       <%= link_to t("common.clear"), hospitalizations_path, class: "btn btn-ghost btn-sm" %>
     <% end %>
   <% end %>

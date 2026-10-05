@@ -1,12 +1,15 @@
 class SurgeriesController < ApplicationController
+  DEFAULT_LOOKBACK_DAYS = 7
+
   before_action :set_surgery, only: %i[ edit update destroy ]
 
   def index
     @surgery_procedures = SurgeryProcedure.alphabetical
     @anesthesia_methods = Surgery.anesthesia_methods
+    @default_range = default_range?
     scope = Surgery.includes(:patient, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure })
-                    .filtered(**filter_params)
-                    .ordered_by_surgery_date
+                    .filtered(**index_filters)
+                    .ascending_by_surgery_date
     @pagination = Pagination.new(scope, page: params[:page])
     @surgeries = @pagination.records
     @holidays = Holiday.by_date(@surgeries.filter_map(&:surgery_date))
@@ -147,6 +150,20 @@ class SurgeriesController < ApplicationController
         { patient_diagnosis_ids: [] },
         { surgery_procedure_selections_attributes: [ [ :id, :surgery_procedure_id, :laterality, :_destroy ] ] }
       ])
+    end
+
+    # Opened with no filter at all (and not via the "all dates" link): start
+    # a week back instead of listing every surgery ever. `page` is not a
+    # filter, so paging through the default view stays in it.
+    def default_range?
+      filter_params.empty? && params[:all].blank?
+    end
+
+    def index_filters
+      return filter_params unless @default_range
+
+      @performed_from = (Date.current - DEFAULT_LOOKBACK_DAYS).iso8601
+      { performed_from: @performed_from, include_undated: true }
     end
 
     def filter_params

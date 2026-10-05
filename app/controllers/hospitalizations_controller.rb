@@ -3,6 +3,7 @@ class HospitalizationsController < ApplicationController
   # detail page only needs enough of the recent trail to be useful, with a
   # link out to the full audit log for anything older.
   RECENT_AUDIT_EVENTS_LIMIT = 10
+  DEFAULT_LOOKBACK_DAYS = 7
 
   before_action :set_hospitalization, only: %i[ show edit update destroy confirm restore copy ]
   before_action :set_form_collections, only: %i[ new edit create update ]
@@ -10,9 +11,10 @@ class HospitalizationsController < ApplicationController
 
   def index
     @diagnoses = Diagnosis.alphabetical
+    @default_range = default_range?
     scope = Hospitalization.includes(:patient, hospitalization_diagnoses: :diagnosis)
-                            .filtered(**filter_params)
-                            .order(Arel.sql("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date) DESC"), created_at: :desc)
+                            .filtered(**index_filters)
+                            .order(Arel.sql("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date) ASC"), created_at: :asc)
     @pagination = Pagination.new(scope, page: params[:page])
     @hospitalizations = @pagination.records
     @holidays = holidays_for(@hospitalizations)
@@ -160,6 +162,20 @@ class HospitalizationsController < ApplicationController
         :discharge_date, :outcome, :discharge_destination,
         { hospitalization_diagnoses_attributes: [ [ :id, :diagnosis_id, :_destroy ] ] }
       ])
+    end
+
+    # Opened with no filter at all (and not via the "all dates" link): start
+    # a week back instead of listing every hospitalization ever. `page` is not
+    # a filter, so paging through the default view stays in it.
+    def default_range?
+      filter_params.empty? && params[:all].blank?
+    end
+
+    def index_filters
+      return filter_params unless @default_range
+
+      @admitted_from = (Date.current - DEFAULT_LOOKBACK_DAYS).iso8601
+      { admitted_from: @admitted_from }
     end
 
     def filter_params

@@ -16,7 +16,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index renders a ledger table with patient id and name stacked in one cell" do
-    get surgeries_url
+    get surgeries_url, params: { all: "1" }
     assert_response :success
     assert_select "table.app-ledger"
     assert_select "table.app-ledger td.ledger-patient" do
@@ -50,6 +50,90 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, holiday_queries
   end
 
+  test "index without params defaults to surgeries from seven days ago and pre-fills the date" do
+    travel_to Date.new(2026, 10, 5) do
+      recent = create_surgery(surgery_date: "2026-09-28")
+      old = create_surgery(surgery_date: "2026-09-27", operator_name: "Dr. Old")
+
+      get surgeries_url
+
+      assert_response :success
+      assert_select "tr td a[href=?]", surgery_path(recent)
+      assert_select "tr td a[href=?]", surgery_path(old), count: 0
+      assert_select "input[name=performed_from][value=?]", "2026-09-28"
+    end
+  end
+
+  test "default index lists surgeries in ascending date order with undated ones last" do
+    travel_to Date.new(2026, 10, 5) do
+      later = create_surgery(surgery_date: "2026-10-20")
+      sooner = create_surgery(surgery_date: "2026-10-06")
+      undated = create_surgery(surgery_date: nil)
+
+      get surgeries_url
+
+      assert_equal [ sooner, later, undated ].map(&:id), surgery_ids_in_table
+    end
+  end
+
+  test "all dates link shows older surgeries in ascending order" do
+    travel_to Date.new(2026, 10, 5) do
+      recent = create_surgery(surgery_date: "2026-10-06")
+
+      get surgeries_url, params: { all: "1" }
+
+      dates = Surgery.where(id: surgery_ids_in_table).index_by(&:id).values_at(*surgery_ids_in_table).map(&:surgery_date)
+      assert_equal dates.compact.sort, dates.compact
+      assert_equal surgery_ids_in_table.size, Surgery.count
+      assert_includes surgery_ids_in_table, surgeries(:one).id
+      assert_includes surgery_ids_in_table, recent.id
+      assert_select "input[name=performed_from][value]", count: 0
+    end
+  end
+
+  test "index offers an all dates link and clear returns to the default view" do
+    get surgeries_url
+
+    assert_select "a[href=?]", surgeries_path(all: 1), text: I18n.t("surgeries.index.show_all_link")
+
+    get surgeries_url, params: { all: "1" }
+
+    assert_select "a[href=?]", surgeries_path, text: I18n.t("common.clear")
+  end
+
+  test "paging through the default view stays in the default range" do
+    travel_to Date.new(2026, 10, 5) do
+      get surgeries_url, params: { page: 1 }
+
+      assert_select "input[name=performed_from][value=?]", "2026-09-28"
+    end
+  end
+
+  test "an explicit performed_from is honoured and undated surgeries stay excluded" do
+    travel_to Date.new(2026, 10, 5) do
+      create_surgery(surgery_date: nil)
+
+      get surgeries_url, params: { performed_from: "2026-03-02" }
+
+      assert_equal [ surgeries(:two).id ], surgery_ids_in_table.first(1)
+      assert_not_includes surgery_ids_in_table, Surgery.undated.first.id
+    end
+  end
+
+  test "an explicitly blank performed_from shows every dated surgery" do
+    get surgeries_url, params: { performed_from: "", keyword: "" }
+
+    assert_includes surgery_ids_in_table, surgeries(:one).id
+  end
+
+  test "pagination links keep the all dates param" do
+    26.times { |i| create_surgery(surgery_date: "2026-04-#{format("%02d", i + 1)}") }
+
+    get surgeries_url, params: { all: "1" }
+
+    assert_select "a[href*=?]", "all=1", text: I18n.t("shared.pagination.next")
+  end
+
   test "index filters by keyword" do
     get surgeries_url, params: { keyword: "jane" }
     assert_response :success
@@ -60,7 +144,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
   test "index shows the operator and assistant of each surgery" do
     surgeries(:one).update!(operator_name: "Dr. Operator", assistant_name: "Dr. Assistant")
 
-    get surgeries_url
+    get surgeries_url, params: { all: "1" }
 
     assert_select "th span", text: "Operator"
     assert_select "td.ledger-operator" do
@@ -114,7 +198,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index shows the assigned slot, and flags elective surgeries without one" do
-    get surgeries_url
+    get surgeries_url, params: { all: "1" }
     assert_response :success
     assert_match(/Slot 1/, @response.body)          # surgeries(:three) and (:four)
     assert_match(/No slot assigned/, @response.body) # surgeries(:six)
@@ -123,7 +207,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
   test "index shows the day's whole number of slots (total_slots), not the raw fractional slot_count" do
     ElectiveSlotRule.find_by(day_of_week: surgeries(:three).surgery_date.wday).update!(slot_count: 2.5, slot_duration_minutes: 240)
 
-    get surgeries_url
+    get surgeries_url, params: { all: "1" }
     assert_response :success
     assert_match(%r{Slot 1 / 3}, @response.body)
     assert_no_match(/2\.5/, @response.body)
@@ -412,6 +496,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
 
   test "show does not issue additional queries for extra patient_diagnoses or procedure selections" do
     surgery = surgeries(:two) # starts with 1 diagnosis, 1 procedure selection
+    get surgery_url(surgery) # warm-up: the first request in a process loads schema and session state
     fewer_queries = capture_query_count { get surgery_url(surgery) }
 
     extra_diagnosis = surgery.patient.patient_diagnoses.create!(diagnosis: diagnoses(:fracture), diagnosed_on: Date.new(2026, 4, 10))
@@ -590,4 +675,20 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_no_match(/#{patient_diagnoses(:appendicitis).display_name}/, response.body)
   end
+
+  private
+
+    def create_surgery(surgery_date:, operator_name: nil)
+      Surgery.create!(
+        patient: patients(:one), surgery_date: surgery_date, operator_name: operator_name,
+        anesthesia_method: "General", duration_hours: 1.0,
+        surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+      )
+    end
+
+    def surgery_ids_in_table
+      css_select("table.app-ledger td.ledger-actions a[href^='/surgeries/']").filter_map do |a|
+        a["href"][%r{\A/surgeries/(\d+)\z}, 1]&.to_i
+      end.uniq
+    end
 end

@@ -58,7 +58,7 @@ class HospitalizationsI18nTest < ActionDispatch::IntegrationTest
   test "index planned days value renders in Japanese without changing the number" do
     sign_in_as(users(:japanese_member))
 
-    get hospitalizations_url
+    get hospitalizations_url, params: { all: "1" }
 
     assert_response :success
     assert_match(/5日/, response.body)
@@ -67,7 +67,7 @@ class HospitalizationsI18nTest < ActionDispatch::IntegrationTest
   test "index admission date renders in the Japanese date format" do
     sign_in_as(users(:japanese_member))
 
-    get hospitalizations_url
+    get hospitalizations_url, params: { all: "1" }
 
     assert_response :success
     assert_match "2026年03月01日", response.body
@@ -76,7 +76,7 @@ class HospitalizationsI18nTest < ActionDispatch::IntegrationTest
   test "index admission date renders in the original English date format" do
     sign_in_as(users(:member))
 
-    get hospitalizations_url
+    get hospitalizations_url, params: { all: "1" }
 
     assert_response :success
     assert_match "2026-03-01", response.body

@@ -114,6 +114,29 @@ class SurgeryTest < ActiveSupport::TestCase
     assert surgery.valid?
   end
 
+  test "ascending_by_surgery_date sorts soonest first and undated last" do
+    undated = create_undated_surgery
+
+    ordered = Surgery.where(id: [ surgeries(:two).id, surgeries(:one).id, undated.id ]).ascending_by_surgery_date
+
+    assert_equal [ surgeries(:one), surgeries(:two), undated ], ordered.to_a
+  ensure
+    undated&.destroy
+  end
+
+  test "filtered with include_undated keeps undated surgeries next to performed_from" do
+    undated = create_undated_surgery
+
+    ids = Surgery.filtered(performed_from: "2026-03-02", include_undated: true).ids
+
+    assert_includes ids, undated.id
+    assert_includes ids, surgeries(:two).id
+    assert_not_includes ids, surgeries(:one).id
+    assert_not_includes Surgery.filtered(performed_from: "2026-03-02").ids, undated.id
+  ensure
+    undated&.destroy
+  end
+
   test "ordered_by_surgery_date sorts undated surgeries after dated ones" do
     undated = create_undated_surgery
 

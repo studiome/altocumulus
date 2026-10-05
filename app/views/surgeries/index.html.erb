@@ -38,7 +38,7 @@
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label"><%= t(".performed_from_label") %></label>
-      <%= f.date_field :performed_from, value: params[:performed_from], class: "input input-sm" %>
+      <%= f.date_field :performed_from, value: @performed_from || params[:performed_from], class: "input input-sm" %>
     </div>
     <div class="app-filter-field">
       <label class="app-filter-label"><%= t(".performed_to_label") %></label>
@@ -52,7 +52,10 @@
       </label>
     </div>
     <%= f.submit t("common.search"), class: "btn btn-primary btn-sm" %>
-    <% if params.values_at(:keyword, :surgery_procedure_id, :anesthesia_method, :performed_from, :performed_to, :scheduling_type, :slot_category, :undated).any?(&:present?) %>
+    <% unless params[:all].present? %>
+      <%= link_to t(".show_all_link"), surgeries_path(all: 1), class: "btn btn-ghost btn-sm" %>
+    <% end %>
+    <% unless @default_range %>
       <%= link_to t("common.clear"), surgeries_path, class: "btn btn-ghost btn-sm" %>
     <% end %>
   <% end %>

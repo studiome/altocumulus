@@ -76,6 +76,64 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td span", text: "2026-03-01 (Sun)"
   end
 
+  test "index without params defaults to admissions from seven days ago and pre-fills the date" do
+    travel_to Date.new(2026, 10, 5) do
+      get hospitalizations_url
+
+      assert_response :success
+      assert_select "input[name=admitted_from][value=?]", "2026-09-28"
+      assert_equal [ hospitalizations(:four).id ], hospitalization_ids_in_table
+    end
+  end
+
+  test "default index excludes admissions older than seven days" do
+    travel_to Date.new(2026, 10, 5) do
+      get hospitalizations_url
+
+      assert_not_includes hospitalization_ids_in_table, hospitalizations(:one).id
+      assert_not_includes hospitalization_ids_in_table, hospitalizations(:three).id
+    end
+  end
+
+  test "index lists hospitalizations in ascending date order" do
+    get hospitalizations_url, params: { all: "1" }
+
+    assert_equal [ :one, :two, :three, :four ].map { |n| hospitalizations(n).id }, hospitalization_ids_in_table
+  end
+
+  test "all dates link shows older hospitalizations" do
+    travel_to Date.new(2026, 10, 5) do
+      get hospitalizations_url, params: { all: "1" }
+
+      assert_includes hospitalization_ids_in_table, hospitalizations(:one).id
+      assert_select "input[name=admitted_from][value]", count: 0
+    end
+  end
+
+  test "index offers an all dates link and clear returns to the default view" do
+    get hospitalizations_url
+
+    assert_select "a[href=?]", hospitalizations_path(all: 1), text: I18n.t("hospitalizations.index.show_all_link")
+
+    get hospitalizations_url, params: { all: "1" }
+
+    assert_select "a[href=?]", hospitalizations_path, text: I18n.t("common.clear")
+  end
+
+  test "an explicit admitted_from is honoured" do
+    get hospitalizations_url, params: { admitted_from: "2026-03-05", admitted_to: "2026-06-30" }
+
+    assert_equal [ hospitalizations(:two).id, hospitalizations(:three).id ], hospitalization_ids_in_table
+  end
+
+  test "paging through the default view stays in the default range" do
+    travel_to Date.new(2026, 10, 5) do
+      get hospitalizations_url, params: { page: 1 }
+
+      assert_select "input[name=admitted_from][value=?]", "2026-09-28"
+    end
+  end
+
   test "index filters by keyword" do
     get hospitalizations_url, params: { keyword: "jane" }
     assert_response :success
@@ -169,7 +227,7 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index shows the finalized length of stay for a discharged hospitalization" do
-    get hospitalizations_url
+    get hospitalizations_url, params: { all: "1" }
     assert_response :success
 
     assert_equal "6 days", length_of_stay_cell_for(@response.body, hospitalizations(:one).reason)
@@ -177,7 +235,7 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
 
   test "index shows the running day count for a hospitalization still admitted" do
     travel_to Date.new(2026, 6, 4) do
-      get hospitalizations_url
+      get hospitalizations_url, params: { all: "1" }
       assert_response :success
 
       assert_equal "Day 4 (ongoing)", length_of_stay_cell_for(@response.body, hospitalizations(:three).reason)
@@ -185,7 +243,7 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index shows a dash for a reservation that has not been admitted yet" do
-    get hospitalizations_url
+    get hospitalizations_url, params: { all: "1" }
     assert_response :success
 
     assert_equal "-", length_of_stay_cell_for(@response.body, hospitalizations(:four).reason)
@@ -199,12 +257,12 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
       hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ]
     )
 
-    get hospitalizations_url
+    get hospitalizations_url, params: { all: "1" }
     assert_response :success
 
     body_index = @response.body.index(reservation.reason)
     other_index = @response.body.index(hospitalizations(:three).reason)
-    assert body_index < other_index, "expected the furthest-out scheduled hospitalization to sort first"
+    assert body_index > other_index, "expected the furthest-out scheduled hospitalization to sort last"
   end
 
   test "should get new" do
@@ -766,4 +824,12 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_select "h2.card-title", text: "Social admission"
   end
+
+  private
+
+    def hospitalization_ids_in_table
+      css_select("table.app-ledger td.ledger-actions a[href^='/hospitalizations/']").filter_map do |a|
+        a["href"][%r{\A/hospitalizations/(\d+)\z}, 1]&.to_i
+      end.uniq
+    end
 end

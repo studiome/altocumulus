@@ -57,7 +57,7 @@ class SurgeriesI18nTest < ActionDispatch::IntegrationTest
   test "index surgery date renders in the Japanese date format" do
     sign_in_as(users(:japanese_member))
 
-    get surgeries_url
+    get surgeries_url, params: { all: "1" }
 
     assert_response :success
     assert_match "2026年03月01日", response.body
@@ -66,7 +66,7 @@ class SurgeriesI18nTest < ActionDispatch::IntegrationTest
   test "index surgery date renders in the original English date format" do
     sign_in_as(users(:member))
 
-    get surgeries_url
+    get surgeries_url, params: { all: "1" }
 
     assert_response :success
     assert_match "2026-03-01", response.body
@@ -75,7 +75,7 @@ class SurgeriesI18nTest < ActionDispatch::IntegrationTest
   test "index still shows the assigned slot count in Japanese" do
     sign_in_as(users(:japanese_member))
 
-    get surgeries_url
+    get surgeries_url, params: { all: "1" }
 
     assert_response :success
     assert_match(%r{第1枠 / 3}, response.body)
