@@ -16,8 +16,8 @@
 
   <% day_cell = capture do %>
     <td class="ledger-day" rowspan="<%= [ surgeries.size, 1 ].max %>">
-      <span class="ledger-primary"><%= l(date, format: :weekday) %></span>
       <%= link_to l(date, format: :default), new_hospitalization_path(scheduled_surgery_date: date, purpose: "surgery"), class: "ledger-primary app-inline-link" %>
+      <span class="ledger-secondary"><%= l(date, format: :weekday) %></span>
       <span class="ledger-secondary <%= "text-warning font-bold" if calendar.admission_warning?(date) %>">
         <%= t(".admissions_label") %> <span class="font-mono"><%= calendar.admission_count_for(date) %></span>
       </span>
