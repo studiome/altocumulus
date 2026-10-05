@@ -137,6 +137,27 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Bilateral Pneumonia/, @response.body)
   end
 
+  test "new prefills the surgery date and patient from params" do
+    get new_surgery_url(patient_id: patients(:one).id, surgery_date: "2027-02-03")
+
+    assert_response :success
+    assert_select "input#surgery_surgery_date[value=?]", "2027-02-03"
+  end
+
+  test "new ignores an unparsable surgery date" do
+    get new_surgery_url(surgery_date: "not-a-date")
+
+    assert_response :success
+    assert_select "input#surgery_surgery_date:not([value])"
+  end
+
+  test "new ignores a crafted array surgery date" do
+    get new_surgery_url, params: { surgery_date: [ "2027-02-03" ] }
+
+    assert_response :success
+    assert_select "input#surgery_surgery_date:not([value])"
+  end
+
   # Nothing is linked yet on a brand new surgery, so the form itself carries no
   # diagnosis at all: they are fetched, patient-scoped, by the picker modal.
   test "new scoped to a patient offers that patient's diagnosis picker without listing any diagnosis" do

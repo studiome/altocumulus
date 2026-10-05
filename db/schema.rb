@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_05_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_05_010000) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -154,6 +154,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_000000) do
     t.date "submitted_on"
     t.datetime "updated_at", null: false
     t.string "ward"
+    t.date "scheduled_surgery_date"
     t.index ["deleted_at"], name: "index_hospitalizations_on_deleted_at"
     t.index ["discharge_date"], name: "index_hospitalizations_on_discharge_date"
     t.index ["patient_id", "admission_date"], name: "index_hospitalizations_on_patient_id_and_admission_date"

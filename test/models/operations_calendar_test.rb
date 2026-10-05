@@ -170,6 +170,18 @@ class OperationsCalendarTest < ActiveSupport::TestCase
     assert_equal "City Clinic", calendar.referred_from_for(surgery)
   end
 
+  test "referred_from_for also matches a hospitalization by its scheduled surgery date" do
+    date = admission_free_date(span: 10)
+    patient = new_patient
+    create_hospitalization(patient: patient, scheduled_admission_date: date - 5, scheduled_surgery_date: date,
+                           admission_date: date + 1, referred_from: "Moved Clinic")
+    surgery = create_surgery(patient, date)
+
+    calendar = OperationsCalendar.build(start: date - 1, days: 3)
+
+    assert_equal "Moved Clinic", calendar.referred_from_for(surgery)
+  end
+
   test "referred_from_for ignores hospitalizations that do not cover the date, are discarded or have no referral" do
     date = admission_free_date(span: 30)
     outside = new_patient

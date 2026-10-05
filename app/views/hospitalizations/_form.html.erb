@@ -35,7 +35,7 @@
 
   <p class="app-helper"><%= t(".required_legend") %></p>
 
-  <section class="space-y-4">
+  <section class="space-y-4" data-controller="purpose-fields">
     <h2 class="text-lg font-bold text-primary"><%= t(".patient_schedule_heading") %></h2>
 
     <%= render "shared/patient_picker_field", form: form, patient: hospitalization.patient,
@@ -46,26 +46,30 @@
       <%= form.select :reservation_status, Hospitalization.reservation_status_form_options, {}, class: "select w-full focus:select-primary" %>
     </div>
 
-    <div class="space-y-4" data-controller="purpose-fields">
-      <div class="app-field">
-        <%= form.label :purpose, Hospitalization.human_attribute_name(:purpose), class: "app-field-label app-field-label-required" %>
-        <%= form.select :purpose, Hospitalization.purpose_form_options, {},
-              class: "select w-full focus:select-primary",
-              data: { purpose_fields_target: "select", action: "purpose-fields#toggle" } %>
-      </div>
+    <div class="app-field">
+      <%= form.label :purpose, Hospitalization.human_attribute_name(:purpose), class: "app-field-label app-field-label-required" %>
+      <%= form.select :purpose, Hospitalization.purpose_form_options, {},
+            class: "select w-full focus:select-primary",
+            data: { purpose_fields_target: "select", action: "purpose-fields#toggle" } %>
+    </div>
 
-      <%# Rendered hidden unless the purpose is "other" so it never flashes in
-          before the controller connects; the value is kept either way. %>
-      <div class="app-field <%= "hidden" unless hospitalization.purpose == "other" %>" data-purpose-fields-target="otherSection">
-        <%= form.label :reason, t("hospitalizations.labels.reason_other_details"), class: "app-field-label app-field-label-required" %>
-        <%= form.text_area :reason, class: "textarea w-full focus:textarea-primary", rows: 3 %>
-      </div>
+    <%# The purpose-specific fields are rendered hidden unless they apply, so
+        they never flash in before the controller connects; their values are
+        kept (and submitted) either way. %>
+    <div class="app-field <%= "hidden" unless hospitalization.purpose == "other" %>" data-purpose-fields-target="otherSection">
+      <%= form.label :reason, t("hospitalizations.labels.reason_other_details"), class: "app-field-label app-field-label-required" %>
+      <%= form.text_area :reason, class: "textarea w-full focus:textarea-primary", rows: 3 %>
     </div>
 
     <div class="app-field">
       <%= form.label :scheduled_admission_date, t("hospitalizations.labels.scheduled_admission_date"), class: "app-field-label app-field-label-required" %>
       <%= form.date_field :scheduled_admission_date, class: "input w-full focus:input-primary" %>
       <p class="app-helper"><%= t(".scheduled_admission_date_helper") %></p>
+    </div>
+
+    <div class="app-field <%= "hidden" unless hospitalization.purpose == "surgery" %>" data-purpose-fields-target="surgerySection">
+      <%= form.label :scheduled_surgery_date, t("hospitalizations.labels.scheduled_surgery_date"), class: "app-field-label" %>
+      <%= form.date_field :scheduled_surgery_date, class: "input w-full focus:input-primary" %>
     </div>
 
     <div class="app-field">

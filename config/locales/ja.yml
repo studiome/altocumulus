@@ -249,6 +249,7 @@ ja:
         reservation_status: "予約ステータス"
         room_preference: "病室希望"
         scheduled_admission_date: "入院予定日"
+        scheduled_surgery_date: "手術予定日"
         submitted_on: "提出日"
         ward: "病棟"
       hospitalization_diagnosis:
@@ -329,6 +330,8 @@ ja:
               cannot_swap_diagnoses_between_rows: "は既存の行同士で診断名を入れ替えることができません。まず一方の行を別の診断名に変更してください"
             discharge_date:
               must_be_on_or_after_admission_date: "は入院日以降の日付にしてください"
+            scheduled_surgery_date:
+              must_be_on_or_after_scheduled_admission_date: "は入院予定日以降の日付にしてください"
             admission_date:
               or_scheduled_admission_date_required: "または入院予定日のいずれかを入力してください"
         case_database_entry:
@@ -820,6 +823,7 @@ ja:
       empty: "削除済みの入院記録はありません。"
     create:
       success_notice: "入院記録を作成しました。"
+      surgery_followup_notice: "入院予約を登録しました。続けて手術を登録してください。"
     update:
       success_notice: "入院記録を更新しました。"
     destroy:
@@ -862,6 +866,7 @@ ja:
       patient_id: "患者ID"
       reservation_status: "予約ステータス"
       scheduled_admission_date: "入院予定日"
+      scheduled_surgery_date: "手術予定日"
       admission_date_actual: "入院日(実績)"
       reason_for_admission: "入院理由"
       reason_other_details: "その他の内容（入院理由）"

@@ -47,6 +47,7 @@ class Hospitalization < ApplicationRecord
   validate :must_have_at_least_one_diagnosis
   validate :no_duplicate_diagnoses
   validate :discharge_date_on_or_after_admission_date
+  validate :scheduled_surgery_date_on_or_after_scheduled_admission_date
   validate :outcome_required_when_discharged
   validate :discharge_fields_require_discharge_date
   validate :no_overlapping_hospitalization_period
@@ -268,6 +269,7 @@ class Hospitalization < ApplicationRecord
     copy.admin_status = "unconfirmed"
     copy.submitted_on = Date.current
     copy.scheduled_admission_date = scheduled_admission_date
+    copy.scheduled_surgery_date = nil
     copy.hospitalization_diagnoses_attributes =
       active_hospitalization_diagnoses.map { |hd| { diagnosis_id: hd.diagnosis_id } }
     copy.save
@@ -317,6 +319,13 @@ class Hospitalization < ApplicationRecord
       errors.add(:discharge_date, :must_be_on_or_after_admission_date)
     end
 
+    def scheduled_surgery_date_on_or_after_scheduled_admission_date
+      return if scheduled_surgery_date.blank? || scheduled_admission_date.blank?
+      return if scheduled_surgery_date >= scheduled_admission_date
+
+      errors.add(:scheduled_surgery_date, :must_be_on_or_after_scheduled_admission_date)
+    end
+
     def outcome_required_when_discharged
       return if discharge_date.blank?
       return if outcome.present?
@@ -339,13 +348,13 @@ class Hospitalization < ApplicationRecord
       errors.add(:admission_date, :or_scheduled_admission_date_required)
     end
 
-    # scheduled_admission_date, admission_date, and discharge_date all mean
+    # scheduled_admission_date, scheduled_surgery_date, admission_date, and discharge_date all mean
     # "undecided" when left blank, but a string that fails to parse into a
     # date (e.g. a typo) should surface as an error rather than silently
     # becoming nil. Comparing the raw pre-cast value against the cast value
     # tells the two cases apart.
     def valid_date_values
-      %i[scheduled_admission_date admission_date discharge_date].each do |field|
+      %i[scheduled_admission_date scheduled_surgery_date admission_date discharge_date].each do |field|
         raw = public_send("#{field}_before_type_cast")
         errors.add(field, :not_a_valid_date) if raw.present? && public_send(field).nil?
       end

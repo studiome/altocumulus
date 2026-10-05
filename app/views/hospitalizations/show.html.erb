@@ -53,6 +53,10 @@
           <span class="text-lg font-medium"><%= Hospitalization.reservation_status_options[@hospitalization.reservation_status] %></span>
         </div>
         <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.scheduled_surgery_date") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.scheduled_surgery_date ? l(@hospitalization.scheduled_surgery_date, format: :long) : "-" %></span>
+        </div>
+        <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:purpose) %></span>
           <span class="text-lg font-medium"><%= Hospitalization.purpose_options[@hospitalization.purpose] %></span>
         </div>

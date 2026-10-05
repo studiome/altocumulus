@@ -103,6 +103,9 @@
                 </td>
                 <td>
                   <span class="ledger-primary"><%= Hospitalization.purpose_options[hospitalization.purpose] %></span>
+                  <% if hospitalization.scheduled_surgery_date.present? %>
+                    <span class="ledger-secondary"><%= t("hospitalizations.labels.scheduled_surgery_date") %>: <%= l(hospitalization.scheduled_surgery_date, format: :default) %></span>
+                  <% end %>
                   <span class="ledger-secondary"><%= Hospitalization.reservation_status_options[hospitalization.reservation_status] %></span>
                 </td>
                 <td class="whitespace-nowrap">

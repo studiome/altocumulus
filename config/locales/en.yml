@@ -234,6 +234,8 @@ en:
               cannot_swap_diagnoses_between_rows: "cannot swap diagnoses between existing rows in one save; change one row to a different diagnosis first"
             discharge_date:
               must_be_on_or_after_admission_date: "must be on or after the admission date"
+            scheduled_surgery_date:
+              must_be_on_or_after_scheduled_admission_date: "must be on or after the scheduled admission date"
             admission_date:
               or_scheduled_admission_date_required: "or a scheduled admission date must be present"
         case_database_entry:
@@ -841,6 +843,7 @@ en:
       empty: "No deleted hospitalizations."
     create:
       success_notice: "Hospitalization was successfully created."
+      surgery_followup_notice: "Hospitalization was successfully created. Now register the surgery."
     update:
       success_notice: "Hospitalization was successfully updated."
     destroy:
@@ -886,6 +889,7 @@ en:
       patient_id: "Patient ID"
       reservation_status: "Reservation Status"
       scheduled_admission_date: "Scheduled Admission Date"
+      scheduled_surgery_date: "Scheduled Surgery Date"
       admission_date_actual: "Admission Date (Actual)"
       reason_for_admission: "Reason for Admission"
       reason_other_details: "Details (Reason for Admission)"

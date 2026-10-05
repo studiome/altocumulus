@@ -652,6 +652,37 @@ class HospitalizationTest < ActiveSupport::TestCase
     assert_equal original_snapshot, hospitalization.reload.patient_name_snapshot
   end
 
+  test "scheduled_surgery_date may not be before the scheduled admission date" do
+    hospitalization = hospitalizations(:four)
+    hospitalization.scheduled_surgery_date = hospitalization.scheduled_admission_date - 1
+
+    assert_not hospitalization.valid?
+    assert hospitalization.errors.of_kind?(:scheduled_surgery_date, :must_be_on_or_after_scheduled_admission_date)
+
+    hospitalization.scheduled_surgery_date = hospitalization.scheduled_admission_date
+    assert hospitalization.valid?, hospitalization.errors.full_messages.to_sentence
+  end
+
+  test "scheduled_surgery_date is optional but must be a valid date" do
+    hospitalization = hospitalizations(:four)
+    hospitalization.scheduled_surgery_date = nil
+    assert hospitalization.valid?
+
+    hospitalization.scheduled_surgery_date = "not-a-date"
+    assert_not hospitalization.valid?
+    assert hospitalization.errors.of_kind?(:scheduled_surgery_date, :not_a_valid_date)
+  end
+
+  test "rebook does not carry the scheduled surgery date over" do
+    original = hospitalizations(:two)
+    original.update!(scheduled_admission_date: Date.new(2026, 3, 4), scheduled_surgery_date: Date.new(2026, 3, 5))
+
+    copy = original.rebook(scheduled_admission_date: Date.new(2027, 1, 15))
+
+    assert copy.persisted?, copy.errors.full_messages.to_sentence
+    assert_nil copy.scheduled_surgery_date
+  end
+
   test "rebook creates a new requested/unconfirmed hospitalization without actuals or discharge info, but keeps diagnoses" do
     original = hospitalizations(:two)
     original.update!(admin_status: "confirmed")

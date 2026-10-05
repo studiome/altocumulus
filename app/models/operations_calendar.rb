@@ -109,12 +109,20 @@ class OperationsCalendar
 
       Hospitalization.active.referred
                      .where(patient_id: patient_ids)
-                     .where("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date) <= ?", dates.last)
-                     .where("hospitalizations.discharge_date IS NULL OR hospitalizations.discharge_date >= ?", dates.first)
+                     .where(
+                       "(COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date) <= :last " \
+                       "AND (hospitalizations.discharge_date IS NULL OR hospitalizations.discharge_date >= :first)) " \
+                       "OR hospitalizations.scheduled_surgery_date BETWEEN :first AND :last",
+                       first: dates.first, last: dates.last
+                     )
                      .group_by(&:patient_id)
     end
 
+    # A hospitalization belongs to a surgery's day when its period spans the
+    # day, or when that day is the surgery date it was booked for.
     def covers?(hospitalization, date)
+      return true if hospitalization.scheduled_surgery_date == date
+
       start = hospitalization.effective_admission_date
       start.present? && start <= date && (hospitalization.discharge_date.nil? || hospitalization.discharge_date >= date)
     end

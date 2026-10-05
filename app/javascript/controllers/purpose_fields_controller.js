@@ -5,7 +5,7 @@ import { Controller } from "@hotwired/stimulus"
 // keeps them in step when the purpose select changes. Hidden fields stay in
 // the DOM so their values are still submitted.
 export default class extends Controller {
-  static targets = [ "select", "otherSection" ]
+  static targets = [ "select", "otherSection", "surgerySection" ]
 
   connect() {
     this.toggle()
@@ -14,6 +14,9 @@ export default class extends Controller {
   toggle() {
     if (this.hasOtherSectionTarget) {
       this.otherSectionTarget.classList.toggle("hidden", this.selectTarget.value !== "other")
+    }
+    if (this.hasSurgerySectionTarget) {
+      this.surgerySectionTarget.classList.toggle("hidden", this.selectTarget.value !== "surgery")
     }
   }
 }

@@ -20,7 +20,7 @@ class SurgeriesController < ApplicationController
   end
 
   def new
-    @surgery = Surgery.new(patient_id: params[:patient_id])
+    @surgery = Surgery.new(patient_id: params[:patient_id], surgery_date: parse_date(params[:surgery_date]))
     set_form_collections
     build_surgery_procedure_selections
   end
@@ -123,6 +123,14 @@ class SurgeriesController < ApplicationController
       else
         raise e
       end
+    end
+
+    # Prefill params are untrusted: anything that is not a parsable date
+    # string (typo, crafted array) simply leaves the field blank.
+    def parse_date(value)
+      Date.iso8601(value) if value.is_a?(String)
+    rescue Date::Error
+      nil
     end
 
     def build_surgery_procedure_selections

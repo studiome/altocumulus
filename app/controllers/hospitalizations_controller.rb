@@ -26,8 +26,10 @@ class HospitalizationsController < ApplicationController
 
   def new
     @hospitalization = Hospitalization.new(
-      patient_id: params[:patient_id], scheduled_admission_date: params[:scheduled_admission_date]
+      patient_id: params[:patient_id], scheduled_admission_date: params[:scheduled_admission_date],
+      scheduled_surgery_date: params[:scheduled_surgery_date]
     )
+    @hospitalization.purpose = params[:purpose] if Hospitalization::PURPOSE_KEYS.include?(params[:purpose])
     build_hospitalization_diagnoses
   end
 
@@ -40,7 +42,7 @@ class HospitalizationsController < ApplicationController
 
     respond_to do |format|
       if save_hospitalization { @hospitalization.save }
-        format.html { redirect_to @hospitalization, notice: t(".success_notice") }
+        format.html { redirect_after_create }
         format.json { render :show, status: :created, location: @hospitalization }
       else
         build_hospitalization_diagnoses if @hospitalization.hospitalization_diagnoses.empty?
@@ -123,13 +125,24 @@ class HospitalizationsController < ApplicationController
       end
     end
 
+    # A surgery reservation made with a surgery date carries straight on to
+    # registering that surgery, which is what the calendar's day link is for.
+    def redirect_after_create
+      if @hospitalization.purpose == "surgery" && @hospitalization.scheduled_surgery_date.present?
+        redirect_to new_surgery_path(patient_id: @hospitalization.patient_id, surgery_date: @hospitalization.scheduled_surgery_date),
+                    notice: t(".surgery_followup_notice")
+      else
+        redirect_to @hospitalization, notice: t(".success_notice")
+      end
+    end
+
     def build_hospitalization_diagnoses
       @hospitalization.hospitalization_diagnoses.build if @hospitalization.hospitalization_diagnoses.empty?
     end
 
     def hospitalization_params
       params.expect(hospitalization: [
-        :patient_id, :admission_date, :scheduled_admission_date, :reservation_status, :purpose,
+        :patient_id, :admission_date, :scheduled_admission_date, :scheduled_surgery_date, :reservation_status, :purpose,
         :planned_days, :reason, :room_preference, :ward, :referred_from, :adl,
         :reservation_doctor, :attending_doctor, :submitted_on, :clinical_comment,
         :discharge_date, :outcome, :discharge_destination,

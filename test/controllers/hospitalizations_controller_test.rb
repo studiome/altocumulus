@@ -657,4 +657,54 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
       } }
     end
   end
+
+  test "new prefills the scheduled surgery date and purpose from params" do
+    get new_hospitalization_url(scheduled_surgery_date: "2027-03-04", purpose: "surgery")
+    assert_response :success
+
+    assert_select "input#hospitalization_scheduled_surgery_date[value=?]", "2027-03-04"
+    assert_select "select#hospitalization_purpose option[selected][value=?]", "surgery"
+    assert_select "input#hospitalization_scheduled_admission_date:not([value])"
+  end
+
+  test "new ignores an unknown purpose param" do
+    get new_hospitalization_url(purpose: "bogus")
+    assert_response :success
+
+    assert_select "select#hospitalization_purpose option[selected][value=?]", "surgery"
+  end
+
+  test "creating a surgery hospitalization with a scheduled surgery date continues to the new surgery form" do
+    patient = Patient.create!(name: "Follow Up Patient", hospital_id: "FU1", date_of_birth: Date.new(1980, 1, 1))
+
+    post hospitalizations_url, params: { hospitalization: {
+      patient_id: patient.id, scheduled_admission_date: "2027-03-03", scheduled_surgery_date: "2027-03-04",
+      reservation_status: "requested", purpose: "surgery",
+      hospitalization_diagnoses_attributes: { "0" => { diagnosis_id: diagnoses(:appendicitis).id } }
+    } }
+
+    assert_redirected_to new_surgery_url(patient_id: patient.id, surgery_date: "2027-03-04")
+    assert_equal "Hospitalization was successfully created. Now register the surgery.", flash[:notice]
+  end
+
+  test "creating a non-surgery hospitalization redirects to it as before" do
+    patient = Patient.create!(name: "Exam Patient", hospital_id: "EX1", date_of_birth: Date.new(1980, 1, 1))
+
+    post hospitalizations_url, params: { hospitalization: {
+      patient_id: patient.id, scheduled_admission_date: "2027-03-03", scheduled_surgery_date: "2027-03-04",
+      reservation_status: "requested", purpose: "examination",
+      hospitalization_diagnoses_attributes: { "0" => { diagnosis_id: diagnoses(:appendicitis).id } }
+    } }
+
+    assert_redirected_to hospitalization_url(Hospitalization.order(:id).last)
+  end
+
+  test "show displays the scheduled surgery date" do
+    @hospitalization.update_columns(scheduled_surgery_date: Date.new(2026, 3, 2))
+
+    get hospitalization_url(@hospitalization)
+    assert_response :success
+    assert_select "span", text: /Scheduled Surgery Date/
+    assert_match "2026", @response.body
+  end
 end

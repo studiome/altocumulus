@@ -41,10 +41,10 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Winter schedule notice/, @response.body)
   end
 
-  test "each day links to a new hospitalization pre-filled with that scheduled admission date" do
+  test "each day links to a new surgery hospitalization pre-filled with that scheduled surgery date" do
     get operations_calendar_url, params: { start: "2026-01-01", days: 1 }
     assert_response :success
-    assert_select "a[href='#{new_hospitalization_path(scheduled_admission_date: '2026-01-01')}']"
+    assert_select "a[href='#{new_hospitalization_path(scheduled_surgery_date: '2026-01-01', purpose: 'surgery')}']"
   end
 
   test "renders the days as one ledger table with a tbody per day" do
@@ -60,7 +60,7 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
 
     assert_select "tbody.oc-day tr.oc-surgery", 4 # four elective fixtures on 2026-03-03
     assert_select "tbody.oc-day td.ledger-day[rowspan='4']" do
-      assert_select "a[href=?]", new_hospitalization_path(scheduled_admission_date: "2026-03-03")
+      assert_select "a[href=?]", new_hospitalization_path(scheduled_surgery_date: "2026-03-03", purpose: "surgery")
     end
     assert_select "tbody.oc-day td.ledger-day", 1
   end
