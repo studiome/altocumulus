@@ -289,6 +289,7 @@ en:
         surgery: "Surgery"
         examination: "Examination / Procedure"
         chemotherapy: "Chemotherapy"
+        other: "Other"
       admin_status_options:
         unconfirmed: "Unconfirmed"
         confirmed: "Confirmed"
@@ -861,6 +862,7 @@ en:
       new_diagnosis_link: "New Diagnosis"
       patient_schedule_heading: "Patient & Schedule"
       scheduled_admission_date_helper: "Set this while the admission is still a reservation. Leave undecided if unknown."
+      required_legend: "* Required"
       admission_date_helper: "Either this or the scheduled admission date above must be set."
       planned_days_label: "Planned Length of Stay (Days)"
       planned_days_placeholder: "e.g. 5"
@@ -886,6 +888,7 @@ en:
       scheduled_admission_date: "Scheduled Admission Date"
       admission_date_actual: "Admission Date (Actual)"
       reason_for_admission: "Reason for Admission"
+      reason_other_details: "Details (Reason for Admission)"
       referred_from: "Referred From"
       adl: "ADL"
       reservation_doctor: "Reservation Doctor"

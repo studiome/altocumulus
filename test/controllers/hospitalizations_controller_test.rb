@@ -617,4 +617,44 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
       ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { yield }
       count
     end
+
+  test "new form hides the reason field unless the purpose is other" do
+    get new_hospitalization_url
+    assert_response :success
+
+    assert_select "[data-purpose-fields-target='otherSection'].hidden textarea#hospitalization_reason"
+    assert_select "[data-purpose-fields-target='otherSection'] label", text: /Details \(Reason for Admission\)/
+  end
+
+  test "edit form shows the reason field when the purpose is other" do
+    @hospitalization.update_columns(purpose: "other", reason: "Social admission")
+
+    get edit_hospitalization_url(@hospitalization)
+    assert_response :success
+
+    assert_select "[data-purpose-fields-target='otherSection']:not(.hidden) textarea#hospitalization_reason", text: /Social admission/
+  end
+
+  test "new form marks required fields and explains the marker" do
+    get new_hospitalization_url
+    assert_response :success
+
+    assert_select "p", text: /Required/
+    %w[hospitalization_reservation_status hospitalization_purpose hospitalization_scheduled_admission_date].each do |id|
+      assert_select "label.app-field-label-required[for=#{id}]"
+    end
+    assert_select ".app-field-label-required", text: "Diagnoses at Admission"
+    assert_select ".app-field-label-required", text: "Patient"
+    assert_select "label.app-field-label-required[for=hospitalization_reason]"
+  end
+
+  test "creates a surgery hospitalization without a reason" do
+    patient = Patient.create!(name: "No Reason Patient", hospital_id: "NR1", date_of_birth: Date.new(1980, 1, 1))
+    assert_difference("Hospitalization.count", 1) do
+      post hospitalizations_url, params: { hospitalization: {
+        patient_id: patient.id, scheduled_admission_date: "2027-01-10", reservation_status: "requested",
+        purpose: "surgery", hospitalization_diagnoses_attributes: { "0" => { diagnosis_id: diagnoses(:appendicitis).id } }
+      } }
+    end
+  end
 end

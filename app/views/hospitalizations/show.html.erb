@@ -13,7 +13,7 @@
     <div class="card-body">
       <div class="flex justify-between items-start mb-6">
         <div>
-          <h2 class="card-title text-xl mb-1 text-primary"><%= @hospitalization.reason %></h2>
+          <h2 class="card-title text-xl mb-1 text-primary"><%= @hospitalization.reason.presence || Hospitalization.purpose_options[@hospitalization.purpose] %></h2>
           <p class="text-base-content/60 font-mono">
             <% if @hospitalization.admission_date.present? %>
               <%= t(".admission_date_prefix") %>: <%= l(@hospitalization.admission_date, format: :default) %>
@@ -62,7 +62,7 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.reason_for_admission") %></span>
-          <span class="text-lg font-medium"><%= @hospitalization.reason %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.reason.presence || t("common.none") %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.preferred_room") %></span>

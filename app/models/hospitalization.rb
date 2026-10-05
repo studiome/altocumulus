@@ -10,7 +10,7 @@ class Hospitalization < ApplicationRecord
   RESERVATION_STATUS_KEYS = %w[
     requested waiting date_fixed surgery_date_fixed admitted admitted_other_dept on_hold discharged
   ].freeze
-  PURPOSE_KEYS = %w[surgery examination chemotherapy].freeze
+  PURPOSE_KEYS = %w[surgery examination chemotherapy other].freeze
   ADMIN_STATUS_KEYS = %w[unconfirmed confirmed].freeze
 
   # The index page's single "Status" filter mixes two kinds of condition: the
@@ -32,7 +32,10 @@ class Hospitalization < ApplicationRecord
                                 allow_destroy: true,
                                 reject_if: ->(attributes) { attributes["diagnosis_id"].blank? }
 
-  validates :reason, presence: true
+  # The free-text reason only carries information for "other"; the other
+  # purposes already say why the patient is admitted. An existing reason is
+  # never wiped when the purpose changes.
+  validates :reason, presence: true, if: -> { purpose == "other" }
   validates :planned_days, numericality: { greater_than: 0, only_integer: true }, allow_nil: true
   validates :outcome, inclusion: { in: OUTCOME_KEYS }, allow_blank: true
   validates :discharge_destination, inclusion: { in: DISCHARGE_DESTINATION_KEYS }, allow_blank: true

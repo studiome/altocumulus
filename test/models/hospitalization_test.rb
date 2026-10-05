@@ -164,10 +164,31 @@ class HospitalizationTest < ActiveSupport::TestCase
     Current.user = nil
   end
 
-  test "should require reason" do
+  test "reason is not required for a surgery, examination or chemotherapy purpose" do
     hospitalization = hospitalizations(:one)
     hospitalization.reason = nil
+
+    %w[surgery examination chemotherapy].each do |purpose|
+      hospitalization.purpose = purpose
+      assert hospitalization.valid?, "#{purpose}: #{hospitalization.errors.full_messages.to_sentence}"
+    end
+  end
+
+  test "reason is required when the purpose is other" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.purpose = "other"
+    hospitalization.reason = nil
+
     assert_not hospitalization.valid?
+    assert hospitalization.errors.of_kind?(:reason, :blank)
+
+    hospitalization.reason = "Social admission"
+    assert hospitalization.valid?
+  end
+
+  test "other is a valid purpose with a localized label" do
+    assert_includes Hospitalization::PURPOSE_KEYS, "other"
+    assert_equal "Other", Hospitalization.purpose_options["other"]
   end
 
   test "planned_days should be a positive integer when present" do

@@ -1,9 +1,10 @@
-<%# locals: form, patient (nilable), label, input_data (default {}) %>
+<%# locals: form, patient (nilable), label, input_data (default {}), required (default false) %>
 <% input_data ||= {} %>
+<% required ||= false %>
 <div class="app-field" data-controller="patient-picker"
      data-action="patient:selected@window->patient-picker#select"
      data-patient-picker-placeholder-value="<%= t("patients.picker.unselected") %>">
-  <span class="app-field-label"><%= label %></span>
+  <span class="app-field-label <%= "app-field-label-required" if required %>"><%= label %></span>
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex-1 min-w-0 rounded-box border border-base-200 bg-base-100 px-4 py-3"
          data-patient-picker-target="display">

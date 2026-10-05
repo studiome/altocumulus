@@ -14,7 +14,8 @@ class HospitalizationsTest < ApplicationSystemTestCase
       admissionDateInput.dispatchEvent(new Event("change", { bubbles: true }))
     JS
     fill_in "Planned Length of Stay (Days)", with: "5"
-    fill_in "Reason for Admission", with: "Fever and cough"
+    select "Other", from: "Purpose"
+    fill_in "Details (Reason for Admission)", with: "Fever and cough"
     choose_diagnosis "Pneumonia"
 
     click_on "Add Diagnosis"
@@ -28,6 +29,16 @@ class HospitalizationsTest < ApplicationSystemTestCase
     end
 
     assert_text "Pneumonia, Hypertension"
+  end
+
+  test "the reason field only appears when the purpose is other" do
+    visit new_hospitalization_path
+
+    assert_no_field "Details (Reason for Admission)"
+    select "Other", from: "Purpose"
+    assert_field "Details (Reason for Admission)"
+    select "Surgery", from: "Purpose"
+    assert_no_field "Details (Reason for Admission)"
   end
 
   test "the diagnosis picked in the modal is shown on the row that opened it" do

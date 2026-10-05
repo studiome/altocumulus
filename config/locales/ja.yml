@@ -381,6 +381,7 @@ ja:
         surgery: "手術"
         examination: "検査・処置"
         chemotherapy: "化学療法"
+        other: "その他"
       admin_status_options:
         unconfirmed: "未確認"
         confirmed: "確認済み"
@@ -839,6 +840,7 @@ ja:
       new_diagnosis_link: "新規診断名"
       patient_schedule_heading: "患者・予定"
       scheduled_admission_date_helper: "予約段階の間はこちらを設定してください。未定の場合は空欄のままで構いません。"
+      required_legend: "＊は必須項目です"
       admission_date_helper: "この項目か、上記の入院予定日のいずれかを設定してください。"
       planned_days_label: "入院予定日数"
       planned_days_placeholder: "例: 5"
@@ -862,6 +864,7 @@ ja:
       scheduled_admission_date: "入院予定日"
       admission_date_actual: "入院日(実績)"
       reason_for_admission: "入院理由"
+      reason_other_details: "その他の内容（入院理由）"
       referred_from: "紹介元"
       adl: "ADL"
       reservation_doctor: "予約医師"

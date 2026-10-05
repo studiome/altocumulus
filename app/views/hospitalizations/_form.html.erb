@@ -33,24 +33,37 @@
     </div>
   <% end %>
 
+  <p class="app-helper"><%= t(".required_legend") %></p>
+
   <section class="space-y-4">
     <h2 class="text-lg font-bold text-primary"><%= t(".patient_schedule_heading") %></h2>
 
     <%= render "shared/patient_picker_field", form: form, patient: hospitalization.patient,
-          label: Hospitalization.human_attribute_name(:patient_id) %>
+          label: Hospitalization.human_attribute_name(:patient_id), required: true %>
 
     <div class="app-field">
-      <%= form.label :reservation_status, t("hospitalizations.labels.reservation_status"), class: "app-field-label" %>
+      <%= form.label :reservation_status, t("hospitalizations.labels.reservation_status"), class: "app-field-label app-field-label-required" %>
       <%= form.select :reservation_status, Hospitalization.reservation_status_form_options, {}, class: "select w-full focus:select-primary" %>
     </div>
 
-    <div class="app-field">
-      <%= form.label :purpose, Hospitalization.human_attribute_name(:purpose), class: "app-field-label" %>
-      <%= form.select :purpose, Hospitalization.purpose_form_options, {}, class: "select w-full focus:select-primary" %>
+    <div class="space-y-4" data-controller="purpose-fields">
+      <div class="app-field">
+        <%= form.label :purpose, Hospitalization.human_attribute_name(:purpose), class: "app-field-label app-field-label-required" %>
+        <%= form.select :purpose, Hospitalization.purpose_form_options, {},
+              class: "select w-full focus:select-primary",
+              data: { purpose_fields_target: "select", action: "purpose-fields#toggle" } %>
+      </div>
+
+      <%# Rendered hidden unless the purpose is "other" so it never flashes in
+          before the controller connects; the value is kept either way. %>
+      <div class="app-field <%= "hidden" unless hospitalization.purpose == "other" %>" data-purpose-fields-target="otherSection">
+        <%= form.label :reason, t("hospitalizations.labels.reason_other_details"), class: "app-field-label app-field-label-required" %>
+        <%= form.text_area :reason, class: "textarea w-full focus:textarea-primary", rows: 3 %>
+      </div>
     </div>
 
     <div class="app-field">
-      <%= form.label :scheduled_admission_date, t("hospitalizations.labels.scheduled_admission_date"), class: "app-field-label" %>
+      <%= form.label :scheduled_admission_date, t("hospitalizations.labels.scheduled_admission_date"), class: "app-field-label app-field-label-required" %>
       <%= form.date_field :scheduled_admission_date, class: "input w-full focus:input-primary" %>
       <p class="app-helper"><%= t(".scheduled_admission_date_helper") %></p>
     </div>
@@ -85,7 +98,7 @@
     <div class="space-y-4" data-controller="hospitalization-diagnosis-fields" data-hospitalization-diagnosis-fields-max-items-value="10">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <span class="app-field-label"><%= t("hospitalizations.labels.diagnoses_at_admission") %></span>
+          <span class="app-field-label app-field-label-required"><%= t("hospitalizations.labels.diagnoses_at_admission") %></span>
           <p class="app-helper"><%= t(".diagnoses_helper") %></p>
         </div>
       </div>
@@ -153,11 +166,6 @@
 
   <section class="space-y-4">
     <h2 class="text-lg font-bold text-primary"><%= t(".comments_heading") %></h2>
-
-    <div class="app-field">
-      <%= form.label :reason, t("hospitalizations.labels.reason_for_admission"), class: "app-field-label" %>
-      <%= form.text_area :reason, class: "textarea w-full focus:textarea-primary", rows: 3 %>
-    </div>
 
     <div class="app-field">
       <%= form.label :clinical_comment, t("hospitalizations.labels.clinical_comment"), class: "app-field-label" %>
