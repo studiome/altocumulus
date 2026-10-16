@@ -21,7 +21,7 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index renders a ledger table with patient id and name stacked in one cell" do
-    get hospitalizations_url
+    get hospitalizations_url, params: { all: "1" }
     assert_response :success
     assert_select "table.app-ledger"
     assert_select "table.app-ledger td.ledger-patient" do
@@ -150,7 +150,7 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index shows reservation status, purpose, and admin confirmation state" do
-    get hospitalizations_url
+    get hospitalizations_url, params: { all: "1" }
     assert_response :success
     assert_match(/Requested|Waiting for Admission|Admission Date Fixed/, @response.body)
     assert_match(/Unconfirmed|Confirmed/, @response.body)
