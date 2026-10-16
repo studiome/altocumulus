@@ -20,13 +20,13 @@ class SurgeryHospitalizationBackfill
     periods = periods_by_patient
     result = { linked: 0, ambiguous: 0, unmatched: 0 }
 
-    connection.select_rows(pending_surgeries_sql).each do |surgery_id, patient_id, surgery_date|
+    connection.select_rows(pending_surgeries).each do |surgery_id, patient_id, surgery_date|
       date = to_date(surgery_date)
-      covering = periods.fetch(patient_id, []).select { |id, period| HospitalizationCoverage.covers?(period, date) }
+      covering = periods.fetch(patient_id, []).select { |_id, period| HospitalizationCoverage.covers?(period, date) }
 
       case covering.size
       when 1
-        connection.execute("UPDATE #{s} SET #{fk} = #{covering.first.first.to_i} WHERE id = #{surgery_id.to_i}")
+        link(surgery_id, covering.first.first)
         result[:linked] += 1
       when 0 then result[:unmatched] += 1
       else result[:ambiguous] += 1
@@ -40,22 +40,30 @@ class SurgeryHospitalizationBackfill
 
     attr_reader :connection
 
-    def s = connection.quote_table_name(@surgeries_table)
-    def h = connection.quote_table_name(@hospitalizations_table)
-    def fk = connection.quote_column_name(@fk_column)
+    def surgeries = (@surgeries ||= Arel::Table.new(@surgeries_table))
+    def hospitalizations = (@hospitalizations ||= Arel::Table.new(@hospitalizations_table))
 
-    def pending_surgeries_sql
-      "SELECT id, patient_id, surgery_date FROM #{s} WHERE surgery_date IS NOT NULL AND #{fk} IS NULL ORDER BY id"
+    def pending_surgeries
+      surgeries.project(surgeries[:id], surgeries[:patient_id], surgeries[:surgery_date])
+               .where(surgeries[:surgery_date].not_eq(nil)).where(surgeries[@fk_column].eq(nil)).order(surgeries[:id])
+    end
+
+    def link(surgery_id, hospitalization_id)
+      update = Arel::UpdateManager.new
+      update.table(surgeries)
+      update.set([ [ surgeries[@fk_column], hospitalization_id ] ])
+      update.where(surgeries[:id].eq(surgery_id))
+      connection.update(update)
     end
 
     # patient_id => [[hospitalization_id, Period], ...] for active rows.
     def periods_by_patient
-      rows = connection.select_rows(<<~SQL)
-        SELECT id, patient_id, admission_date, scheduled_admission_date, scheduled_surgery_date, discharge_date
-        FROM #{h} WHERE deleted_at IS NULL ORDER BY id
-      SQL
+      columns = %i[id patient_id admission_date scheduled_admission_date scheduled_surgery_date discharge_date]
+      query = hospitalizations.project(*columns.map { |column| hospitalizations[column] })
+                              .where(hospitalizations[:deleted_at].eq(nil)).order(hospitalizations[:id])
 
-      rows.each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(id, patient_id, admission, scheduled, surgery, discharge), grouped|
+      connection.select_rows(query).each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |row, grouped|
+        id, patient_id, admission, scheduled, surgery, discharge = row
         period = HospitalizationCoverage::Period.new(
           scheduled_surgery_date: to_date(surgery),
           effective_admission_date: to_date(admission) || to_date(scheduled),

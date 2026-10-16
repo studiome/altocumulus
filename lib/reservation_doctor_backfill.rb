@@ -21,15 +21,18 @@ class ReservationDoctorBackfill
   # clears that string (the user now carries the information). Returns
   # { matched:, unmatched: } counted over rows that had a non-blank string.
   def up
-    users = connection.select_rows("SELECT id, name FROM #{u} WHERE name IS NOT NULL")
     exact = group_ids(users) { |name| name.strip }
     loose = group_ids(users) { |name| squash(name) }
     matched = unmatched = 0
 
-    connection.select_rows(pending_rows_sql).each do |row_id, string|
+    connection.select_rows(pending_rows).each do |row_id, string|
       user_id = unique(exact[string.strip]) || unique(loose[squash(string)])
       if user_id
-        connection.execute("UPDATE #{t} SET #{fk} = #{user_id.to_i}, #{str} = NULL WHERE id = #{row_id.to_i}")
+        update = Arel::UpdateManager.new
+        update.table(rows)
+        update.set([ [ rows[@fk_column], user_id ], [ rows[@string_column], nil ] ])
+        update.where(rows[:id].eq(row_id))
+        connection.update(update)
         matched += 1
       else
         unmatched += 1
@@ -42,23 +45,32 @@ class ReservationDoctorBackfill
   # Writes each linked user's name back into the string column (rows whose
   # string is still set keep it).
   def down
-    connection.execute(<<~SQL)
-      UPDATE #{t} SET #{str} = (SELECT name FROM #{u} WHERE #{u}.id = #{t}.#{fk})
-      WHERE #{fk} IS NOT NULL AND (#{str} IS NULL OR TRIM(#{str}) = '')
-    SQL
+    name_of_user = user_table.project(user_table[:name]).where(user_table[:id].eq(rows[@fk_column]))
+    update = Arel::UpdateManager.new
+    update.table(rows)
+    update.set([ [ rows[@string_column], Arel::Nodes::Grouping.new(name_of_user.ast) ] ])
+    update.where(rows[@fk_column].not_eq(nil).and(rows[@string_column].eq(nil).or(trimmed_string.eq(""))))
+    connection.update(update)
   end
 
   private
 
     attr_reader :connection
 
-    def t = connection.quote_table_name(@table)
-    def u = connection.quote_table_name(@users_table)
-    def str = connection.quote_column_name(@string_column)
-    def fk = connection.quote_column_name(@fk_column)
+    def rows = (@rows ||= Arel::Table.new(@table))
+    def user_table = (@user_table ||= Arel::Table.new(@users_table))
+    def trimmed_string = Arel::Nodes::NamedFunction.new("TRIM", [ rows[@string_column] ])
 
-    def pending_rows_sql
-      "SELECT id, #{str} FROM #{t} WHERE #{fk} IS NULL AND #{str} IS NOT NULL AND TRIM(#{str}) <> '' ORDER BY id"
+    def users
+      connection.select_rows(user_table.project(user_table[:id], user_table[:name]).where(user_table[:name].not_eq(nil)))
+    end
+
+    def pending_rows
+      rows.project(rows[:id], rows[@string_column])
+          .where(rows[@fk_column].eq(nil))
+          .where(rows[@string_column].not_eq(nil))
+          .where(trimmed_string.not_eq(""))
+          .order(rows[:id])
     end
 
     def squash(value)
