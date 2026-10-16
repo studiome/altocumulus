@@ -2,8 +2,10 @@
 # only names its model: DepartmentsController, SurgeryLocationsController and
 # SurgicalDevicesController find these shared views in app/views/master_records
 # through Rails' controller-inheritance view lookup. Like the other masters
-# (diagnoses, holidays...), any signed-in user may edit them.
+# (diagnoses, holidays...), only administrators may change them; everyone
+# signed in may view the list.
 class MasterRecordsController < ApplicationController
+  before_action :require_admin, except: :index
   before_action :set_record, only: %i[ edit update destroy ]
   helper_method :master_class, :collection_path
 

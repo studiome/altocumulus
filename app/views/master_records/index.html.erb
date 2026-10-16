@@ -8,9 +8,11 @@
         <p class="app-page-kicker"><%= t("common.master_data") %></p>
         <h1 class="app-page-title"><%= master_class.model_name.human(count: 2) %></h1>
       </div>
-      <%= link_to new_polymorphic_path(master_class), class: "btn btn-primary" do %>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        <%= t(".new_button", record: master_class.model_name.human) %>
+      <% if admin? %>
+        <%= link_to new_polymorphic_path(master_class), class: "btn btn-primary" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+          <%= t(".new_button", record: master_class.model_name.human) %>
+        <% end %>
       <% end %>
     </div>
   </section>
@@ -51,8 +53,10 @@
                   <% if record.respond_to?(:team_terms) %>
                     <%= link_to t(".terms_link"), team_team_terms_path(record), class: "btn btn-ghost btn-xs text-secondary" %>
                   <% end %>
-                  <%= link_to t("common.edit"), edit_polymorphic_path(record), class: "btn btn-ghost btn-xs text-secondary" %>
-                  <%= button_to t("common.delete"), record, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+                  <% if admin? %>
+                    <%= link_to t("common.edit"), edit_polymorphic_path(record), class: "btn btn-ghost btn-xs text-secondary" %>
+                    <%= button_to t("common.delete"), record, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+                  <% end %>
                 </td>
               </tr>
             <% end %>

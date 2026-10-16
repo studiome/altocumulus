@@ -66,21 +66,13 @@ class I18nTranslationMissingTest < ActionDispatch::IntegrationTest
       edit_hospitalization_url(hospitalizations(:one)),
 
       diagnoses_url,
-      new_diagnosis_url,
       diagnosis_url(diagnosis),
-      edit_diagnosis_url(diagnosis),
       surgery_procedures_url,
-      new_surgery_procedure_url,
       surgery_procedure_url(surgery_procedure),
-      edit_surgery_procedure_url(surgery_procedure),
       holidays_url,
-      new_holiday_url,
       holiday_url(holiday),
-      edit_holiday_url(holiday),
       elective_slot_rules_url,
-      new_elective_slot_rule_url,
       elective_slot_rule_url(rule),
-      edit_elective_slot_rule_url(rule),
 
       case_databases_url,
       case_database_url(case_database)
@@ -119,6 +111,24 @@ class I18nTranslationMissingTest < ActionDispatch::IntegrationTest
     hospitalizations(:one).discard!
 
     assert_no_translation_missing deleted_hospitalizations_url, as: users(:japanese_admin)
+  end
+
+  # Masters are editable by administrators only.
+  test "master edit screens render without missing translations for an admin" do
+    assert_no_translation_missing [
+      diagnoses_url,
+      new_diagnosis_url,
+      edit_diagnosis_url(diagnoses(:appendicitis)),
+      surgery_procedures_url,
+      new_surgery_procedure_url,
+      edit_surgery_procedure_url(surgery_procedures(:appendectomy)),
+      holidays_url,
+      new_holiday_url,
+      edit_holiday_url(holidays(:national_holiday)),
+      elective_slot_rules_url,
+      new_elective_slot_rule_url,
+      edit_elective_slot_rule_url(elective_slot_rules(:tuesday))
+    ], as: users(:japanese_admin)
   end
 
   test "admin screens render without missing translations" do

@@ -1,7 +1,9 @@
-# The terms of one team and the members of each term. Any signed-in user may
-# edit them, like the masters (a clerk enters the members the chief decides).
+# The terms of one team and the members of each term. Like the other masters,
+# only administrators may edit them; everyone signed in may view the list.
 class TeamTermsController < ApplicationController
   include RequiresTeamsFeature
+
+  before_action :require_admin, except: :index
 
   before_action :set_team
   before_action :set_term, only: %i[ edit update destroy ]

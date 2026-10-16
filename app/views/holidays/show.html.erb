@@ -54,8 +54,10 @@
       </div>
 
       <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200">
-        <%= link_to t(".edit_button"), edit_holiday_path(@holiday), class: "btn btn-secondary" %>
-        <%= button_to t(".delete_button"), @holiday, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+        <% if admin? %>
+          <%= link_to t(".edit_button"), edit_holiday_path(@holiday), class: "btn btn-secondary" %>
+          <%= button_to t(".delete_button"), @holiday, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+        <% end %>
       </div>
     </div>
   </div>

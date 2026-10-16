@@ -58,6 +58,13 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Admin notes (admin only) | `/admin/admin_notes` | Free-text handover notes shared between administrators |
 | Application settings (admin only) | `/admin/settings` | Change the application title shown in the navigation bar, the browser tab, and the installable app |
 
+**Master data is edited by administrators only.** Diagnoses, surgery procedures, holidays (closed
+days / day notes / slot overrides), elective slot rules, departments, surgery locations, surgical
+devices, teams and team terms can be viewed by every signed-in user, but creating, editing and deleting
+them (and the "new" buttons) require the `admin` role; others are redirected with a "not authorized"
+notice. The one exception is data entry: any signed-in user may register a *new* diagnosis or surgery
+procedure from inside a picker modal (a turbo-frame request) while booking a hospitalization or surgery.
+
 **Authentication, user management, role separation (user / data manager / admin), access logging, and
 idle timeout are implemented.** Every application screen requires a logged-in user; the
 exceptions are `/login`, the language switcher (`PATCH /locale`), and the `/up` health check.

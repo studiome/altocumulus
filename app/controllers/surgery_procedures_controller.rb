@@ -1,4 +1,9 @@
 class SurgeryProceduresController < ApplicationController
+  # Masters are admin-only, except that any signed-in user may register a new
+  # procedure from inside the picker modal turbo-frame while booking (see
+  # require_admin_unless_modal).
+  before_action :require_admin, except: %i[ index show picker new create ]
+  before_action :require_admin_unless_modal, only: %i[ new create ]
   before_action :set_surgery_procedure, only: %i[ show edit update destroy ]
 
   def index

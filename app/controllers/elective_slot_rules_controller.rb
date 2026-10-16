@@ -1,4 +1,5 @@
 class ElectiveSlotRulesController < ApplicationController
+  before_action :require_admin, except: %i[ index show ]
   before_action :set_elective_slot_rule, only: %i[ show edit update destroy ]
 
   def index

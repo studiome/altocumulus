@@ -8,9 +8,11 @@
         <p class="app-page-kicker"><%= t("common.master_data") %></p>
         <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
-      <%= link_to new_holiday_path, class: "btn btn-primary" do %>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        <%= t(".new_button") %>
+      <% if admin? %>
+        <%= link_to new_holiday_path, class: "btn btn-primary" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+          <%= t(".new_button") %>
+        <% end %>
       <% end %>
     </div>
   </section>
@@ -60,8 +62,10 @@
                 <td class="text-base-content/60 max-w-xs truncate"><%= holiday.note %></td>
                 <td class="text-right flex justify-end gap-2">
                   <%= link_to t("common.view"), holiday, class: "btn btn-ghost btn-xs text-primary" %>
-                  <%= link_to t("common.edit"), edit_holiday_path(holiday), class: "btn btn-ghost btn-xs text-secondary" %>
-                  <%= button_to t("common.delete"), holiday, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+                  <% if admin? %>
+                    <%= link_to t("common.edit"), edit_holiday_path(holiday), class: "btn btn-ghost btn-xs text-secondary" %>
+                    <%= button_to t("common.delete"), holiday, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+                  <% end %>
                 </td>
               </tr>
             <% end %>

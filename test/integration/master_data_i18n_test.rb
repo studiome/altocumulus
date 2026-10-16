@@ -18,7 +18,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
   test "diagnoses screens render in Japanese and English" do
     diagnosis = diagnoses(:appendicitis)
 
-    get_as users(:japanese_member), diagnoses_url
+    get_as users(:japanese_admin), diagnoses_url
     assert_select "h1", text: "診断名"
     assert_select "a", text: "新規診断名"
     assert_select "th", text: "操作"
@@ -38,7 +38,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "診断名を編集"
     assert_select "a", text: "詳細を表示"
 
-    get_as users(:member), diagnoses_url
+    get_as users(:admin), diagnoses_url
     assert_select "h1", text: "Diagnoses"
     assert_select "a", text: "New Diagnosis"
     assert_select "th", text: "Actions"
@@ -58,7 +58,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
   test "surgery procedures screens render in Japanese and English" do
     surgery_procedure = surgery_procedures(:appendectomy)
 
-    get_as users(:japanese_member), surgery_procedures_url
+    get_as users(:japanese_admin), surgery_procedures_url
     assert_select "h1", text: "術式"
     assert_select "a", text: "新規術式"
 
@@ -69,7 +69,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
     get edit_surgery_procedure_url(surgery_procedure)
     assert_select "h1", text: "術式を編集"
 
-    get_as users(:member), surgery_procedures_url
+    get_as users(:admin), surgery_procedures_url
     assert_select "h1", text: "Surgery Procedures"
     assert_select "a", text: "New Procedure"
 
@@ -81,7 +81,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
   test "holidays screens render in Japanese and English with the locale's date format" do
     holiday = holidays(:national_holiday)
 
-    get_as users(:japanese_member), holidays_url
+    get_as users(:japanese_admin), holidays_url
     assert_select "h1", text: "休日"
     assert_select "a", text: "新規休日"
     assert_select "th", text: "日付"
@@ -98,7 +98,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "休日を編集"
     assert_select "label", text: "休日名"
 
-    get_as users(:member), holidays_url
+    get_as users(:admin), holidays_url
     assert_select "h1", text: "Holidays"
     assert_select "th", text: "Date"
     assert_match(/2026-03-10/, response.body)
@@ -111,7 +111,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
   test "elective slot rules screens render in Japanese and English" do
     rule = elective_slot_rules(:tuesday)
 
-    get_as users(:japanese_member), elective_slot_rules_url
+    get_as users(:japanese_admin), elective_slot_rules_url
     assert_select "h1", text: "手術枠ルール"
     assert_select "th", text: "曜日"
 
@@ -121,7 +121,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
     get edit_elective_slot_rule_url(rule)
     assert_select "h1", text: "手術枠ルールを編集"
 
-    get_as users(:member), elective_slot_rules_url
+    get_as users(:admin), elective_slot_rules_url
     assert_select "h1", text: "Elective Slot Rules"
     assert_select "th", text: "Day"
 
@@ -134,7 +134,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
   # ---------------------------------------------------------------------
 
   test "diagnosis flash messages render in Japanese and English" do
-    sign_in_fresh(users(:japanese_member))
+    sign_in_fresh(users(:japanese_admin))
 
     post diagnoses_url, params: { diagnosis: { name: "Migraine" } }
     assert_equal "診断名を作成しました。", flash[:notice]
@@ -146,7 +146,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
     delete diagnosis_url(diagnosis)
     assert_equal "診断名を削除しました。", flash[:notice]
 
-    sign_in_fresh(users(:member))
+    sign_in_fresh(users(:admin))
 
     post diagnoses_url, params: { diagnosis: { name: "Migraine" } }
     assert_equal "Diagnosis was successfully created.", flash[:notice]
@@ -160,7 +160,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
   end
 
   test "surgery procedure, holiday and elective slot rule flash messages render in Japanese" do
-    sign_in_fresh(users(:japanese_member))
+    sign_in_fresh(users(:japanese_admin))
 
     post surgery_procedures_url, params: { surgery_procedure: { name: "Laparoscopy" } }
     assert_equal "術式を作成しました。", flash[:notice]
@@ -195,7 +195,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
 
   # The modal's create response is a turbo-stream/frame, not a redirect.
   test "diagnosis modal creation success message renders in Japanese via turbo stream" do
-    sign_in_fresh(users(:japanese_member))
+    sign_in_fresh(users(:japanese_admin))
 
     post diagnoses_url, params: { diagnosis: { name: "Migraine with aura" } },
                          headers: { "Accept" => "text/vnd.turbo-stream.html, text/html, application/xhtml+xml", "Turbo-Frame" => "diagnosis_modal_frame" }
@@ -211,7 +211,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
       surgery_locations_url => [ "実施場所", "新規実施場所", "Surgery Locations", "New Surgery Location" ],
       surgical_devices_url => [ "手術支援機器", "新規手術支援機器", "Surgical Devices", "New Surgical Device" ]
     }.each do |url, (ja_title, ja_new, en_title, en_new)|
-      get_as users(:japanese_member), url
+      get_as users(:japanese_admin), url
       assert_select "h1", text: ja_title
       assert_select "a", text: ja_new
       assert_select "th", text: "名称"
@@ -219,7 +219,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
       assert_select "span.badge", text: "無効"
       assert_no_match(/[Tt]ranslation missing/, response.body)
 
-      get_as users(:member), url
+      get_as users(:admin), url
       assert_select "h1", text: en_title
       assert_select "a", text: en_new
       assert_select "th", text: "Name"
@@ -229,7 +229,7 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
   end
 
   test "master form and flash messages are translated" do
-    sign_in_fresh(users(:japanese_member))
+    sign_in_fresh(users(:japanese_admin))
     get new_department_url
     assert_select "label", text: "名称"
     assert_select "label", text: "表示順"
@@ -243,13 +243,13 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
     delete department_url(department)
     assert_equal "診療科を削除しました。", flash[:notice]
 
-    sign_in_fresh(users(:member))
+    sign_in_fresh(users(:admin))
     post departments_url, params: { department: { name: "Brand New" } }
     assert_equal "Department was successfully created.", flash[:notice]
   end
 
   test "navigation links the three new masters in both locales" do
-    get_as users(:japanese_member), root_url
+    get_as users(:japanese_admin), root_url
     assert_select "a[href=?]", departments_path, text: "診療科"
     assert_select "a[href=?]", surgery_locations_path, text: "実施場所"
     assert_select "a[href=?]", surgical_devices_path, text: "手術支援機器"

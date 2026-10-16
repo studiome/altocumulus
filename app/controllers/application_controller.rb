@@ -77,6 +77,13 @@ class ApplicationController < ActionController::Base
     redirect_to root_path, alert: t("common.not_authorized")
   end
 
+  # For masters that doctors may still register from a picker modal while
+  # booking: a turbo-frame request (the picker / create-only modal) passes,
+  # a full-page request (the standalone management screen) needs an admin.
+  def require_admin_unless_modal
+    require_admin unless turbo_frame_request?
+  end
+
   def set_current_attributes
     Current.user = current_user
     Current.ip_address = request.remote_ip

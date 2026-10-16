@@ -6,6 +6,11 @@ class DiagnosesController < ApplicationController
   PICKER_FRAME = "diagnosis_picker_frame".freeze
 
   before_action :set_diagnosis, only: %i[ show edit update destroy ]
+  # Masters are admin-only, except that any signed-in user may register a new
+  # diagnosis from inside a picker/modal turbo-frame while booking (see
+  # require_admin_unless_modal).
+  before_action :require_admin, except: %i[ index show picker new create ]
+  before_action :require_admin_unless_modal, only: %i[ new create ]
   helper_method :picker_frame_request?
 
   def index
