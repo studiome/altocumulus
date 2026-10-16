@@ -159,7 +159,8 @@ class WeeklySurgerySchedulePdf
 
     # Date (weekday), the closed-day name and/or day note (notes squished to
     # one line), the slot count when the day overrides it, the slot usage in
-    # minutes (used/capacity, only when the day has slots) and the case count.
+    # minutes (used/capacity, only when the day has slots), the special slot
+    # lanes (used/lanes per resource) and the case count.
     def day_heading(date, surgeries)
       parts = [ "#{I18n.l(date, format: :default)} (#{I18n.l(date, format: :weekday)})" ]
       holiday = holidays[date]
@@ -167,6 +168,7 @@ class WeeklySurgerySchedulePdf
       parts << I18n.t("surgery_schedules.pdf.slot_count", slots: holiday.slot_count_display) if holiday&.slot_override?
       usage = slot_usage(date, surgeries)
       parts << I18n.t("surgery_schedules.pdf.slot_usage", used: usage.used_minutes, capacity: usage.capacity_minutes) if usage.configured?
+      parts.concat(usage.special_slots.map(&:summary))
       parts << I18n.t("surgery_schedules.pdf.day_count", count: surgeries.size)
       parts.join("   ")
     end
@@ -175,11 +177,16 @@ class WeeklySurgerySchedulePdf
     # page (and the one-query rule/holiday lookups), not queried again.
     def slot_usage(date, surgeries)
       ElectiveSlotUsage.new(date: date, rule: slot_rules[date.wday], holiday: holidays[date],
-                            elective_surgeries: surgeries.select(&:elective?), emergency_surgeries: surgeries.select(&:emergency?))
+                            elective_surgeries: surgeries.select(&:elective?), emergency_surgeries: surgeries.select(&:emergency?),
+                            special_rules: special_rules)
     end
 
     def slot_rules
       @slot_rules ||= ElectiveSlotRule.by_day_of_week
+    end
+
+    def special_rules
+      @special_rules ||= ElectiveSlotUsage.load_special_rules
     end
 
     def surgery_row(surgery)

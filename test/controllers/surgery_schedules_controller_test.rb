@@ -200,4 +200,12 @@ class SurgerySchedulesControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[type=date][name=start_date]"
     end
   end
+
+  test "the week board lists each day's special slot lanes" do
+    SpecialSlotRule.create!(resource: surgery_locations(:cath_lab), day_of_week: 2, slot_count: 1)
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+
+    get surgery_schedule_url(week_of: "2026-03-03")
+    assert_select ".special-slot-line", text: "Cath Lab 1/1 lanes"
+  end
 end

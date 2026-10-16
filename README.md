@@ -275,6 +275,15 @@ Key constraints:
 - A `Hospitalization` whose `purpose` is `other` requires a free-text `reason`.
 - `Surgery#slot_category` is `regular`, `simultaneous`, `backup` or `off_slot`. Only regular surgeries
   consume elective slots and can be "unassigned"; the other categories are shown outside the slot limits.
+  `off_slot` means "uses no regular slot" (a ward procedure room, say). A hybrid room / cath lab
+  (`SurgeryLocation`) or surgical robot (`SurgicalDevice`) case is a regular case that additionally
+  takes one lane (列) of that resource: the masters carry weekly lane counts (`SpecialSlotRule`, Monday
+  to Sunday, blank = none; a resource with no positive count is only recorded). Per day,
+  `ElectiveSlotUsage#special_slots` counts elective cases per resource against the weekday's lanes
+  (0 on a closed holiday; emergencies never take a lane), shows "Cath Lab 1/2 lanes" on the calendar
+  day cell, the schedule board and the weekly PDF heading, and warns when a resource is over.
+  `bin/rails surgeries:move_special_off_slot_to_regular` converts older off-slot entries (see the
+  task's header).
 - `Surgery#slot_number` / `#operation_order` are integers of 1 or more (`null` when unassigned).
   Exceeding the slot count or a slot's time budget does not block saving; it surfaces as a warning
   on the schedule board and the operations calendar.

@@ -427,6 +427,111 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     undated&.destroy
   end
 
+  # --- special slots (列): a regular case that also takes a lane of a hybrid
+  # room / cath lab / robot -------------------------------------------------
+
+  def lane(resource, weekday, count)
+    SpecialSlotRule.create!(resource: resource, day_of_week: weekday, slot_count: count)
+  end
+
+  def special_lines(date = TUESDAY)
+    ElectiveSlotUsage.for_dates([ date ])[date].special_slots
+  end
+
+  test "a resource without rules has no special line, whatever surgeries use it" do
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+    assert_empty special_lines
+  end
+
+  test "a special resource shows its lanes for the weekday and the cases using it" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 2)
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+
+    line = special_lines.sole
+    assert_equal surgery_locations(:cath_lab), line.resource
+    assert_equal 2, line.capacity
+    assert_equal 1, line.used
+    assert_not line.over?
+    assert_equal "Cath Lab 1/2 lanes", line.summary
+    assert_empty ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY].warnings.grep(/Cath Lab/)
+  end
+
+  test "a location and a device on one case take one lane of each" do
+    lane(surgery_locations(:hybrid_room), TUESDAY.wday, 1)
+    lane(surgical_devices(:robot_a), TUESDAY.wday, 1)
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:hybrid_room).id, surgical_device_id: surgical_devices(:robot_a).id)
+
+    assert_equal [ [ "Hybrid Room", 1, 1 ], [ "Robot A", 1, 1 ] ], special_lines.map { |line| [ line.resource.name, line.used, line.capacity ] }
+  end
+
+  test "a resource with lanes on another weekday still shows up when used on a day without lanes" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 1)
+    surgeries(:one).update_columns(surgery_location_id: surgery_locations(:cath_lab).id) # Sunday, no lane
+
+    line = special_lines(SUNDAY).sole
+    assert_equal [ 1, 0 ], [ line.used, line.capacity ]
+    assert line.over?
+  end
+
+  test "a day with lanes but no use still lists the resource" do
+    lane(surgical_devices(:robot_b), TUESDAY.wday, 1)
+
+    line = special_lines.sole
+    assert_equal [ 0, 1 ], [ line.used, line.capacity ]
+  end
+
+  test "only elective cases take lanes; emergencies never do" do
+    lane(surgery_locations(:cath_lab), SUNDAY.wday, 1)
+    surgeries(:emergency_one).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+
+    line = special_lines(SUNDAY).sole
+    assert_equal [ 0, 1 ], [ line.used, line.capacity ]
+  end
+
+  test "using more lanes than the day has adds a warning naming the resource" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 1)
+    [ :three, :four ].each { |name| surgeries(name).update_columns(surgery_location_id: surgery_locations(:cath_lab).id) }
+
+    usage = ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY]
+    assert usage.special_slots.sole.over?
+    assert_includes usage.warnings, I18n.t("models.elective_slot_usage.warnings.special_over", name: "Cath Lab", used: 2, capacity: 1)
+    I18n.with_locale(:ja) { assert_match(/Cath Lab.*列/, usage.warnings.last) }
+  end
+
+  test "a closed holiday has no lanes, so any use is over" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 2)
+    Holiday.create!(date: TUESDAY, name: "Closed", holiday: true)
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+
+    usage = ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY]
+    line = usage.special_slots.sole
+    assert_equal [ 1, 0 ], [ line.used, line.capacity ]
+    assert(usage.warnings.any? { |warning| warning.include?("Cath Lab") })
+
+    Holiday.where(date: TUESDAY).update_all(holiday: false, name: "Note")
+    assert_equal 2, ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY].special_slots.sole.capacity
+  end
+
+  test "an overrun of special lanes is warned even on a day without regular slots" do
+    lane(surgery_locations(:cath_lab), SUNDAY.wday, 0)
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 1)
+    surgeries(:one).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+
+    usage = ElectiveSlotUsage.for_dates([ SUNDAY ])[SUNDAY]
+    assert_not usage.configured?
+    assert(usage.warnings.any? { |warning| warning.include?("Cath Lab") })
+  end
+
+  test "special lanes add a fixed number of queries however many dates and rules there are" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 1)
+    lane(surgical_devices(:robot_a), TUESDAY.wday, 1)
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id, surgical_device_id: surgical_devices(:robot_a).id)
+
+    one = count_queries { ElectiveSlotUsage.for_dates([ TUESDAY ]).values.each(&:special_slots) }
+    week = count_queries { ElectiveSlotUsage.for_dates((SUNDAY..(SUNDAY + 6)).to_a).values.each(&:special_slots) }
+    assert_equal one, week
+  end
+
   test "for_dates does not issue more queries as the number of dates grows" do
     one_date_queries = count_queries { ElectiveSlotUsage.for_dates([ TUESDAY ]) }
     full_week_queries = count_queries { ElectiveSlotUsage.for_dates((SUNDAY..(SUNDAY + 6)).to_a) }

@@ -35,6 +35,9 @@
       <% else %>
         <span class="ledger-secondary"><%= t(".no_slots_configured") %></span>
       <% end %>
+      <% usage.special_slots.each do |special| %>
+        <span class="ledger-secondary font-mono special-slot-line <%= "text-error font-bold" if special.over? %>"><%= special.summary %></span>
+      <% end %>
       <% if calendar.admission_warning?(date) %>
         <span class="badge badge-warning badge-sm mt-1"><%= t(".congestion_badge") %></span>
       <% end %>

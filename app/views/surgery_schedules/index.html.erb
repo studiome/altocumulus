@@ -49,6 +49,9 @@
                 <%= t(".no_slots_configured") %>
               <% end %>
             </p>
+            <% usage.special_slots.each do |special| %>
+              <p class="special-slot-line text-sm font-mono <%= special.over? ? "text-error font-bold" : "text-base-content/60" %>"><%= special.summary %></p>
+            <% end %>
           </div>
 
           <% usage.warnings.each do |warning| %>

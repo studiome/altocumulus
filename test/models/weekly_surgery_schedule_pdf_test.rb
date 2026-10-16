@@ -37,6 +37,21 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     assert_includes text, surgeries(:three).display_procedure_name
   end
 
+  test "the day heading shows the special slot lanes used out of those open, monochrome text only" do
+    SpecialSlotRule.create!(resource: surgery_locations(:cath_lab), day_of_week: 2, slot_count: 2)
+    SpecialSlotRule.create!(resource: surgical_devices(:robot_a), day_of_week: 2, slot_count: 1)
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+    surgeries(:four).update_columns(surgical_device_id: surgical_devices(:robot_a).id)
+
+    assert_includes render_text(Date.new(2026, 3, 3)), "Cath Lab 1/2 lanes"
+    assert_includes render_text(Date.new(2026, 3, 3)), "Robot A 1/1 lanes"
+    assert_match(/Cath Lab 1\/2列/, render_text(Date.new(2026, 3, 3), locale: :ja))
+  end
+
+  test "a week without special slot resources adds nothing to the heading" do
+    assert_no_match(/lanes/, render_text(Date.new(2026, 3, 3)))
+  end
+
   test "shows the operator and assistant under an Operator column" do
     surgeries(:three).update!(operator_name: "Dr. Operator", assistant_name: "Dr. Assistant")
 

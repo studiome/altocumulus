@@ -247,7 +247,14 @@ erDiagram
 - `purpose` が `other` の `Hospitalization` は、自由記述の `reason`（理由）が必須です。
 - `Surgery#slot_category` は `regular` / `simultaneous` / `backup` / `off_slot` のいずれかです。
   手術枠を消費し「未割当」になり得るのは通常枠（`regular`）の手術のみで、それ以外は枠の上限とは
-  別に表示されます。
+  別に表示されます。`off_slot` は「通常枠を使わない」区分（病棟処置室など）です。ハイブリッド手術室・
+  カテ室（`SurgeryLocation`）や手術支援ロボット（`SurgicalDevice`）を使う症例は通常枠の症例であり、
+  そのうえで当該場所・機器の 1 列を使用します。マスタに曜日別の列数（`SpecialSlotRule`、月〜日、
+  空欄は設けない）を登録すると特殊枠として扱われ（正の列数が 1 つもなければ記録のみ）、
+  `ElectiveSlotUsage#special_slots` が日ごとに予定手術の件数を列数と照合します（休日は 0 列、
+  緊急手術は列を消費しません）。運用カレンダーの日付セル・スケジュール盤・週間 PDF の日見出しに
+  「ハイブリッド室 1/2列」のように表示し、超過時は警告します。以前の枠外入力は
+  `bin/rails surgeries:move_special_off_slot_to_regular` で通常枠へ移行できます。
 - `Surgery#slot_number` / `#operation_order` は 1 以上の整数（未割当は `null`）。枠数の超過や
   枠時間の超過は保存をブロックせず、スケジュール盤・運用カレンダーの警告として表示されます。
 - `User` は既知のロールを 1 つ以上持つ必要があり、最後の有効な管理者を無効化・降格できません

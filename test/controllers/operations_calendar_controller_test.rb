@@ -18,6 +18,39 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     assert_match "Cath Lab", response.body
   end
 
+  test "the day cell lists each special slot resource with used/lanes, red when over" do
+    SpecialSlotRule.create!(resource: surgery_locations(:cath_lab), day_of_week: 2, slot_count: 2)
+    SpecialSlotRule.create!(resource: surgical_devices(:robot_a), day_of_week: 2, slot_count: 1)
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+    surgeries(:four).update_columns(surgical_device_id: surgical_devices(:robot_a).id)
+    surgeries(:five).update_columns(surgical_device_id: surgical_devices(:robot_a).id)
+
+    get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
+
+    assert_select "td.ledger-day .special-slot-line", 2
+    assert_select "td.ledger-day .special-slot-line:not(.text-error)", text: "Cath Lab 1/2 lanes"
+    assert_select "td.ledger-day .special-slot-line.text-error", text: "Robot A 2/1 lanes"
+    assert_select "tr.ledger-band-warning td", text: /Robot A/
+  end
+
+  test "a day with no special resources shows no special slot line" do
+    get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
+    assert_select ".special-slot-line", 0
+  end
+
+  test "a regular case with a special resource shows its badge and is not hatched as off-slot" do
+    SpecialSlotRule.create!(resource: surgery_locations(:cath_lab), day_of_week: 2, slot_count: 1)
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id, surgical_device_id: surgical_devices(:robot_a).id)
+
+    with_site_config("ledger_columns" => { "operations_calendar" => %w[patient category] }) do
+      get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
+    end
+
+    assert_select "tr.oc-surgery .badge", text: "Cath Lab"
+    assert_select "tr.oc-surgery .badge", text: "Robot A"
+    assert_select "tr.oc-surgery.ledger-row-offslot", 0
+  end
+
   test "an invalid start date redirects with guidance instead of raising" do
     get operations_calendar_url, params: { start: "not-a-date" }
     assert_redirected_to operations_calendar_url

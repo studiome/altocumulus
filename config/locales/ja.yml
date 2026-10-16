@@ -555,6 +555,7 @@ ja:
     elective_slot_rule:
       to_s: "%{day} - %{count}枠 x %{minutes}分"
     elective_slot_usage:
+      special_slot: "%{name} %{used}/%{capacity}列"
       warnings:
         holiday: "%{holiday_name}は休日のため、利用できる手術枠がありません。"
         not_configured: "%{day}には手術枠が設定されていません。"
@@ -564,6 +565,7 @@ ja:
           single: "第%{number}枠は上限%{limit}分を%{overrun}分超過しています。"
           same_limit: "枠%{numbers}は上限%{limit}分を超過しています。"
           item: "第%{number}枠は上限%{limit}分を超過しています。"
+        special_over: "%{name}は%{capacity}列のところ%{used}件の症例が使用しています。"
     user:
       role_options:
         user: "利用者"

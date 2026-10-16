@@ -6,6 +6,12 @@
 # an unassigned surgery waits outside the slots rather than filling one.
 # Emergency surgeries are tracked separately and never affect slot usage or
 # warnings.
+#
+# Besides the regular slots, a day can have special slots (特殊枠): lanes of a
+# hybrid room / cath lab or a surgical robot (SpecialSlotRule). A case using
+# one still sits in a regular slot and also takes one lane of each special
+# resource it names. Lanes count elective cases only (no minutes), like the
+# regular slots, so emergencies never take one; a closed holiday has none.
 class ElectiveSlotUsage
   # One slot of the day, holding every surgery assigned to it.
   class Slot
@@ -39,7 +45,26 @@ class ElectiveSlotUsage
     end
   end
 
-  attr_reader :date, :rule, :elective_surgeries, :emergency_surgeries, :holiday
+  # One special slot resource on the day: the lanes it has and the cases
+  # using it.
+  SpecialSlot = Struct.new(:resource, :capacity, :used) do
+    def over?
+      used > capacity
+    end
+
+    # "Cath Lab 1/2 lanes" (one text for the calendar and the PDF).
+    def summary
+      I18n.t("models.elective_slot_usage.special_slot", name: resource.name, used: used, capacity: capacity)
+    end
+  end
+
+  attr_reader :date, :rule, :elective_surgeries, :emergency_surgeries, :holiday, :special_rules
+
+  # Every positive weekly lane rule, with its resource (one query per resource
+  # type); small and the same for all dates, so it is loaded once.
+  def self.load_special_rules
+    SpecialSlotRule.open.includes(:resource).to_a
+  end
 
   # Builds one ElectiveSlotUsage per date in a single pass, issuing a fixed
   # number of queries regardless of how many dates are given (no N+1).
@@ -49,6 +74,7 @@ class ElectiveSlotUsage
     dates = dates.to_a
     rules = ElectiveSlotRule.by_day_of_week
     holidays = Holiday.by_date(dates)
+    special_rules = load_special_rules
     surgeries_by_date = Surgery.where(surgery_date: dates)
                                 .includes(:patient, :department, :surgery_location, :surgical_device, :hospitalization,
                                           { surgery_procedure_selections: :surgery_procedure }, *includes)
@@ -62,12 +88,14 @@ class ElectiveSlotUsage
         rule: rules[date.wday],
         elective_surgeries: day_surgeries.select(&:elective?),
         emergency_surgeries: day_surgeries.select(&:emergency?),
-        holiday: holidays[date]
+        holiday: holidays[date],
+        special_rules: special_rules
       )
     end
   end
 
-  def initialize(date:, rule:, elective_surgeries:, emergency_surgeries:, holiday: nil)
+  def initialize(date:, rule:, elective_surgeries:, emergency_surgeries:, holiday: nil, special_rules: [])
+    @special_rules = special_rules
     @date = date
     @rule = rule
     @elective_surgeries = elective_surgeries
@@ -196,6 +224,31 @@ class ElectiveSlotUsage
     slots.select(&:overrun?)
   end
 
+  # The day's special slot resources: every one with lanes that weekday or
+  # with a case using it (a resource that has no lane rule at all is not
+  # special and never listed), ordered locations first, then devices, each by
+  # its master position. Uses the surgeries' foreign keys, so nothing is
+  # loaded per case.
+  def special_slots
+    @special_slots ||= begin
+      resources = special_rules.to_h { |special| [ [ special.resource_type, special.resource_id ], special.resource ] }
+      lanes = holiday? ? {} : special_rules.select { |special| special.day_of_week == date.wday }.to_h { |special| [ [ special.resource_type, special.resource_id ], special.slot_count ] }
+      used = Hash.new(0)
+      elective_surgeries.each do |surgery|
+        used[[ "SurgeryLocation", surgery.surgery_location_id ]] += 1 if surgery.surgery_location_id
+        used[[ "SurgicalDevice", surgery.surgical_device_id ]] += 1 if surgery.surgical_device_id
+      end
+
+      keys = (lanes.keys + used.keys).uniq.select { |key| resources.key?(key) }
+      keys.map { |key| SpecialSlot.new(resources[key], lanes.fetch(key, 0), used[key]) }
+          .sort_by { |special| [ SpecialSlotRule::RESOURCE_TYPES.index(special.resource.class.name), special.resource.position, special.resource.name ] }
+    end
+  end
+
+  def special_over?
+    special_slots.any?(&:over?)
+  end
+
   def warnings
     messages = []
 
@@ -210,14 +263,20 @@ class ElectiveSlotUsage
     # On a holiday, or a weekday with no slot rule configured at all, the
     # message above already explains why no regular surgery can be scheduled,
     # so listing the same surgeries as "not assigned to a slot" only adds noise.
-    return messages unless configured?
-
-    messages << unscheduled_warning if over_capacity?
-    messages << overrun_warning if overrunning_slots.any?
-    messages
+    if configured?
+      messages << unscheduled_warning if over_capacity?
+      messages << overrun_warning if overrunning_slots.any?
+    end
+    messages.concat(special_warnings)
   end
 
   private
+
+    def special_warnings
+      special_slots.select(&:over?).map do |special|
+        I18n.t("models.elective_slot_usage.warnings.special_over", name: special.resource.name, used: special.used, capacity: special.capacity)
+      end
+    end
 
     def unscheduled_warning
       I18n.t("models.elective_slot_usage.warnings.unscheduled", count: over_capacity_count)

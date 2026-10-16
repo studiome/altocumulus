@@ -427,6 +427,7 @@ en:
     elective_slot_rule:
       to_s: "%{day} - %{count} slots x %{minutes} min"
     elective_slot_usage:
+      special_slot: "%{name} %{used}/%{capacity} lanes"
       warnings:
         holiday: "%{holiday_name} is a holiday: no elective slots are available."
         not_configured: "No elective slots are configured for %{day}."
@@ -437,6 +438,7 @@ en:
           single: "Slot %{number} is booked %{overrun} min past its %{limit} min limit."
           same_limit: "Slots %{numbers} are booked past their %{limit} min limit."
           item: "Slot %{number} is booked past its %{limit} min limit."
+        special_over: "%{name} is used by %{used} cases but has %{capacity} lanes."
     user:
       role_options:
         user: "User"
