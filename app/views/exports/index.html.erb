@@ -1,0 +1,58 @@
+<% content_for :title, t(".title") %>
+
+<div class="app-page">
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker"><%= t(".kicker") %></p>
+        <h1 class="app-page-title"><%= t(".title") %></h1>
+      </div>
+    </div>
+  </section>
+
+  <% if @definitions.empty? %>
+    <p class="app-panel p-4"><%= t(".empty") %></p>
+  <% else %>
+    <p class="text-sm opacity-70"><%= t(".intro") %></p>
+
+    <%# One card per configured export. The form is a plain GET (a file
+        download, so Turbo stays out of it); ExportsController#show logs it. %>
+    <div class="grid gap-4 lg:grid-cols-2">
+      <% @definitions.each do |definition| %>
+        <% surgery = definition.subject == :surgery %>
+        <% id = "export-#{definition.key}" %>
+        <section id="<%= id %>" class="app-panel p-4">
+          <h2 class="text-lg font-bold"><%= definition.title %></h2>
+          <p class="mb-3 text-sm opacity-70"><%= t(".subject_#{definition.subject}") %></p>
+          <%= form_with url: export_path(definition.key), method: :get, local: true, data: { turbo: false }, class: "app-filter-bar" do |f| %>
+            <% if surgery %>
+              <%= f.hidden_field :view, value: "surgery", id: nil %>
+            <% else %>
+              <div class="app-filter-field">
+                <label class="app-filter-label" for="<%= id %>-view"><%= t(".target_label") %></label>
+                <%= f.select :view, [ [ t(".target_hospitalizations"), "hospitalizations" ], [ t(".target_examination"), "examination" ] ],
+                      {}, id: "#{id}-view", class: "select select-sm" %>
+              </div>
+            <% end %>
+            <div class="app-filter-field">
+              <label class="app-filter-label" for="<%= id %>-from"><%= t(".from") %></label>
+              <%= f.date_field :from, value: @from, required: true, id: "#{id}-from", class: "input input-sm" %>
+            </div>
+            <div class="app-filter-field">
+              <label class="app-filter-label" for="<%= id %>-to"><%= t(".to") %></label>
+              <%= f.date_field :to, value: @to, required: true, id: "#{id}-to", class: "input input-sm" %>
+            </div>
+            <% if SiteConfig.current.teams_enabled? %>
+              <div class="app-filter-field">
+                <label class="app-filter-label" for="<%= id %>-team"><%= t(".team_label") %></label>
+                <%= f.select :team_id, options_for_select([ [ t("teams.undecided_badge"), CalendarFilter::UNDECIDED ] ] + @teams.map { |team| [ team.name, team.id ] }),
+                      { include_blank: t(".team_all") }, id: "#{id}-team", class: "select select-sm" %>
+              </div>
+            <% end %>
+            <%= f.submit t(".download"), class: "btn btn-primary btn-sm", name: nil, data: { turbo: false } %>
+          <% end %>
+        </section>
+      <% end %>
+    </div>
+  <% end %>
+</div>

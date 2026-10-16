@@ -87,8 +87,10 @@ Rails.application.routes.draw do
   # rows are SpecialSlotDayOverride per resource for that ISO date.
   resources :day_special_slots, only: %i[ show edit update ], param: :date
   get "operations_calendar" => "operations_calendar#index", as: :operations_calendar
-  # CSV exports of the configured `exports` (admin / data manager only); `:key`
-  # is the export's name, `view` the screen it was started from.
+  # CSV exports of the configured `exports` (admin / data manager only): the
+  # data download page, and `:key`, the export's name, with `view` the kind of
+  # records (see ExportSource).
+  get "exports" => "exports#index", as: :exports
   get "exports/:key" => "exports#show", as: :export, constraints: { key: /[a-z0-9_]+/ }
   get "dashboard" => "dashboard#index"
   get "search" => "searches#index", as: :search

@@ -9,9 +9,6 @@
         <h1 class="app-page-title"><%= t(".title") %></h1>
       </div>
       <div class="flex items-center gap-2">
-        <%= render "exports/menu", view: "hospitalizations",
-              params_hash: { keyword: params[:keyword], diagnosis_id: params[:diagnosis_id], status: params[:status],
-                             admitted_from: @admitted_from || params[:admitted_from], admitted_to: params[:admitted_to] }.compact_blank %>
         <% if admin? %>
           <%= link_to t(".deleted_link"), deleted_hospitalizations_path, class: "btn btn-ghost" %>
         <% end %>

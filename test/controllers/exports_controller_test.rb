@@ -186,56 +186,141 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  # --- the menu -------------------------------------------------------------
+  # --- the data download page -------------------------------------------------
 
-  test "the surgery tab offers the surgery exports with the range and filters" do
-    get operations_calendar_url, params: RANGE.merge(mine: "1")
-    assert_select "details#export-menu-surgery summary", text: "CSV Export"
-    assert_select "details#export-menu-surgery a", text: "Surgery list" do |links|
-      assert_includes links.first["href"], "/exports/surgery_list?"
-      assert_includes links.first["href"], "view=surgery"
-      assert_includes links.first["href"], "start=2026-03-01"
-      assert_includes links.first["href"], "mine=1"
+  test "the page lists every configured export with a from / to form" do
+    travel_to Date.new(2026, 3, 15) do
+      get exports_url
+      assert_response :success
+      assert_select "section#export-surgery_list h2", text: "Surgery list"
+      assert_select "section#export-admission_list h2", text: "Admission list"
+      assert_select "section#export-surgery_list form[action='#{export_path(:surgery_list)}'][method=get][data-turbo=false]" do
+        assert_select "input[type=hidden][name=view][value=surgery]"
+        assert_select "input[name=from][value='2026-03-01']"
+        assert_select "input[name=to][value='2026-03-31']"
+        assert_select "select[name=team_id]", false
+      end
+      assert_select "section#export-admission_list select[name=view] option", count: 2
     end
-    assert_select "details#export-menu-surgery a", text: "Admission list", count: 0
   end
 
-  test "the examination tab offers the hospitalization exports" do
-    get operations_calendar_url, params: RANGE.merge(view: "examination")
-    assert_select "details#export-menu-examination a[href*='/exports/admission_list']", text: "Admission list"
-    assert_select "details#export-menu-examination a", text: "Surgery list", count: 0
+  test "the team filter is offered with features.teams, including undecided" do
+    with_site_config("features" => { "teams" => true }) do
+      get exports_url
+      assert_select "section#export-surgery_list select[name=team_id] option[value=undecided]"
+      assert_select "section#export-surgery_list select[name=team_id] option[value='#{teams(:blue).id}']"
+    end
   end
 
-  test "the hospitalization list offers the admission export with its filter" do
-    get hospitalizations_url, params: { keyword: "Jane" }
-    assert_select "details#export-menu-hospitalizations a[href*='/exports/admission_list'][href*='keyword=Jane']"
-    get hospitalizations_url
-    assert_select "details#export-menu-hospitalizations a[href*='admitted_from=']"
-  end
-
-  test "non-exporters see no export menu" do
-    sign_in_as(users(:member))
-    get operations_calendar_url, params: RANGE
-    assert_select "details[id^=export-menu]", false
-    get hospitalizations_url
-    assert_select "details[id^=export-menu]", false
-  end
-
-  test "a site's label is the button text and exports can be switched off" do
+  test "a site's exports are listed, and none says so" do
     with_site_config("exports" => { "ncd_list" => { "subject" => "surgery", "fields" => [ "surgery_date" ], "label" => "NCD" } }) do
-      get operations_calendar_url, params: RANGE
-      assert_select "details#export-menu-surgery a", text: "NCD"
+      get exports_url
+      assert_select "section#export-ncd_list h2", text: "NCD"
+      assert_select "section[id^=export-]", count: 1
     end
     with_site_config("exports" => {}) do
-      get operations_calendar_url, params: RANGE
-      assert_select "details[id^=export-menu]", false
+      get exports_url
+      assert_response :success
+      assert_select "section[id^=export-]", false
+      assert_select "p", text: I18n.t("exports.index.empty")
     end
   end
 
-  test "the Japanese menu and the built-in label are translated" do
+  test "only exporters reach the page and see the nav entry" do
+    get exports_url
+    assert_select "a[href='#{exports_path}']", minimum: 2 # mobile and desktop menus
+    sign_in_as(users(:data_manager))
+    get exports_url
+    assert_response :success
+    sign_in_as(users(:member))
+    get operations_calendar_url
+    assert_select "a[href='#{exports_path}']", false
+    get exports_url
+    assert_redirected_to root_path
+    sign_out
+    get exports_url
+    assert_redirected_to login_path
+  end
+
+  test "the nav entry is hidden when no export is configured" do
+    with_site_config("exports" => {}) do
+      get operations_calendar_url
+      assert_select "a[href='#{exports_path}']", false
+    end
+  end
+
+  test "the Japanese page and nav entry are translated" do
     sign_in_as(users(:japanese_admin))
+    get exports_url
+    assert_select "a[href='#{exports_path}']", text: "データダウンロード"
+    assert_select "section#export-surgery_list h2", text: "手術一覧"
+  end
+
+  # --- from / to ------------------------------------------------------------------
+
+  test "from and to export only that range of surgeries" do
+    get export_url(:surgery_list), params: { view: "surgery", from: "2026-03-02", to: "2026-03-02" }
+    assert_response :success
+    table = rows
+    assert_equal [ "2026-03-02" ], table.drop(1).map { |row| row[table.first.index("Surgery Date")] }.uniq
+    assert_match(/filename="surgery_list_2026-03-02_2026-03-02\.csv"/, response.headers["Content-Disposition"])
+  end
+
+  test "from and to work for the examination view and the admission dates of the list" do
+    hospitalizations(:one).update_columns(purpose: "examination", scheduled_procedure_date: Date.new(2026, 3, 2), procedure_name: "Endoscopy")
+    get export_url(:admission_list), params: { view: "examination", from: "2026-03-01", to: "2026-03-03" }
+    assert_equal 1, rows.size - 1
+    get export_url(:admission_list), params: { view: "hospitalizations", from: "2026-05-01", to: "2026-12-31" }
+    assert_match(/filename="admission_list_2026-05-01_2026-12-31\.csv"/, response.headers["Content-Disposition"])
+    assert_equal 2, rows.size - 1
+  end
+
+  test "the team filter narrows the admission list" do
+    hospitalizations(:one).update_columns(team_id: teams(:blue).id)
+    hospitalizations(:two).update_columns(team_id: nil, team_undecided: true)
+    with_site_config("features" => { "teams" => true }) do
+      get export_url(:admission_list), params: { view: "hospitalizations", team_id: teams(:blue).id }
+      table = rows
+      assert_equal [ "H001" ], table.drop(1).map { |row| row[table.first.index("Patient ID")] }
+      get export_url(:admission_list), params: { view: "hospitalizations", team_id: "undecided" }
+      table = rows
+      assert_equal [ "H002" ], table.drop(1).map { |row| row[table.first.index("Patient ID")] }
+    end
+  end
+
+  test "a bad from / to goes back to the page, a bad calendar range to the calendar" do
+    [ { from: "garbage", to: "2026-03-02" }, { from: "2026-03-05", to: "2026-03-01" },
+      { from: "2025-01-01", to: "2026-03-01" }, { from: "2026-03-01" }, { to: "2026-03-01" } ].each do |range|
+      assert_no_difference "AccessLog.count" do
+        get export_url(:surgery_list), params: range.merge(view: "surgery")
+      end
+      assert_redirected_to exports_path
+      assert_equal I18n.t("exports.index.invalid_range"), flash[:alert]
+    end
+    get export_url(:admission_list), params: { view: "hospitalizations", from: "2026-03-05", to: "2026-03-01" }
+    assert_redirected_to exports_path
+  end
+
+  test "a year is the longest range" do
+    get export_url(:surgery_list), params: { view: "surgery", from: "2026-01-01", to: "2026-12-31" }
+    assert_response :success
+  end
+
+  test "a download from the page is logged with its range" do
+    assert_difference "AccessLog.where(event: 'export').count", 1 do
+      get export_url(:surgery_list), params: { view: "surgery", from: "2026-03-01", to: "2026-03-03" }
+    end
+    assert_includes AccessLog.recent_first.first.last_url, "from=2026-03-01"
+  end
+
+  # --- the old menu is gone ------------------------------------------------------------
+
+  test "the calendar and the hospitalization list no longer carry a CSV menu" do
     get operations_calendar_url, params: RANGE
-    assert_select "details#export-menu-surgery summary", text: "CSV出力"
-    assert_select "details#export-menu-surgery a", text: "手術一覧"
+    assert_select "details[id^=export-menu]", false
+    get operations_calendar_url, params: RANGE.merge(view: "examination")
+    assert_select "details[id^=export-menu]", false
+    get hospitalizations_url
+    assert_select "details[id^=export-menu]", false
   end
 end

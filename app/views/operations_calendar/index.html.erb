@@ -42,7 +42,6 @@
   </section>
 
   <%# Tabs are plain links (a reload, so the filters/range ride in the URL). %>
-  <div class="flex items-end justify-between gap-2 print:hidden">
   <div role="tablist" aria-label="<%= t(".tabs_label") %>" class="tabs tabs-border print:hidden">
     <% OperationsCalendarController::VIEWS.each do |view| %>
       <% selected = view == @view %>
@@ -50,8 +49,6 @@
             id: "oc-tab-#{view}", role: "tab", class: "tab #{"tab-active" if selected}",
             aria: { selected: selected.to_s, controls: "oc-panel" }, tabindex: (selected ? 0 : -1) %>
     <% end %>
-  </div>
-  <%= render "exports/menu", view: @view, params_hash: range_params %>
   </div>
 
   <div id="oc-panel" role="tabpanel" aria-labelledby="oc-tab-<%= @view %>">

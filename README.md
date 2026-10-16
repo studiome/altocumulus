@@ -489,10 +489,13 @@ In tests, `with_site_config(hash) { ... }` swaps the config temporarily.
 
 ### CSV export
 
-Admins and data managers (nobody else; enforced in `ExportsController`, buttons hidden otherwise) get a
-"CSV出力" menu on the operations calendar (surgery tab: surgery exports; examination tab: the non-surgery
-admissions it lists) and on the hospitalization list (every admission of its current filter). The file covers
-the screen's date range and filters (`mine`, `team_id`; `ExportSource`), is named
+Admins and data managers (nobody else; enforced in `ExportsController`, the nav entry hidden otherwise) get a
+"データダウンロード / Data download" tab (`/exports`) listing every configured export (the entry is hidden
+while `exports` is empty). Each card has a from / to date range (default: the current month, at most one year)
+and, with `features.teams`, a team filter (including "Undecided"); hospitalization exports choose between
+all admissions (by admission date) and examination admissions (by scheduled procedure date). Download is
+`GET /exports/:key?view=...&from=...&to=...` (`ExportSource`; a bad range goes back to the page with an alert).
+The calendar and hospitalization list have no export button. The file is named
 `<export>_<start>_<end>.csv`, and is UTF-8 with BOM, CRLF, one header row and every value quoted
 (`CsvExport`). Patient IDs are exact text, but Excel drops leading zeros when the file is double-clicked
 open; import the column as text to keep them. Text starting with `= + - @` gets a leading `'` so a
