@@ -49,6 +49,16 @@ class SpecialOffSlotMoveTest < ActiveSupport::TestCase
     assert_equal surgical_devices(:robot_a), @robot.surgical_device
   end
 
+  test "a resource with only a per-date override counts as special; a zero override does not" do
+    SpecialSlotDayOverride.create!(resource: surgery_locations(:closed_room), date: Date.new(2026, 3, 3), slot_count: 1)
+    SpecialSlotDayOverride.create!(resource: surgery_locations(:cath_lab), date: Date.new(2026, 3, 3), slot_count: 0)
+    only_override = off_slot(:six, surgery_location: surgery_locations(:closed_room))
+
+    ids = SpecialOffSlotMove.new.candidates.map(&:id)
+    assert_includes ids, only_override.id
+    assert_not_includes ids, @plain_room.id
+  end
+
   test "other surgeries are left alone" do
     SpecialOffSlotMove.new(apply: true).run
 

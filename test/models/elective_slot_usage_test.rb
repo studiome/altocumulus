@@ -532,6 +532,83 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_equal one, week
   end
 
+  # --- per-date overrides of the weekly lanes --------------------------------
+
+  def day_override(resource, date, count)
+    SpecialSlotDayOverride.create!(resource: resource, date: date, slot_count: count)
+  end
+
+  test "a date's override replaces the weekly lanes and is flagged as changed" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 2)
+    day_override(surgery_locations(:cath_lab), TUESDAY, 1)
+
+    line = special_lines.sole
+    assert_equal 1, line.capacity
+    assert line.overridden?
+    assert_equal "Cath Lab 0/1 lanes", line.summary
+    assert_not special_lines(TUESDAY + 7).first&.overridden?
+  end
+
+  test "an override of 0 closes the resource that day but keeps it listed" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 2)
+    day_override(surgery_locations(:cath_lab), TUESDAY, 0)
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+
+    usage = ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY]
+    assert_equal [ 1, 0 ], [ usage.special_slots.sole.used, usage.special_slots.sole.capacity ]
+    assert usage.special_over?
+  end
+
+  test "a resource without any weekly rule becomes special on the overridden date only" do
+    day_override(surgical_devices(:robot_b), TUESDAY, 1)
+
+    line = special_lines.sole
+    assert_equal [ surgical_devices(:robot_b), 1, 0, true ], [ line.resource, line.capacity, line.used, line.overridden? ]
+    assert_empty special_lines(TUESDAY + 1)
+  end
+
+  test "an override on another date does not leak into this one" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 2)
+    day_override(surgery_locations(:cath_lab), TUESDAY + 7, 5)
+
+    line = special_lines.sole
+    assert_equal [ 2, false ], [ line.capacity, line.overridden? ]
+  end
+
+  test "a closed holiday keeps zero lanes whatever an override says" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 2)
+    day_override(surgery_locations(:cath_lab), TUESDAY, 3)
+    day_override(surgical_devices(:robot_a), TUESDAY, 1)
+    Holiday.create!(date: TUESDAY, name: "Closed", holiday: true)
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+
+    line = special_lines.sole
+    assert_equal [ 0, 1, false ], [ line.capacity, line.used, line.overridden? ]
+
+    Holiday.where(date: TUESDAY).update_all(holiday: false, name: "Note")
+    assert_equal [ 3, 1 ], special_lines.map(&:capacity)
+  end
+
+  test "an override beats the weekly rule in warnings too" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 1)
+    day_override(surgery_locations(:cath_lab), TUESDAY, 2)
+    [ :three, :four ].each { |name| surgeries(name).update_columns(surgery_location_id: surgery_locations(:cath_lab).id) }
+
+    assert_empty ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY].warnings.grep(/Cath Lab/)
+  end
+
+  test "overrides add a fixed number of queries however many dates and overrides there are" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 1)
+    day_override(surgery_locations(:cath_lab), TUESDAY, 2)
+    day_override(surgical_devices(:robot_a), TUESDAY, 1)
+    day_override(surgical_devices(:robot_b), TUESDAY + 1, 1)
+    surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+
+    one = count_queries { ElectiveSlotUsage.for_dates([ TUESDAY ]).values.each(&:special_slots) }
+    week = count_queries { ElectiveSlotUsage.for_dates((SUNDAY..(SUNDAY + 6)).to_a).values.each(&:special_slots) }
+    assert_equal one, week
+  end
+
   test "for_dates does not issue more queries as the number of dates grows" do
     one_date_queries = count_queries { ElectiveSlotUsage.for_dates([ TUESDAY ]) }
     full_week_queries = count_queries { ElectiveSlotUsage.for_dates((SUNDAY..(SUNDAY + 6)).to_a) }

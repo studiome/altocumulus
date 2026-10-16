@@ -1,0 +1,7 @@
+<%# Admin-only hover action in the day cell: opens the special slot editor in
+    the day's special-slot frame (see operations_calendar/_day). %>
+<% if admin? %>
+  <%= link_to t("operations_calendar.day.edit_special_slots"), edit_day_special_slot_path(date, context), data: { turbo_frame: "day-special-slots-#{date.iso8601}" },
+        class: "ledger-hover-action app-inline-link text-xs font-normal print:hidden",
+        aria: { label: t("operations_calendar.day.edit_special_slots_for", date: l(date, format: :default)) } %>
+<% end %>

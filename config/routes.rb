@@ -83,6 +83,9 @@ Rails.application.routes.draw do
   # The inline day-note editor of the operations calendar (admin only): `:date`
   # is the day's ISO date and the record is that day's Holiday row.
   resources :day_notes, only: %i[ show edit update destroy ], param: :date
+  # The inline special-slot (特殊枠) lane editor for one day, admin only: its
+  # rows are SpecialSlotDayOverride per resource for that ISO date.
+  resources :day_special_slots, only: %i[ show edit update ], param: :date
   get "operations_calendar" => "operations_calendar#index", as: :operations_calendar
   # CSV exports of the configured `exports` (admin / data manager only); `:key`
   # is the export's name, `view` the screen it was started from.

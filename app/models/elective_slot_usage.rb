@@ -11,7 +11,10 @@
 # hybrid room / cath lab or a surgical robot (SpecialSlotRule). A case using
 # one still sits in a regular slot and also takes one lane of each special
 # resource it names. Lanes count elective cases only (no minutes), like the
-# regular slots, so emergencies never take one; a closed holiday has none.
+# regular slots, so emergencies never take one; a closed holiday has none. A
+# date can override a resource's weekly lanes (SpecialSlotDayOverride, set from
+# the calendar by an admin); the override wins, also for a resource without a
+# weekly rule, but a closed holiday stays at 0 like the regular slots do.
 class ElectiveSlotUsage
   # One slot of the day, holding every surgery assigned to it.
   class Slot
@@ -47,7 +50,12 @@ class ElectiveSlotUsage
 
   # One special slot resource on the day: the lanes it has and the cases
   # using it.
-  SpecialSlot = Struct.new(:resource, :capacity, :used) do
+  # `overridden` is true when the lanes come from a date override.
+  SpecialSlot = Struct.new(:resource, :capacity, :used, :overridden) do
+    def overridden?
+      overridden.present?
+    end
+
     def over?
       used > capacity
     end
@@ -58,12 +66,18 @@ class ElectiveSlotUsage
     end
   end
 
-  attr_reader :date, :rule, :elective_surgeries, :emergency_surgeries, :holiday, :special_rules
+  attr_reader :date, :rule, :elective_surgeries, :emergency_surgeries, :holiday, :special_rules, :special_overrides
 
   # Every positive weekly lane rule, with its resource (one query per resource
   # type); small and the same for all dates, so it is loaded once.
   def self.load_special_rules
     SpecialSlotRule.open.includes(:resource).to_a
+  end
+
+  # The per-date lane overrides of the given dates, with their resources (one
+  # query per resource type).
+  def self.load_special_overrides(dates)
+    SpecialSlotDayOverride.where(date: dates).includes(:resource).to_a
   end
 
   # Builds one ElectiveSlotUsage per date in a single pass, issuing a fixed
@@ -75,6 +89,7 @@ class ElectiveSlotUsage
     rules = ElectiveSlotRule.by_day_of_week
     holidays = Holiday.by_date(dates)
     special_rules = load_special_rules
+    overrides_by_date = load_special_overrides(dates).group_by(&:date)
     surgeries_by_date = Surgery.where(surgery_date: dates)
                                 .includes(:patient, :department, :surgery_location, :surgical_device, :hospitalization,
                                           { surgery_procedure_selections: :surgery_procedure }, *includes)
@@ -89,13 +104,15 @@ class ElectiveSlotUsage
         elective_surgeries: day_surgeries.select(&:elective?),
         emergency_surgeries: day_surgeries.select(&:emergency?),
         holiday: holidays[date],
-        special_rules: special_rules
+        special_rules: special_rules,
+        special_overrides: overrides_by_date[date] || []
       )
     end
   end
 
-  def initialize(date:, rule:, elective_surgeries:, emergency_surgeries:, holiday: nil, special_rules: [])
+  def initialize(date:, rule:, elective_surgeries:, emergency_surgeries:, holiday: nil, special_rules: [], special_overrides: [])
     @special_rules = special_rules
+    @special_overrides = special_overrides
     @date = date
     @rule = rule
     @elective_surgeries = elective_surgeries
@@ -224,15 +241,18 @@ class ElectiveSlotUsage
     slots.select(&:overrun?)
   end
 
-  # The day's special slot resources: every one with lanes that weekday or
-  # with a case using it (a resource that has no lane rule at all is not
-  # special and never listed), ordered locations first, then devices, each by
+  # The day's special slot resources: every one with lanes that weekday (or
+  # given lanes by a date override, even 0) or with a case using it (a
+  # resource with neither a lane rule nor an override is not special and never
+  # listed), ordered locations first, then devices, each by
   # its master position. Uses the surgeries' foreign keys, so nothing is
   # loaded per case.
   def special_slots
     @special_slots ||= begin
-      resources = special_rules.to_h { |special| [ [ special.resource_type, special.resource_id ], special.resource ] }
-      lanes = holiday? ? {} : special_rules.select { |special| special.day_of_week == date.wday }.to_h { |special| [ [ special.resource_type, special.resource_id ], special.slot_count ] }
+      resources = (special_rules + special_overrides).to_h { |special| [ [ special.resource_type, special.resource_id ], special.resource ] }
+      weekly = special_rules.select { |special| special.day_of_week == date.wday }.to_h { |special| [ [ special.resource_type, special.resource_id ], special.slot_count ] }
+      overridden = special_overrides.select { |special| special.date == date }.to_h { |special| [ [ special.resource_type, special.resource_id ], special.slot_count ] }
+      lanes = holiday? ? {} : weekly.merge(overridden)
       used = Hash.new(0)
       elective_surgeries.each do |surgery|
         used[[ "SurgeryLocation", surgery.surgery_location_id ]] += 1 if surgery.surgery_location_id
@@ -240,7 +260,7 @@ class ElectiveSlotUsage
       end
 
       keys = (lanes.keys + used.keys).uniq.select { |key| resources.key?(key) }
-      keys.map { |key| SpecialSlot.new(resources[key], lanes.fetch(key, 0), used[key]) }
+      keys.map { |key| SpecialSlot.new(resources[key], lanes.fetch(key, 0), used[key], overridden.key?(key) && !holiday?) }
           .sort_by { |special| [ SpecialSlotRule::RESOURCE_TYPES.index(special.resource.class.name), special.resource.position, special.resource.name ] }
     end
   end

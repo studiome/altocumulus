@@ -197,6 +197,7 @@ ja:
       surgery_procedure: "術式"
       surgery_procedure_selection: "手術術式選択"
       special_slot_rule: "特殊枠ルール"
+      special_slot_day_override: "特殊枠の日別列数"
       surgical_device: "手術支援機器"
       team: "担当チーム"
       team_term: "担当期間"
@@ -251,6 +252,9 @@ ja:
         slot_duration_minutes: "枠時間(分)"
       special_slot_rule:
         day_of_week: "曜日"
+        slot_count: "列数"
+      special_slot_day_override:
+        date: "日付"
         slot_count: "列数"
       holiday:
         date: "日付"
@@ -1471,6 +1475,8 @@ ja:
       edit_note_for: "%{date} の備考を編集"
       add_note: "備考を追加"
       add_note_for: "%{date} に備考を追加"
+      edit_special_slots: "特殊枠を変更"
+      edit_special_slots_for: "%{date} の特殊枠を変更"
     examination_day:
       no_examinations: "予定なし"
     labels:
@@ -1487,6 +1493,15 @@ ja:
       cancel: "キャンセル"
       delete: "この日の備考を削除"
       delete_confirm: "この日の備考（列数の変更や休診を含む）を削除しますか？"
+
+  day_special_slots:
+    form:
+      heading: "%{date} の特殊枠"
+      help: "空欄は曜日別の列数（既定値）を使います。数字を入れるとこの日だけ列数を変更します（0 = この日は列なし）。"
+      weekly_hint: "曜日別: %{count}"
+      no_resources: "実施場所・手術支援機器が登録されていません。"
+      save: "保存"
+      cancel: "キャンセル"
 
   dashboard:
     index:

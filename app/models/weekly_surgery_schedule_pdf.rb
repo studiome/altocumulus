@@ -178,7 +178,7 @@ class WeeklySurgerySchedulePdf
     def slot_usage(date, surgeries)
       ElectiveSlotUsage.new(date: date, rule: slot_rules[date.wday], holiday: holidays[date],
                             elective_surgeries: surgeries.select(&:elective?), emergency_surgeries: surgeries.select(&:emergency?),
-                            special_rules: special_rules)
+                            special_rules: special_rules, special_overrides: special_overrides[date] || [])
     end
 
     def slot_rules
@@ -187,6 +187,10 @@ class WeeklySurgerySchedulePdf
 
     def special_rules
       @special_rules ||= ElectiveSlotUsage.load_special_rules
+    end
+
+    def special_overrides
+      @special_overrides ||= ElectiveSlotUsage.load_special_overrides(dates).group_by(&:date)
     end
 
     def surgery_row(surgery)

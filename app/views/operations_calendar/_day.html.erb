@@ -2,7 +2,8 @@
     ledger table. `oc-day` is a structural hook used by tests to count the
     rendered range. The day cell (date, admissions, slot usage) spans every
     surgery row of the day; the note band and warnings sit above them as
-    full-width bands. DayNotesController re-renders this partial for one day. %>
+    full-width bands (admins also get the empty frame the special slot editor
+    opens in). DayNotesController and DaySpecialSlotsController re-render this partial for one day. %>
 <% surgeries = calendar.surgeries_for(date) %>
 <% columns = calendar.columns.size + 1 %>
 <% note_context = day_note_context(calendar, view: "surgery", alternate: alternate) %>
@@ -10,6 +11,9 @@
 <% context = calendar.ledger_context(href: ->(surgery) { surgery_path(surgery, from: "calendar", start: calendar.return_start.iso8601, days: calendar.return_days) }) %>
 <tbody id="day-<%= date.iso8601 %>" class="oc-day group <%= "oc-day-alt" if alternate %> <%= "oc-day-highlight" if highlight %>"<% if highlight %> data-controller="calendar-highlight"<% end %>>
   <%= render "operations_calendar/day_band", date: date, usage_holiday: usage.holiday, columns: columns, context: note_context %>
+  <% if admin? %>
+    <tr class="ledger-band ledger-note-row"><td colspan="<%= columns %>"><%= turbo_frame_tag "day-special-slots-#{date.iso8601}" %></td></tr>
+  <% end %>
   <% usage.warnings.each do |warning| %>
     <tr class="ledger-band-warning"><td colspan="<%= columns %>"><%= warning %></td></tr>
   <% end %>
@@ -36,12 +40,13 @@
         <span class="ledger-secondary"><%= t(".no_slots_configured") %></span>
       <% end %>
       <% usage.special_slots.each do |special| %>
-        <span class="ledger-secondary font-mono special-slot-line <%= "text-error font-bold" if special.over? %>"><%= special.summary %></span>
+        <span class="ledger-secondary font-mono special-slot-line <%= "text-error font-bold" if special.over? %>"><%= special.summary %><% if special.overridden? %><span class="text-info font-semibold"><%= t(".changed_marker") %></span><% end %></span>
       <% end %>
       <% if calendar.admission_warning?(date) %>
         <span class="badge badge-warning badge-sm mt-1"><%= t(".congestion_badge") %></span>
       <% end %>
       <%= render "operations_calendar/add_note_link", date: date, holiday: usage.holiday, context: note_context %>
+      <%= render "operations_calendar/edit_special_slots_link", date: date, context: note_context %>
     </td>
   <% end %>
 

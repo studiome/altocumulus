@@ -1,7 +1,9 @@
 # A master (SurgeryLocation, SurgicalDevice) that may be a special slot
 # resource: it carries weekly lane counts (SpecialSlotRule). A case using it
 # keeps its regular slot and also takes one lane here. A resource without any
-# positive count is an ordinary master, merely recorded on cases.
+# positive count is an ordinary master, merely recorded on cases -- unless a
+# single date overrides it (SpecialSlotDayOverride), which makes it special
+# for that date even without any weekly count.
 module SpecialSlotResource
   extend ActiveSupport::Concern
 
@@ -10,6 +12,7 @@ module SpecialSlotResource
 
   included do
     has_many :special_slot_rules, as: :resource, dependent: :destroy, autosave: true
+    has_many :special_slot_day_overrides, as: :resource, dependent: :destroy
   end
 
   class_methods do
@@ -28,6 +31,8 @@ module SpecialSlotResource
     special_slot_counts.fetch(weekday, 0)
   end
 
+  # Whether it has weekly lanes; a per-date override is looked at per date
+  # (ElectiveSlotUsage#special_slots).
   def special_slot_resource?
     special_slot_counts.any?
   end

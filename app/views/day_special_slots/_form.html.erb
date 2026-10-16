@@ -1,0 +1,46 @@
+<%# The special slot editor of one day, shown in a full-width band above it.
+    One number input per active location and device: blank uses the weekly
+    count (shown as the placeholder), a number sets that date's lanes, 0 means
+    none that day. The calendar's own params ride along as hidden fields so the
+    saved day is re-rendered the way it was shown. %>
+<% errors = rows.flat_map { |row| row.override.errors.map { |error| "#{row.resource.name}: #{error.message}" } } %>
+<%= form_with(url: day_special_slot_path(date), method: :patch, scope: nil, class: "flex flex-col gap-2 font-normal") do |form| %>
+  <% context_params.each do |name, value| %>
+    <%= hidden_field_tag name, value, id: nil %>
+  <% end %>
+
+  <p class="text-sm font-bold"><%= t("day_special_slots.form.heading", date: l(date, format: :default)) %></p>
+  <p class="text-xs text-base-content/70"><%= t("day_special_slots.form.help") %></p>
+
+  <% if errors.any? %>
+    <div role="alert" class="alert alert-error alert-soft w-full py-1 text-xs">
+      <ul class="list-disc ml-4">
+        <% errors.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if rows.empty? %>
+    <p class="text-xs italic"><%= t("day_special_slots.form.no_resources") %></p>
+  <% else %>
+    <div class="flex flex-wrap gap-x-4 gap-y-2">
+      <% rows.each do |row| %>
+        <% field_id = "special_slot_counts_#{row.resource.class.name}_#{row.resource.id}_#{date.iso8601}" %>
+        <div class="app-filter-field">
+          <%= label_tag field_id, row.resource.name, class: "app-filter-label" %>
+          <%= number_field_tag "special_slot_counts[#{row.resource.class.name}][#{row.resource.id}]", row.raw,
+                id: field_id, class: "input input-sm w-24 #{"input-error" if row.override.errors.any?}", min: 0, step: 1,
+                placeholder: row.weekly_default(date), inputmode: "numeric" %>
+          <span class="text-xs text-base-content/60"><%= t("day_special_slots.form.weekly_hint", count: row.weekly_default(date)) %></span>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="flex items-center gap-2">
+    <%= submit_tag t("day_special_slots.form.save"), class: "btn btn-primary btn-sm" %>
+    <%= link_to t("day_special_slots.form.cancel"), day_special_slot_path(date, context_params), class: "btn btn-ghost btn-sm" %>
+  </div>
+<% end %>

@@ -33,6 +33,29 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr.ledger-band-warning td", text: /Robot A/
   end
 
+  test "a date override replaces the weekly lanes and carries the changed marker on that line only" do
+    SpecialSlotRule.create!(resource: surgery_locations(:cath_lab), day_of_week: 2, slot_count: 2)
+    SpecialSlotRule.create!(resource: surgical_devices(:robot_a), day_of_week: 2, slot_count: 1)
+    SpecialSlotDayOverride.create!(resource: surgery_locations(:cath_lab), date: "2026-03-03", slot_count: 1)
+
+    get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
+
+    assert_select "td.ledger-day .special-slot-line", text: "Cath Lab 0/1 lanes (changed)"
+    assert_select "td.ledger-day .special-slot-line", text: "Robot A 0/1 lanes"
+  end
+
+  test "admins get the edit-special-slots link and its frame, members do not" do
+    get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
+    assert_select "td.ledger-day a[href^=?]", edit_day_special_slot_path("2026-03-03")
+    assert_select "turbo-frame#day-special-slots-2026-03-03"
+
+    sign_out
+    sign_in_as(users(:member))
+    get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
+    assert_select "a[href^=?]", edit_day_special_slot_path("2026-03-03"), 0
+    assert_select "turbo-frame#day-special-slots-2026-03-03", 0
+  end
+
   test "a day with no special resources shows no special slot line" do
     get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
     assert_select ".special-slot-line", 0

@@ -48,6 +48,16 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     assert_match(/Cath Lab 1\/2列/, render_text(Date.new(2026, 3, 3), locale: :ja))
   end
 
+  test "the day heading shows the lanes a date override sets" do
+    SpecialSlotRule.create!(resource: surgery_locations(:cath_lab), day_of_week: 2, slot_count: 2)
+    SpecialSlotDayOverride.create!(resource: surgery_locations(:cath_lab), date: Date.new(2026, 3, 3), slot_count: 1)
+    SpecialSlotDayOverride.create!(resource: surgical_devices(:robot_b), date: Date.new(2026, 3, 3), slot_count: 1)
+
+    text = render_text(Date.new(2026, 3, 3))
+    assert_includes text, "Cath Lab 0/1 lanes"
+    assert_includes text, "Robot B 0/1 lanes"
+  end
+
   test "a week without special slot resources adds nothing to the heading" do
     assert_no_match(/lanes/, render_text(Date.new(2026, 3, 3)))
   end

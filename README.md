@@ -280,7 +280,10 @@ Key constraints:
   takes one lane (列) of that resource: the masters carry weekly lane counts (`SpecialSlotRule`, Monday
   to Sunday, blank = none; a resource with no positive count is only recorded). Per day,
   `ElectiveSlotUsage#special_slots` counts elective cases per resource against the weekday's lanes
-  (0 on a closed holiday; emergencies never take a lane), shows "Cath Lab 1/2 lanes" on the calendar
+  (0 on a closed holiday; emergencies never take a lane). A specific date can differ from the weekly
+  pattern: an admin uses "Edit special slots" on the calendar's day cell to set that day's lanes per
+  resource (blank = weekly count, 0 = none that day; works for a resource with no weekly count too and
+  shows "(changed)" on the calendar). It shows "Cath Lab 1/2 lanes" on the calendar
   day cell, the schedule board and the weekly PDF heading, and warns when a resource is over.
   `bin/rails surgeries:move_special_off_slot_to_regular` converts older off-slot entries (see the
   task's header).

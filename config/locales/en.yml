@@ -1564,6 +1564,8 @@ en:
       edit_note_for: "Edit the note for %{date}"
       add_note: "Add note"
       add_note_for: "Add a note for %{date}"
+      edit_special_slots: "Edit special slots"
+      edit_special_slots_for: "Edit the special slots for %{date}"
     examination_day:
       no_examinations: "No examination admissions scheduled"
     labels:
@@ -1580,6 +1582,15 @@ en:
       cancel: "Cancel"
       delete: "Delete this day's note"
       delete_confirm: "Delete the note (and any slot change or closure) for this day?"
+
+  day_special_slots:
+    form:
+      heading: "Special slots on %{date}"
+      help: "Leave a field blank to use the weekly lanes shown as its default; enter a number to change the lanes for this day only (0 = none that day)."
+      weekly_hint: "weekly: %{count}"
+      no_resources: "No locations or devices are registered."
+      save: "Save"
+      cancel: "Cancel"
 
   dashboard:
     index:

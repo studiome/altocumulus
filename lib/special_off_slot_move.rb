@@ -3,7 +3,10 @@
 # consumes neither a regular slot nor any lane. The correct form is a regular
 # case (slot unassigned, to be placed by hand) that also names the special
 # resource, so this moves every elective off-slot surgery whose location or
-# device is a special slot resource (has a lane rule with slot_count > 0).
+# device is a special slot resource: it has a weekly lane rule with
+# slot_count > 0, or a per-date override with slot_count > 0 on any date (so a
+# resource that is special only on certain dates counts too; an override of 0
+# only closes it and does not make it special).
 #
 # Emergency surgeries are left alone: they never take slots or lanes, so their
 # category changes nothing about capacity. The move goes through
@@ -51,6 +54,7 @@ class SpecialOffSlotMove
   private
 
     def special_ids(type)
-      SpecialSlotRule.open.where(resource_type: type).distinct.pluck(:resource_id)
+      (SpecialSlotRule.open.where(resource_type: type).pluck(:resource_id) +
+        SpecialSlotDayOverride.open.where(resource_type: type).pluck(:resource_id)).uniq
     end
 end

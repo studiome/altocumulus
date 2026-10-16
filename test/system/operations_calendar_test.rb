@@ -54,10 +54,27 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
     assert_nil Holiday.find_by(date: DAY)
   end
 
+  test "an admin sets a day's special slot lanes in place and the day shows the changed marker" do
+    SpecialSlotRule.create!(resource: surgery_locations(:cath_lab), day_of_week: DAY.wday, slot_count: 1)
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    page.execute_script("window.__stays = true")
+
+    find("tbody#day-#{DAY.iso8601}").hover
+    within("tbody#day-#{DAY.iso8601}") { click_on "Edit special slots" }
+    within("turbo-frame#day-special-slots-#{DAY.iso8601}") do
+      fill_in "Cath Lab", with: "3"
+      click_on "Save"
+    end
+
+    within("tbody#day-#{DAY.iso8601}") { assert_text "Cath Lab 0/3 lanes (changed)" }
+    assert page.evaluate_script("window.__stays"), "the page was reloaded"
+    assert_equal 3, SpecialSlotDayOverride.find_by!(resource: surgery_locations(:cath_lab), date: DAY).slot_count
+  end
+
   test "the edit link is reachable from the keyboard" do
     Holiday.create!(date: DAY, holiday: false, note: "Existing")
     visit operations_calendar_path(start: DAY.iso8601, days: 1)
-    link = find("tbody#day-#{DAY.iso8601} a", text: "Edit", visible: :all)
+    link = find("tbody#day-#{DAY.iso8601} a", exact_text: "Edit", visible: :all)
     page.execute_script("arguments[0].focus()", link)
     opacity = nil
     40.times do # the fade takes a moment
