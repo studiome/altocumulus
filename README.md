@@ -441,6 +441,15 @@ hospitalization's). The members shown for a case come from the term covering its
 `surgery_date`; a hospitalization's scheduled surgery date, else scheduled procedure date, else
 admission date); an undated case shows only the team name.
 
+### Development demo data
+
+`bin/rails dev:demo_data` (development only; it refuses to run elsewhere) creates clearly fictional
+users (password `password`), teams with a current and a next term, 35 patients and 34
+hospitalizations over the next six weeks with linked surgeries (emergency, joint, backup, off-slot
+cath-lab, hybrid-room, robotic cases) and a few holidays/day notes, so screens can be reviewed. It
+finds-or-creates by natural keys, so running it again adds nothing. The builder is `DevDemoData`
+(`lib/dev_demo_data.rb`).
+
 ### Audit log
 
 The `Auditable` concern is included in `Patient` / `Surgery` / `Hospitalization` and records

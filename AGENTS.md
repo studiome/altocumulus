@@ -100,3 +100,7 @@ Creating a new master record still happens inside the same modal (`Register New 
 ### Teams
 
 Behind `features.teams` in the site config (default off: screens, selects and displays are hidden, `team_id` cannot be a required field). `Team` (a `MasterRecord` plus a palette `color`) has many `TeamTerm`s (inclusive, non-overlapping date ranges) which have many `TeamTermMember`s (optional user, name, role main/sub/member, at most one main and one sub); `Team#term_for(date)` and `TeamTerm#members_display` produce the members line. `Hospitalization` and `Surgery` include `TeamAssignable` (`team_id`, `effective_team`, `team_members_display` for the date given by `team_display_date`); a surgery created for a hospitalization defaults to its team. Terms are edited under `/teams/:id/team_terms` (`TeamTermsController`, nested rows via `team_term_member_fields_controller.js` with the same `Date.now()` child_index rule as above); `copy_previous` builds the next rotation with main/sub swapped. `masters.teams` in the site config seeds teams (`SiteMasterSeeder`).
+
+### Development demo data
+
+`bin/rails dev:demo_data` (`DevDemoData` in `lib/dev_demo_data.rb`) fills a development database with fictional, idempotently created data for UI review; it raises `DevDemoData::NotDevelopmentError` anywhere else. Never run `db:reset`/`db:schema:load` against the development database to "refresh" it; the task is additive.
