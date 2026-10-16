@@ -1,0 +1,31 @@
+<%# locals: row (Reservation::DiagnosisRow), index (Integer, or NEW_RECORD for the template) %>
+<%= fields_for "reservation[diagnoses][#{index}]", row do |df| %>
+  <div class="rounded-box border border-base-200 bg-base-100 p-4 space-y-3" data-hospitalization-diagnosis-fields-target="item">
+    <%= df.hidden_field :_destroy, data: { hospitalization_diagnosis_fields_target: "destroyField" } %>
+    <% if row.persisted? %>
+      <%= df.hidden_field :id %>
+    <% end %>
+
+    <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem]">
+      <%= render "shared/picker_field",
+            form: df,
+            attribute: :diagnosis_id,
+            label: HospitalizationDiagnosis.human_attribute_name(:diagnosis_id),
+            selected_label: row.diagnosis&.name,
+            placeholder: t("diagnoses.picker.unselected"),
+            picker_path: picker_diagnoses_path,
+            picker_frame: "diagnosis_picker_frame",
+            choose_label: t("diagnoses.picker.choose_button"),
+            event_name: "diagnosis:picked" %>
+
+      <div class="app-field">
+        <%= df.label :laterality, PatientDiagnosis.human_attribute_name(:laterality), class: "app-field-label" %>
+        <%= df.select :laterality, PatientDiagnosis.laterality_form_options, {}, class: "select w-full focus:select-primary" %>
+      </div>
+    </div>
+
+    <div class="flex justify-end">
+      <button type="button" class="btn btn-ghost btn-sm" data-action="hospitalization-diagnosis-fields#remove"><%= t("hospitalizations.hospitalization_diagnosis_fields.remove_button") %></button>
+    </div>
+  </div>
+<% end %>

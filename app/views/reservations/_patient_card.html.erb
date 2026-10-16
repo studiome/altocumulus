@@ -1,0 +1,53 @@
+<%# locals: patient (nilable), recent_hospitalizations
+
+    The confirmation card shown once a patient is picked: the chart ID large
+    and in monospace so it can be read against the paper chart, plus the last
+    two hospitalizations. Refreshed by the reservation-form controller through
+    GET /reservations/patient_card when the picked patient changes. %>
+<%= turbo_frame_tag "reservation_patient_card", data: { reservation_form_target: "patientFrame" } do %>
+  <% if patient %>
+    <div class="rounded-box border border-primary/30 bg-primary/5 p-4 space-y-3" data-testid="patient-card">
+      <div class="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+        <span class="font-mono text-3xl font-bold tracking-wide"><%= patient.hospital_id %></span>
+        <span class="text-xl font-semibold"><%= patient.name %></span>
+        <% if patient.name_kana.present? %>
+          <span class="text-sm text-base-content/60"><%= patient.name_kana %></span>
+        <% end %>
+      </div>
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
+        <div>
+          <dt class="text-base-content/60"><%= t("reservations.patient_card.age_sex") %></dt>
+          <dd class="font-medium">
+            <%= patient.age.nil? ? "-" : t("reservations.patient_card.age_value", age: patient.age) %>
+            / <%= Patient.sex_options[patient.sex] || "-" %>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-base-content/60"><%= Patient.human_attribute_name(:date_of_birth) %></dt>
+          <dd class="font-medium"><%= patient.date_of_birth ? l(patient.date_of_birth, format: :default) : "-" %></dd>
+        </div>
+      </dl>
+      <div>
+        <h3 class="text-sm font-semibold"><%= t("reservations.patient_card.recent_heading") %></h3>
+        <% if recent_hospitalizations.any? %>
+          <ul class="text-sm space-y-1 mt-1">
+            <% recent_hospitalizations.each do |hospitalization| %>
+              <li>
+                <span class="font-mono"><%= hospitalization.effective_admission_date ? l(hospitalization.effective_admission_date, format: :default) : t("models.hospitalization.to_s.date_not_set") %></span>
+                &ndash;
+                <%= hospitalization.surgeries.flat_map(&:procedure_names).first(2).join(t("common.list_separator")).presence ||
+                    hospitalization.procedure_name.presence ||
+                    Hospitalization.purpose_options[hospitalization.purpose] %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="text-sm text-base-content/60"><%= t("reservations.patient_card.no_history") %></p>
+        <% end %>
+      </div>
+      <p class="text-sm font-semibold text-primary"><%= t("reservations.patient_card.confirm_hint") %></p>
+    </div>
+  <% else %>
+    <p class="app-helper" data-testid="patient-card-empty"><%= t("reservations.patient_card.pick_patient") %></p>
+  <% end %>
+<% end %>

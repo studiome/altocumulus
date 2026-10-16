@@ -1,0 +1,17 @@
+<%# locals: reservation, heading, url, http_method, submit_label %>
+<div class="max-w-6xl mx-auto w-full">
+  <div class="mb-3 flex items-center gap-3">
+    <%= link_to operations_calendar_path, class: "btn btn-circle btn-ghost", aria: { label: t("reservations.form.back_to_calendar") } do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+    <% end %>
+    <h1 class="app-page-title"><%= heading %></h1>
+  </div>
+
+  <%= render "form", reservation: reservation, url: url, http_method: http_method, submit_label: submit_label %>
+
+  <%= render "shared/picker_modal", dialog_id: "diagnosis_picker_modal", frame_id: "diagnosis_picker_frame",
+        title: t("diagnoses.picker.title"), description: t("diagnoses.picker.description") %>
+  <%= render "shared/picker_modal", dialog_id: "surgery_procedure_picker_modal", frame_id: "surgery_procedure_picker_frame",
+        title: t("surgery_procedures.picker.title"), description: t("surgery_procedures.picker.description") %>
+  <%= render "shared/patient_picker_modal" %>
+</div>

@@ -17,8 +17,10 @@
 
   <% day_cell = capture do %>
     <td class="ledger-day" rowspan="<%= [ surgeries.size, 1 ].max %>">
-      <%= link_to l(date, format: :default), new_hospitalization_path(scheduled_surgery_date: date, purpose: "surgery"), class: "ledger-primary app-inline-link" %>
+      <%= link_to l(date, format: :default), new_reservation_path(surgery_date: date, purpose: "surgery"), class: "ledger-primary app-inline-link" %>
       <span class="ledger-secondary"><%= l(date, format: :weekday) %></span>
+      <%= link_to t("reservations.links.new_reservation"), new_reservation_path(surgery_date: date, purpose: "surgery"),
+            class: "badge badge-sm badge-outline badge-primary print:hidden w-fit", aria: { label: t("reservations.links.new_reservation") + " " + l(date, format: :default) } %>
       <span class="ledger-secondary <%= "text-warning font-bold" if calendar.admission_warning?(date) %>">
         <%= t(".admissions_label") %> <span class="font-mono"><%= calendar.admission_count_for(date) %></span>
       </span>
@@ -50,8 +52,14 @@
     <% surgeries.each_with_index do |surgery, row| %>
       <tr class="oc-surgery row-hover <%= "ledger-row-urgent" if surgery.emergency? %>">
         <%= day_cell if row.zero? %>
-        <% calendar.columns.each do |column| %>
-          <td<% if column.css_class %> class="<%= column.css_class %>"<% end %>><%= ledger_cell(column.cell(surgery, context)) %></td>
+        <% calendar.columns.each_with_index do |column, index| %>
+          <td<% if column.css_class %> class="<%= column.css_class %>"<% end %>>
+            <%= ledger_cell(column.cell(surgery, context)) %>
+            <% if index.zero? && surgery.hospitalization && !surgery.hospitalization.deleted? %>
+              <%= link_to t("reservations.links.edit_reservation"), edit_reservation_path(surgery.hospitalization),
+                    class: "app-inline-link text-xs print:hidden block", aria: { label: t("reservations.links.edit_reservation") + " " + surgery.patient.name } %>
+            <% end %>
+          </td>
         <% end %>
       </tr>
     <% end %>

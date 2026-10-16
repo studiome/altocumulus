@@ -1,0 +1,24 @@
+<%# locals: reservation, hf (the hospitalization fields builder)
+
+    The examination / treatment fields, shown (and enabled) for any purpose
+    other than surgery. %>
+<% hospitalization = reservation.hospitalization %>
+<section class="app-panel <%= "hidden" if hospitalization.purpose == "surgery" %>" aria-labelledby="reservation-examination-heading"
+         data-purpose-fields-target="procedureSection">
+  <div class="card-body space-y-4">
+    <h2 id="reservation-examination-heading" class="text-lg font-bold text-primary"><%= t("reservations.form.examination_heading") %></h2>
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="app-field">
+        <%= hospitalization_label hf, :scheduled_procedure_date %>
+        <%= hf.date_field :scheduled_procedure_date, { class: "input w-full focus:input-primary",
+              data: { reservation_form_target: "procedureDate", action: "change->reservation-form#refreshTeam" } }.merge(reservation_aria(reservation, "hospitalization.scheduled_procedure_date")) %>
+        <%= reservation_field_error(reservation, "hospitalization.scheduled_procedure_date") %>
+      </div>
+      <div class="app-field">
+        <%= hospitalization_label hf, :procedure_name %>
+        <%= hf.text_field :procedure_name, { class: "input w-full focus:input-primary" }.merge(reservation_aria(reservation, "hospitalization.procedure_name")) %>
+        <%= reservation_field_error(reservation, "hospitalization.procedure_name") %>
+      </div>
+    </div>
+  </div>
+</section>

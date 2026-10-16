@@ -1,0 +1,158 @@
+<%# locals: reservation, hf (the hospitalization fields builder) %>
+<% hospitalization = reservation.hospitalization %>
+<section class="app-panel" aria-labelledby="reservation-hospitalization-heading">
+  <div class="card-body space-y-4">
+    <h2 id="reservation-hospitalization-heading" class="text-lg font-bold text-primary"><%= t("reservations.form.hospitalization_heading") %></h2>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="app-field">
+        <%= hf.label :purpose, Hospitalization.human_attribute_name(:purpose), class: "app-field-label app-field-label-required" %>
+        <%= hf.select :purpose, Hospitalization.purpose_form_options, {},
+              { class: "select w-full focus:select-primary",
+                data: { purpose_fields_target: "select", action: "purpose-fields#toggle" } }.deep_merge(reservation_aria(reservation, "hospitalization.purpose")) %>
+        <%= reservation_field_error(reservation, "hospitalization.purpose") %>
+      </div>
+
+      <div class="app-field <%= "hidden" unless hospitalization.purpose == "other" %>" data-purpose-fields-target="otherSection">
+        <%= hospitalization_label hf, :reason, t("hospitalizations.labels.reason_other_details") %>
+        <%= hf.text_area :reason, { class: "textarea w-full focus:textarea-primary", rows: 2 }.merge(reservation_aria(reservation, "hospitalization.reason")) %>
+        <%= reservation_field_error(reservation, "hospitalization.reason") %>
+      </div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="app-field">
+        <%= hf.label :scheduled_admission_date, t("hospitalizations.labels.scheduled_admission_date"), class: "app-field-label app-field-label-required" %>
+        <%= hf.date_field :scheduled_admission_date,
+              { class: "input w-full focus:input-primary",
+                data: { reservation_form_target: "admissionDate",
+                        action: "change->reservation-form#refreshAdmission change->reservation-form#refreshTeam" } }.deep_merge(reservation_aria(reservation, "hospitalization.scheduled_admission_date", "hospitalization.admission_date")) %>
+        <%= reservation_field_error(reservation, "hospitalization.scheduled_admission_date", "hospitalization.admission_date") %>
+        <%= render "admission_count", date: hospitalization.scheduled_admission_date,
+              count: (AdmissionCalendar.count_on(hospitalization.scheduled_admission_date) if hospitalization.scheduled_admission_date),
+              threshold: Rails.application.config.x.admission_warning_threshold %>
+      </div>
+
+      <div class="app-field">
+        <%= hf.label :planned_days, t("hospitalizations.form.planned_days_label"), class: "app-field-label" %>
+        <%= hf.number_field :planned_days, { class: "input w-full focus:input-primary", min: 1, step: 1,
+              placeholder: t("hospitalizations.form.planned_days_placeholder") }.merge(reservation_aria(reservation, "hospitalization.planned_days")) %>
+        <%= reservation_field_error(reservation, "hospitalization.planned_days") %>
+      </div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <fieldset class="app-field">
+        <legend class="app-field-label"><%= t("reservations.form.admission_type_legend") %></legend>
+        <div class="flex gap-6 pt-1">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <%= hf.radio_button :emergency_admission, false, class: "radio radio-primary" %>
+            <%= t("reservations.form.admission_scheduled") %>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <%= hf.radio_button :emergency_admission, true, class: "radio radio-primary" %>
+            <%= t("reservations.form.admission_emergency") %>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="app-field">
+        <legend class="app-field-label"><%= Hospitalization.human_attribute_name(:transfer_status) %></legend>
+        <div class="flex flex-wrap gap-x-6 gap-y-2 pt-1">
+          <% Hospitalization.transfer_status_options.each do |value, label| %>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <%= hf.radio_button :transfer_status, value, class: "radio radio-primary",
+                    data: { reservation_form_target: "transferRadio", action: "change->reservation-form#toggleTransfer" } %>
+              <%= label %>
+            </label>
+          <% end %>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="app-field">
+        <%= hf.label :source_department_id, Hospitalization.human_attribute_name(:source_department_id), class: "app-field-label" %>
+        <%= hf.collection_select :source_department_id, Department.choices_for(hospitalization.source_department_id), :id, :name,
+              { include_blank: true }, { class: "select w-full focus:select-primary", data: { reservation_form_target: "sourceDepartment" } }.merge(reservation_aria(reservation, "hospitalization.source_department")) %>
+        <%= reservation_field_error(reservation, "hospitalization.source_department", "hospitalization.source_department_id") %>
+        <p class="app-helper"><%= t("hospitalizations.form.source_department_helper") %></p>
+      </div>
+
+      <div class="app-field">
+        <%= hospitalization_label hf, :referred_from, t("hospitalizations.labels.referred_from") %>
+        <%= hf.text_field :referred_from, { class: "input w-full focus:input-primary" }.merge(reservation_aria(reservation, "hospitalization.referred_from")) %>
+        <%= reservation_field_error(reservation, "hospitalization.referred_from") %>
+      </div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="app-field">
+        <%= hospitalization_label hf, :reservation_doctor_id, t("hospitalizations.labels.reservation_doctor") %>
+        <%= hf.collection_select :reservation_doctor_id, user_choices_for(hospitalization.reservation_doctor_id), :id, :name,
+              { include_blank: true }, { class: "select w-full focus:select-primary" }.merge(reservation_aria(reservation, "hospitalization.reservation_doctor_id")) %>
+        <%= reservation_field_error(reservation, "hospitalization.reservation_doctor_id") %>
+        <% if hospitalization.reservation_doctor_id.blank? && hospitalization.reservation_doctor_legacy_name.present? %>
+          <p class="app-helper"><%= t("hospitalizations.form.legacy_reservation_doctor_helper", name: hospitalization.reservation_doctor_legacy_name) %></p>
+        <% end %>
+        <p class="text-sm mt-1" data-testid="entered-by">
+          <span class="text-base-content/60"><%= t("reservations.form.entered_by_label") %></span>
+          <span class="font-medium"><%= (hospitalization.created_by || current_user).name %></span>
+        </p>
+      </div>
+
+      <div class="app-field">
+        <%= hospitalization_label hf, :attending_doctor, t("reservations.form.additional_attending_label") %>
+        <%= hf.text_field :attending_doctor, { class: "input w-full focus:input-primary" }.merge(reservation_aria(reservation, "hospitalization.attending_doctor")) %>
+        <%= reservation_field_error(reservation, "hospitalization.attending_doctor") %>
+      </div>
+    </div>
+
+    <% if SiteConfig.current.teams_enabled? %>
+      <div class="app-field">
+        <%= hospitalization_label hf, :team_id, Hospitalization.human_attribute_name(:team_id) %>
+        <%= hf.collection_select :team_id, Team.choices_for(hospitalization.team_id), :id, :name, { include_blank: true },
+              { class: "select w-full focus:select-primary",
+                data: { reservation_form_target: "team", action: "change->reservation-form#refreshTeam" } }.merge(reservation_aria(reservation, "hospitalization.team_id")) %>
+        <%= reservation_field_error(reservation, "hospitalization.team_id") %>
+        <%= render "team_members", team: hospitalization.team, term: hospitalization.team&.term_for(reservation.team_preview_date), date: reservation.team_preview_date %>
+        <p class="app-helper"><%= t("hospitalizations.form.team_helper") %></p>
+      </div>
+    <% end %>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="app-field">
+        <%= hf.label :adl, t("hospitalizations.labels.adl"), class: "app-field-label" %>
+        <%= hf.text_field :adl, class: "input w-full focus:input-primary" %>
+      </div>
+      <div class="app-field">
+        <%= hf.label :room_preference, t("hospitalizations.labels.preferred_room"), class: "app-field-label" %>
+        <%= hf.text_field :room_preference, class: "input w-full focus:input-primary", placeholder: t("hospitalizations.form.room_preference_placeholder") %>
+      </div>
+    </div>
+
+    <div class="space-y-3" data-controller="hospitalization-diagnosis-fields" data-hospitalization-diagnosis-fields-max-items-value="10">
+      <div>
+        <span class="app-field-label app-field-label-required"><%= t("hospitalizations.labels.diagnoses_at_admission") %></span>
+        <p class="app-helper"><%= t("reservations.form.diagnoses_helper") %></p>
+      </div>
+
+      <div class="space-y-3" data-hospitalization-diagnosis-fields-target="list">
+        <% reservation.diagnosis_rows_for_form.each_with_index do |row, index| %>
+          <%= render "diagnosis_row", row: row, index: index %>
+        <% end %>
+      </div>
+
+      <template data-hospitalization-diagnosis-fields-target="template">
+        <%= render "diagnosis_row", row: Reservation::DiagnosisRow.new(laterality: "none"), index: "NEW_RECORD" %>
+      </template>
+
+      <%= reservation_field_error(reservation, "hospitalization.hospitalization_diagnoses") %>
+
+      <div class="flex items-center justify-between gap-3">
+        <span class="app-helper"><%= t("hospitalizations.form.diagnosis_row_helper") %></span>
+        <button type="button" class="btn btn-outline btn-sm" data-hospitalization-diagnosis-fields-target="addButton" data-action="hospitalization-diagnosis-fields#add"><%= t("hospitalizations.form.add_diagnosis_button") %></button>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,13 @@
+<%# locals: reservation, hf (the hospitalization fields builder) %>
+<section class="app-panel" aria-labelledby="reservation-patient-heading">
+  <div class="card-body space-y-4">
+    <h2 id="reservation-patient-heading" class="text-lg font-bold text-primary"><%= t("reservations.form.patient_heading") %></h2>
+
+    <%= render "shared/patient_picker_field", form: hf, patient: reservation.hospitalization.patient,
+          label: Hospitalization.human_attribute_name(:patient_id), required: true,
+          input_data: { action: "change->reservation-form#refreshPatient", reservation_form_target: "patientInput" } %>
+    <%= reservation_field_error(reservation, "hospitalization.patient", "hospitalization.patient_id") %>
+
+    <%= render "patient_card", patient: reservation.hospitalization.patient, recent_hospitalizations: @recent_hospitalizations || [] %>
+  </div>
+</section>

@@ -1,0 +1,27 @@
+<%# locals: reservation %>
+<aside class="space-y-4 xl:sticky xl:top-4" aria-label="<%= t("reservations.side_panel.label") %>">
+  <section class="app-panel" aria-labelledby="reservation-calendar-heading">
+    <div class="card-body p-4">
+      <h2 id="reservation-calendar-heading" class="text-base font-bold text-primary"><%= t("reservations.side_panel.calendar_heading") %></h2>
+      <%= render "admission_calendar", calendar: @admission_calendar, selected: reservation.hospitalization.effective_admission_date %>
+    </div>
+  </section>
+
+  <section class="app-panel" aria-labelledby="reservation-announcements-heading">
+    <div class="card-body p-4 space-y-2">
+      <h2 id="reservation-announcements-heading" class="text-base font-bold text-primary"><%= t("reservations.side_panel.announcements_heading") %></h2>
+      <% if @announcements.any? %>
+        <ul class="space-y-3">
+          <% @announcements.each do |announcement| %>
+            <li>
+              <p class="font-semibold text-sm"><%= announcement.title %></p>
+              <p class="text-sm text-base-content/70 whitespace-pre-line"><%= announcement.body %></p>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="app-helper"><%= t("reservations.side_panel.no_announcements") %></p>
+      <% end %>
+    </div>
+  </section>
+</aside>

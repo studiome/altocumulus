@@ -53,6 +53,18 @@ Rails.application.routes.draw do
       get :deleted
     end
   end
+  # The unified reservation (入約) form: a hospitalization and, for the purpose
+  # surgery, its surgery on one screen. `:id` is the hospitalization's id. The
+  # collection routes feed the form's live pieces (turbo-frames).
+  resources :reservations, only: %i[ new create edit update ] do
+    collection do
+      get :patient_card
+      get :admission_calendar
+      get :admission_count
+      get :slot_summary
+      get :team_members
+    end
+  end
   resources :case_databases do
     resources :fields, controller: "case_database_fields", only: %i[ new create edit update destroy ]
     resources :entries, controller: "case_database_entries", only: %i[ new create edit update destroy ]

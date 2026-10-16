@@ -1,0 +1,7 @@
+<%# locals: team (nilable), term (nilable), date (nilable) %>
+<%= turbo_frame_tag "reservation_team_members", data: { reservation_form_target: "teamFrame" }, aria: { live: "polite" } do %>
+  <p class="text-sm text-base-content/70">
+    <% if date %><span class="font-semibold"><%= l(date, format: :with_weekday) %></span>:<% end %>
+    <%= reservation_team_members_text(team, term) %>
+  </p>
+<% end %>

@@ -222,6 +222,9 @@
       <% end %>
 
       <div class="card-actions justify-end mt-4 pt-6 border-t border-base-200 print:hidden">
+        <% unless @hospitalization.deleted? %>
+          <%= link_to t("reservations.links.edit_in_reservation_form"), edit_reservation_path(@hospitalization), class: "btn btn-primary" %>
+        <% end %>
         <%= link_to t(".edit_button"), edit_hospitalization_path(@hospitalization), class: "btn btn-secondary" %>
         <%= button_to t(".delete_button"), @hospitalization, method: :delete, class: "btn btn-outline btn-error", data: { turbo_confirm: t("common.confirm_delete") } %>
       </div>

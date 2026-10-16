@@ -1,0 +1,13 @@
+<%# locals: date (nilable), count (nilable), threshold %>
+<%= turbo_frame_tag "reservation_admission_count", data: { reservation_form_target: "admissionCountFrame" }, aria: { live: "polite" } do %>
+  <% if date.nil? %>
+    <p class="app-helper"><%= t("reservations.admission_count.pick_date") %></p>
+  <% else %>
+    <p class="text-sm <%= count > threshold ? "text-warning font-bold" : "text-base-content/70" %>">
+      <%= t("reservations.admission_count.summary", count: count, threshold: threshold) %>
+      <% if count > threshold %>
+        <span class="badge badge-warning badge-sm ml-1"><%= t("operations_calendar.day.congestion_badge") %></span>
+      <% end %>
+    </p>
+  <% end %>
+<% end %>

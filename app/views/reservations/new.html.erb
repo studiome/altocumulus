@@ -1,0 +1,4 @@
+<% content_for :title, t(".title") %>
+
+<%= render "page", reservation: @reservation, heading: t(".title"),
+      url: reservations_path, http_method: :post, submit_label: t(".submit") %>

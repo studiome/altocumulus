@@ -1,0 +1,64 @@
+<%# locals: reservation, url, http_method, submit_label
+
+    One screen for the hospitalization and, for the purpose "surgery", its
+    surgery. The main column is the form; the side panel (admission counts of
+    the month, announcements) sits beside it on wide screens. Sections that do
+    not apply to the chosen purpose are hidden and their inputs disabled by
+    the purpose-fields controller, so they are not submitted. %>
+<% hospitalization = reservation.hospitalization %>
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] items-start"
+     data-controller="reservation-form purpose-fields"
+     data-purpose-fields-disable-hidden-value="true"
+     data-reservation-form-patient-card-url-value="<%= patient_card_reservations_path %>"
+     data-reservation-form-admission-count-url-value="<%= admission_count_reservations_path %>"
+     data-reservation-form-admission-calendar-url-value="<%= admission_calendar_reservations_path %>"
+     data-reservation-form-slot-summary-url-value="<%= slot_summary_reservations_path %>"
+     data-reservation-form-team-members-url-value="<%= team_members_reservations_path %>">
+  <div class="min-w-0">
+    <%= form_with model: reservation, scope: :reservation, url: url, method: http_method, class: "app-form space-y-6" do |form| %>
+      <% if reservation.errors.any? %>
+        <div role="alert" class="alert alert-error">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <div>
+            <h2 class="font-bold"><%= t("reservations.form.errors_heading", count: reservation.errors.count) %></h2>
+            <ul class="list-disc ml-6">
+              <% reservation.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      <% end %>
+
+      <p class="app-helper"><%= t("reservations.form.required_legend") %></p>
+
+      <%= form.fields_for :hospitalization, hospitalization do |hf| %>
+        <%= render "patient_section", reservation: reservation, hf: hf %>
+        <%= render "hospitalization_section", reservation: reservation, hf: hf %>
+      <% end %>
+
+      <%= render "surgery_section", reservation: reservation, form: form %>
+
+      <%= form.fields_for :hospitalization, hospitalization do |hf| %>
+        <%= render "examination_section", reservation: reservation, hf: hf %>
+
+        <section class="app-panel" aria-labelledby="reservation-comment-heading">
+          <div class="card-body space-y-4">
+            <h2 id="reservation-comment-heading" class="text-lg font-bold text-primary"><%= t("reservations.form.comment_heading") %></h2>
+            <div class="app-field">
+              <%= hf.label :clinical_comment, t("hospitalizations.labels.clinical_comment"), class: "app-field-label" %>
+              <%= hf.text_area :clinical_comment, class: "textarea w-full focus:textarea-primary", rows: 3 %>
+            </div>
+          </div>
+        </section>
+      <% end %>
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end pt-2">
+        <%= link_to t("common.cancel"), operations_calendar_path, class: "btn btn-ghost" %>
+        <%= form.submit submit_label, class: "btn btn-primary sm:min-w-48" %>
+      </div>
+    <% end %>
+  </div>
+
+  <%= render "side_panel", reservation: reservation %>
+</div>

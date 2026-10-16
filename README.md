@@ -40,11 +40,12 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Feature | Screen | Description |
 | --- | --- | --- |
 | Login | `/login` | Login id (email or username, per `ACCOUNT_IDENTIFIER`) + password authentication. Sessions expire automatically after a period of inactivity. Published announcements are shown on this page, and it is displayed in Japanese for anonymous visitors |
-| Operations calendar (home) | `/operations_calendar` | Day-grouped ledger table spanning 50 days by default (start date and day count adjustable). Per day: surgeries by slot with the referral source, admission counts, congestion warnings, and holidays / per-day comments. The date heading links to a new hospitalization or surgery pre-filled with that day |
+| Operations calendar (home) | `/operations_calendar` | Day-grouped ledger table spanning 50 days by default (start date and day count adjustable). Per day: surgeries by slot with the referral source, admission counts, congestion warnings, and holidays / per-day comments. The date heading and a small "+入約" link open the reservation form pre-filled with that day; each surgery row of a hospitalization has an edit link to the same form |
 | Patient ledger | `/patients` | Patient master data, with keyword search by name or hospital ID and pagination |
 | Patient diagnoses | `/patients/:id/patient_diagnoses` | Per-patient diagnosis history referencing the diagnosis master, holding the diagnosis date and laterality |
 | Surgery records | `/surgeries` | Surgery date (may be "undecided"), procedures (up to 5), anesthesia method, duration, elective/emergency type, slot category (regular / joint / backup / off-slot), operator/assistant/operation order. Linked to patient diagnoses. Searchable by operator |
 | Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / chemoradiotherapy / other, the last requiring a reason), referral source, administrator confirmation, soft delete/restore, and rebooking (copy) |
+| Reservation form (入約) | `/reservations/new`, `/reservations/:hospitalization_id/edit` | One screen that creates or edits a hospitalization and, for the purpose surgery, its surgery together (see below). The calendar's booking flow goes through it; the separate hospitalization and surgery forms remain for administration and detail edits |
 | Surgery slot schedule | `/surgery_schedule` | Weekly calendar showing the surgeries and used time per slot, warning about slot overruns, unassigned surgeries, and holidays. The same week can be printed as a landscape A4 PDF (`/surgery_schedule/pdf?start_date=YYYY-MM-DD`, any start date) in black and white, with operator/assistant, referral source, holiday names, and day notes |
 | Dashboard | `/dashboard` | Statistics filterable by year (patient counts, inpatients, monthly counts, average length of stay, procedure ranking) |
 | Cross-entity search | `/search` | Search patients, hospitalizations, and surgeries with a single keyword |
@@ -64,6 +65,22 @@ devices, teams and team terms can be viewed by every signed-in user, but creatin
 them (and the "new" buttons) require the `admin` role; others are redirected with a "not authorized"
 notice. The one exception is data entry: any signed-in user may register a *new* diagnosis or surgery
 procedure from inside a picker modal (a turbo-frame request) while booking a hospitalization or surgery.
+
+**Reservation form.** `Reservation` (`app/models/reservation.rb`) is a form object around a
+`Hospitalization` and an optional `Surgery` (present only for the purpose "surgery"), saved in one
+transaction with the surgery linked to the hospitalization and the patient. Validation is the models' own
+plus the site's required fields (including the purpose-conditional ones); errors of both records are merged
+under `hospitalization.<attr>` / `surgery.<attr>` keys so each message shows next to its field, with a
+summary on top. Diagnosis rows (diagnosis + laterality) become the hospitalization's diagnoses and, for a
+surgery, links to the patient's diagnosis records (an existing one with the same diagnosis and laterality is
+reused, otherwise one is created, dated by the submission date); related diagnoses added on the surgery's
+own screen are left alone. Procedure rows (max 5) become the surgery's procedure selections. A surgery's
+team defaults from the hospitalization's. On edit, switching the purpose away from surgery is refused while
+the surgery exists (delete it from its own screen first). After saving, a dated surgery goes back to the
+operations calendar positioned and highlighted on its day; other purposes go to the hospitalization page.
+The screen has a patient confirmation card (chart ID, name, age/sex, last two hospitalizations), live
+admission counts / slot summary / team member previews, and a side panel with a month calendar of scheduled
+admissions (days above `ADMISSION_WARNING_THRESHOLD` are marked) and the published announcements.
 
 **Authentication, user management, role separation (user / data manager / admin), access logging, and
 idle timeout are implemented.** Every application screen requires a logged-in user; the

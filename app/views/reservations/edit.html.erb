@@ -1,0 +1,4 @@
+<% content_for :title, t(".title") %>
+
+<%= render "page", reservation: @reservation, heading: t(".title"),
+      url: reservation_path(@reservation.hospitalization), http_method: :patch, submit_label: t(".submit") %>

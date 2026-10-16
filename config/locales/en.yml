@@ -205,6 +205,16 @@ en:
               missing_headers: "must have a header row containing %{headers}"
               too_many_rows: "must not contain more than %{count} rows"
               too_big: "must not be larger than %{count} MB"
+        reservation:
+          attributes:
+            base:
+              not_saved: "The reservation could not be saved"
+            hospitalization:
+              purpose:
+                cannot_leave_surgery: "cannot be changed away from surgery while the reservation has a surgery. Delete the surgery from its own screen first"
+              hospitalization_diagnoses:
+                cannot_swap_between_rows: "cannot swap diagnoses between existing rows in one save; change one row to a different diagnosis first"
+                invalid: "has an invalid laterality"
 
   activerecord:
     # Only the three site-vocabulary masters are listed: the generic master
@@ -1693,3 +1703,69 @@ en:
     no_hospitalization: "No hospitalization"
     performed_by: "Performed by %{department}"
     with_detail: "%{label} (%{detail})"
+
+  # The unified reservation (入約) form: a hospitalization and, for the purpose
+  # surgery, its surgery on one screen. Partials use full keys (they are also
+  # rendered by the live-frame endpoints), the controller uses lazy keys.
+  reservations:
+    new:
+      title: "New Reservation"
+      submit: "Register Reservation"
+    edit:
+      title: "Edit Reservation"
+      submit: "Save Reservation"
+    create:
+      success_notice: "Reservation was successfully registered."
+    update:
+      success_notice: "Reservation was successfully updated."
+    form:
+      back_to_calendar: "Back to the operations calendar"
+      errors_heading:
+        one: "%{count} error prohibited this reservation from being saved:"
+        other: "%{count} errors prohibited this reservation from being saved:"
+      required_legend: "* Required"
+      patient_heading: "Patient"
+      hospitalization_heading: "Admission"
+      surgery_heading: "Surgery"
+      examination_heading: "Examination / Treatment"
+      comment_heading: "Comments"
+      admission_type_legend: "Admission type"
+      admission_scheduled: "Scheduled admission"
+      admission_emergency: "Emergency admission"
+      entered_by_label: "Entered by:"
+      additional_attending_label: "Additional attending doctor"
+      diagnoses_helper: "Add one or more diagnoses. For a surgery they are also recorded on the patient's own diagnosis list."
+      own_department: "Own department"
+      no_device: "Not used"
+      details_summary: "Details (optional)"
+    patient_card:
+      pick_patient: "Pick a patient to confirm the chart."
+      age_sex: "Age / Sex"
+      age_value: "%{age} y"
+      recent_heading: "Recent hospitalizations"
+      no_history: "No earlier hospitalizations."
+      confirm_hint: "Check that the ID and name match the paper chart."
+    admission_count:
+      pick_date: "Enter a date to see how many admissions are already scheduled."
+      summary: "Admissions already scheduled that day: %{count} (warning above %{threshold})"
+    slot_summary:
+      pick_date: "Enter a date to see that day's elective slots."
+    team_members:
+      pick_team: "Pick a team to see its members."
+      no_term: "No team term covers this date."
+      no_members: "The term covering this date has no members."
+    calendar:
+      previous_month: "Previous month"
+      next_month: "Next month"
+      month_title: "%{month}/%{year}"
+      day_title: "%{date}: %{count} admissions"
+      legend: "Numbers are scheduled admissions per day; highlighted days exceed %{threshold}."
+    side_panel:
+      label: "Reservation guide"
+      calendar_heading: "Scheduled admissions"
+      announcements_heading: "Reservation requests"
+      no_announcements: "No announcements."
+    links:
+      new_reservation: "+ Reserve"
+      edit_reservation: "Edit"
+      edit_in_reservation_form: "Edit in the reservation form"

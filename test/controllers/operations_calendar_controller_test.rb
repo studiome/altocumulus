@@ -52,10 +52,31 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Winter schedule notice/, @response.body)
   end
 
-  test "each day links to a new surgery hospitalization pre-filled with that scheduled surgery date" do
+  test "each day links to a new reservation pre-filled with that surgery date, from the date and a small add link" do
     get operations_calendar_url, params: { start: "2026-01-01", days: 1 }
     assert_response :success
-    assert_select "a[href='#{new_hospitalization_path(scheduled_surgery_date: '2026-01-01', purpose: 'surgery')}']"
+    assert_select "a[href=?]", new_reservation_path(surgery_date: "2026-01-01", purpose: "surgery"), count: 2
+    assert_select "a[href=?]", new_reservation_path(surgery_date: "2026-01-01", purpose: "surgery"), text: I18n.t("reservations.links.new_reservation")
+  end
+
+  test "a surgery that belongs to a hospitalization gets an edit link to the reservation form" do
+    hospitalization = hospitalizations(:one)
+    surgeries(:three).update_columns(hospitalization_id: hospitalization.id, patient_id: hospitalization.patient_id)
+
+    get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
+
+    assert_select "tr.oc-surgery a[href=?]", edit_reservation_path(hospitalization), count: 1
+    assert_select "tr.oc-surgery a[href=?]", edit_reservation_path(hospitalizations(:two)), count: 0
+  end
+
+  test "no edit link for a surgery of a deleted hospitalization or one without a hospitalization" do
+    hospitalization = hospitalizations(:one)
+    surgeries(:three).update_columns(hospitalization_id: hospitalization.id, patient_id: hospitalization.patient_id)
+    hospitalization.discard!
+
+    get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
+
+    assert_select "tr.oc-surgery a[href$='/edit']", count: 0
   end
 
   test "renders the days as one ledger table with a tbody per day" do
@@ -71,7 +92,7 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
 
     assert_select "tbody.oc-day tr.oc-surgery", 4 # four elective fixtures on 2026-03-03
     assert_select "tbody.oc-day td.ledger-day[rowspan='4']" do
-      assert_select "a[href=?]", new_hospitalization_path(scheduled_surgery_date: "2026-03-03", purpose: "surgery")
+      assert_select "a[href=?]", new_reservation_path(surgery_date: "2026-03-03", purpose: "surgery")
     end
     assert_select "tbody.oc-day td.ledger-day", 1
   end

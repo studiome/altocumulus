@@ -162,6 +162,16 @@ ja:
               missing_headers: "には%{headers}を含むヘッダー行が必要です"
               too_many_rows: "の行数が上限(%{count}行)を超えています"
               too_big: "のサイズが上限(%{count}MB)を超えています"
+        reservation:
+          attributes:
+            base:
+              not_saved: "入約を保存できませんでした"
+            hospitalization:
+              purpose:
+                cannot_leave_surgery: "は、手術が登録されている間は手術以外に変更できません。先に手術の画面から手術を削除してください"
+              hospitalization_diagnoses:
+                cannot_swap_between_rows: "は既存の行同士で診断名を入れ替えることができません。まず一方の行を別の診断名に変更してください"
+                invalid: "の左右の指定が正しくありません"
 
   activerecord:
     models:
@@ -1593,3 +1603,66 @@ ja:
     no_hospitalization: "入院情報なし"
     performed_by: "実施: %{department}"
     with_detail: "%{label}(%{detail})"
+
+  # 入約フォーム: 入院と、目的が手術の場合はその手術を1画面で扱う。
+  reservations:
+    new:
+      title: "入約登録"
+      submit: "入約を登録"
+    edit:
+      title: "入約編集"
+      submit: "入約を保存"
+    create:
+      success_notice: "入約を登録しました。"
+    update:
+      success_notice: "入約を更新しました。"
+    form:
+      back_to_calendar: "手術カレンダーに戻る"
+      errors_heading:
+        other: "入約を保存できませんでした(%{count}件のエラー):"
+      required_legend: "* は必須項目です"
+      patient_heading: "患者"
+      hospitalization_heading: "入院"
+      surgery_heading: "手術"
+      examination_heading: "検査・処置"
+      comment_heading: "コメント"
+      admission_type_legend: "入院の種別"
+      admission_scheduled: "予定入院"
+      admission_emergency: "緊急入院"
+      entered_by_label: "入力者:"
+      additional_attending_label: "追加の担当医"
+      diagnoses_helper: "診断名を1件以上追加してください。手術の場合は患者の診断一覧にも登録されます。"
+      own_department: "自科"
+      no_device: "使用しない"
+      details_summary: "詳細(任意)"
+    patient_card:
+      pick_patient: "患者を選ぶとカルテとの照合用の情報が表示されます。"
+      age_sex: "年齢・性別"
+      age_value: "%{age}歳"
+      recent_heading: "直近の入院"
+      no_history: "過去の入院はありません。"
+      confirm_hint: "IDと氏名がカルテと一致しているか確認してください"
+    admission_count:
+      pick_date: "日付を入力すると、その日の入院予定数が表示されます。"
+      summary: "その日の入院予定: %{count}件(警告しきい値 %{threshold}件超)"
+    slot_summary:
+      pick_date: "日付を入力すると、その日の手術枠が表示されます。"
+    team_members:
+      pick_team: "チームを選ぶとメンバーが表示されます。"
+      no_term: "この日付をカバーするチームの任期がありません。"
+      no_members: "この日付の任期にはメンバーが登録されていません。"
+    calendar:
+      previous_month: "前の月"
+      next_month: "次の月"
+      month_title: "%{year}年%{month}月"
+      day_title: "%{date}: 入院予定 %{count}件"
+      legend: "数字は日ごとの入院予定数です。%{threshold}件を超える日は色付きで表示します。"
+    side_panel:
+      label: "入約の案内"
+      calendar_heading: "入院予定数"
+      announcements_heading: "入約のお願い"
+      no_announcements: "お知らせはありません。"
+    links:
+      new_reservation: "+入約"
+      edit_reservation: "編集"
+      edit_in_reservation_form: "入約フォームで編集"

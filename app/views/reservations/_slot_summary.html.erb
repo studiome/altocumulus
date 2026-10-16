@@ -1,0 +1,20 @@
+<%# locals: date (nilable), usage (nilable) %>
+<%= turbo_frame_tag "reservation_slot_summary", data: { reservation_form_target: "slotFrame" }, aria: { live: "polite" } do %>
+  <% if date.nil? %>
+    <p class="app-helper"><%= t("reservations.slot_summary.pick_date") %></p>
+  <% else %>
+    <p class="text-sm text-base-content/70">
+      <span class="font-semibold"><%= l(date, format: :with_weekday) %></span>:
+      <% if usage.configured? %>
+        <%= reservation_slot_summary(usage) %>
+        <% if usage.slot_override? %>
+          <span class="badge badge-info badge-sm"><%= t("operations_calendar.day.slot_override_label", slots: usage.slot_count_display) %></span>
+        <% end %>
+      <% elsif usage.holiday? %>
+        <%= t("operations_calendar.day.no_slots_holiday") %>
+      <% else %>
+        <%= t("operations_calendar.day.no_slots_configured") %>
+      <% end %>
+    </p>
+  <% end %>
+<% end %>

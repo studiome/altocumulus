@@ -1,0 +1,194 @@
+<%# locals: reservation, form (the reservation form builder)
+
+    Rendered for every purpose, hidden (and its inputs disabled) unless the
+    purpose is surgery, so choosing "surgery" can reveal it without a reload. %>
+<% surgery = reservation.surgery_for_form %>
+<% hidden = !reservation.surgery_applicable? %>
+<% category = surgery.slot_category %>
+<% details_error_keys = %w[surgery.operator_name surgery.assistant_name surgery.start_time surgery.slot_number surgery.operation_order] %>
+<section class="app-panel <%= "hidden" if hidden %>" aria-labelledby="reservation-surgery-heading"
+         data-purpose-fields-target="surgerySection"
+         data-controller="reservation-surgery"
+         data-reservation-surgery-slot-category-value="<%= category %>">
+  <div class="card-body space-y-4">
+    <h2 id="reservation-surgery-heading" class="text-lg font-bold text-primary"><%= t("reservations.form.surgery_heading") %></h2>
+
+    <%= form.fields_for :surgery, surgery do |sf| %>
+      <fieldset class="app-field">
+        <legend class="app-field-label app-field-label-required"><%= t("surgeries.labels.surgery_date") %></legend>
+        <%= sf.label :surgery_date, t("surgeries.labels.surgery_date"), class: "sr-only" %>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1">
+          <% Surgery.surgery_date_status_options.each do |value, label| %>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <%= sf.radio_button :surgery_date_status, value, checked: surgery.surgery_date_status == value, class: "radio radio-primary" %>
+              <%= label %>
+            </label>
+          <% end %>
+        </div>
+        <%= sf.date_field :surgery_date,
+              { class: "input w-full focus:input-primary mt-2",
+                data: { reservation_form_target: "surgeryDate",
+                        action: "change->reservation-form#refreshSlot change->reservation-form#refreshTeam" } }.deep_merge(reservation_aria(reservation, "surgery.surgery_date", "surgery.surgery_date_status")) %>
+        <%= reservation_field_error(reservation, "surgery.surgery_date", "surgery.surgery_date_status") %>
+        <%= render "slot_summary", date: surgery.surgery_date,
+              usage: (ElectiveSlotUsage.for_dates([ surgery.surgery_date ])[surgery.surgery_date] if surgery.surgery_date) %>
+        <p class="app-helper"><%= t("surgeries.form.surgery_date_helper") %></p>
+      </fieldset>
+
+      <fieldset class="app-field">
+        <legend class="app-field-label"><%= t("surgeries.form.scheduling_type_label") %></legend>
+        <div class="flex gap-6 pt-1">
+          <% Surgery.scheduling_type_options.each do |value, label| %>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <%= sf.radio_button :scheduling_type, value, class: "radio radio-primary",
+                    data: { reservation_surgery_target: "schedulingTypeRadio", action: "change->reservation-surgery#toggle" } %>
+              <%= label %>
+            </label>
+          <% end %>
+        </div>
+      </fieldset>
+
+      <fieldset class="app-field">
+        <legend class="app-field-label"><%= t("surgeries.form.slot_category_label") %></legend>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <% Surgery.slot_category_options.each do |value, label| %>
+            <label class="flex items-center gap-2 cursor-pointer rounded-xl border border-base-200 px-3 py-2.5 has-checked:border-primary has-checked:bg-primary/5">
+              <%= sf.radio_button :slot_category, value, checked: surgery.slot_category == value, class: "radio radio-primary radio-sm shrink-0",
+                    data: { reservation_surgery_target: "categoryRadio", action: "change->reservation-surgery#toggle" } %>
+              <span class="text-sm font-medium"><%= label %></span>
+            </label>
+          <% end %>
+        </div>
+        <p class="app-helper"><%= t("surgeries.form.slot_category_helper") %></p>
+      </fieldset>
+
+      <div class="app-field <%= "hidden" unless %w[simultaneous backup].include?(category) %>" data-reservation-surgery-target="partnerSection">
+        <%= sf.label :department_id, t("surgeries.form.target_department_label"), class: "app-field-label" %>
+        <%= sf.collection_select :department_id, Department.choices_for(surgery.department_id), :id, :name, { include_blank: true },
+              { class: "select w-full focus:select-primary" }.merge(reservation_aria(reservation, "surgery.department")) %>
+        <%= reservation_field_error(reservation, "surgery.department", "surgery.department_id") %>
+        <p class="app-helper"><%= t("surgeries.form.target_department_helper") %></p>
+      </div>
+
+      <fieldset class="app-field <%= "hidden" unless category == "backup" %>" data-reservation-surgery-target="interventionSection">
+        <legend class="app-field-label app-field-label-required"><%= t("surgeries.form.backup_intervention_label") %></legend>
+        <div class="flex gap-6 pt-1">
+          <% Surgery.backup_intervention_options.each do |value, label| %>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <%= sf.radio_button :backup_intervention, value, class: "radio radio-primary" %>
+              <%= label %>
+            </label>
+          <% end %>
+        </div>
+        <%= reservation_field_error(reservation, "surgery.backup_intervention") %>
+        <p class="app-helper"><%= t("surgeries.form.backup_intervention_helper") %></p>
+      </fieldset>
+
+      <div class="grid gap-4 md:grid-cols-2 <%= "hidden" if %w[simultaneous backup].include?(category) %>" data-reservation-surgery-target="locationSection">
+        <div class="app-field">
+          <%= sf.label :surgery_location_id, t("surgeries.form.location_label"), class: "app-field-label" %>
+          <%= sf.select :surgery_location_id, surgery_location_options(surgery.surgery_location_id), { include_blank: true },
+                { class: "select w-full focus:select-primary",
+                  data: { reservation_surgery_target: "locationSelect", action: "change->reservation-surgery#toggle" } } %>
+          <p class="app-helper"><%= t("surgeries.form.location_helper") %></p>
+        </div>
+
+        <div class="app-field <%= "hidden" unless surgery.surgery_location&.asks_performing_department? %>" data-reservation-surgery-target="performingSection">
+          <%= sf.label :performing_department_id, t("surgeries.form.performing_department_label"), class: "app-field-label" %>
+          <%= sf.collection_select :performing_department_id, Department.choices_for(surgery.performing_department_id), :id, :name,
+                { include_blank: t("reservations.form.own_department") }, { class: "select w-full focus:select-primary" } %>
+          <p class="app-helper"><%= t("surgeries.form.performing_department_helper") %></p>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="space-y-3" data-controller="surgery-procedure-fields" data-surgery-procedure-fields-max-items-value="5">
+      <div>
+        <span class="app-field-label app-field-label-required"><%= t("surgeries.labels.procedures") %></span>
+        <p class="app-helper"><%= t("surgeries.form.procedures_helper") %></p>
+      </div>
+
+      <div class="space-y-3" data-surgery-procedure-fields-target="list">
+        <% reservation.procedure_rows_for_form.each_with_index do |row, index| %>
+          <%= render "procedure_row", row: row, index: index %>
+        <% end %>
+      </div>
+
+      <template data-surgery-procedure-fields-target="template">
+        <%= render "procedure_row", row: Reservation::ProcedureRow.new(laterality: "none"), index: "NEW_RECORD" %>
+      </template>
+
+      <%= reservation_field_error(reservation, "surgery.surgery_procedure_selections") %>
+
+      <div class="flex items-center justify-between gap-3">
+        <span class="app-helper"><%= t("surgeries.form.procedure_row_helper") %></span>
+        <button type="button" class="btn btn-outline btn-sm" data-surgery-procedure-fields-target="addButton" data-action="surgery-procedure-fields#add"><%= t("surgeries.form.add_procedure_button") %></button>
+      </div>
+    </div>
+
+    <%= form.fields_for :surgery, surgery do |sf| %>
+      <fieldset class="app-field">
+        <legend class="app-field-label"><%= t("surgeries.form.surgical_device_label") %></legend>
+        <div class="flex flex-wrap gap-x-6 gap-y-2 pt-1">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <%= sf.radio_button :surgical_device_id, "", checked: surgery.surgical_device_id.blank?, class: "radio radio-primary" %>
+            <%= t("reservations.form.no_device") %>
+          </label>
+          <% SurgicalDevice.choices_for(surgery.surgical_device_id).each do |device| %>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <%= sf.radio_button :surgical_device_id, device.id, checked: surgery.surgical_device_id == device.id, class: "radio radio-primary" %>
+              <%= device.name %>
+            </label>
+          <% end %>
+        </div>
+      </fieldset>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="app-field">
+          <%= surgery_label sf, :duration_hours, t("surgeries.form.duration_label") %>
+          <%= sf.number_field :duration_hours, { class: "input w-full focus:input-primary", min: 0, step: :any,
+                placeholder: t("surgeries.form.duration_placeholder") }.merge(reservation_aria(reservation, "surgery.duration_hours")) %>
+          <%= reservation_field_error(reservation, "surgery.duration_hours") %>
+        </div>
+        <div class="app-field">
+          <%= sf.label :anesthesia_method, t("surgeries.form.anesthesia_method_label"), class: "app-field-label app-field-label-required" %>
+          <%= sf.text_field :anesthesia_method, { class: "input w-full focus:input-primary",
+                placeholder: t("surgeries.form.anesthesia_method_placeholder") }.merge(reservation_aria(reservation, "surgery.anesthesia_method")) %>
+          <%= reservation_field_error(reservation, "surgery.anesthesia_method") %>
+        </div>
+      </div>
+
+      <details class="rounded-box border border-base-200 p-4" <%= "open" if details_error_keys.any? { |key| reservation.errors.key?(key.to_sym) } || Surgery.configured_required_attributes.intersect?(%i[operator_name assistant_name]) %>>
+        <summary class="cursor-pointer font-semibold"><%= t("reservations.form.details_summary") %></summary>
+        <div class="grid gap-4 md:grid-cols-2 mt-4">
+          <div class="app-field">
+            <%= surgery_label sf, :operator_name, t("surgeries.labels.operator") %>
+            <%= sf.text_field :operator_name, { class: "input w-full focus:input-primary", placeholder: t("surgeries.form.operator_placeholder") }.merge(reservation_aria(reservation, "surgery.operator_name")) %>
+            <%= reservation_field_error(reservation, "surgery.operator_name") %>
+          </div>
+          <div class="app-field">
+            <%= surgery_label sf, :assistant_name, t("surgeries.labels.assistant") %>
+            <%= sf.text_field :assistant_name, { class: "input w-full focus:input-primary", placeholder: t("surgeries.form.assistant_placeholder") }.merge(reservation_aria(reservation, "surgery.assistant_name")) %>
+            <%= reservation_field_error(reservation, "surgery.assistant_name") %>
+          </div>
+          <div class="app-field">
+            <%= sf.label :start_time, t("surgeries.labels.start_time"), class: "app-field-label" %>
+            <%= sf.time_field :start_time, class: "input w-full focus:input-primary" %>
+          </div>
+          <div class="app-field <%= "hidden" unless category == "regular" && surgery.elective? %>" data-reservation-surgery-target="slotNumberSection">
+            <%= sf.label :slot_number, t("surgeries.form.slot_number_label"), class: "app-field-label" %>
+            <%= sf.number_field :slot_number, { class: "input w-full focus:input-primary", min: 1, step: 1,
+                  placeholder: t("surgeries.form.slot_number_placeholder") }.merge(reservation_aria(reservation, "surgery.slot_number")) %>
+            <%= reservation_field_error(reservation, "surgery.slot_number") %>
+          </div>
+          <div class="app-field">
+            <%= sf.label :operation_order, t("surgeries.labels.operation_order"), class: "app-field-label" %>
+            <%= sf.number_field :operation_order, { class: "input w-full focus:input-primary", min: 1, step: 1,
+                  placeholder: t("surgeries.form.operation_order_placeholder") }.merge(reservation_aria(reservation, "surgery.operation_order")) %>
+            <%= reservation_field_error(reservation, "surgery.operation_order") %>
+          </div>
+        </div>
+      </details>
+    <% end %>
+  </div>
+</section>
