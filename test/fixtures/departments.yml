@@ -1,0 +1,14 @@
+gynecology:
+  name: "Gynecology"
+  position: 1
+  active: true
+
+cardiovascular_surgery:
+  name: "Cardiovascular Surgery"
+  position: 2
+  active: true
+
+closed_department:
+  name: "Closed Department"
+  position: 3
+  active: false

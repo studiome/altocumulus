@@ -178,27 +178,27 @@ class SurgeriesTest < ApplicationSystemTestCase
     # Regular slot is the default: the slot number is asked for, the
     # partner-department and location fields stay out of the way.
     assert_selector "#surgery_slot_number", visible: true
-    assert_no_selector "#surgery_target_department", visible: true
-    assert_no_selector "#surgery_location", visible: true
+    assert_no_selector "#surgery_department_id", visible: true
+    assert_no_selector "#surgery_surgery_location_id", visible: true
 
     choose "Joint/Simultaneous Surgery"
-    assert_selector "#surgery_target_department", visible: true
+    assert_selector "#surgery_department_id", visible: true
     assert_no_selector "#surgery_slot_number", visible: true
-    assert_no_selector "#surgery_location", visible: true
+    assert_no_selector "#surgery_surgery_location_id", visible: true
 
     choose "Backup/Standby"
-    assert_selector "#surgery_target_department", visible: true
-    assert_no_selector "#surgery_location", visible: true
+    assert_selector "#surgery_department_id", visible: true
+    assert_no_selector "#surgery_surgery_location_id", visible: true
 
     choose "Procedure Room / Off-slot"
-    assert_selector "#surgery_location", visible: true
-    assert_no_selector "#surgery_target_department", visible: true
+    assert_selector "#surgery_surgery_location_id", visible: true
+    assert_no_selector "#surgery_department_id", visible: true
     assert_no_selector "#surgery_slot_number", visible: true
 
     choose "Regular Slot"
     assert_selector "#surgery_slot_number", visible: true
-    assert_no_selector "#surgery_target_department", visible: true
-    assert_no_selector "#surgery_location", visible: true
+    assert_no_selector "#surgery_department_id", visible: true
+    assert_no_selector "#surgery_surgery_location_id", visible: true
   end
 
   test "an emergency surgery is not asked for a slot number" do

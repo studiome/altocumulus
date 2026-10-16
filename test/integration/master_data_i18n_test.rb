@@ -203,4 +203,55 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match("診断名を作成しました。", response.body)
   end
+
+  # Department / SurgeryLocation / SurgicalDevice: the generic master screens.
+  test "department, location and device screens render in Japanese and English" do
+    {
+      departments_url => [ "診療科", "新規診療科", "Departments", "New Department" ],
+      surgery_locations_url => [ "実施場所", "新規実施場所", "Surgery Locations", "New Surgery Location" ],
+      surgical_devices_url => [ "手術支援機器", "新規手術支援機器", "Surgical Devices", "New Surgical Device" ]
+    }.each do |url, (ja_title, ja_new, en_title, en_new)|
+      get_as users(:japanese_member), url
+      assert_select "h1", text: ja_title
+      assert_select "a", text: ja_new
+      assert_select "th", text: "名称"
+      assert_select "th", text: "表示順"
+      assert_select "span.badge", text: "無効"
+      assert_no_match(/[Tt]ranslation missing/, response.body)
+
+      get_as users(:member), url
+      assert_select "h1", text: en_title
+      assert_select "a", text: en_new
+      assert_select "th", text: "Name"
+      assert_select "span.badge", text: "Inactive"
+      assert_no_match(/[Tt]ranslation missing/, response.body)
+    end
+  end
+
+  test "master form and flash messages are translated" do
+    sign_in_fresh(users(:japanese_member))
+    get new_department_url
+    assert_select "label", text: "名称"
+    assert_select "label", text: "表示順"
+    assert_select "label", text: /有効/
+
+    post departments_url, params: { department: { name: "新しい診療科" } }
+    assert_equal "診療科を作成しました。", flash[:notice]
+    department = Department.find_by!(name: "新しい診療科")
+    patch department_url(department), params: { department: { name: "更新後" } }
+    assert_equal "診療科を更新しました。", flash[:notice]
+    delete department_url(department)
+    assert_equal "診療科を削除しました。", flash[:notice]
+
+    sign_in_fresh(users(:member))
+    post departments_url, params: { department: { name: "Brand New" } }
+    assert_equal "Department was successfully created.", flash[:notice]
+  end
+
+  test "navigation links the three new masters in both locales" do
+    get_as users(:japanese_member), root_url
+    assert_select "a[href=?]", departments_path, text: "診療科"
+    assert_select "a[href=?]", surgery_locations_path, text: "実施場所"
+    assert_select "a[href=?]", surgical_devices_path, text: "手術支援機器"
+  end
 end

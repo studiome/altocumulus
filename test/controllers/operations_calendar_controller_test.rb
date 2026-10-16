@@ -7,6 +7,17 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     assert_select ".oc-day", 50
   end
 
+  test "calendar shows the partner department and the location of non-regular surgeries" do
+    surgeries(:one).update!(slot_category: "simultaneous", department: departments(:gynecology))
+    surgeries(:emergency_one).update!(slot_category: "off_slot", surgery_location: surgery_locations(:cath_lab))
+
+    get operations_calendar_url, params: { start: "2026-03-01" }
+
+    assert_response :success
+    assert_match "Gynecology", response.body
+    assert_match "Cath Lab", response.body
+  end
+
   test "an invalid start date redirects with guidance instead of raising" do
     get operations_calendar_url, params: { start: "not-a-date" }
     assert_redirected_to operations_calendar_url

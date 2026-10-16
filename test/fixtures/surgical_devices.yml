@@ -1,0 +1,14 @@
+robot_a:
+  name: "Robot A"
+  position: 1
+  active: true
+
+robot_b:
+  name: "Robot B"
+  position: 2
+  active: true
+
+retired_robot:
+  name: "Retired Robot"
+  position: 3
+  active: false

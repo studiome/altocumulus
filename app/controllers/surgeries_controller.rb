@@ -9,7 +9,7 @@ class SurgeriesController < ApplicationController
     @surgery_procedures = SurgeryProcedure.alphabetical
     @anesthesia_methods = Surgery.anesthesia_methods
     @default_range = default_range?
-    scope = Surgery.includes(:patient, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure })
+    scope = Surgery.includes(:patient, :department, :surgery_location, :surgical_device, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure })
                     .filtered(**index_filters)
                     .ascending_by_surgery_date
     @pagination = Pagination.new(scope, page: params[:page])
@@ -19,7 +19,7 @@ class SurgeriesController < ApplicationController
   end
 
   def show
-    @surgery = Surgery.includes(:patient, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure })
+    @surgery = Surgery.includes(:patient, :department, :surgery_location, :surgical_device, { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure })
                        .find(params.expect(:id))
     @slot_rules = ElectiveSlotRule.by_day_of_week
     @holidays = Holiday.by_date([ @surgery.surgery_date ].compact)
@@ -157,7 +157,7 @@ class SurgeriesController < ApplicationController
     def surgery_params
       params.expect(surgery: [
         :surgery_date, :surgery_date_status, :duration_hours, :anesthesia_method, :patient_id,
-        :scheduling_type, :slot_category, :target_department, :location, :start_time, :slot_number,
+        :scheduling_type, :slot_category, :department_id, :surgery_location_id, :surgical_device_id, :start_time, :slot_number,
         :operator_name, :assistant_name, :operation_order,
         { patient_diagnosis_ids: [] },
         { surgery_procedure_selections_attributes: [ [ :id, :surgery_procedure_id, :laterality, :_destroy ] ] }

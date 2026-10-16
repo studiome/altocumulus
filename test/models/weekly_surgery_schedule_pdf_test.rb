@@ -150,6 +150,31 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     assert_includes text, "Patient #-1"
   end
 
+  test "shows the partner department and the location of non-regular surgeries" do
+    date = Date.new(2030, 1, 9)
+    create_surgery(new_patient, date).update!(slot_category: "simultaneous", department: departments(:gynecology))
+    create_surgery(new_patient, date).update!(slot_category: "off_slot", surgery_location: surgery_locations(:cath_lab))
+
+    text = render_text(Date.new(2030, 1, 7))
+
+    assert_includes text, "Gynecology"
+    assert_includes text, "Cath Lab"
+  end
+
+  test "department and location add no queries per surgery" do
+    date = Date.new(2030, 1, 8)
+    create_surgery(new_patient, date).update!(slot_category: "simultaneous", department: departments(:gynecology))
+    create_surgery(new_patient, date).update!(slot_category: "off_slot", surgery_location: surgery_locations(:cath_lab),
+                                              surgical_device: surgical_devices(:robot_a))
+    one = count_queries { WeeklySurgerySchedulePdf.new(Date.new(2030, 1, 7)).render }
+    3.times do
+      create_surgery(new_patient, date).update!(slot_category: "off_slot", surgery_location: surgery_locations(:cath_lab))
+    end
+    many = count_queries { WeeklySurgerySchedulePdf.new(Date.new(2030, 1, 7)).render }
+
+    assert_equal one, many
+  end
+
   test "referral lookup adds no queries per surgery" do
     date = Date.new(2030, 1, 8)
     create_surgery(new_patient, date)

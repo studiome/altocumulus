@@ -434,13 +434,26 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_equal one_date_queries, full_week_queries
   end
 
+  test "for_dates preloads department, location and device" do
+    surgeries(:one).update!(slot_category: "off_slot", surgery_location: surgery_locations(:cath_lab),
+                            surgical_device: surgical_devices(:robot_a))
+    surgeries(:three).update!(slot_category: "simultaneous", department: departments(:gynecology))
+
+    usage = ElectiveSlotUsage.for_dates([ SUNDAY, TUESDAY ])
+    all = usage.values.flat_map { |u| u.elective_surgeries + u.emergency_surgeries }
+
+    assert_queries_count(0) do
+      all.each { |surgery| [ surgery.department&.name, surgery.surgery_location&.name, surgery.surgical_device&.name ] }
+    end
+  end
+
   test "non-regular slot categories do not affect elective slots or warnings" do
     simultaneous = Surgery.create!(
       patient: patients(:one),
       surgery_date: TUESDAY,
       scheduling_type: "elective",
       slot_category: "simultaneous",
-      target_department: "Gynecology",
+      department: departments(:gynecology),
       anesthesia_method: "General",
       duration_hours: 3.0,
       surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
@@ -450,7 +463,7 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
       surgery_date: TUESDAY,
       scheduling_type: "elective",
       slot_category: "backup",
-      target_department: "Cardiovascular Surgery",
+      department: departments(:cardiovascular_surgery),
       anesthesia_method: "General",
       duration_hours: 2.0,
       surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
@@ -460,7 +473,7 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
       surgery_date: TUESDAY,
       scheduling_type: "elective",
       slot_category: "off_slot",
-      location: "Catheter Lab",
+      surgery_location: surgery_locations(:cath_lab),
       anesthesia_method: "Local",
       duration_hours: 1.5,
       surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]

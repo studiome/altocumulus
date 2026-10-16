@@ -132,6 +132,9 @@ en:
     procedures: "Procedures"
     slot_rules: "Slot Rules"
     holidays: "Holidays"
+    departments: "Departments"
+    surgery_locations: "Surgery Locations"
+    surgical_devices: "Surgical Devices"
     admin: "Admin"
     users: "Users"
     announcements: "Announcements"
@@ -203,6 +206,18 @@ en:
               too_big: "must not be larger than %{count} MB"
 
   activerecord:
+    # Only the three site-vocabulary masters are listed: the generic master
+    # screens (master_records.*) need a real plural for their page title.
+    models:
+      department:
+        one: "Department"
+        other: "Departments"
+      surgery_location:
+        one: "Surgery Location"
+        other: "Surgery Locations"
+      surgical_device:
+        one: "Surgical Device"
+        other: "Surgical Devices"
     errors:
       format: "%{attribute} %{message}"
       messages:
@@ -565,6 +580,32 @@ en:
         other: "%{count} errors prohibited this surgery procedure from being saved:"
       name_label: "Procedure Name"
       name_placeholder: "e.g. Laparoscopic cholecystectomy"
+
+  # Shared by the Department / SurgeryLocation / SurgicalDevice screens
+  # (MasterRecordsController); the record's own name comes in as %{record}.
+  master_records:
+    index:
+      new_button: "New %{record}"
+      empty: "No %{records} registered yet."
+      active_badge: "Active"
+      inactive_badge: "Inactive"
+    new:
+      title: "New %{record}"
+    edit:
+      title: "Edit %{record}"
+    create:
+      success_notice: "%{record} was successfully created."
+    update:
+      success_notice: "%{record} was successfully updated."
+    destroy:
+      success_notice: "%{record} was successfully deleted."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this record from being saved:"
+        other: "%{count} errors prohibited this record from being saved:"
+      position_helper: "Smaller numbers are listed first. Leave blank to add it at the end."
+      active_label: "Active"
+      active_helper: "An inactive record is no longer offered for new entries, but stays visible on the records that already use it. A record in use cannot be deleted; deactivate it instead."
 
   holidays:
     index:
@@ -999,18 +1040,11 @@ en:
       slot_category_label: "Slot Category"
       slot_category_helper: "Besides this department's own regular slots, a surgery can be a joint case in another department's slot, standby backup for one, or an off-slot procedure in the cath lab, a procedure room, and so on."
       target_department_label: "Partner Department"
-      target_department_placeholder: "e.g. Gastroenterological Surgery, Cardiovascular Surgery, Gynecology"
-      target_department_helper: "The department whose slot the joint or backup case runs in."
+      target_department_helper: "The department whose slot the joint or backup case runs in. Choices are managed under Masters."
       location_label: "Location / Setting"
-      location_placeholder: "e.g. Cath Lab, Outpatient Procedure Room, Endoscopy Suite"
-      location_helper: "Where the case is performed outside the main operating rooms. Pick a suggestion or type your own."
-      location_suggestions:
-        catheter_lab: "Cath Lab"
-        outpatient_room: "Outpatient Procedure Room (local)"
-        endoscopy_room: "Endoscopy Suite"
-        angio_room: "Angio Suite"
-        minor_or: "Minor OR"
-        ward: "Ward Procedure Room"
+      location_helper: "Where the case is performed. Choices are managed under Masters."
+      surgical_device_label: "Surgical Support Device"
+      surgical_device_helper: "Leave blank when no support device is used. Choices are managed under Masters."
       start_time_helper: "Emergency surgeries can be scheduled at any time, including nights."
       slot_number_label: "Elective Slot"
       slot_number_placeholder: "e.g. 1"
@@ -1052,6 +1086,7 @@ en:
       slot_category: "Slot Category"
       target_department: "Partner Department"
       location: "Location"
+      surgical_device: "Surgical Device"
       no_slot_assigned: "No slot assigned"
       unknown_patient_name: "Patient #%{id}"
       unknown_patient: "Unknown"

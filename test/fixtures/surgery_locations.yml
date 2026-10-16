@@ -1,0 +1,14 @@
+cath_lab:
+  name: "Cath Lab"
+  position: 1
+  active: true
+
+hybrid_room:
+  name: "Hybrid Room"
+  position: 2
+  active: true
+
+closed_room:
+  name: "Closed Room"
+  position: 3
+  active: false

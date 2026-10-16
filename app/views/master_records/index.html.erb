@@ -1,0 +1,59 @@
+<% content_for :title, master_class.model_name.human(count: 2) %>
+
+<div class="app-page">
+
+  <section class="app-page-header">
+    <div class="app-page-header-body">
+      <div>
+        <p class="app-page-kicker"><%= t("common.master_data") %></p>
+        <h1 class="app-page-title"><%= master_class.model_name.human(count: 2) %></h1>
+      </div>
+      <%= link_to new_polymorphic_path(master_class), class: "btn btn-primary" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        <%= t(".new_button", record: master_class.model_name.human) %>
+      <% end %>
+    </div>
+  </section>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th><%= master_class.human_attribute_name(:name) %></th>
+            <th><%= master_class.human_attribute_name(:position) %></th>
+            <th><%= master_class.human_attribute_name(:active) %></th>
+            <th class="text-right"><%= t("common.actions") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @records.any? %>
+            <% @records.each do |record| %>
+              <tr class="row-hover">
+                <td class="master-name font-semibold"><%= record.name %></td>
+                <td class="font-mono"><%= record.position %></td>
+                <td>
+                  <% if record.active? %>
+                    <span class="badge badge-success badge-sm"><%= t(".active_badge") %></span>
+                  <% else %>
+                    <span class="badge badge-ghost badge-sm"><%= t(".inactive_badge") %></span>
+                  <% end %>
+                </td>
+                <td class="text-right flex justify-end gap-2">
+                  <%= link_to t("common.edit"), edit_polymorphic_path(record), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <%= button_to t("common.delete"), record, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="4" class="text-center py-10 text-base-content/50 italic">
+                <%= t(".empty", records: master_class.model_name.human(count: 2)) %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

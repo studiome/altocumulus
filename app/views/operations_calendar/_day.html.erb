@@ -83,7 +83,7 @@
             <span class="badge badge-sm <%= surgery.emergency? ? "badge-error" : "badge-ghost" %>"><%= surgery.scheduling_type_label %></span>
             <% unless surgery.regular_slot? %>
               <span class="badge <%= surgery.slot_category_badge_class %> badge-xs whitespace-nowrap">
-                <%= surgery.slot_category_label %><% if surgery.target_department.present? %>: <%= surgery.target_department %><% elsif surgery.location.present? %>: <%= surgery.location %><% end %>
+                <%= surgery.slot_category_label %><% if surgery.slot_category_detail.present? %>: <%= surgery.slot_category_detail %><% end %>
               </span>
             <% end %>
           </div>

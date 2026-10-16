@@ -53,16 +53,22 @@
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.slot_category") %></span>
           <span class="text-lg font-medium"><%= @surgery.slot_category_label %></span>
         </div>
-        <% if @surgery.target_department.present? %>
+        <% if @surgery.department %>
           <div>
             <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.target_department") %></span>
-            <span class="text-lg font-medium"><%= @surgery.target_department %></span>
+            <span class="text-lg font-medium"><%= @surgery.department.name %></span>
           </div>
         <% end %>
-        <% if @surgery.location.present? %>
+        <% if @surgery.surgery_location %>
           <div>
             <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.location") %></span>
-            <span class="text-lg font-medium"><%= @surgery.location %></span>
+            <span class="text-lg font-medium"><%= @surgery.surgery_location.name %></span>
+          </div>
+        <% end %>
+        <% if @surgery.surgical_device %>
+          <div>
+            <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.surgical_device") %></span>
+            <span class="text-lg font-medium"><%= @surgery.surgical_device.name %></span>
           </div>
         <% end %>
         <div>

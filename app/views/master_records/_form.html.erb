@@ -1,0 +1,38 @@
+<%= form_with(model: record, class: "app-form") do |form| %>
+  <% if record.errors.any? %>
+    <div role="alert" class="alert alert-error mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <h3 class="font-bold"><%= t(".errors_heading", count: record.errors.count) %></h3>
+        <ul class="list-disc ml-6">
+          <% record.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="app-field">
+    <%= form.label :name, class: "app-field-label" %>
+    <%= form.text_field :name, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :position, class: "app-field-label" %>
+    <%= form.number_field :position, class: "input w-full focus:input-primary", step: 1 %>
+    <p class="app-helper"><%= t(".position_helper") %></p>
+  </div>
+
+  <div class="app-field">
+    <label class="label cursor-pointer justify-start gap-2 py-0">
+      <%= form.check_box :active, class: "checkbox checkbox-primary" %>
+      <span class="app-field-label mb-0"><%= t(".active_label") %></span>
+    </label>
+    <p class="app-helper"><%= t(".active_helper") %></p>
+  </div>
+
+  <div class="pt-4">
+    <%= form.submit class: "btn btn-primary w-full" %>
+  </div>
+<% end %>

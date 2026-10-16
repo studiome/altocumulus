@@ -10,6 +10,12 @@ class Surgery < ApplicationRecord
   SLOT_CATEGORY_KEYS = %w[regular simultaneous backup off_slot].freeze
 
   belongs_to :patient
+  # Site vocabulary kept in admin-editable masters (see MasterRecord). All
+  # optional: department only means something for simultaneous/backup cases,
+  # see clear_fields_the_slot_category_does_not_use.
+  belongs_to :department, optional: true
+  belongs_to :surgery_location, optional: true
+  belongs_to :surgical_device, optional: true
   has_many :surgery_diagnosis_links, dependent: :destroy
   has_many :patient_diagnoses, through: :surgery_diagnosis_links
   has_many :surgery_procedure_selections, -> { order(:id) }, dependent: :destroy, inverse_of: :surgery
@@ -181,6 +187,12 @@ class Surgery < ApplicationRecord
     end
   end
 
+  # What the calendar, list and PDF show next to a non-regular slot category:
+  # the partner department when there is one, otherwise the location.
+  def slot_category_detail
+    department&.name.presence || surgery_location&.name.presence
+  end
+
   def start_time_display
     start_time&.strftime("%H:%M") || "-"
   end
@@ -221,14 +233,14 @@ class Surgery < ApplicationRecord
     self.slot_number = nil if emergency? || !regular_slot?
   end
 
-  # target_department only means anything for the two categories that run in
-  # another department's slot. location, by contrast, is deliberately kept for
+  # department only means anything for the two categories that run in
+  # another department's slot. The location, by contrast, is deliberately kept for
   # the regular slots too (a regular case can still record which room it ran
   # in); it is only meaningless when the case sits in a partner department's
   # slot rather than a room of our own.
   def clear_fields_the_slot_category_does_not_use
-    self.target_department = nil unless simultaneous_slot? || backup_slot?
-    self.location = nil if simultaneous_slot? || backup_slot?
+    self.department = nil unless simultaneous_slot? || backup_slot?
+    self.surgery_location = nil if simultaneous_slot? || backup_slot?
   end
 
   def patient_diagnoses_must_belong_to_patient

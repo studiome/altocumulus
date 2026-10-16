@@ -6,7 +6,7 @@
   <% unless surgery.regular_slot? %>
     <div class="mt-1 flex flex-wrap gap-1">
       <span class="badge <%= surgery.slot_category_badge_class %> badge-xs">
-        <%= surgery.slot_category_label %><% if surgery.target_department.present? %>: <%= surgery.target_department %><% elsif surgery.location.present? %>: <%= surgery.location %><% end %>
+        <%= surgery.slot_category_label %><% if surgery.slot_category_detail.present? %>: <%= surgery.slot_category_detail %><% end %>
       </span>
     </div>
   <% end %>

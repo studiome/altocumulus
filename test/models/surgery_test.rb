@@ -536,45 +536,70 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_nil surgery.reload.slot_number
   end
 
-  test "leaving the simultaneous/backup categories clears target_department" do
+  test "leaving the simultaneous/backup categories clears the department" do
     surgery = surgeries(:one)
-    surgery.update!(slot_category: "simultaneous", target_department: "Gastroenterological Surgery")
+    surgery.update!(slot_category: "simultaneous", department: departments(:cardiovascular_surgery))
 
     surgery.slot_category = "regular"
     assert surgery.save
-    assert_nil surgery.reload.target_department
+    assert_nil surgery.reload.department_id
   end
 
-  test "a backup surgery keeps its target_department" do
+  test "a backup surgery keeps its department" do
     surgery = surgeries(:one)
-    surgery.update!(slot_category: "backup", target_department: "Cardiovascular Surgery")
+    surgery.update!(slot_category: "backup", department: departments(:cardiovascular_surgery))
 
-    assert_equal "Cardiovascular Surgery", surgery.reload.target_department
+    assert_equal departments(:cardiovascular_surgery), surgery.reload.department
   end
 
   test "moving to a partner-department category clears a stale location" do
     surgery = surgeries(:one)
-    surgery.update!(slot_category: "off_slot", location: "Cath Lab 1")
+    surgery.update!(slot_category: "off_slot", surgery_location: surgery_locations(:cath_lab))
 
     surgery.slot_category = "simultaneous"
-    surgery.target_department = "Gynecology"
+    surgery.department = departments(:gynecology)
     assert surgery.save
-    assert_nil surgery.reload.location
-    assert_equal "Gynecology", surgery.target_department
+    assert_nil surgery.reload.surgery_location_id
+    assert_equal departments(:gynecology), surgery.department
   end
 
   test "a regular slot surgery may still record where it was performed" do
-    # Not every regular case runs in the usual room, so location stays
-    # available outside the off_slot category (unlike target_department).
+    # Not every regular case runs in the usual room, so the location stays
+    # available outside the off_slot category (unlike the department).
     surgery = surgeries(:one)
-    surgery.update!(slot_category: "regular", location: "OR 3")
+    surgery.update!(slot_category: "regular", surgery_location: surgery_locations(:hybrid_room))
 
-    assert_equal "OR 3", surgery.reload.location
+    assert_equal surgery_locations(:hybrid_room), surgery.reload.surgery_location
+  end
+
+  test "department, location and device are optional" do
+    surgery = surgeries(:one)
+    assert_nil surgery.department
+    assert_nil surgery.surgery_location
+    assert_nil surgery.surgical_device
+    assert surgery.valid?
+  end
+
+  test "a surgery can record a surgical device in any slot category" do
+    Surgery::SLOT_CATEGORY_KEYS.each do |category|
+      surgery = surgeries(:one)
+      surgery.update!(slot_category: category, surgical_device: surgical_devices(:robot_a))
+      assert_equal surgical_devices(:robot_a), surgery.reload.surgical_device
+    end
+  end
+
+  test "an inactive master keeps displaying on a surgery that already uses it" do
+    surgery = surgeries(:one)
+    surgery.update!(slot_category: "off_slot", surgery_location: surgery_locations(:closed_room),
+                    surgical_device: surgical_devices(:retired_robot))
+
+    assert_equal "Closed Room", surgery.reload.surgery_location.name
+    assert_equal "Retired Robot", surgery.surgical_device.name
   end
 
   test "filtered by slot_category" do
     surgery = surgeries(:two)
-    surgery.update!(slot_category: "off_slot", location: "Catheter Lab")
+    surgery.update!(slot_category: "off_slot", surgery_location: surgery_locations(:cath_lab))
 
     assert_includes Surgery.filtered(slot_category: "off_slot"), surgery
     assert_not_includes Surgery.filtered(slot_category: "regular"), surgery

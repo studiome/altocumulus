@@ -1,0 +1,6 @@
+# A surgical support device (手術支援機器) a surgery can be recorded against.
+class SurgicalDevice < ApplicationRecord
+  include MasterRecord
+
+  has_many :surgeries, dependent: :restrict_with_error
+end

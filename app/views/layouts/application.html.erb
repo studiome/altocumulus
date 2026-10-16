@@ -50,6 +50,9 @@
             <li><%= link_to t("nav.procedures"), surgery_procedures_path %></li>
             <li><%= link_to t("nav.slot_rules"), elective_slot_rules_path %></li>
             <li><%= link_to t("nav.holidays"), holidays_path %></li>
+            <li><%= link_to t("nav.departments"), departments_path %></li>
+            <li><%= link_to t("nav.surgery_locations"), surgery_locations_path %></li>
+            <li><%= link_to t("nav.surgical_devices"), surgical_devices_path %></li>
             <% if current_user %>
               <% if admin? %>
                 <li class="menu-title"><%= t("nav.admin") %></li>
@@ -97,6 +100,9 @@
               <li><%= link_to t("nav.procedures"), surgery_procedures_path %></li>
               <li><%= link_to t("nav.slot_rules"), elective_slot_rules_path %></li>
               <li><%= link_to t("nav.holidays"), holidays_path %></li>
+              <li><%= link_to t("nav.departments"), departments_path %></li>
+              <li><%= link_to t("nav.surgery_locations"), surgery_locations_path %></li>
+              <li><%= link_to t("nav.surgical_devices"), surgical_devices_path %></li>
             </ul>
           </li>
           <% if current_user && admin? %>

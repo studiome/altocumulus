@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_05_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_000100) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -90,6 +90,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_010000) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_case_databases_on_name", unique: true
+  end
+
+  create_table "departments", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "position", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_departments_on_name", unique: true
   end
 
   create_table "diagnoses", force: :cascade do |t|
@@ -191,8 +200,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_010000) do
     t.string "anesthesia_method"
     t.string "assistant_name"
     t.datetime "created_at", null: false
+    t.integer "department_id"
     t.float "duration_hours"
-    t.string "location"
     t.integer "operation_order"
     t.string "operator_name"
     t.integer "patient_id", null: false
@@ -201,11 +210,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_010000) do
     t.integer "slot_number"
     t.time "start_time"
     t.date "surgery_date"
-    t.string "target_department"
+    t.integer "surgery_location_id"
+    t.integer "surgical_device_id"
     t.datetime "updated_at", null: false
+    t.index ["department_id"], name: "index_surgeries_on_department_id"
     t.index ["patient_id"], name: "index_surgeries_on_patient_id"
     t.index ["surgery_date", "scheduling_type"], name: "index_surgeries_on_surgery_date_and_scheduling_type"
     t.index ["surgery_date", "slot_number"], name: "index_surgeries_on_surgery_date_and_slot_number"
+    t.index ["surgery_location_id"], name: "index_surgeries_on_surgery_location_id"
+    t.index ["surgical_device_id"], name: "index_surgeries_on_surgical_device_id"
   end
 
   create_table "surgery_diagnosis_links", force: :cascade do |t|
@@ -216,6 +229,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_010000) do
     t.index ["patient_diagnosis_id"], name: "index_surgery_diagnosis_links_on_patient_diagnosis_id"
     t.index ["surgery_id", "patient_diagnosis_id"], name: "idx_on_surgery_id_patient_diagnosis_id_434c0ea0bf", unique: true
     t.index ["surgery_id"], name: "index_surgery_diagnosis_links_on_surgery_id"
+  end
+
+  create_table "surgery_locations", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "position", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_surgery_locations_on_name", unique: true
   end
 
   create_table "surgery_procedure_selections", force: :cascade do |t|
@@ -234,6 +256,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_010000) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_surgery_procedures_on_name", unique: true
+  end
+
+  create_table "surgical_devices", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "position", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_surgical_devices_on_name", unique: true
   end
 
   create_table "user_roles", force: :cascade do |t|
@@ -267,7 +298,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_010000) do
   add_foreign_key "hospitalizations", "patients"
   add_foreign_key "patient_diagnoses", "diagnoses"
   add_foreign_key "patient_diagnoses", "patients"
+  add_foreign_key "surgeries", "departments"
   add_foreign_key "surgeries", "patients"
+  add_foreign_key "surgeries", "surgery_locations"
+  add_foreign_key "surgeries", "surgical_devices"
   add_foreign_key "surgery_diagnosis_links", "patient_diagnoses"
   add_foreign_key "surgery_diagnosis_links", "surgeries"
   add_foreign_key "surgery_procedure_selections", "surgeries"

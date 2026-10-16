@@ -57,7 +57,7 @@ class WeeklySurgerySchedulePdf
 
     def surgeries_by_date
       @surgeries_by_date ||= Surgery.where(surgery_date: dates)
-                                    .includes(:patient, { patient_diagnoses: :diagnosis },
+                                    .includes(:patient, :department, :surgery_location, :surgical_device, { patient_diagnoses: :diagnosis },
                                               { surgery_procedure_selections: :surgery_procedure })
                                     .group_by(&:surgery_date)
                                     .transform_values { |list| list.sort_by { |surgery| sort_key(surgery) } }
@@ -155,7 +155,7 @@ class WeeklySurgerySchedulePdf
     def category_text(surgery)
       lines = [ surgery.scheduling_type_label ]
       unless surgery.regular_slot?
-        detail = surgery.target_department.presence || surgery.location.presence
+        detail = surgery.slot_category_detail
         lines << [ surgery.slot_category_label, detail ].compact.join(": ")
       end
       lines.join("\n")

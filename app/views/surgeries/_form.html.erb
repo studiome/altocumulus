@@ -89,23 +89,24 @@
   </div>
 
   <div class="app-field hidden" data-surgery-slot-category-target="targetDepartmentSection">
-    <%= form.label :target_department, t(".target_department_label"), class: "app-field-label" %>
-    <%= form.text_field :target_department, class: "input w-full focus:input-primary", placeholder: t(".target_department_placeholder") %>
+    <%= form.label :department_id, t(".target_department_label"), class: "app-field-label" %>
+    <%= form.collection_select :department_id, Department.choices_for(surgery.department_id), :id, :name,
+                               { include_blank: true }, { class: "select w-full focus:select-primary" } %>
     <p class="app-helper"><%= t(".target_department_helper") %></p>
   </div>
 
   <div class="app-field hidden" data-surgery-slot-category-target="locationSection">
-    <%= form.label :location, t(".location_label"), class: "app-field-label" %>
-    <%= form.text_field :location, list: "surgery_location_suggestions", class: "input w-full focus:input-primary", placeholder: t(".location_placeholder") %>
-    <datalist id="surgery_location_suggestions">
-      <option value="<%= t(".location_suggestions.catheter_lab") %>"></option>
-      <option value="<%= t(".location_suggestions.outpatient_room") %>"></option>
-      <option value="<%= t(".location_suggestions.endoscopy_room") %>"></option>
-      <option value="<%= t(".location_suggestions.angio_room") %>"></option>
-      <option value="<%= t(".location_suggestions.minor_or") %>"></option>
-      <option value="<%= t(".location_suggestions.ward") %>"></option>
-    </datalist>
+    <%= form.label :surgery_location_id, t(".location_label"), class: "app-field-label" %>
+    <%= form.collection_select :surgery_location_id, SurgeryLocation.choices_for(surgery.surgery_location_id), :id, :name,
+                               { include_blank: true }, { class: "select w-full focus:select-primary" } %>
     <p class="app-helper"><%= t(".location_helper") %></p>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :surgical_device_id, t(".surgical_device_label"), class: "app-field-label" %>
+    <%= form.collection_select :surgical_device_id, SurgicalDevice.choices_for(surgery.surgical_device_id), :id, :name,
+                               { include_blank: true }, { class: "select w-full focus:select-primary" } %>
+    <p class="app-helper"><%= t(".surgical_device_helper") %></p>
   </div>
 
   <div class="app-field">

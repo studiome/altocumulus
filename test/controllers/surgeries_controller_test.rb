@@ -159,7 +159,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index passes each filter param through to the surgery scope" do
-    surgeries(:one).update!(slot_category: "off_slot", location: "Cath Lab Suite")
+    surgeries(:one).update!(slot_category: "off_slot", surgery_location: surgery_locations(:cath_lab))
     undated = create_surgery(surgery_date: nil)
     {
       { anesthesia_method: "Spinal" } => [ surgeries(:two), surgeries(:one) ],
@@ -419,7 +419,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Bilateral Cholecystectomy, Left Appendectomy", Surgery.last.display_procedure_name
   end
 
-  test "should create surgery with simultaneous slot_category and target_department" do
+  test "should create surgery with simultaneous slot_category and department" do
     assert_difference("Surgery.count") do
       post surgeries_url, params: { surgery: {
         patient_id: patients(:one).id,
@@ -427,7 +427,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
         anesthesia_method: "General",
         duration_hours: 2.0,
         slot_category: "simultaneous",
-        target_department: "Gynecology",
+        department_id: departments(:gynecology).id,
         surgery_procedure_selections_attributes: {
           "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "right" }
         }
@@ -437,7 +437,7 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to calendar_url_for(Surgery.last.surgery_date)
     created = Surgery.last
     assert_equal "simultaneous", created.slot_category
-    assert_equal "Gynecology", created.target_department
+    assert_equal departments(:gynecology), created.department
     assert_nil created.slot_number
   end
 
@@ -449,7 +449,8 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
         anesthesia_method: "Local",
         duration_hours: 1.0,
         slot_category: "off_slot",
-        location: "Cath Lab 1",
+        surgery_location_id: surgery_locations(:cath_lab).id,
+        surgical_device_id: surgical_devices(:robot_a).id,
         surgery_procedure_selections_attributes: {
           "0" => { surgery_procedure_id: surgery_procedures(:appendectomy).id, laterality: "none" }
         }
@@ -459,8 +460,69 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to calendar_url_for(Surgery.last.surgery_date)
     created = Surgery.last
     assert_equal "off_slot", created.slot_category
-    assert_equal "Cath Lab 1", created.location
+    assert_equal surgery_locations(:cath_lab), created.surgery_location
+    assert_equal surgical_devices(:robot_a), created.surgical_device
     assert_nil created.slot_number
+  end
+
+  test "form offers active masters only, plus the inactive one the surgery already uses" do
+    surgery = surgeries(:one)
+    surgery.update!(slot_category: "off_slot", surgery_location: surgery_locations(:closed_room))
+
+    get new_surgery_url
+    assert_select "select#surgery_department_id option", text: "Gynecology"
+    assert_select "select#surgery_department_id option", text: "Closed Department", count: 0
+    assert_select "select#surgery_surgery_location_id option", text: "Closed Room", count: 0
+    assert_select "select#surgery_surgical_device_id option", text: "Retired Robot", count: 0
+    assert_select "select#surgery_department_id option[value='']"
+
+    get edit_surgery_url(surgery)
+    assert_select "select#surgery_surgery_location_id option[selected]", text: "Closed Room"
+    assert_select "select#surgery_surgery_location_id option", text: "Cath Lab"
+  end
+
+  test "form no longer ships hardcoded location suggestions" do
+    get new_surgery_url
+    assert_select "datalist", count: 0
+  end
+
+  test "show displays department, location and device names, even when inactive" do
+    surgery = surgeries(:one)
+    surgery.update!(slot_category: "regular", surgery_location: surgery_locations(:closed_room),
+                    surgical_device: surgical_devices(:retired_robot))
+
+    get surgery_url(surgery)
+    assert_match "Closed Room", response.body
+    assert_match "Retired Robot", response.body
+
+    surgery.update!(slot_category: "simultaneous", department: departments(:closed_department))
+    get surgery_url(surgery)
+    assert_match "Closed Department", response.body
+  end
+
+  test "index shows the partner department or the location" do
+    surgeries(:one).update!(slot_category: "simultaneous", department: departments(:gynecology))
+    surgeries(:two).update!(slot_category: "off_slot", surgery_location: surgery_locations(:cath_lab))
+
+    get surgeries_url, params: { all: "1" }
+    assert_match "Gynecology", response.body
+    assert_match "Cath Lab", response.body
+  end
+
+  test "json exposes department and location names under the legacy keys plus ids and the device" do
+    surgery = surgeries(:one)
+    surgery.update!(slot_category: "off_slot", surgery_location: surgery_locations(:cath_lab),
+                    surgical_device: surgical_devices(:robot_a))
+
+    get surgery_url(surgery, format: :json)
+    json = JSON.parse(response.body)
+
+    assert_equal "Cath Lab", json["location"]
+    assert_equal surgery_locations(:cath_lab).id, json["surgery_location_id"]
+    assert_nil json["target_department"]
+    assert_nil json["department_id"]
+    assert_equal surgical_devices(:robot_a).id, json["surgical_device_id"]
+    assert_equal "Robot A", json["surgical_device"]
   end
 
   test "should create a surgery with an undecided surgery_date" do
