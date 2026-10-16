@@ -186,11 +186,12 @@ class SurgeriesTest < ApplicationSystemTestCase
   test "the slot category picker shows only the fields that category needs" do
     visit new_surgery_path
 
-    # Regular slot is the default: the slot number is asked for, the
-    # partner-department and location fields stay out of the way.
+    # Regular slot is the default: the slot number is asked for, and the
+    # location too (a hybrid room / cath lab case also takes a regular slot);
+    # the partner-department field stays out of the way.
     assert_selector "#surgery_slot_number", visible: true
     assert_no_selector "#surgery_department_id", visible: true
-    assert_no_selector "#surgery_surgery_location_id", visible: true
+    assert_selector "#surgery_surgery_location_id", visible: true
 
     choose "Joint/Simultaneous Surgery"
     assert_selector "#surgery_department_id", visible: true
@@ -209,7 +210,7 @@ class SurgeriesTest < ApplicationSystemTestCase
     choose "Regular Slot"
     assert_selector "#surgery_slot_number", visible: true
     assert_no_selector "#surgery_department_id", visible: true
-    assert_no_selector "#surgery_surgery_location_id", visible: true
+    assert_selector "#surgery_surgery_location_id", visible: true
   end
 
   test "an emergency surgery is not asked for a slot number" do

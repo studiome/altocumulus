@@ -1,0 +1,16 @@
+<%# Weekly lane counts (列) of a special slot resource: one number per weekday,
+    Monday first, blank = none (see SpecialSlotResource). %>
+<fieldset class="app-field">
+  <legend class="app-field-label"><%= t("master_records.form.special_slot_counts_label") %></legend>
+  <div class="grid grid-cols-4 sm:grid-cols-7 gap-2">
+    <% SpecialSlotResource::WEEKDAY_ORDER.each do |weekday| %>
+      <% id = "#{form.object_name}_special_slot_counts_#{weekday}" %>
+      <div>
+        <%= label_tag id, t("date.day_names")[weekday], class: "app-field-label" %>
+        <%= number_field_tag "#{form.object_name}[special_slot_counts][#{weekday}]", record.special_slot_counts[weekday], id: id,
+              min: 0, step: 1, class: "input w-full focus:input-primary" %>
+      </div>
+    <% end %>
+  </div>
+  <p class="app-helper"><%= t("master_records.form.special_slot_counts_helper") %></p>
+</fieldset>

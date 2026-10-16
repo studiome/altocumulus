@@ -94,4 +94,34 @@ class MasterRecordsControllerTest < ActionDispatch::IntegrationTest
       assert_redirected_to login_url
     end
   end
+
+  # --- weekly special slot lane counts (SurgeryLocation / SurgicalDevice) ---
+
+  { SurgeryLocation => [ :surgery_location, :cath_lab ], SurgicalDevice => [ :surgical_device, :robot_a ] }.each do |klass, (singular, fixture)|
+    test "#{singular}: the form has one lane count input per weekday, with localized names" do
+      get public_send("edit_#{singular}_url", send(klass.table_name, fixture))
+      assert_select "input[type=number][name='#{singular}[special_slot_counts][#{0}]']"
+      (0..6).each do |wday|
+        assert_select "input[type=number][name='#{singular}[special_slot_counts][#{wday}]'][min='0'][step='1']"
+      end
+      assert_select "label", text: I18n.t("date.day_names")[1]
+    end
+
+    test "#{singular}: lane counts are saved from the form and listed on the index" do
+      record = send(klass.table_name, fixture)
+      patch public_send("#{singular}_url", record), params: { singular => { special_slot_counts: { "1" => "2", "2" => "", "4" => "1" } } }
+      assert_redirected_to public_send("#{klass.table_name}_url")
+      assert_equal({ 1 => 2, 4 => 1 }, record.reload.special_slot_counts)
+
+      get public_send("#{klass.table_name}_url")
+      assert_select "tr", text: /#{record.name}/ do
+        assert_select ".special-slot-counts", text: /#{Regexp.escape(I18n.t("date.abbr_day_names")[1])}\s*2/
+      end
+    end
+  end
+
+  test "departments have no lane count inputs" do
+    get edit_department_url(departments(:gynecology))
+    assert_select "input[name*='special_slot_counts']", false
+  end
 end

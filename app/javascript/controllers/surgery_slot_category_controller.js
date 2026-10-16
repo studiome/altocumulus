@@ -35,9 +35,11 @@ export default class extends Controller {
       this.backupInterventionSectionTarget.classList.toggle("hidden", selectedCategory !== "backup")
     }
 
-    // Location is relevant for off_slot (procedure room, catheter lab, etc.)
+    // Location is relevant for off_slot (procedure room) and for regular slots
+    // (a hybrid room / cath lab case also takes a regular slot); not for the
+    // partner-department categories.
     if (this.hasLocationSectionTarget) {
-      const showLocation = selectedCategory === "off_slot"
+      const showLocation = selectedCategory === "off_slot" || selectedCategory === "regular"
       this.locationSectionTarget.classList.toggle("hidden", !showLocation)
     }
   }

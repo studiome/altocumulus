@@ -3,4 +3,6 @@ class SurgicalDevice < ApplicationRecord
   include MasterRecord
 
   has_many :surgeries, dependent: :restrict_with_error
+  # After the restrict above, so a record in use is refused before its rules go.
+  include SpecialSlotResource
 end

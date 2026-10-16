@@ -42,6 +42,10 @@
     </div>
   <% end %>
 
+  <% if record.respond_to?(:special_slot_counts) %>
+    <%= render "master_records/special_slot_counts", form: form, record: record %>
+  <% end %>
+
   <div class="app-field">
     <label class="label cursor-pointer justify-start gap-2 py-0">
       <%= form.check_box :active, class: "checkbox checkbox-primary" %>

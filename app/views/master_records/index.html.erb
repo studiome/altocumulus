@@ -1,5 +1,6 @@
 <% content_for :title, master_class.model_name.human(count: 2) %>
 
+<% special_slots = master_class.method_defined?(:special_slot_counts) %>
 <div class="app-page">
 
   <section class="app-page-header">
@@ -24,6 +25,9 @@
           <tr>
             <th><%= master_class.human_attribute_name(:name) %></th>
             <th><%= master_class.human_attribute_name(:position) %></th>
+            <% if special_slots %>
+              <th><%= t(".special_slot_counts_header") %></th>
+            <% end %>
             <th><%= master_class.human_attribute_name(:active) %></th>
             <th class="text-right"><%= t("common.actions") %></th>
           </tr>
@@ -42,6 +46,12 @@
                   <% end %>
                 </td>
                 <td class="font-mono"><%= record.position %></td>
+                <% if special_slots %>
+                  <td class="special-slot-counts text-sm">
+                    <% counts = SpecialSlotResource::WEEKDAY_ORDER.filter_map { |weekday| (t("date.abbr_day_names")[weekday] + " " + record.special_slot_counts[weekday].to_s) if record.special_slot_counts[weekday] } %>
+                    <%= counts.any? ? counts.join(t("common.list_separator")) : t("common.none") %>
+                  </td>
+                <% end %>
                 <td>
                   <% if record.active? %>
                     <span class="badge badge-success badge-sm"><%= t(".active_badge") %></span>
@@ -62,7 +72,7 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="4" class="text-center py-10 text-base-content/50 italic">
+              <td colspan="<%= special_slots ? 5 : 4 %>" class="text-center py-10 text-base-content/50 italic">
                 <%= t(".empty", records: master_class.model_name.human(count: 2)) %>
               </td>
             </tr>
