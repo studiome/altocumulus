@@ -8,21 +8,34 @@ module LedgerHelper
     secondary_mono: "ledger-secondary font-mono"
   }.freeze
 
+  # daisyUI badges are one line of fixed height; `ledger-badge` (see the CSS)
+  # lets them grow and wrap inside a narrow cell instead of overflowing it.
   BADGE_CLASSES = {
-    scheduling: "badge badge-sm badge-ghost",
-    emergency: "badge badge-sm badge-error",
-    off_slot: "badge badge-xs badge-accent whitespace-nowrap",
-    partner_department: "badge badge-xs badge-info whitespace-nowrap",
-    location: "badge badge-xs badge-outline whitespace-nowrap",
-    transfer: "badge badge-xs badge-secondary whitespace-nowrap",
-    device: "badge badge-xs badge-neutral whitespace-nowrap",
-    team: "badge badge-sm",
-    missing: "badge badge-sm badge-warning badge-outline"
+    scheduling: "badge badge-sm badge-ghost ledger-badge",
+    emergency: "badge badge-sm badge-error ledger-badge",
+    off_slot: "badge badge-xs badge-accent ledger-badge",
+    partner_department: "badge badge-xs badge-info ledger-badge",
+    location: "badge badge-xs badge-outline ledger-badge",
+    transfer: "badge badge-xs badge-secondary ledger-badge",
+    device: "badge badge-xs badge-neutral ledger-badge",
+    team: "badge badge-sm ledger-badge",
+    missing: "badge badge-sm badge-warning badge-outline ledger-badge"
   }.freeze
+
+  # LedgerColumn#min_width is in PDF points at the PDF's base font; the HTML
+  # table's text is bigger, so scale it to screen pixels.
+  MIN_WIDTH_PX_PER_POINT = 1.4
 
   # The two header tiers: the upper label with the lower one beneath it.
   def ledger_header(column)
     safe_join([ column.header_upper, column.header_lower ].compact.map { |label| tag.span(label, class: "block") })
+  end
+
+  # Header cell attributes: the column's own narrowest width (a CSS variable the
+  # stylesheet turns into min-width, and drops again for print), so the table
+  # scrolls sideways before a column is squeezed.
+  def ledger_header_attributes(column)
+    { style: "--ledger-col-min: #{(column.min_width * MIN_WIDTH_PX_PER_POINT).round}px" }
   end
 
   # A cell's upper and lower parts. Badges are stacked in a column; text
@@ -47,7 +60,7 @@ module LedgerHelper
     end
 
     def ledger_badge_class(segment)
-      return "badge badge-sm #{Team::BADGE_CLASSES.fetch(segment.color, Team::BADGE_CLASSES['gray'])}" if segment.kind == :team
+      return "badge badge-sm ledger-badge #{Team::BADGE_CLASSES.fetch(segment.color, Team::BADGE_CLASSES['gray'])}" if segment.kind == :team
 
       BADGE_CLASSES.fetch(segment.kind)
     end

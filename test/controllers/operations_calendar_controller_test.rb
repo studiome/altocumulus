@@ -87,6 +87,12 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "every column header declares its own minimum width so the table scrolls instead of squeezing" do
+    get operations_calendar_url, params: { start: "2026-03-01", days: 1 }
+
+    assert_select "table.oc-ledger thead th[style*='--ledger-col-min']", SiteConfig.current.ledger_column_keys(:operations_calendar).size
+  end
+
   test "a day cell spans all of that day's surgery rows and carries the date link" do
     get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
 

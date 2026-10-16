@@ -72,7 +72,7 @@
             <tr>
               <th><%= @view == "surgery" ? t("surgeries.labels.surgery_date") : t(".date_header") %></th>
               <% @calendar.columns.each do |column| %>
-                <th><%= ledger_header(column) %></th>
+                <th <%= tag.attributes(ledger_header_attributes(column)) %>><%= ledger_header(column) %></th>
               <% end %>
             </tr>
           </thead>
