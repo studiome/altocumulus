@@ -20,7 +20,7 @@ class ApplicationController < ActionController::Base
   before_action :require_login
   before_action :set_current_attributes
 
-  helper_method :current_user, :admin?, :data_manager?
+  helper_method :current_user, :admin?, :data_manager?, :data_exporter?
 
   private
 
@@ -63,6 +63,17 @@ class ApplicationController < ActionController::Base
     return if current_user
 
     redirect_to login_path, alert: t("common.please_sign_in")
+  end
+
+  # Who may download patient data as CSV (see ExportsController).
+  def data_exporter?
+    admin? || data_manager?
+  end
+
+  def require_data_exporter
+    return if data_exporter?
+
+    redirect_to root_path, alert: t("common.not_authorized")
   end
 
   def require_admin

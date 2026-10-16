@@ -22,4 +22,8 @@ class AccessLogTest < ActiveSupport::TestCase
     assert_not log.valid?
     assert_includes log.errors[:event], "can't be blank"
   end
+
+  test "records csv exports" do
+    assert AccessLog.new(user: users(:admin), event: "export").valid?
+  end
 end

@@ -1,5 +1,5 @@
 class AccessLog < ApplicationRecord
-  EVENTS = %w[login logout timeout login_failed].freeze
+  EVENTS = %w[login logout timeout login_failed export].freeze
 
   belongs_to :user, optional: true
 

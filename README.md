@@ -462,8 +462,28 @@ Keys:
   spare page width goes to the flexible text columns (diagnosis/procedure, category, referral/ADL), a too
   wide set shrinks towards the minimums, and only then does the font step down (8 -> 7.5 -> 7 -> 6.5)
   before a final proportional squeeze (`LedgerColumnFitting`).
+- `exports`: named CSV exports for the clerk's admission list / registry (NCD) lists. Each entry is
+  `<name>: {subject: surgery|hospitalization, fields: [...], label: optional}`; fields come from the export
+  field registry (`ExportField`, `app/models/export_field.rb` and `app/models/export_fields/`), which yields
+  one plain value per column (unlike the stacked ledger cells). Omit the key for the built-in `surgery_list`
+  and `admission_list` (every field of the subject); `exports: {}` switches exports off. Unknown
+  subjects/fields, duplicates, an empty list, a bad name or `team`/`team_members` without `features.teams`
+  stop the boot. See `config/site.yml` for every field and `config/site.example.yml` for an `ncd_list`.
 
 In tests, `with_site_config(hash) { ... }` swaps the config temporarily.
+
+### CSV export
+
+Admins and data managers (nobody else; enforced in `ExportsController`, buttons hidden otherwise) get a
+"CSV出力" menu on the operations calendar (surgery tab: surgery exports; examination tab: the non-surgery
+admissions it lists) and on the hospitalization list (every admission of its current filter). The file covers
+the screen's date range and filters (`mine`, `team_id`; `ExportSource`), is named
+`<export>_<start>_<end>.csv`, and is UTF-8 with BOM, CRLF, one header row and every value quoted
+(`CsvExport`). Patient IDs are exact text, but Excel drops leading zeros when the file is double-clicked
+open; import the column as text to keep them. Text starting with `= + - @` gets a leading `'` so a
+spreadsheet cannot run it as a formula. Every download is an `AccessLog` row (`event: export`, with the
+export, range and filters in `last_url`). Rows are preloaded, so the query count does not grow with the
+row count.
 
 ### Teams (担当チーム)
 

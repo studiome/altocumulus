@@ -51,3 +51,36 @@ ledger_columns:
 weekly_pdf:
   font_size: 8
   title: "Weekly Operating Room Schedule"
+
+# CSV exports (see config/site.yml for every field): a surgery export shaped
+# like a surgical registry (NCD) worksheet, plus a slim admission list. The
+# columns are generic placeholders, not any registry's real item codes; the
+# clerk maps them to the registry's own layout.
+exports:
+  ncd_list:
+    label: NCD登録用
+    subject: surgery
+    fields:
+      - surgery_date
+      - hospital_id
+      - patient_name
+      - patient_kana
+      - age
+      - sex
+      - scheduling_type
+      - diagnoses
+      - procedures
+      - surgical_device
+      - anesthesia_method
+      - duration_hours
+      - operator
+      - assistant
+      - admission_date
+      - discharge_date
+      - emergency_admission
+  surgery_list:
+    subject: surgery
+    fields: [surgery_date, weekday, start_time, slot_category, hospital_id, patient_name, diagnoses, procedures, operator, team, location]
+  admission_list:
+    subject: hospitalization
+    fields: [scheduled_admission_date, admission_date, hospital_id, patient_name, age, sex, diagnoses, purpose, referred_from, adl, reservation_doctor, team, reservation_status]

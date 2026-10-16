@@ -341,4 +341,84 @@ class SiteConfigTest < ActiveSupport::TestCase
     assert_equal 8, example.weekly_pdf_font_size
     assert example.weekly_pdf_title.present?
   end
+
+  # --- exports ---------------------------------------------------------
+
+  test "without exports the built-in surgery_list and admission_list apply" do
+    definitions = SiteConfig.from_hash({}).export_definitions
+    assert_equal %i[surgery_list admission_list], definitions.map(&:key)
+    surgery_list, admission_list = definitions
+    assert_equal :surgery, surgery_list.subject
+    assert_equal :hospitalization, admission_list.subject
+    assert_includes surgery_list.fields, :hospital_id
+    assert_includes admission_list.fields, :procedure_name
+    assert_equal ExportField.keys(:surgery).sort - %i[team team_members], surgery_list.fields.sort
+  end
+
+  test "the built-in exports include the team fields with the teams feature" do
+    config = SiteConfig.from_hash("features" => { "teams" => true })
+    assert_includes config.export_definition(:surgery_list).fields, :team_members
+    assert_includes config.export_definition("admission_list").fields, :team
+  end
+
+  test "exports are read in file order with an optional label" do
+    config = SiteConfig.from_hash("exports" => {
+      "ncd_list" => { "subject" => "surgery", "fields" => %w[surgery_date hospital_id], "label" => " NCD " },
+      "plain" => { "subject" => "hospitalization", "fields" => [ "admission_date" ] }
+    })
+    assert_equal %i[ncd_list plain], config.export_definitions.map(&:key)
+    ncd = config.export_definition(:ncd_list)
+    assert_equal :surgery, ncd.subject
+    assert_equal %i[surgery_date hospital_id], ncd.fields
+    assert_equal "NCD", ncd.title
+    assert_equal "Plain", config.export_definition(:plain).title
+    assert_nil config.export_definition(:surgery_list)
+  end
+
+  test "an empty exports mapping switches exports off" do
+    assert_empty SiteConfig.from_hash("exports" => {}).export_definitions
+  end
+
+  test "export validation rejects bad definitions" do
+    good = { "subject" => "surgery", "fields" => [ "surgery_date" ] }
+    bad = [
+      { "Bad-Key" => good },
+      { "x" => good.merge("subject" => "patient") },
+      { "x" => good.merge("subject" => nil) },
+      { "x" => good.merge("fields" => []) },
+      { "x" => good.merge("fields" => nil) },
+      { "x" => good.merge("fields" => %w[surgery_date surgery_date]) },
+      { "x" => good.merge("fields" => [ "procedure_name" ]) },
+      { "x" => good.merge("fields" => [ "nope" ]) },
+      { "x" => good.merge("fields" => [ 1 ]) },
+      { "x" => good.merge("label" => 5) },
+      { "x" => good.merge("label" => "y" * 41) },
+      { "x" => good.merge("colour" => "red") },
+      { "x" => "surgery" },
+      [ good ]
+    ]
+    bad.each do |exports|
+      assert_raises(SiteConfig::Error, exports.inspect) { SiteConfig.from_hash("exports" => exports) }
+    end
+  end
+
+  test "export fields are checked against the export's own subject" do
+    error = assert_raises(SiteConfig::Error) do
+      SiteConfig.from_hash("exports" => { "x" => { "subject" => "hospitalization", "fields" => [ "surgery_date" ] } })
+    end
+    assert_match "surgery_date", error.message
+  end
+
+  test "team export fields need features.teams" do
+    exports = { "x" => { "subject" => "surgery", "fields" => %w[surgery_date team] } }
+    error = assert_raises(SiteConfig::Error) { SiteConfig.from_hash("exports" => exports) }
+    assert_match "features.teams", error.message
+    assert_nothing_raised { SiteConfig.from_hash("exports" => exports, "features" => { "teams" => true }) }
+  end
+
+  test "the shipped configs load, the example with an ncd_list export" do
+    assert_equal %i[surgery_list admission_list], SiteConfig.load(Rails.root.join("config/site.yml")).export_definitions.map(&:key)
+    example = SiteConfig.load(Rails.root.join("config/site.example.yml"))
+    assert_includes example.export_definitions.map(&:key), :ncd_list
+  end
 end

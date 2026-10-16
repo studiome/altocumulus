@@ -54,6 +54,10 @@ class SiteConfig
   WEEKLY_PDF_DEFAULT_FONT_SIZE = 8
   WEEKLY_PDF_TITLE_MAX = 100
 
+  # exports: named CSV exports (see ExportDefinition, ExportField).
+  EXPORT_KEYS = %w[subject fields label].freeze
+  EXPORT_LABEL_MAX = 40
+
   # top-level key => validator method (receives the raw value, returns the
   # normalized one, raises Error).
   SCHEMA = {
@@ -62,7 +66,8 @@ class SiteConfig
     "features" => :normalize_features,
     "masters" => :normalize_masters,
     "ledger_columns" => :normalize_ledger_columns,
-    "weekly_pdf" => :normalize_weekly_pdf
+    "weekly_pdf" => :normalize_weekly_pdf,
+    "exports" => :normalize_exports
   }.freeze
 
   class << self
@@ -130,6 +135,7 @@ class SiteConfig
     end
     reject_team_fields_without_teams_feature!
     reject_team_column_without_teams_feature!
+    reject_team_export_fields_without_teams_feature!
     @values.freeze
   end
 
@@ -193,6 +199,20 @@ class SiteConfig
     @values.fetch("weekly_pdf")[:title]
   end
 
+  # The CSV exports on offer (ExportDefinition), in file order: the configured
+  # ones, or the built-in surgery_list / admission_list when `exports` is
+  # omitted (an explicit empty mapping switches exports off).
+  def export_definitions
+    configured = @values.fetch("exports")
+    return ExportDefinition.defaults(teams_enabled: teams_enabled?) if configured.nil?
+
+    configured.values
+  end
+
+  def export_definition(key)
+    export_definitions.find { |definition| definition.key.to_s == key.to_s }
+  end
+
   private
 
     def reject_team_fields_without_teams_feature!
@@ -212,6 +232,17 @@ class SiteConfig
         next unless keys.include?(LedgerColumn::TEAM_COLUMN)
 
         raise Error, "#{source}: ledger_columns.#{ledger} lists #{LedgerColumn::TEAM_COLUMN}, which needs features.teams to be true"
+      end
+    end
+
+    def reject_team_export_fields_without_teams_feature!
+      return if teams_enabled?
+
+      (@values.fetch("exports") || {}).each_value do |definition|
+        team_fields = definition.fields.select { |key| ExportField.find(definition.subject, key).teams? }
+        next if team_fields.empty?
+
+        raise Error, "#{source}: exports.#{definition.key} lists #{team_fields.join(', ')}, which needs features.teams to be true"
       end
     end
 
@@ -334,6 +365,54 @@ class SiteConfig
         result[:title] = title.strip if title.strip.present?
       end
       result.freeze
+    end
+
+    # key => ExportDefinition, or nil when `exports` is omitted (the built-in
+    # defaults then apply, see #export_definitions).
+    def normalize_exports(value)
+      return nil if value.nil?
+      raise Error, "#{source}: exports must be a mapping of export name => {subject:, fields:}" unless value.is_a?(Hash)
+
+      value.to_h do |key, definition|
+        [ key, normalize_export(key, definition) ]
+      end.freeze
+    end
+
+    def normalize_export(key, definition)
+      label = "exports.#{key}"
+      unless key.is_a?(String) && key.match?(ExportDefinition::KEY_FORMAT)
+        raise Error, "#{source}: #{label}: the export name must match #{ExportDefinition::KEY_FORMAT.source} (lowercase letters, digits, underscore)"
+      end
+      raise Error, "#{source}: #{label} must be a mapping with subject and fields" unless definition.is_a?(Hash)
+
+      unknown = definition.keys - EXPORT_KEYS
+      raise Error, "#{source}: #{label} has unknown key(s) #{unknown.join(', ')} (known: #{EXPORT_KEYS.join(', ')})" if unknown.any?
+
+      subjects = ExportField::SUBJECTS.map(&:to_s)
+      subject = definition["subject"]
+      raise Error, "#{source}: #{label}.subject must be one of #{subjects.join(', ')}" unless subjects.include?(subject)
+
+      ExportDefinition.new(key: key.to_sym, subject: subject.to_sym, fields: normalize_export_fields(label, subject, definition["fields"]),
+                           label: normalize_export_label(label, definition["label"]))
+    end
+
+    def normalize_export_fields(label, subject, fields)
+      raise Error, "#{source}: #{label}.fields must be a non-empty list of field keys" unless fields.is_a?(Array) && fields.any? && fields.all?(String)
+      raise Error, "#{source}: #{label}.fields lists a field more than once" unless fields.uniq.size == fields.size
+
+      known = ExportField.keys(subject).map(&:to_s)
+      unknown = fields - known
+      raise Error, "#{source}: #{label}.fields has unknown field(s) #{unknown.join(', ')} (known for #{subject}: #{known.join(', ')})" if unknown.any?
+
+      fields.map(&:to_sym).freeze
+    end
+
+    def normalize_export_label(label, value)
+      return nil if value.nil?
+      raise Error, "#{source}: #{label}.label must be a string" unless value.is_a?(String)
+      raise Error, "#{source}: #{label}.label must be at most #{EXPORT_LABEL_MAX} characters" if value.strip.length > EXPORT_LABEL_MAX
+
+      value.strip.presence
     end
 
     def normalize_patient(value)

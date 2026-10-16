@@ -114,3 +114,43 @@ ledger_columns:
 weekly_pdf:
   font_size: 8
   title: null
+
+# exports: named CSV exports (CSV出力), offered to admins and data managers
+# only, as a "CSV出力" menu on the operations calendar (surgery tab: exports
+# with subject surgery; examination tab: subject hospitalization, the
+# non-surgery admissions listed there) and on the hospitalization list (all
+# admissions of its current filter). The file covers the screen's date range
+# and active filters (mine, team) and is named <name>_<start>_<end>.csv. It is
+# UTF-8 with a byte order mark, CRLF line endings, one header row and every
+# value quoted; patient IDs are exact text, but Excel drops leading zeros when
+# the file is opened by double click (import the column as text to keep
+# them). Each download is recorded in the access log.
+# Omit the key to get the two built-in exports below, with every field of
+# their subject; `exports: {}` switches exports off. Otherwise each entry is
+#   <name>:            lowercase letters, digits and underscores
+#     subject:         surgery (a row per surgery) or hospitalization
+#     fields:          non-empty list of field keys, in column order, no repeats
+#     label:           optional button text (at most 40 characters); default is
+#                      the translated name (surgery_list = 手術一覧,
+#                      admission_list = 入院一覧)
+# Fields of subject surgery:
+#   surgery_date weekday start_time slot_number slot_category scheduling_type
+#   hospital_id patient_name patient_kana age (on the surgery date) sex
+#   diagnoses procedures (with laterality) surgical_device duration_hours
+#   anesthesia_method operator assistant team team_members location
+#   performing_department partner_department backup_intervention
+#   and, from the surgery's hospitalization: scheduled_admission_date
+#   admission_date discharge_date emergency_admission transfer_status
+#   source_department referred_from adl reservation_doctor created_by
+#   submitted_on reservation_status purpose clinical_comment
+# Fields of subject hospitalization:
+#   hospital_id patient_name patient_kana age (on the admission date) sex
+#   diagnoses scheduled_admission_date admission_date discharge_date
+#   emergency_admission transfer_status source_department referred_from adl
+#   reservation_doctor created_by submitted_on reservation_status purpose
+#   clinical_comment scheduled_procedure_date procedure_name planned_days
+#   scheduled_surgery_date attending_doctor ward team team_members
+# team and team_members need features.teams: true, otherwise the boot fails.
+# The built-in defaults (what is used while `exports` is omitted):
+#   surgery_list:   {subject: surgery, fields: every surgery field}
+#   admission_list: {subject: hospitalization, fields: every hospitalization field}

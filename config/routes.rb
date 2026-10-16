@@ -84,6 +84,9 @@ Rails.application.routes.draw do
   # is the day's ISO date and the record is that day's Holiday row.
   resources :day_notes, only: %i[ show edit update destroy ], param: :date
   get "operations_calendar" => "operations_calendar#index", as: :operations_calendar
+  # CSV exports of the configured `exports` (admin / data manager only); `:key`
+  # is the export's name, `view` the screen it was started from.
+  get "exports/:key" => "exports#show", as: :export, constraints: { key: /[a-z0-9_]+/ }
   get "dashboard" => "dashboard#index"
   get "search" => "searches#index", as: :search
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

@@ -29,6 +29,19 @@ class ExaminationCalendar
     @by_date = load_rows.group_by { |hospitalization| row_date(hospitalization) }
   end
 
+  # The hospitalizations the tab lists for `dates` (before any preloading or
+  # ordering): active, not for surgery, sitting on one of the dates, narrowed
+  # by the filter. Shared with the CSV export, which must list the same rows.
+  def self.scope_for(dates, filter: CalendarFilter.none)
+    date_sql = Arel.sql("COALESCE(hospitalizations.scheduled_procedure_date, hospitalizations.admission_date, hospitalizations.scheduled_admission_date)")
+    scope = Hospitalization.active.where.not(purpose: "surgery").where(date_sql.in(dates))
+    filter.apply_to_hospitalizations(scope)
+  end
+
+  def self.order_scope(scope)
+    scope.order(Arel.sql("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date)"), :id)
+  end
+
   def hospitalizations_for(date)
     @by_date[date] || []
   end
@@ -58,11 +71,7 @@ class ExaminationCalendar
     end
 
     def load_rows
-      date_sql = Arel.sql("COALESCE(hospitalizations.scheduled_procedure_date, hospitalizations.admission_date, hospitalizations.scheduled_admission_date)")
-      scope = Hospitalization.active.where.not(purpose: "surgery").where(date_sql.in(dates))
-      scope = filter.apply_to_hospitalizations(scope)
-      scope.includes(:patient, *LedgerColumn.includes_for(columns))
-           .order(Arel.sql("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date)"), :id)
-           .to_a
+      scope = self.class.scope_for(dates, filter: filter)
+      self.class.order_scope(scope.includes(:patient, *LedgerColumn.includes_for(columns))).to_a
     end
 end
