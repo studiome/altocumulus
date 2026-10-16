@@ -245,24 +245,32 @@ ja:
         admission_date: "入院日"
         attending_doctor: "主治医"
         clinical_comment: "臨床コメント"
+        created_by_id: "入力者"
         deleted_at: "削除日時"
         discharge_date: "退院日"
         discharge_destination: "退院先"
+        emergency_admission: "緊急入院"
         outcome: "転帰"
         patient_age_snapshot: "患者年齢(記録時点)"
         patient_id: "患者"
         patient_name_snapshot: "患者氏名(記録時点)"
         patient_sex_snapshot: "患者性別(記録時点)"
         planned_days: "予定入院日数"
+        procedure_name: "検査処置名"
         purpose: "入院目的"
         reason: "入院理由"
         referred_from: "紹介元"
         reservation_doctor: "予約医師"
+        reservation_doctor_id: "予約医師"
+        reservation_doctor_legacy_name: "予約医師(旧入力)"
         reservation_status: "予約ステータス"
         room_preference: "病室希望"
         scheduled_admission_date: "入院予定日"
+        scheduled_procedure_date: "検査処置予定日"
         scheduled_surgery_date: "手術予定日"
+        source_department_id: "転科元診療科"
         submitted_on: "提出日"
+        transfer_status: "転科状況"
         ward: "病棟"
       hospitalization_diagnosis:
         diagnosis_id: "診断名"
@@ -359,6 +367,8 @@ ja:
               must_be_on_or_after_admission_date: "は入院日以降の日付にしてください"
             scheduled_surgery_date:
               must_be_on_or_after_scheduled_admission_date: "は入院予定日以降の日付にしてください"
+            scheduled_procedure_date:
+              must_be_on_or_after_scheduled_admission_date: "は入院予定日以降の日付にしてください"
             admission_date:
               or_scheduled_admission_date_required: "または入院予定日のいずれかを入力してください"
         case_database_entry:
@@ -416,6 +426,10 @@ ja:
       admin_status_options:
         unconfirmed: "未確認"
         confirmed: "確認済み"
+      transfer_status_options:
+        none: "転科なし"
+        transferred_in: "他科から転科して入院"
+        operated_without_transfer: "他科入院のまま転科せず手術"
       status_filter_options:
         in_hospital: "入院中"
         discharged: "退院済み"
@@ -899,6 +913,8 @@ ja:
       new_diagnosis_link: "新規診断名"
       patient_schedule_heading: "患者・予定"
       scheduled_admission_date_helper: "予約段階の間はこちらを設定してください。未定の場合は空欄のままで構いません。"
+      source_department_helper: "「転科なし」以外を選んだ場合は必須です。「転科なし」の場合は保存時に空になります。"
+      legacy_reservation_doctor_helper: "医師が利用者として登録される前の入力値: %{name}。利用者を選ぶと置き換わります。"
       required_legend: "＊は必須項目です"
       admission_date_helper: "この項目か、上記の入院予定日のいずれかを設定してください。"
       planned_days_label: "入院予定日数"

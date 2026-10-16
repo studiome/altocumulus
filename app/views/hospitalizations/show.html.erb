@@ -86,7 +86,30 @@
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.reservation_doctor") %></span>
-          <span class="text-lg font-medium"><%= @hospitalization.reservation_doctor.presence || t("common.none") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.reservation_doctor_display || t("common.none") %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:emergency_admission) %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.emergency_admission? ? t("helpers.audit_events.yes") : t("helpers.audit_events.no") %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:transfer_status) %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.transfer_status_label %></span>
+          <% if @hospitalization.source_department %>
+            <span class="text-base-content/60 block"><%= Hospitalization.human_attribute_name(:source_department_id) %>: <%= @hospitalization.source_department.name %></span>
+          <% end %>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:scheduled_procedure_date) %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.scheduled_procedure_date ? date_with_weekday(@hospitalization.scheduled_procedure_date, holidays: @holidays) : "-" %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:procedure_name) %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.procedure_name.presence || t("common.none") %></span>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:created_by_id) %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.created_by&.name || t("common.none") %></span>
         </div>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.attending_doctor") %></span>

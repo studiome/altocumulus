@@ -48,3 +48,24 @@ class AuditEventsHelperTest < ActionView::TestCase
     end
   end
 end
+
+class AuditEventsHelperRoleForeignKeyTest < ActionView::TestCase
+  include AuditEventsHelper
+
+  # source_department_id / reservation_doctor_id / created_by_id do not map to a
+  # class by name; the belongs_to reflection says which model they point at.
+  test "role-named foreign keys resolve through the association" do
+    event = AuditEvent.new(
+      auditable_type: "Hospitalization", auditable_id: 1, action: "update", record_label: "x",
+      change_data: {
+        "reservation_doctor_id" => [ nil, users(:member).id ],
+        "source_department_id" => [ nil, departments(:gynecology).id ],
+        "created_by_id" => [ nil, users(:admin).id ]
+      }
+    )
+    rows = audit_change_rows(event).index_by { |row| row[:label] }
+    assert_equal "Member User", rows.fetch(Hospitalization.human_attribute_name(:reservation_doctor_id))[:after]
+    assert_equal "Gynecology", rows.fetch(Hospitalization.human_attribute_name(:source_department_id))[:after]
+    assert_equal "Admin User", rows.fetch(Hospitalization.human_attribute_name(:created_by_id))[:after]
+  end
+end

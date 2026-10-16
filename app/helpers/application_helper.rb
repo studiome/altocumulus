@@ -2,10 +2,32 @@ module ApplicationHelper
   # CSS class for the label of a field whose requiredness is chosen by the
   # site config (see ConfigurableRequiredFields): the asterisk comes from the
   # same source as the validation, so the two cannot disagree.
-  def required_label_class(model_class, attribute)
+  #
+  # Pass the form's record as `record:` for a field that is only required in
+  # some situations (e.g. by hospitalization purpose); the mark then follows
+  # that record as rendered.
+  def required_label_class(model_class, attribute, record: nil)
     classes = %w[app-field-label]
-    classes << "app-field-label-required" if model_class.required_attribute?(attribute)
+    classes << "app-field-label-required" if model_class.required_attribute?(attribute, record)
     classes.join(" ")
+  end
+
+  # The users a form may offer for a "which person" field, ordered by name:
+  # every active user, plus the one the record being edited already points at
+  # (even if deactivated since), the way MasterRecord.choices_for does.
+  def user_choices_for(current_id)
+    User.active.or(User.where(id: current_id)).order(:name)
+  end
+
+  # Space-separated hospitalization purposes for which the site requires the
+  # attribute without always requiring it, or nil. The purpose-fields
+  # Stimulus controller reads it to keep a label's asterisk in step with the
+  # purpose select as it changes.
+  def required_purposes_for(attribute)
+    return nil if Hospitalization.required_attribute?(attribute)
+
+    purposes = Hospitalization::PURPOSE_KEYS.select { |purpose| Hospitalization.required_attribute?(attribute, purpose: purpose) }
+    purposes.join(" ").presence
   end
 
   # The installation's own name (see AppSetting). Memoized because the layout

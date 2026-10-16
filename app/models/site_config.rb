@@ -24,11 +24,19 @@ class SiteConfig
     "surgery" => "Surgery"
   }.freeze
 
+  # required_fields also takes hospitalization_by_purpose: purpose =>
+  # [field, ...], fields required only for hospitalizations of that purpose.
+  BY_PURPOSE_KEY = "hospitalization_by_purpose".freeze
+
   PATIENT_KEYS = %w[hospital_id_format hospital_id_format_hint].freeze
 
   # Keys of the masters section: the names a deployment wants present in the
   # admin-editable master tables (see SiteMasterSeeder, `site:seed_masters`).
   MASTER_KEYS = %w[departments surgery_locations surgical_devices].freeze
+
+  # Masters whose entries may be a mapping ({name: ..., <option>: ...}) instead
+  # of a plain name, with the options each accepts.
+  MASTER_ENTRY_OPTIONS = { "surgery_locations" => %w[asks_performing_department] }.freeze
 
   # top-level key => validator method (receives the raw value, returns the
   # normalized one, raises Error).
@@ -110,6 +118,12 @@ class SiteConfig
     @values.fetch("required_fields").fetch(model.to_s, [])
   end
 
+  # Attribute names (symbols) required only for hospitalizations of the given
+  # purpose (required_fields.hospitalization_by_purpose).
+  def required_fields_for_purpose(purpose)
+    @values.fetch("required_fields").fetch(BY_PURPOSE_KEY, {}).fetch(purpose.to_s, [])
+  end
+
   def hospital_id_format
     @values.fetch("patient")[:hospital_id_format]
   end
@@ -124,37 +138,65 @@ class SiteConfig
     @values.fetch("masters").fetch(key.to_s, [])
   end
 
+  # Names of the surgery locations the site flagged asks_performing_department
+  # (see SiteMasterSeeder).
+  def surgery_locations_asking_performing_department
+    @master_flags.fetch("surgery_locations", {}).select { |_name, flags| flags["asks_performing_department"] }.keys
+  end
+
   private
 
     def normalize_required_fields(value)
       return {} if value.nil?
       raise Error, "#{source}: required_fields must be a mapping of model => [field, ...]" unless value.is_a?(Hash)
 
-      unknown_models = value.keys - REQUIRED_FIELD_MODELS.keys
+      known = REQUIRED_FIELD_MODELS.keys + [ BY_PURPOSE_KEY ]
+      unknown_models = value.keys - known
       if unknown_models.any?
-        raise Error, "#{source}: required_fields has unknown model(s) #{unknown_models.join(', ')} (known: #{REQUIRED_FIELD_MODELS.keys.join(', ')})"
+        raise Error, "#{source}: required_fields has unknown model(s) #{unknown_models.join(', ')} (known: #{known.join(', ')})"
       end
 
       value.to_h do |model, fields|
-        fields = [] if fields.nil?
-        unless fields.is_a?(Array) && fields.all?(String)
-          raise Error, "#{source}: required_fields.#{model} must be a list of field names"
-        end
-        validate_field_names!(model, fields)
-        [ model, fields.map(&:to_sym).uniq.freeze ]
+        next [ model, normalize_by_purpose(fields) ] if model == BY_PURPOSE_KEY
+
+        [ model, normalize_field_list("required_fields.#{model}", model, fields) ]
       end.freeze
+    end
+
+    def normalize_by_purpose(value)
+      return {}.freeze if value.nil?
+      unless value.is_a?(Hash)
+        raise Error, "#{source}: required_fields.#{BY_PURPOSE_KEY} must be a mapping of purpose => [field, ...]"
+      end
+
+      unknown = value.keys - Hospitalization::PURPOSE_KEYS
+      if unknown.any?
+        raise Error, "#{source}: required_fields.#{BY_PURPOSE_KEY} has unknown purpose(s) #{unknown.join(', ')} (known: #{Hospitalization::PURPOSE_KEYS.join(', ')})"
+      end
+
+      value.to_h do |purpose, fields|
+        [ purpose, normalize_field_list("required_fields.#{BY_PURPOSE_KEY}.#{purpose}", "hospitalization", fields) ]
+      end.freeze
+    end
+
+    def normalize_field_list(label, model, fields)
+      fields = [] if fields.nil?
+      raise Error, "#{source}: #{label} must be a list of field names" unless fields.is_a?(Array) && fields.all?(String)
+
+      validate_field_names!(label, model, fields)
+      fields.map(&:to_sym).uniq.freeze
     end
 
     # Field names are checked against the model's real attribute names so a
     # typo fails the deploy instead of silently never being required. When the
     # database is not reachable yet (assets:precompile, db:create) the check is
     # skipped rather than failing the boot for an unrelated reason.
-    def validate_field_names!(model, fields)
+    def validate_field_names!(label, model, fields)
       attribute_names = REQUIRED_FIELD_MODELS.fetch(model).constantize.attribute_names
       unknown = fields - attribute_names
       return if unknown.empty?
 
-      raise Error, "#{source}: required_fields.#{model} has unknown field(s) #{unknown.join(', ')}"
+      raise Error, "#{source}: #{label} has unknown field(s) #{unknown.join(', ')}"
     rescue ActiveRecord::ActiveRecordError
       nil
     end
@@ -179,18 +221,56 @@ class SiteConfig
     end
 
     def normalize_masters(value)
+      @master_flags = {}
       return {}.freeze if value.nil?
       raise Error, "#{source}: masters must be a mapping of master => [name, ...]" unless value.is_a?(Hash)
 
       unknown = value.keys - MASTER_KEYS
       raise Error, "#{source}: masters has unknown key(s) #{unknown.join(', ')} (known: #{MASTER_KEYS.join(', ')})" if unknown.any?
 
-      value.to_h do |key, names|
-        names = [] if names.nil?
-        unless names.is_a?(Array) && names.all? { |name| name.is_a?(String) && name.strip.present? }
-          raise Error, "#{source}: masters.#{key} must be a list of non-blank strings"
+      value.to_h do |key, entries|
+        entries = [] if entries.nil?
+        raise Error, "#{source}: masters.#{key} must be a list of non-blank strings" unless entries.is_a?(Array)
+
+        names = []
+        entries.each do |entry|
+          name, flags = normalize_master_entry(key, entry)
+          names << name
+          next if flags.empty?
+
+          merged = (@master_flags[key] ||= {})[name] ||= {}
+          flags.each { |flag, flag_value| merged[flag] ||= flag_value }
         end
-        [ key, names.map(&:strip).uniq.freeze ]
-      end.freeze
+        [ key, names.uniq.freeze ]
+      end.tap { @master_flags.each_value(&:freeze) }.freeze
+    end
+
+    # An entry is a non-blank name, or (only for masters listed in
+    # MASTER_ENTRY_OPTIONS) a mapping with a name and boolean options.
+    def normalize_master_entry(key, entry)
+      return [ entry.strip, {} ] if entry.is_a?(String) && entry.strip.present?
+
+      allowed = MASTER_ENTRY_OPTIONS[key]
+      unless entry.is_a?(Hash) && allowed
+        message = allowed ? "must be a list of non-blank strings or {name: ...} mappings" : "must be a list of non-blank strings"
+        raise Error, "#{source}: masters.#{key} #{message}"
+      end
+
+      name = entry["name"]
+      unless name.is_a?(String) && name.strip.present?
+        raise Error, "#{source}: masters.#{key} entries given as a mapping need a non-blank name"
+      end
+
+      unknown = entry.keys - [ "name" ] - allowed
+      if unknown.any?
+        raise Error, "#{source}: masters.#{key} entry #{name} has unknown option(s) #{unknown.join(', ')} (known: #{allowed.join(', ')})"
+      end
+
+      flags = entry.except("name")
+      unless flags.values.all? { |flag| flag == true || flag == false }
+        raise Error, "#{source}: masters.#{key} entry #{name}: options must be true or false"
+      end
+
+      [ name.strip, flags ]
     end
 end

@@ -33,9 +33,9 @@ class SiteConfigRequiredMarksTest < ActionView::TestCase
   test "hospitalization form marks configured fields only" do
     render_hospitalization_form
     assert_select "label[for=hospitalization_referred_from].app-field-label-required", count: 0
-    with_site_config("required_fields" => { "hospitalization" => %w[referred_from reservation_doctor attending_doctor] }) do
+    with_site_config("required_fields" => { "hospitalization" => %w[referred_from reservation_doctor_id attending_doctor] }) do
       render_hospitalization_form
-      %w[referred_from reservation_doctor attending_doctor].each do |f|
+      %w[referred_from reservation_doctor_id attending_doctor].each do |f|
         assert_select "label[for=hospitalization_#{f}].app-field-label-required", count: 1
       end
     end

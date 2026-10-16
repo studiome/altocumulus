@@ -5,7 +5,7 @@ import { Controller } from "@hotwired/stimulus"
 // keeps them in step when the purpose select changes. Hidden fields stay in
 // the DOM so their values are still submitted.
 export default class extends Controller {
-  static targets = [ "select", "otherSection", "surgerySection" ]
+  static targets = [ "select", "otherSection", "surgerySection", "procedureSection", "requiredLabel" ]
 
   connect() {
     this.toggle()
@@ -18,5 +18,14 @@ export default class extends Controller {
     if (this.hasSurgerySectionTarget) {
       this.surgerySectionTarget.classList.toggle("hidden", this.selectTarget.value !== "surgery")
     }
+    if (this.hasProcedureSectionTarget) {
+      this.procedureSectionTarget.classList.toggle("hidden", this.selectTarget.value === "surgery")
+    }
+    // A label whose field the site requires only for some purposes carries
+    // those purposes in data-required-purposes.
+    this.requiredLabelTargets.forEach((label) => {
+      const purposes = (label.dataset.requiredPurposes || "").split(" ")
+      label.classList.toggle("app-field-label-required", purposes.includes(this.selectTarget.value))
+    })
   }
 }

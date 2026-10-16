@@ -129,6 +129,50 @@ class SiteConfigTest < ActiveSupport::TestCase
     assert_empty SiteConfig.from_hash("masters" => { "departments" => nil }).master_names(:departments)
   end
 
+  test "hospitalization_by_purpose loads per-purpose field lists" do
+    config = SiteConfig.from_hash("required_fields" => {
+      "hospitalization_by_purpose" => { "examination" => %w[procedure_name scheduled_procedure_date], "other" => nil }
+    })
+    assert_equal %i[procedure_name scheduled_procedure_date], config.required_fields_for_purpose(:examination)
+    assert_empty config.required_fields_for_purpose("other")
+    assert_empty config.required_fields_for_purpose("surgery")
+    assert_empty config.required_fields(:hospitalization)
+  end
+
+  test "hospitalization_by_purpose rejects unknown purposes, unknown fields and bad shapes" do
+    error = assert_raises(SiteConfig::Error) do
+      SiteConfig.from_hash("required_fields" => { "hospitalization_by_purpose" => { "nap" => [ "reason" ] } })
+    end
+    assert_match "nap", error.message
+    error = assert_raises(SiteConfig::Error) do
+      SiteConfig.from_hash("required_fields" => { "hospitalization_by_purpose" => { "examination" => [ "nope" ] } })
+    end
+    assert_match "nope", error.message
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("required_fields" => { "hospitalization_by_purpose" => [ "x" ] }) }
+    assert_raises(SiteConfig::Error) do
+      SiteConfig.from_hash("required_fields" => { "hospitalization_by_purpose" => { "examination" => "procedure_name" } })
+    end
+  end
+
+  test "the example config shows a purpose-conditional list" do
+    config = SiteConfig.load(Rails.root.join("config/site.example.yml"))
+    assert_includes config.required_fields_for_purpose(:examination), :procedure_name
+    assert_includes config.required_fields(:hospitalization), :reservation_doctor_id
+  end
+
+  test "masters.surgery_locations entries may be a name or a mapping with asks_performing_department" do
+    config = SiteConfig.from_hash("masters" => { "surgery_locations" => [ "Ward", { "name" => " Cath Lab ", "asks_performing_department" => true } ] })
+    assert_equal [ "Ward", "Cath Lab" ], config.master_names(:surgery_locations)
+    assert_equal [ "Cath Lab" ], config.surgery_locations_asking_performing_department
+  end
+
+  test "masters mapping entries are validated" do
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "surgery_locations" => [ { "asks_performing_department" => true } ] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "surgery_locations" => [ { "name" => "X", "bogus" => 1 } ] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "surgery_locations" => [ { "name" => "X", "asks_performing_department" => "yes" } ] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "departments" => [ { "name" => "X" } ] }) }
+  end
+
   test "with swaps the current config and restores it" do
     original = SiteConfig.current
     with_site_config("required_fields" => { "surgery" => [ "operator_name" ] }) do

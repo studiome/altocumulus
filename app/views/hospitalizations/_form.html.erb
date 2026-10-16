@@ -53,6 +53,24 @@
             data: { purpose_fields_target: "select", action: "purpose-fields#toggle" } %>
     </div>
 
+    <div class="app-field">
+      <label class="label cursor-pointer justify-start gap-3">
+        <%= form.check_box :emergency_admission, class: "checkbox checkbox-primary" %>
+        <span class="app-field-label"><%= Hospitalization.human_attribute_name(:emergency_admission) %></span>
+      </label>
+    </div>
+
+    <div class="app-field">
+      <%= form.label :transfer_status, Hospitalization.human_attribute_name(:transfer_status), class: "app-field-label" %>
+      <%= form.select :transfer_status, Hospitalization.transfer_status_form_options, {}, class: "select w-full focus:select-primary" %>
+    </div>
+
+    <div class="app-field">
+      <%= form.label :source_department_id, Hospitalization.human_attribute_name(:source_department_id), class: "app-field-label" %>
+      <%= form.collection_select :source_department_id, Department.choices_for(hospitalization.source_department_id), :id, :name, { include_blank: true }, class: "select w-full focus:select-primary" %>
+      <p class="app-helper"><%= t(".source_department_helper") %></p>
+    </div>
+
     <%# The purpose-specific fields are rendered hidden unless they apply, so
         they never flash in before the controller connects; their values are
         kept (and submitted) either way. %>
@@ -70,6 +88,17 @@
     <div class="app-field <%= "hidden" unless hospitalization.purpose == "surgery" %>" data-purpose-fields-target="surgerySection">
       <%= form.label :scheduled_surgery_date, t("hospitalizations.labels.scheduled_surgery_date"), class: "app-field-label" %>
       <%= form.date_field :scheduled_surgery_date, class: "input w-full focus:input-primary" %>
+    </div>
+
+    <div class="app-field <%= "hidden" if hospitalization.purpose == "surgery" %>" data-purpose-fields-target="procedureSection">
+      <%= form.label :scheduled_procedure_date, Hospitalization.human_attribute_name(:scheduled_procedure_date),
+            class: required_label_class(Hospitalization, :scheduled_procedure_date, record: hospitalization),
+            data: { required_purposes: required_purposes_for(:scheduled_procedure_date), purpose_fields_target: "requiredLabel" } %>
+      <%= form.date_field :scheduled_procedure_date, class: "input w-full focus:input-primary" %>
+      <%= form.label :procedure_name, Hospitalization.human_attribute_name(:procedure_name),
+            class: required_label_class(Hospitalization, :procedure_name, record: hospitalization) + " mt-3",
+            data: { required_purposes: required_purposes_for(:procedure_name), purpose_fields_target: "requiredLabel" } %>
+      <%= form.text_field :procedure_name, class: "input w-full focus:input-primary" %>
     </div>
 
     <div class="app-field">
@@ -126,12 +155,15 @@
     </div>
 
     <div class="app-field">
-      <%= form.label :reservation_doctor, t("hospitalizations.labels.reservation_doctor"), class: required_label_class(Hospitalization, :reservation_doctor) %>
-      <%= form.text_field :reservation_doctor, class: "input w-full focus:input-primary" %>
+      <%= form.label :reservation_doctor_id, t("hospitalizations.labels.reservation_doctor"), class: required_label_class(Hospitalization, :reservation_doctor_id, record: hospitalization) %>
+      <%= form.collection_select :reservation_doctor_id, user_choices_for(hospitalization.reservation_doctor_id), :id, :name, { include_blank: true }, class: "select w-full focus:select-primary" %>
+      <% if hospitalization.reservation_doctor_id.blank? && hospitalization.reservation_doctor_legacy_name.present? %>
+        <p class="app-helper"><%= t(".legacy_reservation_doctor_helper", name: hospitalization.reservation_doctor_legacy_name) %></p>
+      <% end %>
     </div>
 
     <div class="app-field">
-      <%= form.label :attending_doctor, t("hospitalizations.labels.attending_doctor"), class: required_label_class(Hospitalization, :attending_doctor) %>
+      <%= form.label :attending_doctor, t("hospitalizations.labels.attending_doctor"), class: required_label_class(Hospitalization, :attending_doctor, record: hospitalization) %>
       <%= form.text_field :attending_doctor, class: "input w-full focus:input-primary" %>
     </div>
 
@@ -146,7 +178,7 @@
     </div>
 
     <div class="app-field">
-      <%= form.label :referred_from, t("hospitalizations.labels.referred_from"), class: required_label_class(Hospitalization, :referred_from) %>
+      <%= form.label :referred_from, t("hospitalizations.labels.referred_from"), class: required_label_class(Hospitalization, :referred_from, record: hospitalization) %>
       <%= form.text_field :referred_from, class: "input w-full focus:input-primary" %>
     </div>
 

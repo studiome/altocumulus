@@ -884,7 +884,7 @@ class HospitalizationSiteConfigTest < ActiveSupport::TestCase
       assert_includes hospitalization.errors[:referred_from], I18n.t("errors.messages.blank")
       assert_empty hospitalization.errors[:attending_doctor]
       assert Hospitalization.required_attribute?(:referred_from)
-      assert_not Hospitalization.required_attribute?(:reservation_doctor)
+      assert_not Hospitalization.required_attribute?(:reservation_doctor_id)
 
       hospitalization.referred_from = "Clinic"
       assert hospitalization.valid?

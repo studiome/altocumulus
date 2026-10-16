@@ -13,6 +13,9 @@ class Hospitalization < ApplicationRecord
   ].freeze
   PURPOSE_KEYS = %w[surgery examination chemotherapy chemoradiotherapy other].freeze
   ADMIN_STATUS_KEYS = %w[unconfirmed confirmed].freeze
+  # Whether the patient was already in hospital under another department:
+  # transferred in to this one, or operated on without ever being transferred.
+  TRANSFER_STATUS_KEYS = %w[none transferred_in operated_without_transfer].freeze
 
   # The index page's single "Status" filter mixes two kinds of condition: the
   # derived in_hospital/discharged state, and reservation-workflow shortcuts
@@ -27,6 +30,13 @@ class Hospitalization < ApplicationRecord
   RECENTLY_UPDATED_WITHIN = 2.days
 
   belongs_to :patient
+  # The department a transferred patient came from; required exactly when
+  # transfer_status is not "none" (see clear_source_department_without_transfer).
+  belongs_to :source_department, class_name: "Department", optional: true
+  # Users: the doctor the reservation is for, and whoever entered the record
+  # (set from Current.user on create, never from params).
+  belongs_to :reservation_doctor, class_name: "User", optional: true
+  belongs_to :created_by, class_name: "User", optional: true
   has_many :hospitalization_diagnoses, -> { order(:id) }, dependent: :destroy, inverse_of: :hospitalization
   has_many :diagnoses, through: :hospitalization_diagnoses
   accepts_nested_attributes_for :hospitalization_diagnoses,
@@ -43,12 +53,15 @@ class Hospitalization < ApplicationRecord
   validates :reservation_status, inclusion: { in: RESERVATION_STATUS_KEYS }
   validates :purpose, inclusion: { in: PURPOSE_KEYS }
   validates :admin_status, inclusion: { in: ADMIN_STATUS_KEYS }
+  validates :transfer_status, inclusion: { in: TRANSFER_STATUS_KEYS }
+  validates :source_department, presence: true, if: :transferred?
   validate :valid_date_values
   validate :admission_date_or_scheduled_admission_date_required
   validate :must_have_at_least_one_diagnosis
   validate :no_duplicate_diagnoses
   validate :discharge_date_on_or_after_admission_date
   validate :scheduled_surgery_date_on_or_after_scheduled_admission_date
+  validate :scheduled_procedure_date_on_or_after_scheduled_admission_date
   validate :outcome_required_when_discharged
   validate :discharge_fields_require_discharge_date
   validate :no_overlapping_hospitalization_period
@@ -67,6 +80,13 @@ class Hospitalization < ApplicationRecord
   # changes -- never on an ordinary field edit, or it would silently drift
   # away from being a point-in-time record.
   before_save :capture_patient_snapshot, if: -> { new_record? || patient_id_changed? }
+
+  before_validation :clear_source_department_without_transfer
+  # A chosen doctor supersedes the historical free text.
+  before_validation :drop_legacy_reservation_doctor_name, if: -> { reservation_doctor_id.present? }
+  # Always the signed-in user (nil for console/seeds), so a rebooked copy
+  # belongs to whoever rebooked it rather than inheriting the original's.
+  before_create { self.created_by = Current.user }
 
   # No default_scope: it would fight the deleted list, restore, and admin
   # tooling, which all need to see discarded records. Every other read path
@@ -112,6 +132,10 @@ class Hospitalization < ApplicationRecord
     PURPOSE_KEYS.index_with { |key| I18n.t("models.hospitalization.purpose_options.#{key}") }
   end
 
+  def self.transfer_status_options
+    TRANSFER_STATUS_KEYS.index_with { |key| I18n.t("models.hospitalization.transfer_status_options.#{key}") }
+  end
+
   def self.admin_status_options
     ADMIN_STATUS_KEYS.index_with { |key| I18n.t("models.hospitalization.admin_status_options.#{key}") }
   end
@@ -138,6 +162,10 @@ class Hospitalization < ApplicationRecord
 
   def self.admin_status_form_options
     admin_status_options.map { |k, v| [ v, k ] }
+  end
+
+  def self.transfer_status_form_options
+    transfer_status_options.map { |k, v| [ v, k ] }
   end
 
   def self.status_filter_form_options
@@ -188,6 +216,30 @@ class Hospitalization < ApplicationRecord
   # expressed in terms of this single effective date.
   def effective_admission_date
     admission_date || scheduled_admission_date
+  end
+
+  # Fields a site requires only for this hospitalization's purpose
+  # (required_fields.hospitalization_by_purpose in the site config).
+  def self.conditional_required_attributes_for(purpose: nil, **)
+    purpose.present? ? SiteConfig.current.required_fields_for_purpose(purpose) : []
+  end
+
+  def conditional_required_options
+    { purpose: purpose }
+  end
+
+  def transferred?
+    transfer_status.present? && transfer_status != "none"
+  end
+
+  def transfer_status_label
+    self.class.transfer_status_options[transfer_status] || transfer_status
+  end
+
+  # The reservation doctor as shown to people: the linked user's name, else the
+  # free text carried over from before doctors were users, else nil.
+  def reservation_doctor_display
+    reservation_doctor&.name.presence || reservation_doctor_legacy_name.presence
   end
 
   def deleted?
@@ -271,6 +323,7 @@ class Hospitalization < ApplicationRecord
     copy.submitted_on = Date.current
     copy.scheduled_admission_date = scheduled_admission_date
     copy.scheduled_surgery_date = nil
+    copy.scheduled_procedure_date = nil
     copy.hospitalization_diagnoses_attributes =
       active_hospitalization_diagnoses.map { |hd| { diagnosis_id: hd.diagnosis_id } }
     copy.save
@@ -278,6 +331,14 @@ class Hospitalization < ApplicationRecord
   end
 
   private
+
+    def clear_source_department_without_transfer
+      self.source_department = nil unless transferred?
+    end
+
+    def drop_legacy_reservation_doctor_name
+      self.reservation_doctor_legacy_name = nil
+    end
 
     def reset_admin_status_for_non_admin_update
       self.admin_status = "unconfirmed"
@@ -327,6 +388,13 @@ class Hospitalization < ApplicationRecord
       errors.add(:scheduled_surgery_date, :must_be_on_or_after_scheduled_admission_date)
     end
 
+    def scheduled_procedure_date_on_or_after_scheduled_admission_date
+      return if scheduled_procedure_date.blank? || scheduled_admission_date.blank?
+      return if scheduled_procedure_date >= scheduled_admission_date
+
+      errors.add(:scheduled_procedure_date, :must_be_on_or_after_scheduled_admission_date)
+    end
+
     def outcome_required_when_discharged
       return if discharge_date.blank?
       return if outcome.present?
@@ -349,13 +417,13 @@ class Hospitalization < ApplicationRecord
       errors.add(:admission_date, :or_scheduled_admission_date_required)
     end
 
-    # scheduled_admission_date, scheduled_surgery_date, admission_date, and discharge_date all mean
+    # scheduled_admission_date, scheduled_surgery_date, scheduled_procedure_date, admission_date, and discharge_date all mean
     # "undecided" when left blank, but a string that fails to parse into a
     # date (e.g. a typo) should surface as an error rather than silently
     # becoming nil. Comparing the raw pre-cast value against the cast value
     # tells the two cases apart.
     def valid_date_values
-      %i[scheduled_admission_date scheduled_surgery_date admission_date discharge_date].each do |field|
+      %i[scheduled_admission_date scheduled_surgery_date scheduled_procedure_date admission_date discharge_date].each do |field|
         raw = public_send("#{field}_before_type_cast")
         errors.add(field, :not_a_valid_date) if raw.present? && public_send(field).nil?
       end

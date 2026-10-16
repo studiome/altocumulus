@@ -6,8 +6,12 @@
 required_fields:
   hospitalization:
     - referred_from
-    - reservation_doctor
+    - reservation_doctor_id
     - attending_doctor
+  hospitalization_by_purpose:
+    examination:
+      - scheduled_procedure_date
+      - procedure_name
   surgery:
     - operator_name
     - duration_hours

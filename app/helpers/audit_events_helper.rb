@@ -56,7 +56,7 @@ module AuditEventsHelper
       when :boolean
         audit_boolean_label(value)
       else
-        attribute.to_s.end_with?("_id") ? audit_resolve_foreign_key(attribute, value) : value.to_s
+        attribute.to_s.end_with?("_id") ? audit_resolve_foreign_key(model_class, attribute, value) : value.to_s
       end
     end
 
@@ -87,11 +87,23 @@ module AuditEventsHelper
     # audit event has a handful of changed attributes), so this does not
     # introduce N+1 queries across a list of audit events. Falls back to the
     # raw id whenever the attribute name doesn't map to a real association.
-    def audit_resolve_foreign_key(attribute, value)
-      klass = attribute.to_s.delete_suffix("_id").classify.safe_constantize
+    def audit_resolve_foreign_key(model_class, attribute, value)
+      klass = audit_foreign_key_class(model_class, attribute)
       return value.to_s unless klass && klass < ActiveRecord::Base
 
       record = klass.find_by(id: value)
       record ? record.to_s : "##{value} #{I18n.t("helpers.audit_events.not_found")}"
+    end
+
+    # The model a foreign key points at: what the model's own belongs_to says
+    # (so reservation_doctor_id -> User, source_department_id -> Department),
+    # else the key's name read as a class name (diagnosis_id -> Diagnosis).
+    def audit_foreign_key_class(model_class, attribute)
+      reflection = model_class&.reflect_on_all_associations(:belongs_to)&.find { |association| association.foreign_key.to_s == attribute.to_s }
+      return reflection.klass if reflection && !reflection.polymorphic?
+
+      attribute.to_s.delete_suffix("_id").classify.safe_constantize
+    rescue NameError
+      nil
     end
 end

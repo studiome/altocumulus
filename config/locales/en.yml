@@ -257,6 +257,8 @@ en:
               must_be_on_or_after_admission_date: "must be on or after the admission date"
             scheduled_surgery_date:
               must_be_on_or_after_scheduled_admission_date: "must be on or after the scheduled admission date"
+            scheduled_procedure_date:
+              must_be_on_or_after_scheduled_admission_date: "must be on or after the scheduled admission date"
             admission_date:
               or_scheduled_admission_date_required: "or a scheduled admission date must be present"
         case_database_entry:
@@ -317,6 +319,10 @@ en:
       admin_status_options:
         unconfirmed: "Unconfirmed"
         confirmed: "Confirmed"
+      transfer_status_options:
+        none: "No transfer"
+        transferred_in: "Transferred in from another department"
+        operated_without_transfer: "Operated on while staying under another department"
       status_filter_options:
         in_hospital: "In Hospital"
         discharged: "Discharged"
@@ -915,6 +921,8 @@ en:
       new_diagnosis_link: "New Diagnosis"
       patient_schedule_heading: "Patient & Schedule"
       scheduled_admission_date_helper: "Set this while the admission is still a reservation. Leave undecided if unknown."
+      source_department_helper: "Required when a transfer status other than \"No transfer\" is chosen; cleared otherwise."
+      legacy_reservation_doctor_helper: "Entered before doctors were users: %{name}. Choose a user to replace it."
       required_legend: "* Required"
       admission_date_helper: "Either this or the scheduled admission date above must be set."
       planned_days_label: "Planned Length of Stay (Days)"

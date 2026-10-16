@@ -115,7 +115,7 @@ class HospitalizationsController < ApplicationController
     # colours (see date_with_weekday) costs nothing per row.
     def holidays_for(hospitalizations)
       dates = hospitalizations.flat_map do |h|
-        [ h.admission_date, h.scheduled_admission_date, h.discharge_date, h.scheduled_surgery_date, h.submitted_on ]
+        [ h.admission_date, h.scheduled_admission_date, h.discharge_date, h.scheduled_surgery_date, h.scheduled_procedure_date, h.submitted_on ]
       end
       Holiday.by_date(dates.compact.uniq)
     end
@@ -158,7 +158,8 @@ class HospitalizationsController < ApplicationController
       params.expect(hospitalization: [
         :patient_id, :admission_date, :scheduled_admission_date, :scheduled_surgery_date, :reservation_status, :purpose,
         :planned_days, :reason, :room_preference, :ward, :referred_from, :adl,
-        :reservation_doctor, :attending_doctor, :submitted_on, :clinical_comment,
+        :reservation_doctor_id, :attending_doctor, :submitted_on, :clinical_comment,
+        :emergency_admission, :transfer_status, :source_department_id, :scheduled_procedure_date, :procedure_name,
         :discharge_date, :outcome, :discharge_destination,
         { hospitalization_diagnoses_attributes: [ [ :id, :diagnosis_id, :_destroy ] ] }
       ])

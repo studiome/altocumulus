@@ -12,8 +12,14 @@
 # in addition to what the app always requires. Keys are model names
 # (hospitalization, surgery); values are lists of attribute names. The form's
 # red asterisk follows this list automatically.
-#   hospitalization: e.g. referred_from, reservation_doctor, attending_doctor
+#   hospitalization: e.g. referred_from, reservation_doctor_id, attending_doctor
 #   surgery:         e.g. operator_name, assistant_name, duration_hours
+# hospitalization_by_purpose requires fields only for hospitalizations of a
+# given purpose (surgery, examination, chemotherapy, chemoradiotherapy, other),
+# on top of the unconditional list. The asterisk follows the purpose chosen in
+# the form.
+#   hospitalization_by_purpose:
+#     examination: [scheduled_procedure_date, procedure_name]
 required_fields: {}
 
 # patient: patient ID rules.
@@ -31,6 +37,9 @@ patient: {}
 # It only adds missing names, in the order listed, and never renames, reorders
 # or deletes existing rows.
 #   departments:       clinical departments (診療科)
-#   surgery_locations: places a surgery is performed (実施場所)
+#   surgery_locations: places a surgery is performed (実施場所). An entry is
+#                      a name, or {name: ..., asks_performing_department: true}
+#                      to flag a place whose cases may be performed by another
+#                      department (applied only to newly created rows).
 #   surgical_devices:  surgical support devices (手術支援機器)
 masters: {}
