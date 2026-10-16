@@ -24,7 +24,7 @@ class OperationsCalendar
   end
 
   attr_reader :start_date, :days, :dates, :slot_usages, :admission_counts,
-              :admission_warning_threshold
+              :admission_warning_threshold, :columns
 
   # Parses the raw (and possibly invalid or crafted) request params into a
   # valid range before building the calendar, so a bad `start` or `days`
@@ -41,7 +41,8 @@ class OperationsCalendar
     @dates = (start_date..(start_date + days - 1)).to_a
     @admission_warning_threshold = Rails.application.config.x.admission_warning_threshold
 
-    @slot_usages = ElectiveSlotUsage.for_dates(@dates)
+    @columns = LedgerColumn.for_ledger(:operations_calendar)
+    @slot_usages = ElectiveSlotUsage.for_dates(@dates, includes: LedgerColumn.includes_for(@columns))
     @admission_counts = build_admission_counts
     @referral_lookup = build_referral_lookup
   end
@@ -50,6 +51,12 @@ class OperationsCalendar
   # the surgery date, or nil when there is none (or it has no referral).
   def referred_from_for(surgery)
     @referral_lookup.referred_from_for(surgery)
+  end
+
+  # What the ledger column builders need besides the record; `href` makes the
+  # patient column link to a surgery.
+  def ledger_context(href: nil)
+    LedgerColumn::Context.new(referral_lookup: @referral_lookup, href: href)
   end
 
   def admission_count_for(date)

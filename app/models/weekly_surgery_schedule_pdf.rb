@@ -1,7 +1,9 @@
 # Renders seven days of surgeries, starting on an arbitrary date, as a landscape
 # A4 PDF for printing. One ledger-style table: a shaded heading row per day
 # (date, holiday name, case count) followed by that day's surgeries, with the
-# column headings repeated on every page.
+# column headings repeated on every page. The columns, and their order, are the
+# site's ledger_columns.weekly_pdf (see LedgerColumn); each cell is the
+# column's value flattened to plain text.
 #
 # Text is set in the bundled IPAex Gothic (vendor/fonts, IPA Font License) so
 # Japanese renders without depending on fonts installed on the server. The
@@ -10,15 +12,9 @@ class WeeklySurgerySchedulePdf
   FONT_PATH = Rails.root.join("vendor/fonts/ipaexg.ttf")
   DAYS = 7
   MARGIN = 28
-  # Fixed widths for every column but the last, which takes whatever is left of
-  # the printable width (A4 is 841.89pt wide, so a hard-coded total would be off
-  # by a fraction of a point and Prawn refuses a table wider than the page).
-  FIXED_COLUMN_WIDTHS = [ 44, 34, 108, 130, 168, 80, 46, 66 ].freeze
-  COLUMN_KEYS = %i[time slot patient diagnosis procedure operator duration anesthesia category].freeze
-
   # Black, white and grays only: the sheet is meant for a monochrome printer, so
   # nothing may depend on hue. Emergency cases are told apart by the "Emergency"
-  # label in the type column plus a light gray fill.
+  # label in the type column plus a light gray fill (badges print as text).
   HEAD_COLOR = "D0D0D0".freeze
   DAY_COLOR = "E6E6E6".freeze
   LINE_COLOR = "666666".freeze
@@ -30,6 +26,20 @@ class WeeklySurgerySchedulePdf
 
   def initialize(start_date)
     @start_date = start_date.to_date
+  end
+
+  # Widths (points) for the columns, fitting `total`. Each column brings a
+  # default width; when they add up to less than the page the last column takes
+  # the remainder (a hard-coded total would be off by a fraction of a point, and
+  # Prawn refuses a table wider than the page), and when they add up to more
+  # they are all scaled down in proportion (rounded down, never over).
+  def column_widths(columns, total)
+    defaults = columns.map(&:width)
+    sum = defaults.sum
+    return defaults[0...-1] + [ total - defaults[0...-1].sum ] if sum <= total
+
+    factor = total.to_f / sum
+    defaults.map { |width| (width * factor).floor(2) }
   end
 
   def end_date
@@ -57,10 +67,19 @@ class WeeklySurgerySchedulePdf
 
     def surgeries_by_date
       @surgeries_by_date ||= Surgery.where(surgery_date: dates)
-                                    .includes(:patient, :department, :surgery_location, :surgical_device, :hospitalization, { patient_diagnoses: :diagnosis },
-                                              { surgery_procedure_selections: :surgery_procedure })
+                                    .includes(:patient, :department, :surgery_location, :surgical_device, :hospitalization,
+                                              { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure },
+                                              *LedgerColumn.includes_for(columns))
                                     .group_by(&:surgery_date)
                                     .transform_values { |list| list.sort_by { |surgery| sort_key(surgery) } }
+    end
+
+    def columns
+      @columns ||= LedgerColumn.for_ledger(:weekly_pdf)
+    end
+
+    def context
+      @context ||= LedgerColumn::Context.new(referral_lookup: referral_lookup)
     end
 
     def referral_lookup
@@ -89,7 +108,7 @@ class WeeklySurgerySchedulePdf
       rows = [ heading_row ]
       dates.each { |date| rows.concat(day_rows(date)) }
 
-      widths = FIXED_COLUMN_WIDTHS + [ pdf.bounds.width - FIXED_COLUMN_WIDTHS.sum ]
+      widths = column_widths(columns, pdf.bounds.width)
       pdf.table(rows, header: true, column_widths: widths,
                       cell_style: { size: 8, padding: [ 3, 4 ], border_width: 0.5, border_color: LINE_COLOR }) do |table|
         table.row(0).background_color = HEAD_COLOR
@@ -98,15 +117,15 @@ class WeeklySurgerySchedulePdf
     end
 
     def heading_row
-      COLUMN_KEYS.map { |key| I18n.t("surgery_schedules.pdf.columns.#{key}") }
+      columns.map { |column| [ column.header_upper, column.header_lower ].compact.join("\n") }
     end
 
     def day_rows(date)
       surgeries = surgeries_by_date[date] || []
-      rows = [ [ { content: day_heading(date, surgeries), colspan: COLUMN_KEYS.size, background_color: DAY_COLOR } ] ]
+      rows = [ [ { content: day_heading(date, surgeries), colspan: columns.size, background_color: DAY_COLOR } ] ]
 
       if surgeries.empty?
-        rows << [ { content: I18n.t("surgery_schedules.pdf.no_surgeries"), colspan: COLUMN_KEYS.size, text_color: MUTED_TEXT_COLOR } ]
+        rows << [ { content: I18n.t("surgery_schedules.pdf.no_surgeries"), colspan: columns.size, text_color: MUTED_TEXT_COLOR } ]
       else
         surgeries.each { |surgery| rows << surgery_row(surgery) }
       end
@@ -129,41 +148,8 @@ class WeeklySurgerySchedulePdf
     end
 
     def surgery_row(surgery)
-      cells = [
-        surgery.start_time_display,
-        surgery.regular_slot? ? surgery.slot_number.to_s.presence || "-" : "-",
-        patient_text(surgery),
-        surgery.diagnosis_names_display,
-        surgery.display_procedure_name,
-        operator_text(surgery),
-        surgery.duration_hours ? I18n.t("surgeries.labels.duration_value", hours: surgery.duration_hours) : "-",
-        surgery.anesthesia_method.to_s,
-        category_text(surgery)
-      ]
+      cells = columns.map { |column| column.cell(surgery, context).plain_text }
       surgery.emergency? ? cells.map { |content| { content: content, background_color: EMERGENCY_COLOR } } : cells
-    end
-
-    # Hospital id over name, then the referral source when there is one.
-    def patient_text(surgery)
-      name = surgery.patient&.name.presence || I18n.t("surgery_schedules.labels.unknown_patient_name", id: surgery.patient_id)
-      referred_from = referral_lookup.referred_from_for(surgery)
-      lines = [ surgery.patient&.hospital_id, name ].compact
-      lines << "#{I18n.t('hospitalizations.labels.referred_from')}: #{referred_from}" if referred_from.present?
-      lines.join("\n")
-    end
-
-    # Operator over assistant, mirroring the stacked cell on the surgery list.
-    def operator_text(surgery)
-      [ surgery.operator_name.presence || "-", surgery.assistant_name.presence ].compact.join("\n")
-    end
-
-    def category_text(surgery)
-      lines = [ surgery.scheduling_type_label ]
-      unless surgery.regular_slot?
-        detail = surgery.slot_category_detail
-        lines << [ surgery.slot_category_label, detail ].compact.join(": ")
-      end
-      lines.join("\n")
     end
 
     def draw_page_numbers(pdf)

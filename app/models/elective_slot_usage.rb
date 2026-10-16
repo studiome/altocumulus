@@ -43,13 +43,15 @@ class ElectiveSlotUsage
 
   # Builds one ElectiveSlotUsage per date in a single pass, issuing a fixed
   # number of queries regardless of how many dates are given (no N+1).
-  def self.for_dates(dates)
+  # `includes` adds associations to preload on top of the always-loaded set
+  # (e.g. what the ledger columns on screen read, see LedgerColumn.includes_for).
+  def self.for_dates(dates, includes: [])
     dates = dates.to_a
     rules = ElectiveSlotRule.by_day_of_week
     holidays = Holiday.by_date(dates)
     surgeries_by_date = Surgery.where(surgery_date: dates)
                                 .includes(:patient, :department, :surgery_location, :surgical_device, :hospitalization,
-                                          { surgery_procedure_selections: :surgery_procedure })
+                                          { surgery_procedure_selections: :surgery_procedure }, *includes)
                                 .order(:slot_number, :start_time, :id)
                                 .group_by(&:surgery_date)
 

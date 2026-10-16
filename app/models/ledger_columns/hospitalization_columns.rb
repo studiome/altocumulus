@@ -11,7 +11,7 @@ module LedgerColumns
           column(:patient, 108, css_class: "ledger-patient", includes: [ :patient ]) { |hospitalization, context|
             patient_cell(hospitalization, context)
           },
-          column(:age_sex, 40, includes: [ :patient ]) { |hospitalization, _|
+          column(:age_sex, 46, includes: [ :patient ]) { |hospitalization, _|
             age_sex_cell(hospitalization.patient, hospitalization.effective_admission_date)
           },
           column(:diagnosis_procedure_name, 250, includes: [ { hospitalization_diagnoses: :diagnosis } ]) { |hospitalization, _|

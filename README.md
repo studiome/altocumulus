@@ -424,6 +424,15 @@ Keys:
 - `masters.teams`: team names (or `{name: ..., color: blue}`, color one of blue/red/green/orange/purple/
   teal/gray), seeded the same additive way as the other masters. Terms and members are entered in
   the app, not in this file.
+- `ledger_columns.operations_calendar` / `weekly_pdf` / `examination_calendar`: the columns each ledger
+  table shows, in order (the calendar's and PDF's day cell is always first and not listed). Columns come
+  from the ledger column registry (`LedgerColumn`, `app/models/ledger_column.rb` and
+  `app/models/ledger_columns/`): surgery ledgers use `time_slot`, `admission_dates`, `patient`, `age_sex`,
+  `diagnosis_procedure`, `operator_assistant`, `duration_anesthesia`, `team` (needs `features.teams`),
+  `category`, `reservation`, `referral_adl`, `status`; the examination ledger uses `admission_dates`,
+  `patient`, `age_sex`, `diagnosis_procedure_name`, `purpose`, `team`, `category`, `reservation`,
+  `referral_adl`, `status`. Omit a ledger for its built-in default. Unknown or duplicate columns, an empty
+  list, or `team` without `features.teams` stop the boot. See `config/site.yml` for the column meanings.
 
 In tests, `with_site_config(hash) { ... }` swaps the config temporarily.
 

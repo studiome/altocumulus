@@ -181,22 +181,120 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "shows the referral source in the patient column when the surgery day is covered by a hospitalization" do
+  test "shows the referral source in its own column, not under the patient name" do
     surgery = surgeries(:one)
-    hospitalizations(:one).update_columns(referred_from: "Riverside Clinic")
+    hospitalizations(:one).update_columns(referred_from: "Riverside Clinic", adl: "Walker")
 
     get operations_calendar_url, params: { start: surgery.surgery_date.to_s, days: 1 }
 
     assert_response :success
-    assert_select ".ledger-patient .ledger-secondary", text: /Referred From.*Riverside Clinic/m
+    assert_select ".ledger-patient", text: /Riverside Clinic/, count: 0
+    assert_select "tr.oc-surgery td:last-child .ledger-primary", text: "Riverside Clinic"
+    assert_select "tr.oc-surgery td:last-child .ledger-secondary", text: "Walker"
   end
 
-  test "shows no referral line when there is no referral source" do
+  test "shows nothing in the referral column when there is no referral source" do
     surgery = surgeries(:one)
 
     get operations_calendar_url, params: { start: surgery.surgery_date.to_s, days: 1 }
 
     assert_response :success
-    assert_select ".ledger-patient .ledger-secondary", text: /Referred From/, count: 0
+    assert_select "tr.oc-surgery td:last-child .ledger-primary", count: 0
   end
+
+  test "the default header is the day cell plus the default columns, two tiers each" do
+    get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
+
+    assert_select "thead th", 8
+    assert_select "thead th:nth-child(2) span", count: 2
+    assert_select "thead th:nth-child(2) span:nth-child(1)", text: "Start Time"
+    assert_select "thead th:nth-child(2) span:nth-child(2)", text: "Slot"
+    assert_select "thead th:last-child", text: /Referred From.*ADL/m
+    assert_select "thead th:nth-child(7)", text: "Type"
+  end
+
+  test "the columns and their order follow the site config" do
+    with_site_config("ledger_columns" => { "operations_calendar" => %w[patient time_slot] }) do
+      get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
+
+      assert_select "thead th", 3
+      assert_select "thead th:nth-child(2)", text: /Patient ID.*Name/m
+      assert_select "thead th:nth-child(3)", text: /Start Time.*Slot/m
+      assert_select "tr.oc-surgery + tr.oc-surgery td:first-child.ledger-patient" # later rows have no day cell
+      assert_select "tr.oc-surgery", 4
+    end
+  end
+
+  test "band rows and the empty-day row span the configured columns" do
+    with_site_config("ledger_columns" => { "operations_calendar" => %w[patient time_slot] }) do
+      get operations_calendar_url, params: { start: "2026-03-03", days: 3 }
+
+      assert_select "tr.ledger-band-warning td[colspan='3']"
+      assert_select "tr.oc-empty td[colspan='2']"
+    end
+    get operations_calendar_url, params: { start: "2026-03-03", days: 3 }
+    assert_select "tr.ledger-band-warning td[colspan='8']"
+    assert_select "tr.oc-empty td[colspan='7']"
+  end
+
+  test "the category column renders badges for emergency and partner department cases" do
+    surgeries(:one).update_columns(slot_category: "simultaneous", department_id: departments(:gynecology).id,
+                                   scheduling_type: "emergency")
+
+    with_site_config("ledger_columns" => { "operations_calendar" => %w[patient category] }) do
+      get operations_calendar_url, params: { start: "2026-03-01", days: 1 }
+
+      assert_select "tr.oc-surgery .badge.badge-error", text: "Emergency"
+      assert_select "tr.oc-surgery .badge", text: /Gynecology/
+    end
+  end
+
+  test "a team column shows the team badge and the members for the surgery date" do
+    config = { "features" => { "teams" => true }, "ledger_columns" => { "operations_calendar" => %w[patient team] } }
+    surgeries(:one).update_columns(team_id: teams(:blue).id, surgery_date: Date.new(2026, 10, 20))
+
+    with_site_config(config) do
+      get operations_calendar_url, params: { start: "2026-10-20", days: 1 }
+
+      assert_select "tr.oc-surgery .badge", text: "Blue Team"
+      assert_select "tr.oc-surgery .ledger-secondary", text: /Alpha\(M\), Bravo\(S\)/
+    end
+  end
+
+  test "the number of queries does not grow with the number of surgeries, even with every column" do
+    columns = LedgerColumn.keys(:surgery).map(&:to_s)
+    config = { "features" => { "teams" => true }, "ledger_columns" => { "operations_calendar" => columns } }
+    date = Date.new(2030, 1, 8)
+    add = lambda do |index|
+      patient = Patient.create!(name: "Q#{index}", hospital_id: "Q#{index}", date_of_birth: Date.new(1970, 1, 1), sex: "male")
+      hospitalization = Hospitalization.create!(patient: patient, reason: "x", scheduled_admission_date: date - 1,
+                                                referred_from: "Clinic", team: teams(:blue), reservation_doctor: users(:admin),
+                                                created_by: users(:member), transfer_status: "transferred_in",
+                                                source_department: departments(:gynecology),
+                                                hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:appendicitis).id } ])
+      Surgery.create!(patient: patient, surgery_date: date, anesthesia_method: "General", hospitalization: hospitalization,
+                      slot_category: "simultaneous", department: departments(:gynecology), team: teams(:red),
+                      surgical_device: surgical_devices(:robot_a), performing_department: departments(:gynecology),
+                      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ])
+    end
+
+    with_site_config(config) do
+      add.call(1)
+      one = count_queries { get operations_calendar_url, params: { start: date.to_s, days: 3 } }
+      3.times { |i| add.call(i + 2) }
+      many = count_queries { get operations_calendar_url, params: { start: date.to_s, days: 3 } }
+      assert_equal one, many
+    end
+  end
+
+  private
+
+    def count_queries
+      count = 0
+      counter = ->(_name, _started, _finished, _unique_id, payload) do
+        count += 1 unless payload[:cached] || payload[:name] == "SCHEMA"
+      end
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
+      count
+    end
 end

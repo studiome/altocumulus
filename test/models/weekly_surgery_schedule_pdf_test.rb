@@ -116,18 +116,19 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     assert_empty tinted, "non-gray colors in PDF: #{tinted.uniq.inspect}"
   end
 
-  test "shows the referral source under the patient when a referred hospitalization covers the surgery date" do
+  test "shows the referral source in the referral column when a referred hospitalization covers the surgery date" do
     date = Date.new(2030, 1, 8)
     patient = new_patient
     create_hospitalization(patient, scheduled_admission_date: date - 1, discharge_date: date + 3,
                                     outcome: "recovered", referred_from: "City Clinic")
     create_surgery(patient, date)
 
-    assert_includes render_text(Date.new(2030, 1, 7)), "Referred From: City Clinic"
-    assert_includes render_text(Date.new(2030, 1, 7), locale: :ja), "紹介元: City Clinic"
+    assert_includes render_text(Date.new(2030, 1, 7)), "City Clinic"
+    assert_includes render_text(Date.new(2030, 1, 7)), "Referred From"
+    assert_includes render_text(Date.new(2030, 1, 7), locale: :ja), "紹介元"
   end
 
-  test "leaves out the referral line when no referred hospitalization covers the surgery" do
+  test "leaves out the referral when no referred hospitalization covers the surgery" do
     date = Date.new(2030, 1, 8)
     create_surgery(new_patient, date)
     other = new_patient
@@ -136,7 +137,6 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
 
     text = render_text(Date.new(2030, 1, 7))
 
-    assert_not_includes text, "Referred From"
     assert_not_includes text, "Later Clinic"
   end
 
@@ -210,6 +210,106 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     many = count_queries { WeeklySurgerySchedulePdf.new(Date.new(2030, 1, 7)).render }
 
     assert_equal one, many
+  end
+
+  test "the header has two tiers and the columns follow the site config order" do
+    config = { "ledger_columns" => { "weekly_pdf" => %w[patient time_slot] } }
+    with_site_config(config) do
+      text = render_text(Date.new(2026, 3, 1))
+
+      assert_operator text.index("Patient ID"), :<, text.index("Start Time")
+      assert_includes text, "Name"
+      assert_includes text, "Slot"
+      assert_not_includes text, "Operator"
+      assert_includes text, "John Doe"
+    end
+  end
+
+  test "renders the configured columns with their content" do
+    config = { "features" => { "teams" => true },
+               "ledger_columns" => { "weekly_pdf" => %w[patient age_sex diagnosis_procedure team category reservation referral_adl] } }
+    date = Date.new(2026, 10, 20)
+    patient = new_patient # born 1980-01-01 => 46 on the surgery date
+    patient.update!(sex: "female")
+    hospitalization = create_hospitalization(patient, scheduled_admission_date: date - 2, referred_from: "City Clinic",
+                                                      adl: "Independent", team: teams(:blue), submitted_on: date - 10,
+                                                      reservation_doctor: users(:admin), reservation_status: "date_fixed")
+    surgery = create_surgery(patient, date)
+    surgery.update!(hospitalization: hospitalization, team: teams(:blue), surgery_location: surgery_locations(:cath_lab),
+                    surgical_device: surgical_devices(:robot_a))
+
+    with_site_config(config) do
+      text = render_text(date - 1)
+
+      [ "46 y", "Female", "Blue Team", "Alpha(M), Bravo(S)", "Cath Lab", "Robot A", "City Clinic", "Independent",
+        users(:admin).name, "2026-10-10" ].each do |expected|
+        assert_includes text, expected
+      end
+    end
+  end
+
+  test "renders the admission date and status columns" do
+    date = Date.new(2026, 10, 20)
+    patient = new_patient
+    hospitalization = create_hospitalization(patient, scheduled_admission_date: date - 2, reservation_status: "date_fixed")
+    create_surgery(patient, date).update!(hospitalization: hospitalization)
+
+    with_site_config("ledger_columns" => { "weekly_pdf" => %w[patient admission_dates status] }) do
+      text = render_text(date - 1)
+
+      assert_includes text, "2026-10-18"
+      assert_includes text, Hospitalization.reservation_status_options["date_fixed"]
+    end
+  end
+
+  test "an over-wide column set is scaled to fit the page" do
+    all = LedgerColumn.keys(:surgery).map(&:to_s)
+    with_site_config("features" => { "teams" => true }, "ledger_columns" => { "weekly_pdf" => all }) do
+      assert_operator LedgerColumn.for_ledger(:weekly_pdf).sum(&:width), :>, 790
+      assert_nothing_raised { WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1)).render }
+      assert_includes render_text(Date.new(2026, 3, 1)), "John Doe"
+    end
+  end
+
+  test "column widths use the registry defaults, the last column taking the remainder" do
+    widths = WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1)).column_widths(LedgerColumn.for_ledger(:weekly_pdf), 785.89)
+
+    defaults = LedgerColumn.for_ledger(:weekly_pdf).map(&:width)
+    assert_equal defaults[0...-1], widths[0...-1]
+    assert_in_delta 785.89, widths.sum, 0.001
+    assert_operator widths.last, :>=, defaults.last
+  end
+
+  test "column widths shrink proportionally when the defaults exceed the printable width" do
+    columns = LedgerColumn.keys(:surgery).reject { |key| key == :team }.map { |key| LedgerColumn.find(:surgery, key) }
+    widths = WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1)).column_widths(columns, 600)
+
+    assert_operator widths.sum, :<=, 600
+    assert_in_delta 600, widths.sum, 0.1
+    ratio = widths.first / columns.first.width
+    columns.zip(widths).each { |column, width| assert_in_delta ratio * column.width, width, 0.02 }
+  end
+
+  test "category, location and team columns add no queries per surgery" do
+    config = { "features" => { "teams" => true },
+               "ledger_columns" => { "weekly_pdf" => LedgerColumn.keys(:surgery).map(&:to_s) } }
+    date = Date.new(2030, 1, 8)
+    add = lambda do
+      patient = new_patient
+      hospitalization = create_hospitalization(patient, scheduled_admission_date: date - 1, referred_from: "Clinic",
+                                                        team: teams(:blue), reservation_doctor: users(:admin), created_by: users(:member),
+                                                        transfer_status: "transferred_in", source_department: departments(:gynecology))
+      create_surgery(patient, date).update!(hospitalization: hospitalization, team: teams(:red), surgery_location: surgery_locations(:cath_lab),
+                                            surgical_device: surgical_devices(:robot_a), performing_department: departments(:gynecology))
+    end
+    with_site_config(config) do
+      add.call
+      one = count_queries { WeeklySurgerySchedulePdf.new(Date.new(2030, 1, 7)).render }
+      3.times { add.call }
+      many = count_queries { WeeklySurgerySchedulePdf.new(Date.new(2030, 1, 7)).render }
+
+      assert_equal one, many
+    end
   end
 
   private
