@@ -23,3 +23,14 @@ required_fields: {}
 #   hospital_id_format_hint: human-readable description of the format, shown in
 #                            the error message (e.g. "8 digits"). Optional.
 patient: {}
+
+# masters: names to make sure exist in the admin-editable master tables, which
+# are managed on the Masters screens (Departments, Surgery Locations, Surgical
+# Devices) and feed the surgery form's choices. Nothing is created at boot:
+# run `bin/rails site:seed_masters` (also part of `db:seed`) after a deploy.
+# It only adds missing names, in the order listed, and never renames, reorders
+# or deletes existing rows.
+#   departments:       clinical departments (診療科)
+#   surgery_locations: places a surgery is performed (実施場所)
+#   surgical_devices:  surgical support devices (手術支援機器)
+masters: {}

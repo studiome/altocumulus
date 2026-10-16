@@ -26,11 +26,16 @@ class SiteConfig
 
   PATIENT_KEYS = %w[hospital_id_format hospital_id_format_hint].freeze
 
+  # Keys of the masters section: the names a deployment wants present in the
+  # admin-editable master tables (see SiteMasterSeeder, `site:seed_masters`).
+  MASTER_KEYS = %w[departments surgery_locations surgical_devices].freeze
+
   # top-level key => validator method (receives the raw value, returns the
   # normalized one, raises Error).
   SCHEMA = {
     "required_fields" => :normalize_required_fields,
-    "patient" => :normalize_patient
+    "patient" => :normalize_patient,
+    "masters" => :normalize_masters
   }.freeze
 
   class << self
@@ -113,6 +118,12 @@ class SiteConfig
     @values.fetch("patient")[:hospital_id_format_hint]
   end
 
+  # Names configured under masters.<key> (departments / surgery_locations /
+  # surgical_devices), in file order; empty when none.
+  def master_names(key)
+    @values.fetch("masters").fetch(key.to_s, [])
+  end
+
   private
 
     def normalize_required_fields(value)
@@ -165,5 +176,21 @@ class SiteConfig
       end
       result[:hospital_id_format_hint] = value["hospital_id_format_hint"].to_s if value["hospital_id_format_hint"].present?
       result.freeze
+    end
+
+    def normalize_masters(value)
+      return {}.freeze if value.nil?
+      raise Error, "#{source}: masters must be a mapping of master => [name, ...]" unless value.is_a?(Hash)
+
+      unknown = value.keys - MASTER_KEYS
+      raise Error, "#{source}: masters has unknown key(s) #{unknown.join(', ')} (known: #{MASTER_KEYS.join(', ')})" if unknown.any?
+
+      value.to_h do |key, names|
+        names = [] if names.nil?
+        unless names.is_a?(Array) && names.all? { |name| name.is_a?(String) && name.strip.present? }
+          raise Error, "#{source}: masters.#{key} must be a list of non-blank strings"
+        end
+        [ key, names.map(&:strip).uniq.freeze ]
+      end.freeze
     end
 end

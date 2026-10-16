@@ -36,3 +36,7 @@ if Rails.env.development?
     user.active = true
   end
 end
+
+# Master records named in the site config (config/site.yml or SITE_CONFIG_PATH).
+# Additive and idempotent; a no-op with the neutral default config.
+SiteMasterSeeder.call

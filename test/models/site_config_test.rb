@@ -94,6 +94,41 @@ class SiteConfigTest < ActiveSupport::TestCase
     assert_match "hospital_id_format", error.message
   end
 
+  test "the committed default config seeds no masters" do
+    config = SiteConfig.load(Rails.root.join("config/site.yml"))
+    SiteConfig::MASTER_KEYS.each { |key| assert_empty config.master_names(key) }
+  end
+
+  test "the example config lists masters" do
+    config = SiteConfig.load(Rails.root.join("config/site.example.yml"))
+    assert_includes config.master_names(:departments), "泌尿器科"
+    assert_includes config.master_names("surgery_locations"), "ハイブリッド室"
+    assert_equal [ "da Vinci", "hinotori" ], config.master_names(:surgical_devices)
+  end
+
+  test "masters are normalized: stripped, de-duplicated, order kept" do
+    config = SiteConfig.from_hash("masters" => { "departments" => [ " B ", "A", "B" ] })
+    assert_equal %w[B A], config.master_names(:departments)
+    assert_empty config.master_names(:surgical_devices)
+  end
+
+  test "masters with an unknown key fail fast" do
+    error = assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "teams" => [ "x" ] }) }
+    assert_match "teams", error.message
+  end
+
+  test "masters must be a mapping of lists of non-blank strings" do
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => [ "x" ]) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "departments" => "x" }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "departments" => [ "x", "" ] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "departments" => [ "x", 1 ] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "departments" => [ "x", nil ] }) }
+  end
+
+  test "a null masters list means empty" do
+    assert_empty SiteConfig.from_hash("masters" => { "departments" => nil }).master_names(:departments)
+  end
+
   test "with swaps the current config and restores it" do
     original = SiteConfig.current
     with_site_config("required_fields" => { "surgery" => [ "operator_name" ] }) do

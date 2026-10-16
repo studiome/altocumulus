@@ -402,6 +402,14 @@ Keys:
 - `patient.hospital_id_format` / `patient.hospital_id_format_hint`: a regular expression the patient's
   hospital ID must match when it is set or changed, and a human-readable description for the error
   message. Omit for no restriction.
+- `masters.departments` / `masters.surgery_locations` / `masters.surgical_devices`: lists of names
+  (for example a hospital's departments, its rooms such as a hybrid room or cath lab, and its
+  support devices) to make sure exist in the master tables. Nothing hospital-specific is hardcoded
+  in the app; the vocabulary lives in those admin-editable masters (Masters menu), and this key only
+  seeds them. Run `bin/rails site:seed_masters` after a deploy (it is also part of `db:seed`): it
+  only creates missing names, in the listed order after the existing rows, and never renames,
+  reorders or deletes anything. A deactivated master is no longer offered for new selections but
+  still shows on the surgeries that use it; a master in use cannot be deleted.
 
 In tests, `with_site_config(hash) { ... }` swaps the config temporarily.
 
