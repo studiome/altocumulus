@@ -505,9 +505,16 @@ admission date); an undated case shows only the team name.
 `bin/rails dev:demo_data` (development only; it refuses to run elsewhere) creates clearly fictional
 users (password `password`), teams with a current and a next term, 35 patients and 34
 hospitalizations over the next six weeks with linked surgeries (emergency, joint, backup, off-slot
-cath-lab, hybrid-room, robotic cases) and a few holidays/day notes, so screens can be reviewed. It
-finds-or-creates by natural keys, so running it again adds nothing. The builder is `DevDemoData`
-(`lib/dev_demo_data.rb`).
+cath-lab, hybrid-room, robotic cases) and a few holidays/day notes, so screens can be reviewed. Every
+case is built from a coherent diagnosis/procedure pair (`DevDemoData::Pair`: e.g. colorectal cancer with
+a robotic colectomy and a device, a hernia as a short laterality-aware repair, vascular cases in the
+hybrid room, catheter-lab cases done by another department), and the first week after the run holds
+a joint, a backup and an off-slot case plus several referral sources. It finds-or-creates by natural
+keys, so running it again adds nothing. `REFRESH=1 bin/rails dev:demo_data` additionally rewrites the
+clinical content (diagnoses, procedures, dates, slot category, referral) of the demo cases in place; it
+only touches a hospitalization carrying the `デモデータ #NN` marker on its demo patient (and that case's
+surgery and the patient's first diagnosis), never anything else, and a second refresh changes nothing.
+The builder is `DevDemoData` (`lib/dev_demo_data.rb`).
 
 ### Audit log
 
