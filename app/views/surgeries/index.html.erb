@@ -77,7 +77,7 @@
         <tbody>
           <% if @surgeries.any? %>
             <% @surgeries.each do |surgery| %>
-              <% slot_rule = @slot_rules[surgery.surgery_date&.wday] %>
+              <% slot_rule = surgery.surgery_date ? ElectiveSlotRule.effective_for(surgery.surgery_date, @slot_rules, @holidays) : nil %>
               <tr class="row-hover <%= "ledger-row-urgent" if surgery.emergency? %>">
                 <td class="whitespace-nowrap">
                   <span class="ledger-primary font-mono">

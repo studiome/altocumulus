@@ -9,6 +9,14 @@ class ElectiveSlotRule < ApplicationRecord
     ordered.index_by(&:day_of_week)
   end
 
+  # The rule in force on a date: the weekday's rule from `rules`
+  # (by_day_of_week), unless that date's Holiday row overrides it. `holidays`
+  # is Holiday.by_date.
+  def self.effective_for(date, rules, holidays)
+    rule = rules[date.wday]
+    holidays[date]&.effective_rule_for(rule) || rule
+  end
+
   # Localized weekday names, e.g. via the date.day_names keys the i18n
   # foundation already defines in both locale files -- always the current
   # I18n.locale's names, so this is a method, not a memoized/frozen constant.

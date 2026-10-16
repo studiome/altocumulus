@@ -37,6 +37,16 @@
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Holiday.human_attribute_name(:name) %></span>
           <span class="text-lg font-medium"><%= @holiday.name.presence || t("common.none") %></span>
         </div>
+        <% if @holiday.slot_override? %>
+          <div>
+            <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Holiday.human_attribute_name(:slot_count) %></span>
+            <span class="text-lg font-medium"><%= @holiday.slot_count_display %></span>
+          </div>
+          <div>
+            <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Holiday.human_attribute_name(:slot_duration_minutes) %></span>
+            <span class="text-lg font-medium"><%= @holiday.slot_duration_minutes ? t(".minutes_value", minutes: @holiday.slot_duration_minutes) : t(".weekday_duration") %></span>
+          </div>
+        <% end %>
         <div class="sm:col-span-2">
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Holiday.human_attribute_name(:note) %></span>
           <span class="text-lg font-medium whitespace-pre-line"><%= @holiday.note.presence || t("common.none") %></span>

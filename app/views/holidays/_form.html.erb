@@ -33,6 +33,18 @@
   </div>
 
   <div class="app-field">
+    <%= form.label :slot_count, t(".slot_count_label"), class: "app-field-label" %>
+    <%= form.number_field :slot_count, class: "input w-full focus:input-primary", min: 0.5, step: 0.5, placeholder: t(".slot_count_placeholder") %>
+    <p class="app-helper"><%= t(".slot_count_helper") %></p>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :slot_duration_minutes, t(".slot_duration_label"), class: "app-field-label" %>
+    <%= form.number_field :slot_duration_minutes, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: t(".slot_duration_placeholder") %>
+    <p class="app-helper"><%= t(".slot_duration_helper") %></p>
+  </div>
+
+  <div class="app-field">
     <%= form.label :note, class: "app-field-label" %>
     <%= form.text_area :note, class: "textarea w-full focus:textarea-primary", rows: 3, placeholder: t(".note_placeholder") %>
   </div>

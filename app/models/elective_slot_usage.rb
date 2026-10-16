@@ -81,10 +81,24 @@ class ElectiveSlotUsage
   end
 
   # The rule to actually apply for elective slots. A holiday shuts down
-  # elective slots for the day regardless of the weekday rule; emergency
-  # surgeries never consult this and are never affected.
+  # elective slots for the day regardless of the weekday rule; a comment-only
+  # day with a slot_count replaces the weekday rule (see
+  # Holiday#effective_rule_for); emergency surgeries never consult this and
+  # are never affected.
   def effective_rule
-    holiday? ? nil : rule
+    return @effective_rule if defined?(@effective_rule)
+
+    @effective_rule = holiday? ? nil : (holiday&.effective_rule_for(rule) || rule)
+  end
+
+  # True when a Holiday row's slot_count is what this day is using instead of
+  # the weekday rule.
+  def slot_override?
+    !holiday? && holiday.present? && holiday.slot_override?
+  end
+
+  def slot_count_display
+    effective_rule&.slot_count_display
   end
 
   def configured?

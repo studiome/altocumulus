@@ -239,6 +239,8 @@ ja:
         holiday: "休日"
         name: "名称"
         note: "備考"
+        slot_count: "列数（枠数）"
+        slot_duration_minutes: "1枠の時間（分）"
       hospitalization:
         adl: "ADL"
         admin_status: "確認ステータス"
@@ -350,6 +352,12 @@ ja:
           attributes:
             base:
               must_have_name_or_note: "名称または備考を入力してください"
+            slot_count:
+              must_be_blank_on_a_closed_day: "は休診日には指定できません"
+              required_with_slot_duration: "は1枠の時間を指定する場合に必須です"
+            slot_duration_minutes:
+              must_be_blank_on_a_closed_day: "は休診日には指定できません"
+              required_without_weekday_rule: "は、この曜日に手術枠ルールがないため必須です"
         patient:
           attributes:
             hospital_id:
@@ -686,12 +694,17 @@ ja:
       year_filter_label: "年"
       all_years_option: "すべて"
       type_header: "種別"
+      slots_header: "列数(変更)"
+      slots_value: "%{slots}枠 × %{minutes}分"
+      slots_value_weekday_duration: "%{slots}枠 × 曜日の時間"
       empty_no_filter: "休日が登録されていません。「新規休日」から作成してください。"
       empty_filtered: "条件に一致する休日がありません。"
     show:
       title: "休日の詳細"
       subtitle: "休日マスタ"
       unnamed: "(名称未設定)"
+      minutes_value: "%{minutes}分"
+      weekday_duration: "曜日のルール"
       edit_button: "休日を編集"
       delete_button: "休日を削除"
     new:
@@ -713,6 +726,12 @@ ja:
       name_placeholder: "例: 春分の日"
       name_helper: "休診日の場合は必須です。メモのみの日の場合は任意です。"
       note_placeholder: "例: 午前中に避難訓練"
+      slot_count_label: "この日の列数（枠数）(任意)"
+      slot_count_placeholder: "例: 2 または 2.5"
+      slot_count_helper: "この日に限り、曜日ごとの手術枠数を上書きします。空欄の場合は曜日のルールのままです。小数(例: 2.5)にすると最後の枠が短くなります。休診日には指定できません。"
+      slot_duration_label: "1枠の時間（分）(任意)"
+      slot_duration_placeholder: "例: 240"
+      slot_duration_helper: "この日に限り、曜日ごとの1枠の時間を上書きします。空欄の場合は曜日のルールのままです。曜日に手術枠ルールがない場合は必須です。"
     status_badge:
       closed: "休診"
       note_only: "メモのみ"
@@ -1109,6 +1128,7 @@ ja:
       period: "%{from} ~ %{to}"
       printed_at: "出力日時 %{time}"
       day_count: "%{count}件"
+      slot_override: "枠 %{slots}（変更）"
       no_surgeries: "手術予定なし"
       columns:
         time: "開始時刻"
@@ -1315,6 +1335,7 @@ ja:
       no_slots_holiday: "手術枠なし(休日)"
       no_slots_configured: "手術枠未設定"
       no_surgeries: "手術の予定はありません"
+      slot_override_label: "枠 %{slots}（変更）"
     labels:
       unknown_patient_name: "患者 #%{id}"
 

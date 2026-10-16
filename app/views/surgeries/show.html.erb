@@ -22,7 +22,7 @@
           <span class="badge <%= @surgery.emergency? ? "badge-error" : "badge-ghost" %> badge-lg p-4"><%= @surgery.scheduling_type_label %></span>
           <% if @surgery.elective? %>
             <% if @surgery.regular_slot? %>
-              <% slot_rule = @slot_rules[@surgery.surgery_date&.wday] %>
+              <% slot_rule = @surgery.surgery_date ? ElectiveSlotRule.effective_for(@surgery.surgery_date, @slot_rules, @holidays) : nil %>
               <% if @surgery.slot_number %>
                 <span class="badge badge-ghost">
                   <% if slot_rule %>

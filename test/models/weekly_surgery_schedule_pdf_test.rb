@@ -161,6 +161,14 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     assert_includes text, "Cath Lab"
   end
 
+  test "the day heading says when the slot count is overridden" do
+    Holiday.create!(date: Date.new(2030, 1, 8), holiday: false, note: "Reduced", slot_count: 2, slot_duration_minutes: 120)
+
+    assert_includes render_text(Date.new(2030, 1, 7)), "Slots: 2 (changed)"
+    assert_includes render_text(Date.new(2030, 1, 7), locale: :ja), "枠 2（変更）"
+    assert_not_includes render_text(Date.new(2030, 2, 4)), "changed"
+  end
+
   test "department and location add no queries per surgery" do
     date = Date.new(2030, 1, 8)
     create_surgery(new_patient, date).update!(slot_category: "simultaneous", department: departments(:gynecology))

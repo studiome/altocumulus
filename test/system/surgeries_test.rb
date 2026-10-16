@@ -26,6 +26,17 @@ class SurgeriesTest < ApplicationSystemTestCase
     end
   end
 
+  test "the backup intervention question only appears for the backup category" do
+    visit new_surgery_path
+
+    assert_no_text "Intervention involved"
+    choose "Backup/Standby"
+    assert_text "Intervention involved"
+    assert_text "No intervention"
+    choose "Regular Slot"
+    assert_no_text "Intervention involved"
+  end
+
   test "a picked related diagnosis is dropped when the patient changes" do
     visit new_surgery_path
 

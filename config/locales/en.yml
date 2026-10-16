@@ -218,6 +218,12 @@ en:
       surgical_device:
         one: "Surgical Device"
         other: "Surgical Devices"
+    # Only where Rails' humanize default reads badly (e.g. "Slot duration
+    # minutes"); ja.yml defines every attribute.
+    attributes:
+      holiday:
+        slot_count: "Slot count"
+        slot_duration_minutes: "Slot duration (min)"
     errors:
       format: "%{attribute} %{message}"
       messages:
@@ -236,6 +242,12 @@ en:
           attributes:
             base:
               must_have_name_or_note: "must have a name or a note"
+            slot_count:
+              must_be_blank_on_a_closed_day: "must be blank for a closed day"
+              required_with_slot_duration: "is required when a slot duration is given"
+            slot_duration_minutes:
+              must_be_blank_on_a_closed_day: "must be blank for a closed day"
+              required_without_weekday_rule: "is required because the weekday has no slot rule to inherit it from"
         patient:
           attributes:
             hospital_id:
@@ -628,12 +640,17 @@ en:
       year_filter_label: "Year"
       all_years_option: "All"
       type_header: "Type"
+      slots_header: "Slots (override)"
+      slots_value: "%{slots} × %{minutes} min"
+      slots_value_weekday_duration: "%{slots} × weekday duration"
       empty_no_filter: "No holidays found. Click \"New Holiday\" to get started."
       empty_filtered: "No holidays match your search."
     show:
       title: "Holiday Details"
       subtitle: "Holiday Master"
       unnamed: "(no name)"
+      minutes_value: "%{minutes} min"
+      weekday_duration: "Weekday rule"
       edit_button: "Edit Holiday"
       delete_button: "Delete Holiday"
     new:
@@ -656,6 +673,12 @@ en:
       name_placeholder: "e.g. Vernal Equinox Day"
       name_helper: "Required for a closed day. Optional for a note-only day."
       note_placeholder: "e.g. Fire drill in the morning"
+      slot_count_label: "Slots for this day (optional)"
+      slot_count_placeholder: "e.g. 2 or 2.5"
+      slot_count_helper: "Overrides the weekday's number of elective slots for this date only. Leave blank to keep the weekday rule. A fractional value (e.g. 2.5) makes the last slot shorter. Not available for a closed day."
+      slot_duration_label: "Minutes per slot (optional)"
+      slot_duration_placeholder: "e.g. 240"
+      slot_duration_helper: "Overrides the weekday's slot length for this date. Leave blank to keep it; required when the weekday has no slot rule."
     # Shared across index and show (see the design note above `common:`).
     status_badge:
       closed: "Closed"
@@ -1144,6 +1167,7 @@ en:
       period: "%{from} - %{to}"
       printed_at: "Printed %{time}"
       day_count: "%{count} case(s)"
+      slot_override: "Slots: %{slots} (changed)"
       no_surgeries: "No surgeries scheduled"
       columns:
         time: "Time"
@@ -1424,6 +1448,7 @@ en:
       no_slots_holiday: "No elective slots (holiday)"
       no_slots_configured: "No slots configured"
       no_surgeries: "No surgeries scheduled"
+      slot_override_label: "Slots: %{slots} (changed)"
     labels:
       unknown_patient_name: "Patient #%{id}"
 

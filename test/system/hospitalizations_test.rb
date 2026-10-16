@@ -41,6 +41,24 @@ class HospitalizationsTest < ApplicationSystemTestCase
     assert_no_field "Details (Reason for Admission)"
   end
 
+  test "procedure fields show for non-surgery purposes and their asterisks follow the site config" do
+    with_site_config("required_fields" => { "hospitalization_by_purpose" => { "examination" => %w[procedure_name] } }) do
+      visit new_hospitalization_path
+
+      assert_no_field "Procedure name"
+      select "Examination / Procedure", from: "Purpose"
+      assert_field "Procedure name"
+      assert_selector "label.app-field-label-required[for=hospitalization_procedure_name]"
+
+      select "Chemotherapy", from: "Purpose"
+      assert_field "Procedure name"
+      assert_no_selector "label.app-field-label-required[for=hospitalization_procedure_name]"
+
+      select "Surgery", from: "Purpose"
+      assert_no_field "Procedure name"
+    end
+  end
+
   test "the diagnosis picked in the modal is shown on the row that opened it" do
     visit new_hospitalization_path
 

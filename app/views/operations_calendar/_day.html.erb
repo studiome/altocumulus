@@ -25,6 +25,9 @@
         <% if usage.configured? %>
           <%= t(".slots_summary", used: usage.used_slots, total: usage.total_slots) %>
           <%= t(".minutes_summary", used: usage.used_minutes, capacity: usage.capacity_minutes) %>
+          <% if usage.slot_override? %>
+            <span class="badge badge-info badge-sm"><%= t(".slot_override_label", slots: usage.slot_count_display) %></span>
+          <% end %>
         <% elsif usage.holiday? %>
           <%= t(".no_slots_holiday") %>
         <% else %>

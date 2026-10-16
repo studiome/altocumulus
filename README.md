@@ -399,6 +399,11 @@ Keys:
 
 - `required_fields.hospitalization` / `required_fields.surgery`: attribute names that must be filled
   in before saving. The red asterisk on the form follows the same list (`Model.required_attribute?`).
+- `required_fields.hospitalization_by_purpose`: the same, but only for hospitalizations of one purpose
+  (`surgery`, `examination`, `chemotherapy`, `chemoradiotherapy`, `other`), e.g.
+  `examination: [scheduled_procedure_date, procedure_name]`. The asterisk follows the purpose chosen
+  in the form (`Hospitalization.required_attribute?(attr, record)` or `(attr, purpose: ...)`).
+  The reservation doctor is the user reference `reservation_doctor_id` (not the old `reservation_doctor` string).
 - `patient.hospital_id_format` / `patient.hospital_id_format_hint`: a regular expression the patient's
   hospital ID must match when it is set or changed, and a human-readable description for the error
   message. Omit for no restriction.
@@ -409,7 +414,10 @@ Keys:
   seeds them. Run `bin/rails site:seed_masters` after a deploy (it is also part of `db:seed`): it
   only creates missing names, in the listed order after the existing rows, and never renames,
   reorders or deletes anything. A deactivated master is no longer offered for new selections but
-  still shows on the surgeries that use it; a master in use cannot be deleted.
+  still shows on the surgeries that use it; a master in use cannot be deleted. A `surgery_locations`
+  entry may also be a mapping, `{name: ..., asks_performing_department: true}`, which flags a place whose
+  cases may be performed by another department (a hint for the surgery form; set only on newly created
+  rows, and editable on the Surgery Locations master screen).
 
 In tests, `with_site_config(hash) { ... }` swaps the config temporarily.
 

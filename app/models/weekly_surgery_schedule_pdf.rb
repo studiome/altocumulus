@@ -119,8 +119,13 @@ class WeeklySurgerySchedulePdf
       # A Holiday row is either a closed day (name) or a plain day comment
       # (note); show whichever of the two it has, notes flattened to one line.
       parts.concat([ holiday&.name, holiday&.note&.squish ].select(&:present?))
+      parts << slot_override_label(holiday) if holiday&.slot_override?
       parts << I18n.t("surgery_schedules.pdf.day_count", count: surgeries.size)
       parts.join("   ")
+    end
+
+    def slot_override_label(holiday)
+      I18n.t("surgery_schedules.pdf.slot_override", slots: holiday.slot_count_display)
     end
 
     def surgery_row(surgery)

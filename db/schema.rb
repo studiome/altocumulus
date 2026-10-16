@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_000200) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -124,6 +124,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000100) do
     t.string "name"
     t.text "note"
     t.datetime "updated_at", null: false
+    t.decimal "slot_count", precision: 4, scale: 1
+    t.integer "slot_duration_minutes"
     t.index ["date"], name: "index_holidays_on_date", unique: true
   end
 
