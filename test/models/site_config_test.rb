@@ -10,6 +10,16 @@ class SiteConfigTest < ActiveSupport::TestCase
     file.path
   end
 
+  # Minitest 6 no longer ships Object#stub, so swap the seam by hand.
+  def with_pending_migrations(pending)
+    SiteConfig.singleton_class.alias_method :__pending_migrations?, :pending_migrations?
+    SiteConfig.define_singleton_method(:pending_migrations?) { pending }
+    yield
+  ensure
+    SiteConfig.singleton_class.alias_method :pending_migrations?, :__pending_migrations?
+    SiteConfig.singleton_class.remove_method :__pending_migrations?
+  end
+
   test "the committed default config adds no restrictions" do
     config = SiteConfig.load(Rails.root.join("config/site.yml"))
     assert_empty config.required_fields(:hospitalization)
@@ -79,6 +89,20 @@ class SiteConfigTest < ActiveSupport::TestCase
     assert_match "nope", error.message
     error = assert_raises(SiteConfig::Error) { SiteConfig.from_hash("required_fields" => { "surgery" => [ "not_a_column" ] }) }
     assert_match "not_a_column", error.message
+  end
+
+  test "field names are not checked while migrations are pending" do
+    # db:prepare boots the app before migrating, and a deploy may name columns
+    # that very migration adds; the server's own boot afterwards checks for real.
+    with_pending_migrations(true) do
+      config = SiteConfig.from_hash("required_fields" => { "hospitalization" => [ "not_a_column" ] })
+      assert_equal [ :not_a_column ], config.required_fields(:hospitalization)
+    end
+    with_pending_migrations(false) do
+      assert_raises(SiteConfig::Error) do
+        SiteConfig.from_hash("required_fields" => { "hospitalization" => [ "not_a_column" ] })
+      end
+    end
   end
 
   test "required_fields must be lists of strings" do

@@ -417,7 +417,9 @@ Per-hospital customizations are not hardcoded; they live in a YAML file loaded o
 environment variable is set (in production, mount it with a Kamal volume -- see the commented
 example in `config/deploy.yml`), otherwise the committed `config/site.yml`, a neutral default that
 keeps the stock behavior. `config/site.example.yml` shows every key filled in. A malformed file, an
-unknown key or an unknown field name stops the boot with a `SiteConfig::Error`.
+unknown key or an unknown field name stops the boot with a `SiteConfig::Error`. (Field names are not
+checked while migrations are pending, so `db:prepare` can boot and migrate first; the server's boot
+afterwards checks them.)
 
 Keys:
 

@@ -83,6 +83,11 @@ class SiteConfig
       @current = nil
     end
 
+    # Whether the schema is behind the migrations on disk (also a seam for tests).
+    def pending_migrations?
+      ActiveRecord::Base.connection_pool.migration_context.needs_migration?
+    end
+
     # Temporarily swap the current config (tests). Accepts a SiteConfig or a
     # hash with the shape of site.yml.
     def with(config)
@@ -302,10 +307,15 @@ class SiteConfig
     end
 
     # Field names are checked against the model's real attribute names so a
-    # typo fails the deploy instead of silently never being required. When the
-    # database is not reachable yet (assets:precompile, db:create) the check is
-    # skipped rather than failing the boot for an unrelated reason.
+    # typo fails the deploy instead of silently never being required. The check
+    # is skipped, rather than failing the boot for an unrelated reason, when the
+    # database is not reachable yet (assets:precompile, db:create) or when
+    # migrations are pending: the container entrypoint runs db:prepare, which
+    # boots the app before migrating, and a config may name a column that very
+    # migration adds. The server's own boot after the migration checks for real.
     def validate_field_names!(label, model, fields)
+      return if self.class.pending_migrations?
+
       attribute_names = REQUIRED_FIELD_MODELS.fetch(model).constantize.attribute_names
       unknown = fields - attribute_names
       return if unknown.empty?
