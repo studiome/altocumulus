@@ -602,3 +602,31 @@ class SurgeryTest < ActiveSupport::TestCase
       )
     end
 end
+
+class SurgerySiteConfigTest < ActiveSupport::TestCase
+  CONFIG = { "required_fields" => { "surgery" => %w[operator_name duration_hours] } }.freeze
+
+  test "configured fields are not required by default" do
+    surgery = surgeries(:one)
+    surgery.operator_name = nil
+    surgery.duration_hours = nil
+    assert surgery.valid?
+    assert_not Surgery.required_attribute?(:operator_name)
+  end
+
+  test "configured fields block save when blank" do
+    with_site_config(CONFIG) do
+      surgery = surgeries(:one)
+      surgery.operator_name = ""
+      surgery.duration_hours = nil
+      assert_not surgery.valid?
+      assert_includes surgery.errors[:operator_name], I18n.t("errors.messages.blank")
+      assert_includes surgery.errors[:duration_hours], I18n.t("errors.messages.blank")
+      assert Surgery.required_attribute?(:duration_hours)
+
+      surgery.operator_name = "Dr. B"
+      surgery.duration_hours = 0
+      assert surgery.valid?
+    end
+  end
+end

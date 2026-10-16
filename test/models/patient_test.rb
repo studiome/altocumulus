@@ -89,3 +89,61 @@ class PatientTest < ActiveSupport::TestCase
     end
   end
 end
+
+class PatientSiteConfigTest < ActiveSupport::TestCase
+  CONFIG = {
+    "patient" => { "hospital_id_format" => '\A\d{8}\z', "hospital_id_format_hint" => "8 digits" }
+  }.freeze
+
+  def build(hospital_id)
+    Patient.new(hospital_id: hospital_id, name: "Alice", date_of_birth: "1975-10-20")
+  end
+
+  test "no format restriction by default" do
+    assert build("H004").valid?
+  end
+
+  test "configured format rejects non-matching ids with the hint" do
+    with_site_config(CONFIG) do
+      patient = build("H004")
+      assert_not patient.valid?
+      assert_includes patient.errors[:hospital_id].join, "8 digits"
+      assert build("12345678").valid?
+    end
+  end
+
+  test "configured format message is localized" do
+    with_site_config(CONFIG.deep_merge("patient" => { "hospital_id_format_hint" => "8桁の数字" })) do
+      I18n.with_locale(:ja) do
+        patient = build("abc")
+        patient.valid?
+        assert_includes patient.errors[:hospital_id].join, "8桁の数字"
+        assert_match "患者ID", patient.errors.full_messages.join
+      end
+    end
+  end
+
+  test "format without a hint still gives a message" do
+    with_site_config("patient" => { "hospital_id_format" => '\A\d+\z' }) do
+      patient = build("x")
+      assert_not patient.valid?
+      assert_not_empty patient.errors[:hospital_id]
+    end
+  end
+
+  test "a blank id reports only the presence error" do
+    with_site_config(CONFIG) do
+      patient = build("")
+      patient.valid?
+      assert_equal [ I18n.t("errors.messages.blank") ], patient.errors[:hospital_id]
+    end
+  end
+
+  test "an unchanged legacy id does not block unrelated edits" do
+    patient = patients(:one)
+    with_site_config(CONFIG) do
+      patient.name = "Renamed"
+      assert patient.valid?
+    end
+  end
+end

@@ -126,12 +126,12 @@
     </div>
 
     <div class="app-field">
-      <%= form.label :reservation_doctor, t("hospitalizations.labels.reservation_doctor"), class: "app-field-label" %>
+      <%= form.label :reservation_doctor, t("hospitalizations.labels.reservation_doctor"), class: required_label_class(Hospitalization, :reservation_doctor) %>
       <%= form.text_field :reservation_doctor, class: "input w-full focus:input-primary" %>
     </div>
 
     <div class="app-field">
-      <%= form.label :attending_doctor, t("hospitalizations.labels.attending_doctor"), class: "app-field-label" %>
+      <%= form.label :attending_doctor, t("hospitalizations.labels.attending_doctor"), class: required_label_class(Hospitalization, :attending_doctor) %>
       <%= form.text_field :attending_doctor, class: "input w-full focus:input-primary" %>
     </div>
 
@@ -146,7 +146,7 @@
     </div>
 
     <div class="app-field">
-      <%= form.label :referred_from, t("hospitalizations.labels.referred_from"), class: "app-field-label" %>
+      <%= form.label :referred_from, t("hospitalizations.labels.referred_from"), class: required_label_class(Hospitalization, :referred_from) %>
       <%= form.text_field :referred_from, class: "input w-full focus:input-primary" %>
     </div>
 

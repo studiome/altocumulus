@@ -1,5 +1,6 @@
 class Surgery < ApplicationRecord
   include Auditable
+  include ConfigurableRequiredFields
 
   # Only the valid DB keys live here -- labels come from
   # config/locales/*.yml (models.surgery.*_options), see Hospitalization for

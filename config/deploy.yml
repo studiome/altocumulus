@@ -55,6 +55,11 @@ env:
     # Use altocumulus-db for a db accessory server on same machine via local kamal docker network.
     # DB_HOST: 192.168.0.2
 
+    # Site-specific configuration (required form fields, patient ID format; see
+    # config/site.example.yml and the "Site configuration" README section).
+    # Mount your file with the volume below and point the app at it:
+    # SITE_CONFIG_PATH: /rails/site/site.yml
+
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
 
@@ -78,6 +83,8 @@ aliases:
 # `docker run --rm -v altocumulus_storage:/from -v /srv/altocumulus/storage:/to alpine cp -a /from/. /to/`).
 volumes:
   - "/srv/altocumulus/storage:/rails/storage"
+  # Site configuration file, read-only (pair with SITE_CONFIG_PATH above):
+  # - "/srv/altocumulus/site.yml:/rails/site/site.yml:ro"
 
 # Bridge fingerprinted assets, like JS and CSS, between versions to avoid
 # hitting 404 on in-flight requests. Combines all files from new and old

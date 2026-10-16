@@ -386,6 +386,25 @@ an administrator edits on `/admin/settings`. When nothing has been saved there, 
 `APP_TITLE` environment variable read at boot, and then to the built-in name -- so a fresh deploy can
 be branded with an environment variable alone.
 
+### Site configuration
+
+Per-hospital customizations are not hardcoded; they live in a YAML file loaded once at boot by
+`SiteConfig` (`app/models/site_config.rb`). The file is the one at `SITE_CONFIG_PATH` if that
+environment variable is set (in production, mount it with a Kamal volume -- see the commented
+example in `config/deploy.yml`), otherwise the committed `config/site.yml`, a neutral default that
+keeps the stock behavior. `config/site.example.yml` shows every key filled in. A malformed file, an
+unknown key or an unknown field name stops the boot with a `SiteConfig::Error`.
+
+Keys:
+
+- `required_fields.hospitalization` / `required_fields.surgery`: attribute names that must be filled
+  in before saving. The red asterisk on the form follows the same list (`Model.required_attribute?`).
+- `patient.hospital_id_format` / `patient.hospital_id_format_hint`: a regular expression the patient's
+  hospital ID must match when it is set or changed, and a human-readable description for the error
+  message. Omit for no restriction.
+
+In tests, `with_site_config(hash) { ... }` swaps the config temporarily.
+
 ### Audit log
 
 The `Auditable` concern is included in `Patient` / `Surgery` / `Hospitalization` and records

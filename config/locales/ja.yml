@@ -317,6 +317,10 @@ ja:
           attributes:
             base:
               must_have_name_or_note: "名称または備考を入力してください"
+        patient:
+          attributes:
+            hospital_id:
+              invalid_site_format: "は所定の形式ではありません(%{hint})"
         user:
           attributes:
             base:

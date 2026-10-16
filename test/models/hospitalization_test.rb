@@ -864,3 +864,41 @@ class HospitalizationTest < ActiveSupport::TestCase
       )
     end
 end
+
+class HospitalizationSiteConfigTest < ActiveSupport::TestCase
+  CONFIG = { "required_fields" => { "hospitalization" => %w[referred_from attending_doctor] } }.freeze
+
+  test "configured fields are not required by default" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.referred_from = nil
+    assert hospitalization.valid?
+    assert_not Hospitalization.required_attribute?(:referred_from)
+  end
+
+  test "configured fields block save when blank" do
+    with_site_config(CONFIG) do
+      hospitalization = hospitalizations(:one)
+      hospitalization.referred_from = ""
+      hospitalization.attending_doctor = "Dr. A"
+      assert_not hospitalization.valid?
+      assert_includes hospitalization.errors[:referred_from], I18n.t("errors.messages.blank")
+      assert_empty hospitalization.errors[:attending_doctor]
+      assert Hospitalization.required_attribute?(:referred_from)
+      assert_not Hospitalization.required_attribute?(:reservation_doctor)
+
+      hospitalization.referred_from = "Clinic"
+      assert hospitalization.valid?
+    end
+  end
+
+  test "the error message is localized" do
+    with_site_config(CONFIG) do
+      I18n.with_locale(:ja) do
+        hospitalization = hospitalizations(:one)
+        hospitalization.referred_from = nil
+        hospitalization.valid?
+        assert_includes hospitalization.errors.full_messages, "紹介元を入力してください"
+      end
+    end
+  end
+end

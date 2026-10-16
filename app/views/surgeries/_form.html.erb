@@ -172,7 +172,7 @@
   </div>
 
   <div class="app-field">
-    <%= form.label :duration_hours, t(".duration_label"), class: "app-field-label" %>
+    <%= form.label :duration_hours, t(".duration_label"), class: required_label_class(Surgery, :duration_hours) %>
     <%= form.number_field :duration_hours, class: "input w-full focus:input-primary", min: 0, step: :any, placeholder: t(".duration_placeholder") %>
   </div>
 
@@ -182,7 +182,7 @@
   </div>
 
   <div class="app-field">
-    <%= form.label :operator_name, t("surgeries.labels.operator"), class: "app-field-label" %>
+    <%= form.label :operator_name, t("surgeries.labels.operator"), class: required_label_class(Surgery, :operator_name) %>
     <%= form.text_field :operator_name, class: "input w-full focus:input-primary", placeholder: t(".operator_placeholder") %>
   </div>
 

@@ -1,0 +1,17 @@
+# Example site configuration with every key filled in. Copy it to the server,
+# edit it, and point SITE_CONFIG_PATH at it (see config/deploy.yml). Names and
+# values below are generic placeholders. See config/site.yml for what each key
+# means.
+
+required_fields:
+  hospitalization:
+    - referred_from
+    - reservation_doctor
+    - attending_doctor
+  surgery:
+    - operator_name
+    - duration_hours
+
+patient:
+  hospital_id_format: '\A\d{8}\z'
+  hospital_id_format_hint: "8 digits"

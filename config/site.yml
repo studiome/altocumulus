@@ -1,0 +1,25 @@
+# Site configuration: what differs between installations (hospitals) but is
+# not a runtime admin setting. This committed file is the neutral default and
+# keeps the application's stock behavior. To customize a deployment, do NOT
+# edit this file: mount your own file on the server and point SITE_CONFIG_PATH
+# at it (see config/site.example.yml and config/deploy.yml). The file is read
+# once at boot; a malformed file, an unknown key or an unknown field name makes
+# the boot fail.
+#
+# Unknown keys are rejected, so every key below is documented here.
+
+# required_fields: fields that must be filled in before a record can be saved,
+# in addition to what the app always requires. Keys are model names
+# (hospitalization, surgery); values are lists of attribute names. The form's
+# red asterisk follows this list automatically.
+#   hospitalization: e.g. referred_from, reservation_doctor, attending_doctor
+#   surgery:         e.g. operator_name, assistant_name, duration_hours
+required_fields: {}
+
+# patient: patient ID rules.
+#   hospital_id_format:      Ruby regular expression (single-quoted YAML string)
+#                            that Patient#hospital_id must match. Omit for no
+#                            restriction. Checked when the ID is set or changed.
+#   hospital_id_format_hint: human-readable description of the format, shown in
+#                            the error message (e.g. "8 digits"). Optional.
+patient: {}

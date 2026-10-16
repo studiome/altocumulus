@@ -1,4 +1,13 @@
 module ApplicationHelper
+  # CSS class for the label of a field whose requiredness is chosen by the
+  # site config (see ConfigurableRequiredFields): the asterisk comes from the
+  # same source as the validation, so the two cannot disagree.
+  def required_label_class(model_class, attribute)
+    classes = %w[app-field-label]
+    classes << "app-field-label-required" if model_class.required_attribute?(attribute)
+    classes.join(" ")
+  end
+
   # The installation's own name (see AppSetting). Memoized because the layout
   # asks for it more than once per request.
   def app_title

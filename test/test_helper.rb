@@ -16,6 +16,15 @@ module AccountIdentifierTestHelper
   end
 end
 
+# Lets a test temporarily swap the deploy-time site configuration (see
+# SiteConfig) for a hash with the same shape as config/site.yml. The original
+# is restored afterwards, even if the block raises.
+module SiteConfigTestHelper
+  def with_site_config(hash)
+    SiteConfig.with(hash) { yield }
+  end
+end
+
 module ActiveSupport
   class TestCase
     # Run tests in parallel with specified workers
@@ -26,6 +35,7 @@ module ActiveSupport
 
     # Add more helper methods to be used by all tests here...
     include AccountIdentifierTestHelper
+    include SiteConfigTestHelper
   end
 end
 

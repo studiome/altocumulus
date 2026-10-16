@@ -221,6 +221,10 @@ en:
           attributes:
             base:
               must_have_name_or_note: "must have a name or a note"
+        patient:
+          attributes:
+            hospital_id:
+              invalid_site_format: "does not match the required format (%{hint})"
         user:
           attributes:
             base:

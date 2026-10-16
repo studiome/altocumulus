@@ -75,6 +75,10 @@ Because Rails' `params.expect` only treats purely numeric keys as nested-attribu
 
 Controllers rescue `ActiveRecord::RecordNotUnique` around the save of these nested rows (see `HospitalizationsController#save_hospitalization`) and turn it into a validation error, since swapping two existing rows' values can transiently hit a unique index mid-save even though the end state is valid.
 
+### Site configuration
+
+Site-specific customization is a deploy-time YAML file, not code: `SiteConfig` (`app/models/site_config.rb`) reads `ENV["SITE_CONFIG_PATH"]` if set (production mounts a file there via a Kamal volume), else the committed neutral default `config/site.yml` (`config/site.example.yml` is a fully filled example). It is validated at boot (`config/initializers/site_config.rb`): unknown keys, unknown field names or an uncompilable regex raise `SiteConfig::Error`. New top-level keys go into `SiteConfig::SCHEMA` with a per-key normalizer. Current keys: `required_fields.{hospitalization,surgery}` (strict presence validation via the `ConfigurableRequiredFields` concern, evaluated at validation time; forms mark labels with `required_label_class` / `Model.required_attribute?` so the asterisk and validation share one source) and `patient.hospital_id_format` / `hospital_id_format_hint` (`Patient` validation, only when the ID is set or changed). Tests swap it with `with_site_config(hash) { ... }`.
+
 ### Bulk user registration
 
 `UserImport` (`app/models/user_import.rb`) is a plain ActiveModel wrapping the CSV an admin uploads on `/admin/user_import/new`. `UserImport.template_csv` (served by `#template`) is the blank starting point offered on that screen: the header row alone, BOM-led, with no example rows to accidentally import. It validates the file (headers, row count, size) before `#run` saves row by row -- deliberately not in one transaction -- and returns a `Result` of per-line `Row`s (`:created` / `:skipped` / `:failed`). Existing login ids are skipped rather than updated. The form sets `data: { turbo: false }`, since the result page is a 200 render, not a redirect.

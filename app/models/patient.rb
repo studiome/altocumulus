@@ -11,6 +11,7 @@ class Patient < ApplicationRecord
   has_many :case_database_entries, dependent: :destroy
 
   validates :hospital_id, presence: true, uniqueness: true
+  validate :hospital_id_matches_site_format
   validates :name, presence: true
   validates :date_of_birth, presence: true
   validates :sex, inclusion: { in: SEX_KEYS }, allow_blank: true
@@ -47,4 +48,22 @@ class Patient < ApplicationRecord
   def to_s
     "#{hospital_id} - #{name}"
   end
+
+  private
+
+    # Optional per-site ID format (SiteConfig). Only checked when the ID is
+    # being set or changed, so a legacy ID that predates the format does not
+    # block unrelated edits of the patient.
+    def hospital_id_matches_site_format
+      format = SiteConfig.current.hospital_id_format
+      return if format.nil? || hospital_id.blank? || !will_save_change_to_hospital_id?
+      return if format.match?(hospital_id)
+
+      hint = SiteConfig.current.hospital_id_format_hint
+      if hint
+        errors.add(:hospital_id, :invalid_site_format, hint: hint)
+      else
+        errors.add(:hospital_id, :invalid)
+      end
+    end
 end
