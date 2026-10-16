@@ -71,6 +71,8 @@
       <p class="app-helper"><%= t(".source_department_helper") %></p>
     </div>
 
+    <%= render "shared/team_field", form: form, record: hospitalization, helper_text: t(".team_helper") %>
+
     <%# The purpose-specific fields are rendered hidden unless they apply, so
         they never flash in before the controller connects; their values are
         kept (and submitted) either way. %>

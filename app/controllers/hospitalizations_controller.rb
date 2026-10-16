@@ -151,12 +151,18 @@ class HospitalizationsController < ApplicationController
       end
     end
 
+    # The team is only a field while the site uses teams (features.teams).
+    def team_params
+      SiteConfig.current.teams_enabled? ? [ :team_id ] : []
+    end
+
     def build_hospitalization_diagnoses
       @hospitalization.hospitalization_diagnoses.build if @hospitalization.hospitalization_diagnoses.empty?
     end
 
     def hospitalization_params
       params.expect(hospitalization: [
+        *team_params,
         :patient_id, :admission_date, :scheduled_admission_date, :scheduled_surgery_date, :reservation_status, :purpose,
         :planned_days, :reason, :room_preference, :ward, :referred_from, :adl,
         :reservation_doctor_id, :attending_doctor, :submitted_on, :clinical_comment,

@@ -60,6 +60,11 @@ Rails.application.routes.draw do
   resources :elective_slot_rules
   resources :holidays
   resources :departments, :surgery_locations, :surgical_devices, except: :show
+  resources :teams, except: :show do
+    resources :team_terms, except: :show do
+      post :copy_previous, on: :collection
+    end
+  end
   resources :audit_events, only: %i[ index show ]
   get "surgery_schedule" => "surgery_schedules#index", as: :surgery_schedule
   get "surgery_schedule/pdf" => "surgery_schedules#pdf", as: :surgery_schedule_pdf

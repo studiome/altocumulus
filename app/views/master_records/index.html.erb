@@ -32,6 +32,9 @@
               <tr class="row-hover">
                 <td class="master-name font-semibold">
                   <%= record.name %>
+                  <% if record.respond_to?(:badge_class) %>
+                    <span class="badge badge-sm ml-2 <%= record.badge_class %>"><%= record.color_label %></span>
+                  <% end %>
                   <% if record.respond_to?(:asks_performing_department) && record.asks_performing_department? %>
                     <span class="badge badge-info badge-sm ml-2"><%= t(".asks_performing_badge") %></span>
                   <% end %>
@@ -45,6 +48,9 @@
                   <% end %>
                 </td>
                 <td class="text-right flex justify-end gap-2">
+                  <% if record.respond_to?(:team_terms) %>
+                    <%= link_to t(".terms_link"), team_team_terms_path(record), class: "btn btn-ghost btn-xs text-secondary" %>
+                  <% end %>
                   <%= link_to t("common.edit"), edit_polymorphic_path(record), class: "btn btn-ghost btn-xs text-secondary" %>
                   <%= button_to t("common.delete"), record, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
                 </td>

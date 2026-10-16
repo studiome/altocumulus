@@ -135,6 +135,7 @@ en:
     departments: "Departments"
     surgery_locations: "Surgery Locations"
     surgical_devices: "Surgical Devices"
+    teams: "Teams"
     admin: "Admin"
     users: "Users"
     announcements: "Announcements"
@@ -218,6 +219,9 @@ en:
       surgical_device:
         one: "Surgical Device"
         other: "Surgical Devices"
+      team:
+        one: "Team"
+        other: "Teams"
     # Only where Rails' humanize default reads badly (e.g. "Slot duration
     # minutes"); ja.yml defines every attribute.
     attributes:
@@ -273,6 +277,15 @@ en:
               must_be_on_or_after_scheduled_admission_date: "must be on or after the scheduled admission date"
             admission_date:
               or_scheduled_admission_date_required: "or a scheduled admission date must be present"
+        team_term:
+          attributes:
+            base:
+              overlaps_another_term: "overlaps another term of this team"
+            ends_on:
+              must_be_on_or_after_starts_on: "must be on or after the start date"
+            team_term_members:
+              only_one_main: "may have at most one main member"
+              only_one_sub: "may have at most one sub member"
         case_database_entry:
           attributes:
             field_values:
@@ -301,6 +314,27 @@ en:
   # are localized. English values here must stay byte-identical to what the
   # constants/strings used to hard-code, since existing tests assert them.
   models:
+    team:
+      color_options:
+        blue: "Blue"
+        red: "Red"
+        green: "Green"
+        orange: "Orange"
+        purple: "Purple"
+        teal: "Teal"
+        gray: "Gray"
+    team_term:
+      member_separator: ", "
+    team_term_member:
+      role_options:
+        main: "Main"
+        sub: "Sub"
+        member: "Member"
+      # Compact markers for lists such as "Arai(M), Haraguchi(S), Sonoda".
+      role_abbreviations:
+        main: "M"
+        sub: "S"
+        member: ""
     hospitalization:
       outcome_options:
         recovered: "Recovered"
@@ -613,6 +647,7 @@ en:
       active_badge: "Active"
       inactive_badge: "Inactive"
       asks_performing_badge: "Asks performing department"
+      terms_link: "Terms and members"
     new:
       title: "New %{record}"
     edit:
@@ -628,10 +663,51 @@ en:
         one: "%{count} error prohibited this record from being saved:"
         other: "%{count} errors prohibited this record from being saved:"
       position_helper: "Smaller numbers are listed first. Leave blank to add it at the end."
+      color_helper: "Used for the badge that shows the team on cases."
       asks_performing_department_label: "Ask for the performing department"
       asks_performing_department_helper: "A hint for the surgery form: cases at this place may be performed by another department, so offer the performing-department control for them."
       active_label: "Active"
       active_helper: "An inactive record is no longer offered for new entries, but stays visible on the records that already use it. A record in use cannot be deleted; deactivate it instead."
+
+  teams:
+    display:
+      label: "Team"
+
+  team_terms:
+    index:
+      title: "%{team} - Terms"
+      new_button: "New Term"
+      copy_previous_button: "Copy Previous Term"
+      copy_previous_confirm: "Create the next term from the latest one, with the main and sub members swapped?"
+      members_heading: "Members"
+      empty: "No terms registered yet."
+    new:
+      title: "New Term"
+    edit:
+      title: "Edit Term"
+    create:
+      success_notice: "Term was successfully created."
+    update:
+      success_notice: "Term was successfully updated."
+    destroy:
+      success_notice: "Term was successfully deleted."
+    copy_previous:
+      success_notice: "The next term was created from the previous one. Check the members and adjust them."
+      no_previous_term: "There is no term to copy yet."
+    form:
+      errors_heading:
+        one: "%{count} error prohibited this term from being saved:"
+        other: "%{count} errors prohibited this term from being saved:"
+      dates_helper: "Both dates are included in the term. Terms of the same team cannot overlap."
+      members_heading: "Members"
+      members_helper: "Choose a user, or just type a name for a member without an account. At most one main and one sub member."
+      add_member_button: "Add Member"
+    member_fields:
+      user_label: "User"
+      no_user: "(no account)"
+      name_label: "Name"
+      role_label: "Role"
+      remove_button: "Remove"
 
   holidays:
     index:
@@ -953,6 +1029,7 @@ en:
       patient_schedule_heading: "Patient & Schedule"
       scheduled_admission_date_helper: "Set this while the admission is still a reservation. Leave undecided if unknown."
       source_department_helper: "Required when a transfer status other than \"No transfer\" is chosen; cleared otherwise."
+      team_helper: "The members shown come from the team's term that covers the surgery, procedure or admission date. Choices are managed under Masters."
       legacy_reservation_doctor_helper: "Entered before doctors were users: %{name}. Choose a user to replace it."
       required_legend: "* Required"
       admission_date_helper: "Either this or the scheduled admission date above must be set."
@@ -1088,6 +1165,7 @@ en:
       performing_department_helper: "Leave blank when our own department performs it. Choices are managed under Masters."
       surgical_device_label: "Surgical Support Device"
       surgical_device_helper: "Leave blank when no support device is used. Choices are managed under Masters."
+      team_helper: "Defaults to the hospitalization's team for a new surgery. The members shown come from the team's term covering the surgery date."
       start_time_helper: "Emergency surgeries can be scheduled at any time, including nights."
       slot_number_label: "Elective Slot"
       slot_number_placeholder: "e.g. 1"

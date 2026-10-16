@@ -114,8 +114,8 @@ class SiteConfigTest < ActiveSupport::TestCase
   end
 
   test "masters with an unknown key fail fast" do
-    error = assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "teams" => [ "x" ] }) }
-    assert_match "teams", error.message
+    error = assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "wards" => [ "x" ] }) }
+    assert_match "wards", error.message
   end
 
   test "masters must be a mapping of lists of non-blank strings" do
@@ -186,5 +186,59 @@ class SiteConfigTest < ActiveSupport::TestCase
     original = SiteConfig.current
     assert_raises(RuntimeError) { with_site_config({}) { raise "boom" } }
     assert_same original, SiteConfig.current
+  end
+
+  test "features default to everything off in the committed config" do
+    config = SiteConfig.load(Rails.root.join("config/site.yml"))
+    assert_not config.teams_enabled?
+    assert_not SiteConfig.from_hash({}).teams_enabled?
+  end
+
+  test "features.teams turns the teams feature on" do
+    assert SiteConfig.from_hash("features" => { "teams" => true }).teams_enabled?
+    assert_not SiteConfig.from_hash("features" => { "teams" => false }).teams_enabled?
+    assert_not SiteConfig.from_hash("features" => nil).teams_enabled?
+  end
+
+  test "features are validated" do
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("features" => "teams") }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("features" => { "bogus" => true }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("features" => { "teams" => "yes" }) }
+  end
+
+  test "team_id may be required only when the teams feature is on" do
+    config = SiteConfig.from_hash("features" => { "teams" => true },
+                                  "required_fields" => { "hospitalization" => [ "team_id" ], "surgery" => [ "team_id" ],
+                                                         "hospitalization_by_purpose" => { "surgery" => [ "team_id" ] } })
+    assert_equal [ :team_id ], config.required_fields(:surgery)
+    assert_equal [ :team_id ], config.required_fields_for_purpose(:surgery)
+
+    [ { "hospitalization" => [ "team_id" ] }, { "surgery" => [ "team_id" ] },
+      { "hospitalization_by_purpose" => { "surgery" => [ "team_id" ] } } ].each do |required|
+      error = assert_raises(SiteConfig::Error) { SiteConfig.from_hash("required_fields" => required) }
+      assert_match(/team_id/, error.message)
+      assert_match(/features\.teams/, error.message)
+      assert_raises(SiteConfig::Error) { SiteConfig.from_hash("features" => { "teams" => false }, "required_fields" => required) }
+    end
+  end
+
+  test "masters.teams entries may be a name or a mapping with a color" do
+    config = SiteConfig.from_hash("masters" => { "teams" => [ "Plain", { "name" => " Sky ", "color" => "blue" } ] })
+    assert_equal [ "Plain", "Sky" ], config.master_names(:teams)
+    assert_equal "blue", config.master_option(:teams, "Sky", "color")
+    assert_nil config.master_option(:teams, "Plain", "color")
+  end
+
+  test "masters.teams colors must be in the palette" do
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "teams" => [ { "name" => "X", "color" => "magenta" } ] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "teams" => [ { "name" => "X", "bogus" => true } ] }) }
+  end
+
+  test "the example config turns teams on and seeds some" do
+    config = SiteConfig.load(Rails.root.join("config/site.example.yml"))
+    assert config.teams_enabled?
+    assert_equal 3, config.master_names(:teams).size
+    assert_equal "blue", config.master_option(:teams, config.master_names(:teams).first, "color")
+    assert_includes config.required_fields(:hospitalization), :team_id
   end
 end

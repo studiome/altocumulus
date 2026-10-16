@@ -83,6 +83,7 @@
             <span class="text-lg font-medium"><%= link_to @surgery.hospitalization.period_display, @surgery.hospitalization, class: "link link-primary" %></span>
           </div>
         <% end %>
+        <%= render "shared/team_display", record: @surgery %>
         <% if @surgery.surgical_device %>
           <div>
             <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.surgical_device") %></span>

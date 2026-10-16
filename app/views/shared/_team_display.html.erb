@@ -1,0 +1,13 @@
+<%# Team badge and the members of the term covering the case date; shown only
+    while features.teams is on and the case has a team. %>
+<% team = record.effective_team %>
+<% if SiteConfig.current.teams_enabled? && team %>
+  <div>
+    <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("teams.display.label") %></span>
+    <span class="team-badge badge <%= team.badge_class %>"><%= team.name %></span>
+    <% members = record.team_members_display %>
+    <% if members %>
+      <span class="team-members text-lg font-medium ml-2"><%= members %></span>
+    <% end %>
+  </div>
+<% end %>

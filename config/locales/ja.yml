@@ -90,6 +90,7 @@ ja:
     departments: "診療科"
     surgery_locations: "実施場所"
     surgical_devices: "手術支援機器"
+    teams: "担当チーム"
     admin: "管理"
     users: "利用者"
     announcements: "お知らせ"
@@ -186,6 +187,9 @@ ja:
       surgery_procedure: "術式"
       surgery_procedure_selection: "手術術式選択"
       surgical_device: "手術支援機器"
+      team: "担当チーム"
+      team_term: "担当期間"
+      team_term_member: "担当メンバー"
       user: "利用者"
 
     attributes:
@@ -272,6 +276,7 @@ ja:
         scheduled_surgery_date: "手術予定日"
         source_department_id: "転科元診療科"
         submitted_on: "提出日"
+        team_id: "担当チーム"
         transfer_status: "転科状況"
         ward: "病棟"
       hospitalization_diagnosis:
@@ -307,6 +312,7 @@ ja:
         backup_intervention: "介入の有無"
         hospitalization_id: "入院"
         performing_department_id: "実施診療科"
+        team_id: "担当チーム"
       surgery_diagnosis_link:
         patient_diagnosis_id: "患者診断"
         surgery_id: "手術"
@@ -325,6 +331,21 @@ ja:
         name: "名称"
         position: "表示順"
         active: "有効"
+      team:
+        name: "チーム名"
+        color: "色"
+        position: "表示順"
+        active: "有効"
+      team_term:
+        starts_on: "開始日"
+        ends_on: "終了日"
+        note: "備考"
+        team_term_members: "メンバー"
+      team_term_member:
+        name: "氏名"
+        user_id: "利用者"
+        role: "役割"
+        position: "表示順"
       user:
         active: "有効"
         current_password: "現在のパスワード"
@@ -383,6 +404,15 @@ ja:
               must_be_on_or_after_scheduled_admission_date: "は入院予定日以降の日付にしてください"
             admission_date:
               or_scheduled_admission_date_required: "または入院予定日のいずれかを入力してください"
+        team_term:
+          attributes:
+            base:
+              overlaps_another_term: "が同じチームの他の期間と重複しています"
+            ends_on:
+              must_be_on_or_after_starts_on: "は開始日以降の日付にしてください"
+            team_term_members:
+              only_one_main: "のメインは1人までです"
+              only_one_sub: "のサブは1人までです"
         case_database_entry:
           attributes:
             field_values:
@@ -408,6 +438,27 @@ ja:
   # Stage 2 of the i18n rollout (see en.yml for the design notes). DB columns
   # keep their English keys; only these looked-up labels are localized.
   models:
+    team:
+      color_options:
+        blue: "青"
+        red: "赤"
+        green: "緑"
+        orange: "橙"
+        purple: "紫"
+        teal: "青緑"
+        gray: "灰"
+    team_term:
+      member_separator: "・"
+    team_term_member:
+      role_options:
+        main: "メイン"
+        sub: "サブ"
+        member: "メンバー"
+      # 一覧用の略記。例: 荒井(M)・原口(S)・園田
+      role_abbreviations:
+        main: "M"
+        sub: "S"
+        member: ""
     hospitalization:
       outcome_options:
         recovered: "治癒"
@@ -668,6 +719,7 @@ ja:
       active_badge: "有効"
       inactive_badge: "無効"
       asks_performing_badge: "実施診療科を確認"
+      terms_link: "期間とメンバー"
     new:
       title: "新規%{record}"
     edit:
@@ -682,10 +734,50 @@ ja:
       errors_heading:
         other: "%{count}件のエラーがあるため保存できませんでした:"
       position_helper: "数字が小さいほど先に表示されます。空欄の場合は末尾に追加されます。"
+      color_helper: "症例に表示するチームのバッジに使う色です。"
       asks_performing_department_label: "実施診療科を確認する"
       asks_performing_department_helper: "手術フォームへのヒントです。この場所の症例は他の診療科が実施することがあるため、実施診療科の入力欄を表示します。"
       active_label: "有効"
       active_helper: "無効にすると新規入力の選択肢には表示されなくなりますが、すでに使用しているレコードには引き続き表示されます。使用中のレコードは削除できないため、無効にしてください。"
+
+  teams:
+    display:
+      label: "担当チーム"
+
+  team_terms:
+    index:
+      title: "%{team} - 担当期間"
+      new_button: "新規担当期間"
+      copy_previous_button: "前期間をコピー"
+      copy_previous_confirm: "直近の期間から、メインとサブを入れ替えた次の期間を作成しますか?"
+      members_heading: "メンバー"
+      empty: "担当期間はまだ登録されていません。"
+    new:
+      title: "新規担当期間"
+    edit:
+      title: "担当期間を編集"
+    create:
+      success_notice: "担当期間を作成しました。"
+    update:
+      success_notice: "担当期間を更新しました。"
+    destroy:
+      success_notice: "担当期間を削除しました。"
+    copy_previous:
+      success_notice: "前の期間から次の期間を作成しました。メンバーを確認し、必要に応じて修正してください。"
+      no_previous_term: "コピーできる期間がまだありません。"
+    form:
+      errors_heading:
+        other: "%{count}件のエラーがあるため保存できませんでした:"
+      dates_helper: "開始日・終了日とも期間に含まれます。同じチームの期間は重複できません。"
+      members_heading: "メンバー"
+      members_helper: "利用者を選ぶか、アカウントのないメンバーは氏名だけを入力します。メインとサブはそれぞれ1人までです。"
+      add_member_button: "メンバーを追加"
+    member_fields:
+      user_label: "利用者"
+      no_user: "(アカウントなし)"
+      name_label: "氏名"
+      role_label: "役割"
+      remove_button: "削除"
 
   holidays:
     index:
@@ -945,6 +1037,7 @@ ja:
       patient_schedule_heading: "患者・予定"
       scheduled_admission_date_helper: "予約段階の間はこちらを設定してください。未定の場合は空欄のままで構いません。"
       source_department_helper: "「転科なし」以外を選んだ場合は必須です。「転科なし」の場合は保存時に空になります。"
+      team_helper: "表示されるメンバーは、手術・検査処置・入院の日付を含むチームの担当期間から決まります。選択肢はマスタ管理で登録します。"
       legacy_reservation_doctor_helper: "医師が利用者として登録される前の入力値: %{name}。利用者を選ぶと置き換わります。"
       required_legend: "＊は必須項目です"
       admission_date_helper: "この項目か、上記の入院予定日のいずれかを設定してください。"
@@ -1051,6 +1144,7 @@ ja:
       performing_department_helper: "自診療科で実施する場合は空欄のままにします。選択肢はマスタ管理で登録します。"
       surgical_device_label: "手術支援機器"
       surgical_device_helper: "支援機器を使用しない場合は空欄のままにします。選択肢はマスタ管理で登録します。"
+      team_helper: "新規の手術では入院のチームが初期値になります。表示されるメンバーは、手術日を含むチームの担当期間から決まります。"
       start_time_helper: "緊急手術は夜間を含め、いつでも設定できます。"
       slot_number_label: "予定手術枠"
       slot_number_placeholder: "例: 1"

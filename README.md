@@ -397,6 +397,9 @@ unknown key or an unknown field name stops the boot with a `SiteConfig::Error`.
 
 Keys:
 
+- `features.teams` (default `false`): turns the care-team feature on (see "Teams" below). While
+  `false`, the Teams screens, the team selects and the team displays are hidden and `team_id` may not
+  be listed under `required_fields` (the boot fails if it is).
 - `required_fields.hospitalization` / `required_fields.surgery`: attribute names that must be filled
   in before saving. The red asterisk on the form follows the same list (`Model.required_attribute?`).
 - `required_fields.hospitalization_by_purpose`: the same, but only for hospitalizations of one purpose
@@ -418,8 +421,25 @@ Keys:
   entry may also be a mapping, `{name: ..., asks_performing_department: true}`, which flags a place whose
   cases may be performed by another department (a hint for the surgery form; set only on newly created
   rows, and editable on the Surgery Locations master screen).
+- `masters.teams`: team names (or `{name: ..., color: blue}`, color one of blue/red/green/orange/purple/
+  teal/gray), seeded the same additive way as the other masters. Terms and members are entered in
+  the app, not in this file.
 
 In tests, `with_site_config(hash) { ... }` swaps the config temporarily.
+
+### Teams (担当チーム)
+
+With `features.teams: true`, Masters gains a Teams screen. A `Team` (name, palette color, position,
+active) has `TeamTerm`s -- date ranges, both ends inclusive and never overlapping within a team --
+and each term has `TeamTermMember`s (an optional user, a required name that defaults to the user's
+name, and a role of main / sub / member; at most one main and one sub). A clerk enters the next
+term's members after the chief decides them; "Copy Previous Term" starts from the latest term (the
+day after it ends, the same number of whole months or days, same members, main and sub swapped) and
+opens it for editing. Hospitalizations and surgeries have an optional `team_id`; a surgery created
+for a hospitalization starts on its team (`Surgery#effective_team` falls back to the
+hospitalization's). The members shown for a case come from the term covering its date (a surgery's
+`surgery_date`; a hospitalization's scheduled surgery date, else scheduled procedure date, else
+admission date); an undated case shows only the team name.
 
 ### Audit log
 

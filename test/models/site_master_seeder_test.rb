@@ -22,7 +22,7 @@ class SiteMasterSeederTest < ActiveSupport::TestCase
     assert a.active?
     assert SurgeryLocation.exists?(name: "Seed Room")
     assert SurgicalDevice.exists?(name: "Seed Device")
-    assert_equal({ "departments" => 2, "surgery_locations" => 1, "surgical_devices" => 1 }, result)
+    assert_equal({ "departments" => 2, "surgery_locations" => 1, "surgical_devices" => 1, "teams" => 0 }, result)
   end
 
   test "is idempotent and never renames, reorders or reactivates existing rows" do
@@ -32,7 +32,7 @@ class SiteMasterSeederTest < ActiveSupport::TestCase
 
     SiteMasterSeeder.call(config)
     assert_no_difference -> { Department.count } do
-      assert_equal({ "departments" => 0, "surgery_locations" => 0, "surgical_devices" => 0 }, SiteMasterSeeder.call(config))
+      assert_equal({ "departments" => 0, "surgery_locations" => 0, "surgical_devices" => 0, "teams" => 0 }, SiteMasterSeeder.call(config))
     end
 
     assert_equal before, existing.reload.attributes
@@ -47,6 +47,17 @@ class SiteMasterSeederTest < ActiveSupport::TestCase
     assert_not SurgeryLocation.find_by!(name: "Plain Room").asks_performing_department
     assert SurgeryLocation.find_by!(name: "Seed Cath").asks_performing_department
     assert_not surgery_locations(:cath_lab).reload.asks_performing_department
+  end
+
+  test "teams are seeded additively with their color, only on creation" do
+    config = SiteConfig.from_hash("masters" => { "teams" => [ "Plain Team", { "name" => "Sky Team", "color" => "teal" },
+                                                              { "name" => "Blue Team", "color" => "green" } ] })
+
+    assert_equal 2, SiteMasterSeeder.call(config)["teams"]
+    assert_equal "gray", Team.find_by!(name: "Plain Team").color
+    assert_equal "teal", Team.find_by!(name: "Sky Team").color
+    assert_equal "blue", teams(:blue).reload.color
+    assert_equal 0, SiteMasterSeeder.call(config)["teams"]
   end
 
   test "never deletes rows that are not listed" do

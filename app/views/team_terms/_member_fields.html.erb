@@ -1,0 +1,24 @@
+<div class="rounded-box border border-base-200 bg-base-100 p-3 grid grid-cols-1 sm:grid-cols-[1fr_1fr_8rem_auto] gap-3 items-end" data-team-term-member-fields-target="item">
+  <%= member_fields.hidden_field :_destroy, data: { team_term_member_fields_target: "destroyField" } %>
+  <% if member_fields.object.persisted? %>
+    <%= member_fields.hidden_field :id %>
+  <% end %>
+
+  <div class="app-field">
+    <%= member_fields.label :user_id, t("team_terms.member_fields.user_label"), class: "app-field-label" %>
+    <%= member_fields.select :user_id, user_options, { include_blank: t("team_terms.member_fields.no_user") },
+          class: "select w-full focus:select-primary", data: { action: "team-term-member-fields#userChanged" } %>
+  </div>
+
+  <div class="app-field">
+    <%= member_fields.label :name, t("team_terms.member_fields.name_label"), class: "app-field-label" %>
+    <%= member_fields.text_field :name, class: "input w-full focus:input-primary", data: { team_term_member_fields_target: "nameField" } %>
+  </div>
+
+  <div class="app-field">
+    <%= member_fields.label :role, t("team_terms.member_fields.role_label"), class: "app-field-label" %>
+    <%= member_fields.select :role, TeamTermMember.role_form_options, {}, class: "select w-full focus:select-primary" %>
+  </div>
+
+  <button type="button" class="btn btn-ghost btn-sm" data-action="team-term-member-fields#remove"><%= t("team_terms.member_fields.remove_button") %></button>
+</div>

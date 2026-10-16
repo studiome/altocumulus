@@ -1,0 +1,10 @@
+blue_autumn:
+  team: blue
+  starts_on: 2026-10-01
+  ends_on: 2026-11-30
+  note: "Autumn rotation"
+
+blue_winter:
+  team: blue
+  starts_on: 2026-12-01
+  ends_on: 2027-01-31

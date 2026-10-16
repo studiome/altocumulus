@@ -1,6 +1,7 @@
 class Hospitalization < ApplicationRecord
   include Auditable
   include ConfigurableRequiredFields
+  include TeamAssignable
 
   # Only the valid DB keys live here now -- labels are looked up from
   # config/locales/*.yml (models.hospitalization.*_options) so they render in
@@ -227,6 +228,12 @@ class Hospitalization < ApplicationRecord
 
   def conditional_required_options
     { purpose: purpose }
+  end
+
+  # The date that decides which team term's members apply: the scheduled
+  # surgery, else the scheduled procedure, else the (scheduled) admission.
+  def team_display_date
+    scheduled_surgery_date || scheduled_procedure_date || effective_admission_date
   end
 
   def transferred?

@@ -32,17 +32,28 @@ class SiteConfig
 
   # Keys of the masters section: the names a deployment wants present in the
   # admin-editable master tables (see SiteMasterSeeder, `site:seed_masters`).
-  MASTER_KEYS = %w[departments surgery_locations surgical_devices].freeze
+  MASTER_KEYS = %w[departments surgery_locations surgical_devices teams].freeze
 
   # Masters whose entries may be a mapping ({name: ..., <option>: ...}) instead
   # of a plain name, with the options each accepts.
-  MASTER_ENTRY_OPTIONS = { "surgery_locations" => %w[asks_performing_department] }.freeze
+  MASTER_ENTRY_OPTIONS = {
+    "surgery_locations" => %w[asks_performing_department],
+    "teams" => %w[color]
+  }.freeze
+
+  # Optional features a site can switch on (features.<key>: true). Everything
+  # is off by default, which keeps the stock behavior.
+  FEATURE_KEYS = %w[teams].freeze
+
+  # Required-field name that only makes sense with the teams feature on.
+  TEAM_FIELD = "team_id".freeze
 
   # top-level key => validator method (receives the raw value, returns the
   # normalized one, raises Error).
   SCHEMA = {
     "required_fields" => :normalize_required_fields,
     "patient" => :normalize_patient,
+    "features" => :normalize_features,
     "masters" => :normalize_masters
   }.freeze
 
@@ -109,7 +120,13 @@ class SiteConfig
     @values = SCHEMA.each_with_object({}) do |(key, validator), values|
       values[key] = send(validator, hash[key])
     end
+    reject_team_fields_without_teams_feature!
     @values.freeze
+  end
+
+  # features.teams: whether care teams are used (nav, selects, displays).
+  def teams_enabled?
+    @values.fetch("features").fetch("teams", false)
   end
 
   # Attribute names (symbols) that must be present for the given model
@@ -144,7 +161,37 @@ class SiteConfig
     @master_flags.fetch("surgery_locations", {}).select { |_name, flags| flags["asks_performing_department"] }.keys
   end
 
+  # The value of an option given on a masters entry (e.g. a team's color), or
+  # nil when the entry did not set it.
+  def master_option(key, name, option)
+    @master_flags.fetch(key.to_s, {}).fetch(name.to_s, {})[option.to_s]
+  end
+
   private
+
+    def reject_team_fields_without_teams_feature!
+      return if teams_enabled?
+
+      required = @values.fetch("required_fields")
+      lists = required.except(BY_PURPOSE_KEY).values + required.fetch(BY_PURPOSE_KEY, {}).values
+      return unless lists.any? { |fields| fields.include?(TEAM_FIELD.to_sym) }
+
+      raise Error, "#{source}: required_fields lists #{TEAM_FIELD}, which needs features.teams to be true"
+    end
+
+    def normalize_features(value)
+      return {}.freeze if value.nil?
+      raise Error, "#{source}: features must be a mapping of feature => true/false" unless value.is_a?(Hash)
+
+      unknown = value.keys - FEATURE_KEYS
+      raise Error, "#{source}: features has unknown key(s) #{unknown.join(', ')} (known: #{FEATURE_KEYS.join(', ')})" if unknown.any?
+
+      unless value.values.all? { |flag| flag == true || flag == false }
+        raise Error, "#{source}: features values must be true or false"
+      end
+
+      value.freeze
+    end
 
     def normalize_required_fields(value)
       return {} if value.nil?
@@ -267,10 +314,20 @@ class SiteConfig
       end
 
       flags = entry.except("name")
-      unless flags.values.all? { |flag| flag == true || flag == false }
-        raise Error, "#{source}: masters.#{key} entry #{name}: options must be true or false"
-      end
+      validate_master_flags!(key, name, flags)
 
       [ name.strip, flags ]
+    end
+
+    # Options are booleans, except a team's color, which must be a palette key.
+    def validate_master_flags!(key, name, flags)
+      flags.each do |option, flag|
+        if key == "teams" && option == "color"
+          next if Team::COLOR_KEYS.include?(flag)
+
+          raise Error, "#{source}: masters.teams entry #{name}: color must be one of #{Team::COLOR_KEYS.join(', ')}"
+        end
+        raise Error, "#{source}: masters.#{key} entry #{name}: options must be true or false" unless flag == true || flag == false
+      end
     end
 end

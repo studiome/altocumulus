@@ -126,6 +126,8 @@
     <p class="app-helper"><%= t(".performing_department_helper") %></p>
   </div>
 
+  <%= render "shared/team_field", form: form, record: surgery, helper_text: t(".team_helper") %>
+
   <div class="app-field">
     <%= form.label :surgical_device_id, t(".surgical_device_label"), class: "app-field-label" %>
     <%= form.collection_select :surgical_device_id, SurgicalDevice.choices_for(surgery.surgical_device_id), :id, :name,

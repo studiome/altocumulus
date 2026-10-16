@@ -1,6 +1,7 @@
 class Surgery < ApplicationRecord
   include Auditable
   include ConfigurableRequiredFields
+  include TeamAssignable
 
   # Only the valid DB keys live here -- labels come from
   # config/locales/*.yml (models.surgery.*_options), see Hospitalization for
@@ -60,6 +61,9 @@ class Surgery < ApplicationRecord
   # Moving an existing surgery to another patient must not leave it pointing at
   # the previous patient's hospitalization.
   before_validation :unlink_hospitalization_of_previous_patient, if: -> { persisted? && patient_id_changed? }
+  # A surgery entered for a hospitalization starts out on its team; it can be
+  # changed afterwards (and is not kept in step with later team changes).
+  before_validation :default_team_from_hospitalization, on: :create
 
   scope :anesthesia_methods, -> { distinct.order(:anesthesia_method).pluck(:anesthesia_method).compact_blank }
   scope :elective, -> { where(scheduling_type: "elective") }
@@ -219,6 +223,15 @@ class Surgery < ApplicationRecord
     department&.name.presence || surgery_location&.name.presence
   end
 
+  # Own team, else the hospitalization's.
+  def effective_team
+    team || hospitalization&.team
+  end
+
+  def team_display_date
+    surgery_date
+  end
+
   def start_time_display
     start_time&.strftime("%H:%M") || "-"
   end
@@ -268,6 +281,10 @@ class Surgery < ApplicationRecord
     self.department = nil unless simultaneous_slot? || backup_slot?
     self.surgery_location = nil if simultaneous_slot? || backup_slot?
     self.backup_intervention = nil unless backup_slot?
+  end
+
+  def default_team_from_hospitalization
+    self.team ||= hospitalization&.team
   end
 
   def unlink_hospitalization_of_previous_patient

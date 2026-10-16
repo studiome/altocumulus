@@ -1,0 +1,17 @@
+blue:
+  name: "Blue Team"
+  color: blue
+  position: 1
+  active: true
+
+red:
+  name: "Red Team"
+  color: red
+  position: 2
+  active: true
+
+retired_team:
+  name: "Retired Team"
+  color: gray
+  position: 3
+  active: false

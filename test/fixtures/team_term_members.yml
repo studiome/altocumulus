@@ -1,0 +1,36 @@
+autumn_main:
+  team_term: blue_autumn
+  name: "Alpha"
+  role: main
+  position: 1
+
+autumn_sub:
+  team_term: blue_autumn
+  name: "Bravo"
+  role: sub
+  position: 2
+
+autumn_charlie:
+  team_term: blue_autumn
+  user: member
+  name: "Charlie"
+  role: member
+  position: 4
+
+autumn_delta:
+  team_term: blue_autumn
+  name: "Delta"
+  role: member
+  position: 3
+
+winter_main:
+  team_term: blue_winter
+  name: "Bravo"
+  role: main
+  position: 1
+
+winter_sub:
+  team_term: blue_winter
+  name: "Alpha"
+  role: sub
+  position: 2

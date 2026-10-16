@@ -24,6 +24,14 @@
     <p class="app-helper"><%= t(".position_helper") %></p>
   </div>
 
+  <% if record.respond_to?(:color) %>
+    <div class="app-field">
+      <%= form.label :color, class: "app-field-label" %>
+      <%= form.select :color, record.class.color_form_options, {}, class: "select w-full focus:select-primary" %>
+      <p class="app-helper"><%= t(".color_helper") %></p>
+    </div>
+  <% end %>
+
   <% if record.respond_to?(:asks_performing_department) %>
     <div class="app-field">
       <label class="label cursor-pointer justify-start gap-2 py-0">

@@ -8,7 +8,8 @@ class SiteMasterSeeder
   MODELS = {
     "departments" => "Department",
     "surgery_locations" => "SurgeryLocation",
-    "surgical_devices" => "SurgicalDevice"
+    "surgical_devices" => "SurgicalDevice",
+    "teams" => "Team"
   }.freeze
 
   # Returns how many rows were created per master key.
@@ -30,6 +31,8 @@ class SiteMasterSeeder
   def self.extra_attributes(key, name, config)
     if key == "surgery_locations" && config.surgery_locations_asking_performing_department.include?(name)
       { asks_performing_department: true }
+    elsif key == "teams" && (color = config.master_option(key, name, "color"))
+      { color: color }
     else
       {}
     end

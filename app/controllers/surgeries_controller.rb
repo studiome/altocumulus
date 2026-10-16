@@ -163,8 +163,14 @@ class SurgeriesController < ApplicationController
       @surgery.surgery_procedure_selections.build if @surgery.surgery_procedure_selections.empty?
     end
 
+    # The team is only a field while the site uses teams (features.teams).
+    def team_params
+      SiteConfig.current.teams_enabled? ? [ :team_id ] : []
+    end
+
     def surgery_params
       params.expect(surgery: [
+        *team_params,
         :surgery_date, :surgery_date_status, :duration_hours, :anesthesia_method, :patient_id,
         :scheduling_type, :slot_category, :department_id, :surgery_location_id, :surgical_device_id, :start_time, :slot_number,
         :hospitalization_id, :backup_intervention, :performing_department_id,

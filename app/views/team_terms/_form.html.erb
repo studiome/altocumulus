@@ -1,0 +1,58 @@
+<%= form_with(model: [ team, term ], class: "app-form") do |form| %>
+  <% if term.errors.any? %>
+    <div role="alert" class="alert alert-error mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <h3 class="font-bold"><%= t(".errors_heading", count: term.errors.count) %></h3>
+        <ul class="list-disc ml-6">
+          <% term.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="app-field">
+      <%= form.label :starts_on, class: "app-field-label app-field-label-required" %>
+      <%= form.date_field :starts_on, class: "input w-full focus:input-primary" %>
+    </div>
+    <div class="app-field">
+      <%= form.label :ends_on, class: "app-field-label app-field-label-required" %>
+      <%= form.date_field :ends_on, class: "input w-full focus:input-primary" %>
+    </div>
+  </div>
+  <p class="app-helper"><%= t(".dates_helper") %></p>
+
+  <div class="app-field">
+    <%= form.label :note, class: "app-field-label" %>
+    <%= form.text_field :note, class: "input w-full focus:input-primary" %>
+  </div>
+
+  <% user_options = User.active.order(:name).pluck(:name, :id) %>
+  <div class="app-field" data-controller="team-term-member-fields">
+    <span class="app-field-label"><%= t(".members_heading") %></span>
+    <p class="app-helper"><%= t(".members_helper") %></p>
+
+    <div class="space-y-3 my-3" data-team-term-member-fields-target="list">
+      <% term.team_term_members.each do |member| %>
+        <%= form.fields_for :team_term_members, member, include_id: false do |member_fields| %>
+          <%= render "team_terms/member_fields", member_fields: member_fields, user_options: user_options %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <template data-team-term-member-fields-target="template">
+      <%= form.fields_for :team_term_members, TeamTermMember.new, child_index: "NEW_RECORD", include_id: false do |member_fields| %>
+        <%= render "team_terms/member_fields", member_fields: member_fields, user_options: user_options %>
+      <% end %>
+    </template>
+
+    <button type="button" class="btn btn-outline btn-sm" data-action="team-term-member-fields#add"><%= t(".add_member_button") %></button>
+  </div>
+
+  <div class="pt-4">
+    <%= form.submit class: "btn btn-primary w-full" %>
+  </div>
+<% end %>

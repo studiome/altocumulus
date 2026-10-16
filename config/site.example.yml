@@ -3,9 +3,13 @@
 # values below are generic placeholders. See config/site.yml for what each key
 # means.
 
+features:
+  teams: true
+
 required_fields:
   hospitalization:
     - referred_from
+    - team_id
     - reservation_doctor_id
     - attending_doctor
   hospitalization_by_purpose:
@@ -29,3 +33,9 @@ masters:
       asks_performing_department: true
     - 病棟処置室
   surgical_devices: [da Vinci, hinotori]
+  teams:
+    - name: 青チーム
+      color: blue
+    - name: 赤チーム
+      color: red
+    - 緑チーム
