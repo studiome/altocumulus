@@ -12,6 +12,13 @@ module ApplicationHelper
     classes.join(" ")
   end
 
+  # Options of a team select: the "team undecided" choice first, then the
+  # active teams plus the record's current one. Pair with
+  # `selected: record.team_choice` (see TeamAssignable).
+  def team_select_options(record)
+    [ [ t("teams.undecided"), TeamAssignable::UNDECIDED ] ] + Team.choices_for(record.team_id).map { |team| [ team.name, team.id ] }
+  end
+
   # The users a form may offer for a "which person" field, ordered by name:
   # every active user, plus the one the record being edited already points at
   # (even if deactivated since), the way MasterRecord.choices_for does.

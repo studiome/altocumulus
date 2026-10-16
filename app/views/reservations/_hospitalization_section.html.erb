@@ -111,7 +111,7 @@
     <% if SiteConfig.current.teams_enabled? %>
       <div class="app-field">
         <%= hospitalization_label hf, :team_id, Hospitalization.human_attribute_name(:team_id) %>
-        <%= hf.collection_select :team_id, Team.choices_for(hospitalization.team_id), :id, :name, { include_blank: true },
+        <%= hf.select :team_id, team_select_options(hospitalization), { include_blank: true, selected: hospitalization.team_choice },
               { class: "select w-full focus:select-primary",
                 data: { reservation_form_target: "team", action: "change->reservation-form#refreshTeam" } }.merge(reservation_aria(reservation, "hospitalization.team_id")) %>
         <%= reservation_field_error(reservation, "hospitalization.team_id") %>

@@ -279,9 +279,16 @@ class Reservation
     # still on the hospitalization's previous team.
     def follow_hospitalization_team
       if surgery.new_record?
-        surgery.team ||= hospitalization.team
-      elsif hospitalization.team_id_changed? && (surgery.team_id.nil? || surgery.team_id == hospitalization.team_id_was)
+        return if surgery.team || surgery.team_undecided?
+
+        surgery.team = hospitalization.team
+        surgery.team_undecided = hospitalization.team_undecided?
+      elsif hospitalization.team_id_changed? || hospitalization.team_undecided_changed?
+        was = [ hospitalization.team_id_was, hospitalization.team_undecided_was ]
+        return unless (surgery.team_id.nil? && !surgery.team_undecided?) || [ surgery.team_id, surgery.team_undecided? ] == was
+
         surgery.team_id = hospitalization.team_id
+        surgery.team_undecided = hospitalization.team_undecided?
       end
     end
 

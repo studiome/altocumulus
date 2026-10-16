@@ -96,6 +96,16 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "an undecided team is exported as the undecided label" do
+    surgeries(:two).update_columns(team_undecided: true)
+    with_site_config("features" => { "teams" => true }) do
+      get export_url(:surgery_list), params: RANGE.merge(view: "surgery", team_id: "undecided")
+      table = rows
+      assert_equal 1, table.size - 1
+      assert_equal I18n.t("teams.undecided_badge"), table[1][table.first.index("Team")]
+    end
+  end
+
   test "the examination tab exports the non-surgery admissions it lists" do
     hospitalizations(:one).update_columns(purpose: "examination", scheduled_procedure_date: Date.new(2026, 3, 2), procedure_name: "Endoscopy")
     hospitalizations(:two).update_columns(purpose: "surgery")

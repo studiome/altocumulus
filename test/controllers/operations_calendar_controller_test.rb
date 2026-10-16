@@ -288,6 +288,24 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "an undecided team shows a gray badge in the team column and can be filtered" do
+    config = { "features" => { "teams" => true }, "ledger_columns" => { "operations_calendar" => %w[patient team] } }
+    surgeries(:one).update_columns(team_undecided: true, surgery_date: Date.new(2026, 10, 20))
+
+    with_site_config(config) do
+      get operations_calendar_url, params: { start: "2026-10-20", days: 1 }
+      assert_select "tr.oc-surgery .badge", text: I18n.t("teams.undecided_badge")
+      assert_select "select#calendar_team_id option[value='undecided']", text: I18n.t("teams.undecided_badge")
+
+      get operations_calendar_url, params: { start: "2026-10-20", days: 1, team_id: "undecided" }
+      assert_select "select#calendar_team_id option[value='undecided'][selected]"
+      assert_select "tr.oc-surgery", count: 1
+
+      get operations_calendar_url, params: { start: "2026-10-20", days: 1, team_id: teams(:blue).id }
+      assert_select "tr.oc-surgery", count: 0
+    end
+  end
+
   test "the number of queries does not grow with the number of surgeries, even with every column" do
     columns = LedgerColumn.keys(:surgery).map(&:to_s)
     config = { "features" => { "teams" => true }, "ledger_columns" => { "operations_calendar" => columns } }

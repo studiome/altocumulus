@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_000300) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_000400) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -174,6 +174,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000300) do
     t.string "procedure_name"
     t.integer "reservation_doctor_id"
     t.integer "team_id"
+    t.boolean "team_undecided", default: false, null: false
     t.index ["created_by_id"], name: "index_hospitalizations_on_created_by_id"
     t.index ["deleted_at"], name: "index_hospitalizations_on_deleted_at"
     t.index ["discharge_date"], name: "index_hospitalizations_on_discharge_date"
@@ -231,6 +232,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000300) do
     t.string "backup_intervention"
     t.integer "performing_department_id"
     t.integer "team_id"
+    t.boolean "team_undecided", default: false, null: false
     t.index ["department_id"], name: "index_surgeries_on_department_id"
     t.index ["hospitalization_id"], name: "index_surgeries_on_hospitalization_id"
     t.index ["patient_id"], name: "index_surgeries_on_patient_id"

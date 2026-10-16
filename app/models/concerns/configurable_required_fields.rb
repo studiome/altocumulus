@@ -55,6 +55,8 @@ module ConfigurableRequiredFields
     def validate_configured_required_fields
       configured_required_attributes.each do |attribute|
         next if errors.added?(attribute, :blank)
+        # "Team undecided" is an answer to the team question, unlike a blank.
+        next if attribute == :team_id && try(:team_undecided?)
 
         errors.add(attribute, :blank) if public_send(attribute).blank?
       end

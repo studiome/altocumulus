@@ -680,6 +680,8 @@ en:
       active_helper: "An inactive record is no longer offered for new entries, but stays visible on the records that already use it. A record in use cannot be deleted; deactivate it instead."
 
   teams:
+    undecided: "Team undecided"
+    undecided_badge: "Undecided"
     display:
       label: "Team"
 

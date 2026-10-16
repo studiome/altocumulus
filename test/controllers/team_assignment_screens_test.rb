@@ -46,6 +46,42 @@ class TeamAssignmentScreensTest < ActionDispatch::IntegrationTest
     assert_nil @hospitalization.reload.team_id
   end
 
+  test "forms offer an undecided option first after the blank one" do
+    with_site_config(@config) do
+      get edit_hospitalization_url(@hospitalization)
+      assert_select "select[name='hospitalization[team_id]'] option:nth-child(2)[value='undecided']", text: I18n.t("teams.undecided")
+      get new_surgery_url
+      assert_select "select[name='surgery[team_id]'] option[value='undecided']"
+
+      @hospitalization.update_columns(team_undecided: true)
+      get edit_hospitalization_url(@hospitalization)
+      assert_select "select[name='hospitalization[team_id]'] option[value='undecided'][selected]"
+    end
+  end
+
+  test "undecided can be saved and satisfies a required team" do
+    with_site_config(@config.merge("required_fields" => { "hospitalization" => [ "team_id" ] })) do
+      patch hospitalization_url(@hospitalization), params: { hospitalization: { team_id: "undecided" } }
+      assert_response :redirect
+      assert @hospitalization.reload.team_undecided?
+      assert_nil @hospitalization.team_id
+
+      patch hospitalization_url(@hospitalization), params: { hospitalization: { team_id: teams(:red).id } }
+      assert_not @hospitalization.reload.team_undecided?
+    end
+  end
+
+  test "show pages display an undecided badge" do
+    @hospitalization.update_columns(team_undecided: true)
+    @surgery.update_columns(team_undecided: true)
+    with_site_config(@config) do
+      get hospitalization_url(@hospitalization)
+      assert_select ".team-badge", text: I18n.t("teams.undecided_badge")
+      get surgery_url(@surgery)
+      assert_select ".team-badge", text: I18n.t("teams.undecided_badge")
+    end
+  end
+
   test "a required team shows an error when missing" do
     with_site_config(@config.merge("required_fields" => { "hospitalization" => [ "team_id" ] })) do
       patch hospitalization_url(@hospitalization), params: { hospitalization: { team_id: "" } }

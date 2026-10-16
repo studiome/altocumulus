@@ -500,7 +500,11 @@ opens it for editing. Hospitalizations and surgeries have an optional `team_id`;
 for a hospitalization starts on its team (`Surgery#effective_team` falls back to the
 hospitalization's). The members shown for a case come from the term covering its date (a surgery's
 `surgery_date`; a hospitalization's scheduled surgery date, else scheduled procedure date, else
-admission date); an undated case shows only the team name.
+admission date); an undated case shows only the team name. "Team undecided" (チーム未決定) is a
+deliberate answer apart from a blank team: the team selects offer it first (submitted as
+`team_id=undecided`, stored as `team_undecided` with no team), it satisfies a required `team_id`, a
+chosen team clears it, a surgery inherits it from its hospitalization like the team, and it shows as a
+gray "Undecided" badge, an "Undecided" calendar team filter option and the same label in CSV exports.
 
 ### Development demo data
 

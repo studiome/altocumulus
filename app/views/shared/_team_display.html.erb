@@ -1,7 +1,12 @@
 <%# Team badge and the members of the term covering the case date; shown only
-    while features.teams is on and the case has a team. %>
+    while features.teams is on and the case has a team (or is undecided). %>
 <% team = record.effective_team %>
-<% if SiteConfig.current.teams_enabled? && team %>
+<% if SiteConfig.current.teams_enabled? && team.nil? && record.effective_team_undecided? %>
+  <div>
+    <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("teams.display.label") %></span>
+    <span class="team-badge badge <%= Team::BADGE_CLASSES['gray'] %>"><%= t("teams.undecided_badge") %></span>
+  </div>
+<% elsif SiteConfig.current.teams_enabled? && team %>
   <div>
     <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("teams.display.label") %></span>
     <span class="team-badge badge <%= team.badge_class %>"><%= team.name %></span>

@@ -34,7 +34,9 @@ module ExportFields
     end
 
     def team_name(record)
-      SiteConfig.current.teams_enabled? ? record.effective_team&.name : nil
+      return nil unless SiteConfig.current.teams_enabled?
+
+      record.effective_team&.name || (I18n.t("teams.undecided_badge") if record.effective_team_undecided?)
     end
 
     def team_members(record)

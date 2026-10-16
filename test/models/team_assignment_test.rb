@@ -92,6 +92,81 @@ class TeamAssignmentTest < ActiveSupport::TestCase
     end
   end
 
+  # --- team undecided (チーム未決定) -----------------------------------------
+
+  test "team_id accepts the undecided choice, which is no team" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.team_id = "undecided"
+    assert hospitalization.team_undecided?
+    assert_nil hospitalization.team_id
+    assert_equal "undecided", hospitalization.team_choice
+  end
+
+  test "choosing a team, or leaving it blank, clears undecided" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.team_id = "undecided"
+    hospitalization.team_id = @team.id.to_s
+    assert_not hospitalization.team_undecided?
+
+    hospitalization.team_id = "undecided"
+    hospitalization.team_id = ""
+    assert_not hospitalization.team_undecided?
+    assert_nil hospitalization.team_choice
+
+    hospitalization.team_undecided = true
+    hospitalization.team = @team
+    hospitalization.valid?
+    assert_not hospitalization.team_undecided?
+  end
+
+  test "a required team is satisfied by undecided but not by leaving it blank" do
+    config = { "features" => { "teams" => true },
+               "required_fields" => { "hospitalization" => [ "team_id" ], "surgery" => [ "team_id" ] } }
+    with_site_config(config) do
+      hospitalization = hospitalizations(:one)
+      hospitalization.team_id = ""
+      assert_not hospitalization.valid?
+      assert hospitalization.errors.added?(:team_id, :blank)
+
+      hospitalization.team_id = "undecided"
+      hospitalization.valid?
+      assert_not hospitalization.errors.added?(:team_id, :blank)
+
+      surgery = surgeries(:one)
+      surgery.team_id = ""
+      assert_not surgery.valid?
+      surgery.team_id = "undecided"
+      surgery.valid?
+      assert_not surgery.errors.added?(:team_id, :blank)
+    end
+  end
+
+  test "a surgery created for an undecided hospitalization is undecided too" do
+    @hospitalization.update!(team_undecided: true)
+    surgery = build_surgery(hospitalization: @hospitalization)
+    surgery.save!
+    assert surgery.team_undecided?
+    assert surgery.effective_team_undecided?
+  end
+
+  test "effective_team_undecided? follows the hospitalization only while the surgery has no team of its own" do
+    surgery = surgeries(:one)
+    surgery.hospitalization = @hospitalization
+    @hospitalization.team_undecided = true
+    assert surgery.effective_team_undecided?
+
+    surgery.team = @team
+    assert_not surgery.effective_team_undecided?
+
+    @hospitalization.team_undecided = false
+    @hospitalization.team = @team
+    surgery.team = nil
+    surgery.team_undecided = true
+    assert surgery.effective_team_undecided?
+    assert_nil surgery.effective_team, "an explicit undecided on the surgery beats the hospitalization's team"
+    assert_not @hospitalization.effective_team_undecided?
+  end
+
   private
 
     def build_surgery(**attributes)

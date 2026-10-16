@@ -1,10 +1,10 @@
 <%# Team select for the hospitalization / surgery forms; rendered only while
-    features.teams is on (see SiteConfig). Offers the active teams plus the
-    record's current one. %>
+    features.teams is on (see SiteConfig). Offers "team undecided", the active
+    teams and the record's current one. %>
 <% if SiteConfig.current.teams_enabled? %>
   <div class="app-field">
     <%= form.label :team_id, record.class.human_attribute_name(:team_id), class: required_label_class(record.class, :team_id, record: record) %>
-    <%= form.collection_select :team_id, Team.choices_for(record.team_id), :id, :name, { include_blank: true }, class: "select w-full focus:select-primary" %>
+    <%= form.select :team_id, team_select_options(record), { include_blank: true, selected: record.team_choice }, class: "select w-full focus:select-primary" %>
     <% if local_assigns[:helper_text] %>
       <p class="app-helper"><%= helper_text %></p>
     <% end %>

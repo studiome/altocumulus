@@ -223,9 +223,14 @@ class Surgery < ApplicationRecord
     department&.name.presence || surgery_location&.name.presence
   end
 
-  # Own team, else the hospitalization's.
+  # Own team, else the hospitalization's (unless the surgery itself was left
+  # undecided).
   def effective_team
-    team || hospitalization&.team
+    team || (team_undecided? ? nil : hospitalization&.team)
+  end
+
+  def effective_team_undecided?
+    effective_team.nil? && (team_undecided? || hospitalization&.team_undecided? == true)
   end
 
   def team_display_date
@@ -284,7 +289,10 @@ class Surgery < ApplicationRecord
   end
 
   def default_team_from_hospitalization
-    self.team ||= hospitalization&.team
+    return if team || team_undecided? || hospitalization.nil?
+
+    self.team = hospitalization.team
+    self.team_undecided = hospitalization.team_undecided?
   end
 
   def unlink_hospitalization_of_previous_patient

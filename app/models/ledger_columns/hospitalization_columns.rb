@@ -24,7 +24,7 @@ module LedgerColumns
                  optional(date && date_text(date)))
           },
           column(:team, 80, min: 60, flex: 2, includes: [ { team: TEAM_INCLUDES } ]) { |hospitalization, _|
-            team_cell(hospitalization.effective_team, hospitalization.team_members_display)
+            team_cell(hospitalization.effective_team, hospitalization.team_members_display, undecided: hospitalization.effective_team_undecided?)
           },
           column(:category, 100, min: 90, flex: 3, includes: [ :source_department ]) { |hospitalization, _|
             cell(emergency_admission_segment(hospitalization), transfer_segment(hospitalization))

@@ -84,6 +84,40 @@ class CalendarFilterTest < ActiveSupport::TestCase
     end
   end
 
+  test "from_params reads the undecided team choice" do
+    with_site_config("features" => { "teams" => true }) do
+      filter = CalendarFilter.from_params({ team_id: "undecided" }, user: @member)
+      assert filter.team_undecided?
+      assert filter.active?
+      assert_nil filter.team_id
+      assert_equal({ team_id: "undecided" }, filter.to_params)
+    end
+    assert_not CalendarFilter.from_params({ team_id: "undecided" }, user: @member).active?
+  end
+
+  test "the undecided filter keeps cases whose effective team is undecided" do
+    with_site_config("features" => { "teams" => true }) do
+      assert_empty filter(team_undecided: true).surgery_ids(@dates)
+
+      @hospitalization.update_columns(team_undecided: true)
+      assert_equal [ @surgery.id ], filter(team_undecided: true).surgery_ids(@dates).to_a
+
+      @surgery.update_columns(team_id: teams(:red).id)
+      assert_empty filter(team_undecided: true).surgery_ids(@dates)
+
+      @surgery.update_columns(team_id: nil, team_undecided: true)
+      @hospitalization.update_columns(team_undecided: false, team_id: teams(:blue).id)
+      assert_equal [ @surgery.id ], filter(team_undecided: true).surgery_ids(@dates).to_a
+      assert_empty filter(team_id: teams(:blue).id).surgery_ids(@dates)
+    end
+  end
+
+  test "the undecided filter applies to hospitalizations" do
+    @hospitalization.update_columns(team_undecided: true)
+    scope = Hospitalization.where(id: [ @hospitalization.id, hospitalizations(:two).id ])
+    assert_equal [ @hospitalization.id ], filter(team_undecided: true).apply_to_hospitalizations(scope).pluck(:id)
+  end
+
   test "a name with LIKE wildcards does not match everything" do
     @member.update_columns(name: "%")
     assert_empty filter(mine: true).surgery_ids(@dates)

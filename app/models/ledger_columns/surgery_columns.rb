@@ -44,7 +44,7 @@ module LedgerColumns
                  optional(surgery.anesthesia_method))
           },
           column(:team, 80, min: 60, flex: 2, includes: [ { team: TEAM_INCLUDES }, { hospitalization: { team: TEAM_INCLUDES } } ]) { |surgery, _|
-            team_cell(surgery.effective_team, surgery.team_members_display)
+            team_cell(surgery.effective_team, surgery.team_members_display, undecided: surgery.effective_team_undecided?)
           },
           column(:category, 100, min: 90, flex: 3, includes: [ :department, :surgery_location, :performing_department, :surgical_device,
                                               { hospitalization: :source_department } ]) { |surgery, _|

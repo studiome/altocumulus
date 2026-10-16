@@ -26,7 +26,8 @@
         <% if SiteConfig.current.teams_enabled? %>
           <div class="app-filter-field">
             <label class="app-filter-label" for="calendar_team_id"><%= t(".team_label") %></label>
-            <%= f.select :team_id, options_from_collection_for_select(Team.active.ordered, :id, :name, @filter.team_id),
+            <%= f.select :team_id, options_for_select([ [ t("teams.undecided_badge"), CalendarFilter::UNDECIDED ] ] + Team.active.ordered.map { |team| [ team.name, team.id ] },
+                                            @filter.team_undecided? ? CalendarFilter::UNDECIDED : @filter.team_id),
                   { include_blank: t(".team_all") }, id: "calendar_team_id", class: "select select-sm" %>
           </div>
         <% end %>

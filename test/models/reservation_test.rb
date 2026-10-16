@@ -183,6 +183,30 @@ class ReservationTest < ActiveSupport::TestCase
     end
   end
 
+  test "the surgery's team follows the hospitalization being undecided" do
+    team = teams(:blue)
+    with_site_config("features" => { "teams" => true }) do
+      reservation = build(hospitalization: { team_id: "undecided" })
+      reservation.save!
+      surgery = reservation.surgery.reload
+      assert surgery.team_undecided?
+      assert_nil surgery.team_id
+
+      # A surgery still on the hospitalization's (undecided) team follows its change.
+      update = Reservation.for_hospitalization(reservation.hospitalization)
+      update.assign(hospitalization: { team_id: team.id })
+      update.save!
+      assert_equal team, surgery.reload.team
+      assert_not surgery.team_undecided?
+
+      back = Reservation.for_hospitalization(reservation.hospitalization.reload)
+      back.assign(hospitalization: { team_id: "undecided" })
+      back.save!
+      assert surgery.reload.team_undecided?
+      assert_nil surgery.team_id
+    end
+  end
+
   test "for_hospitalization loads the first linked surgery by date and updates both" do
     reservation = build
     reservation.save!

@@ -47,8 +47,10 @@ module LedgerColumns
            optional(Patient.sex_options[patient&.sex]))
     end
 
-    def team_cell(team, members)
-      return cell unless SiteConfig.current.teams_enabled? && team
+    def team_cell(team, members, undecided: false)
+      return cell unless SiteConfig.current.teams_enabled?
+      return cell(segment(I18n.t("teams.undecided_badge"), :team, color: "gray")) if team.nil? && undecided
+      return cell unless team
 
       cell(segment(team.name, :team, color: team.color), optional(members))
     end
