@@ -171,15 +171,20 @@ class ReservationsTest < ApplicationSystemTestCase
   end
 
   test "a non-admin can register a new diagnosis from the picker while booking" do
-    sign_out_and_in_as(users(:member))
+    # The signed-in user (an admin) loses the role, so the same browser session is a regular user's.
+    users(:admin).user_roles.where(role: "admin").delete_all
+    assert_not users(:admin).reload.admin?
     visit new_reservation_path(purpose: "examination")
 
     click_on "Select Diagnosis", match: :first
     within("turbo-frame#diagnosis_picker_frame") do
+      assert_text "Appendicitis"
       click_on "Register New Diagnosis"
+      assert_field "Diagnosis Name"
       fill_in "Diagnosis Name", with: "Brand new diagnosis"
       click_on "Create Diagnosis"
     end
+    assert_selector "turbo-frame#diagnosis_picker_frame", text: "Diagnosis was successfully created.", visible: :all
     assert_no_selector "dialog#diagnosis_picker_modal[open]"
     within(first("[data-hospitalization-diagnosis-fields-target='item']")) { assert_text "Brand new diagnosis" }
   end
@@ -217,12 +222,4 @@ class ReservationsTest < ApplicationSystemTestCase
       assert_selector "turbo-frame#reservation_team_members", text: "Alpha"
     end
   end
-
-  private
-
-    # The setup already signed in as an admin; drop that session first.
-    def sign_out_and_in_as(user)
-      page.driver.browser.manage.delete_all_cookies
-      sign_in_as(user)
-    end
 end
