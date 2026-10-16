@@ -49,9 +49,12 @@ class Team < ApplicationRecord
     BADGE_CLASSES.fetch(color, BADGE_CLASSES["gray"])
   end
 
-  # The term whose date range covers the date, if any.
+  # The term whose date range covers the date, if any. Picked in memory when
+  # the terms (and their members) were preloaded, so a ledger of many cases
+  # does not query once per row.
   def term_for(date)
     return nil if date.blank?
+    return team_terms.find { |term| term.starts_on <= date && term.ends_on >= date } if team_terms.loaded?
 
     team_terms.includes(:team_term_members).find_by("starts_on <= :date AND ends_on >= :date", date: date)
   end

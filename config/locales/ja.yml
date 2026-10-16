@@ -1539,3 +1539,57 @@ ja:
       success_notice: "値を更新しました。"
     destroy:
       success_notice: "患者を症例データベースから削除しました。"
+
+  # Ledger columns (LedgerColumn): two-tier headers shared by the operations
+  # calendar, the weekly PDF and the examination calendar, plus the fixed
+  # phrases the cell builders compose.
+  ledger_columns:
+    headers:
+      time_slot:
+        upper: "開始時刻"
+        lower: "枠"
+      admission_dates:
+        upper: "入院予定日"
+        lower: "入院日"
+      patient:
+        upper: "患者ID"
+        lower: "氏名"
+      age_sex:
+        upper: "年齢"
+        lower: "性別"
+      diagnosis_procedure:
+        upper: "診断名"
+        lower: "術式"
+      diagnosis_procedure_name:
+        upper: "診断名"
+        lower: "検査・処置名"
+      operator_assistant:
+        upper: "術者"
+        lower: "助手"
+      duration_anesthesia:
+        upper: "手術時間"
+        lower: "麻酔"
+      team:
+        upper: "担当チーム"
+        lower: "メンバー"
+      category:
+        upper: "区分"
+      purpose:
+        upper: "入院目的"
+        lower: "予定日"
+      reservation:
+        upper: "入約日"
+        lower: "予約医"
+      referral_adl:
+        upper: "紹介元"
+        lower: "ADL"
+      status:
+        upper: "予約状況"
+        lower: "管理状況"
+    age_value: "%{age}歳"
+    entered_by: "入力: %{name}"
+    emergency_admission: "緊急入院"
+    off_slot_marker: "枠外"
+    no_hospitalization: "入院情報なし"
+    performed_by: "実施: %{department}"
+    with_detail: "%{label}(%{detail})"

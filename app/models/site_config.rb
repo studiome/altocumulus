@@ -54,7 +54,8 @@ class SiteConfig
     "required_fields" => :normalize_required_fields,
     "patient" => :normalize_patient,
     "features" => :normalize_features,
-    "masters" => :normalize_masters
+    "masters" => :normalize_masters,
+    "ledger_columns" => :normalize_ledger_columns
   }.freeze
 
   class << self
@@ -121,6 +122,7 @@ class SiteConfig
       values[key] = send(validator, hash[key])
     end
     reject_team_fields_without_teams_feature!
+    reject_team_column_without_teams_feature!
     @values.freeze
   end
 
@@ -167,6 +169,12 @@ class SiteConfig
     @master_flags.fetch(key.to_s, {}).fetch(name.to_s, {})[option.to_s]
   end
 
+  # Keys (symbols) of the columns the ledger shows, in order: the configured
+  # list, else the ledger's built-in default (see LedgerColumn::LEDGERS).
+  def ledger_column_keys(ledger)
+    @values.fetch("ledger_columns").fetch(ledger.to_s) { LedgerColumn.default_keys(ledger) }
+  end
+
   private
 
     def reject_team_fields_without_teams_feature!
@@ -177,6 +185,16 @@ class SiteConfig
       return unless lists.any? { |fields| fields.include?(TEAM_FIELD.to_sym) }
 
       raise Error, "#{source}: required_fields lists #{TEAM_FIELD}, which needs features.teams to be true"
+    end
+
+    def reject_team_column_without_teams_feature!
+      return if teams_enabled?
+
+      @values.fetch("ledger_columns").each do |ledger, keys|
+        next unless keys.include?(LedgerColumn::TEAM_COLUMN)
+
+        raise Error, "#{source}: ledger_columns.#{ledger} lists #{LedgerColumn::TEAM_COLUMN}, which needs features.teams to be true"
+      end
     end
 
     def normalize_features(value)
@@ -246,6 +264,32 @@ class SiteConfig
       raise Error, "#{source}: #{label} has unknown field(s) #{unknown.join(', ')}"
     rescue ActiveRecord::ActiveRecordError
       nil
+    end
+
+    # ledger => [column key, ...]. Each list is checked against the columns
+    # that exist for the ledger's kind of record, so a typo (or a column of the
+    # wrong ledger) fails the deploy instead of rendering nothing.
+    def normalize_ledger_columns(value)
+      return {}.freeze if value.nil?
+      raise Error, "#{source}: ledger_columns must be a mapping of ledger => [column, ...]" unless value.is_a?(Hash)
+
+      ledgers = LedgerColumn.ledger_names.map(&:to_s)
+      unknown = value.keys - ledgers
+      raise Error, "#{source}: ledger_columns has unknown ledger(s) #{unknown.join(', ')} (known: #{ledgers.join(', ')})" if unknown.any?
+
+      value.to_h { |ledger, keys| [ ledger, normalize_ledger_column_list(ledger, keys) ] }.freeze
+    end
+
+    def normalize_ledger_column_list(ledger, keys)
+      label = "ledger_columns.#{ledger}"
+      raise Error, "#{source}: #{label} must be a non-empty list of column keys" unless keys.is_a?(Array) && keys.any? && keys.all?(String)
+      raise Error, "#{source}: #{label} lists a column more than once" unless keys.uniq.size == keys.size
+
+      known = LedgerColumn.keys(LedgerColumn.subject_for(ledger)).map(&:to_s)
+      unknown = keys - known
+      raise Error, "#{source}: #{label} has unknown column(s) #{unknown.join(', ')} (known: #{known.join(', ')})" if unknown.any?
+
+      keys.map(&:to_sym).freeze
     end
 
     def normalize_patient(value)

@@ -241,4 +241,59 @@ class SiteConfigTest < ActiveSupport::TestCase
     assert_equal "blue", config.master_option(:teams, config.master_names(:teams).first, "color")
     assert_includes config.required_fields(:hospitalization), :team_id
   end
+
+  # --- ledger_columns ---------------------------------------------------
+
+  test "ledger_column_keys defaults to the built-in columns when nothing is configured" do
+    config = SiteConfig.from_hash({})
+    assert_equal %i[time_slot patient diagnosis_procedure operator_assistant duration_anesthesia category referral_adl],
+                 config.ledger_column_keys(:operations_calendar)
+    assert_equal config.ledger_column_keys(:operations_calendar), config.ledger_column_keys(:weekly_pdf)
+    assert_equal %i[admission_dates patient age_sex diagnosis_procedure_name purpose reservation referral_adl status],
+                 config.ledger_column_keys(:examination_calendar)
+  end
+
+  test "ledger_columns sets the order per ledger and leaves the others at their default" do
+    config = SiteConfig.from_hash("ledger_columns" => { "weekly_pdf" => %w[patient time_slot] })
+    assert_equal %i[patient time_slot], config.ledger_column_keys(:weekly_pdf)
+    assert_equal 7, config.ledger_column_keys(:operations_calendar).size
+  end
+
+  test "ledger_columns rejects an unknown ledger" do
+    error = assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "nope" => %w[patient] }) }
+    assert_match(/ledger_columns has unknown ledger\(s\) nope/, error.message)
+  end
+
+  test "ledger_columns rejects an unknown column key" do
+    error = assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "weekly_pdf" => %w[patient bogus] }) }
+    assert_match(/ledger_columns.weekly_pdf has unknown column\(s\) bogus/, error.message)
+  end
+
+  test "ledger_columns rejects a column of the other subject" do
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "weekly_pdf" => %w[patient purpose] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "examination_calendar" => %w[patient time_slot] }) }
+  end
+
+  test "ledger_columns rejects duplicates, empty lists and non-lists" do
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "weekly_pdf" => %w[patient patient] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "weekly_pdf" => [] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "weekly_pdf" => "patient" }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => %w[patient]) }
+  end
+
+  test "ledger_columns allows the team column only with features.teams" do
+    error = assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "weekly_pdf" => %w[patient team] }) }
+    assert_match(/team.*features.teams/, error.message)
+
+    config = SiteConfig.from_hash("features" => { "teams" => true }, "ledger_columns" => { "weekly_pdf" => %w[patient team] })
+    assert_equal %i[patient team], config.ledger_column_keys(:weekly_pdf)
+  end
+
+  test "the example config lays out the richer calendar and PDF columns" do
+    config = SiteConfig.load(Rails.root.join("config/site.example.yml"))
+    assert_equal %i[admission_dates patient age_sex diagnosis_procedure duration_anesthesia team category reservation referral_adl status],
+                 config.ledger_column_keys(:operations_calendar)
+    assert_equal %i[time_slot patient age_sex diagnosis_procedure duration_anesthesia team category referral_adl],
+                 config.ledger_column_keys(:weekly_pdf)
+  end
 end

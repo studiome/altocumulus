@@ -39,3 +39,9 @@ masters:
     - name: 赤チーム
       color: red
     - 緑チーム
+
+# Column layout of the ledger tables (see config/site.yml for every column).
+ledger_columns:
+  operations_calendar: [admission_dates, patient, age_sex, diagnosis_procedure, duration_anesthesia, team, category, reservation, referral_adl, status]
+  weekly_pdf: [time_slot, patient, age_sex, diagnosis_procedure, duration_anesthesia, team, category, referral_adl]
+  examination_calendar: [admission_dates, patient, age_sex, diagnosis_procedure_name, purpose, team, reservation, referral_adl, status]

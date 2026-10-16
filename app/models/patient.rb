@@ -36,12 +36,16 @@ class Patient < ApplicationRecord
   end
 
   def age
-    return nil if date_of_birth.blank?
+    age_on(Date.current)
+  end
 
-    today = Date.current
-    years = today.year - date_of_birth.year
-    years -= 1 if today.month < date_of_birth.month ||
-                  (today.month == date_of_birth.month && today.day < date_of_birth.day)
+  # Age in whole years on the given day; nil without a birth date or a day.
+  def age_on(date)
+    return nil if date_of_birth.blank? || date.blank?
+
+    years = date.year - date_of_birth.year
+    years -= 1 if date.month < date_of_birth.month ||
+                  (date.month == date_of_birth.month && date.day < date_of_birth.day)
     years
   end
 

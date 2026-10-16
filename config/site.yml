@@ -62,3 +62,42 @@ patient: {}
 #                      need features.teams, but they only show when it is true.
 #                      Terms and members are entered on the Teams screen.
 masters: {}
+
+# ledger_columns: which columns each ledger table shows, and in what order.
+# Applies to the operations calendar, the weekly PDF and the examination
+# calendar. The day/date cell of the calendar and PDF is always the first
+# column and is not listed. Omit a ledger (or the whole key) to get its
+# built-in default, shown below. Unknown ledgers or columns, a column of the
+# wrong kind, duplicates and an empty list make the boot fail. Each column has
+# an upper and a lower line (e.g. patient = hospital ID over name).
+#
+# Columns of the surgery ledgers (operations_calendar, weekly_pdf):
+#   time_slot            start time / slot number or slot category
+#   admission_dates      scheduled admission date / actual admission date
+#   patient              hospital ID / name (links to the surgery on screen)
+#   age_sex              age on the surgery date / sex
+#   diagnosis_procedure  diagnoses / procedures
+#   operator_assistant   operator / assistant
+#   duration_anesthesia  duration / anesthesia method
+#   team                 team / members of the term covering the date
+#                        (only with features.teams: true)
+#   category             badges: emergency, emergency admission, slot category
+#                        with partner department and backup intervention,
+#                        outside-slot marker; location (with performing
+#                        department), transfer, surgical device
+#   reservation          submitted on (入約日) / reservation doctor (and who
+#                        entered it, when different)
+#   referral_adl         referred from / ADL (of the linked hospitalization)
+#   status               reservation status / admin status
+# Columns of the hospitalization ledger (examination_calendar):
+#   admission_dates, patient, age_sex, team (needs features.teams),
+#   reservation, referral_adl, status (as above) and
+#   diagnosis_procedure_name   diagnoses / procedure name
+#   purpose                    purpose / scheduled procedure or surgery date
+#   category                   emergency admission / transfer
+# The PDF is monochrome: badges print as plain text. Its column widths come
+# from the columns themselves and shrink proportionally to fit the page.
+ledger_columns:
+  operations_calendar: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl]
+  weekly_pdf: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl]
+  examination_calendar: [admission_dates, patient, age_sex, diagnosis_procedure_name, purpose, reservation, referral_adl, status]

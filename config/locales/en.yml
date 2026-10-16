@@ -1639,3 +1639,57 @@ en:
       success_notice: "Values were successfully updated."
     destroy:
       success_notice: "Patient was successfully removed from the case database."
+
+  # Ledger columns (LedgerColumn): two-tier headers shared by the operations
+  # calendar, the weekly PDF and the examination calendar, plus the fixed
+  # phrases the cell builders compose.
+  ledger_columns:
+    headers:
+      time_slot:
+        upper: "Start Time"
+        lower: "Slot"
+      admission_dates:
+        upper: "Scheduled Admission"
+        lower: "Admission"
+      patient:
+        upper: "Patient ID"
+        lower: "Name"
+      age_sex:
+        upper: "Age"
+        lower: "Sex"
+      diagnosis_procedure:
+        upper: "Diagnosis"
+        lower: "Procedures"
+      diagnosis_procedure_name:
+        upper: "Diagnosis"
+        lower: "Procedure Name"
+      operator_assistant:
+        upper: "Operator"
+        lower: "Assistant"
+      duration_anesthesia:
+        upper: "Duration"
+        lower: "Anesthesia"
+      team:
+        upper: "Team"
+        lower: "Members"
+      category:
+        upper: "Type"
+      purpose:
+        upper: "Purpose"
+        lower: "Scheduled Date"
+      reservation:
+        upper: "Submitted On"
+        lower: "Reservation Doctor"
+      referral_adl:
+        upper: "Referred From"
+        lower: "ADL"
+      status:
+        upper: "Reservation Status"
+        lower: "Admin Status"
+    age_value: "%{age} y"
+    entered_by: "Entered by: %{name}"
+    emergency_admission: "Emergency admission"
+    off_slot_marker: "Outside slots"
+    no_hospitalization: "No hospitalization"
+    performed_by: "Performed by %{department}"
+    with_detail: "%{label} (%{detail})"
