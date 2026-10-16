@@ -101,3 +101,16 @@ ledger_columns:
   operations_calendar: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl]
   weekly_pdf: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl]
   examination_calendar: [admission_dates, patient, age_sex, diagnosis_procedure_name, purpose, reservation, referral_adl, status]
+
+# weekly_pdf: the look of the weekly surgery schedule PDF (surgery schedule
+# screen). Both keys are optional.
+#   font_size: starting font size in points, 6 to 10 (default 8). When the
+#              configured columns do not fit the page at their minimum widths
+#              the PDF steps the font down by half points (at most three
+#              steps, never below 6) before squeezing columns any further.
+#   title:     replaces the translated default title ("Weekly Surgery
+#              Schedule" / 週間手術予定表), e.g. with the department's name.
+#              null (or omitted) keeps the default. At most 100 characters.
+weekly_pdf:
+  font_size: 8
+  title: null

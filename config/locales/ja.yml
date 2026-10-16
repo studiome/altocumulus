@@ -1232,7 +1232,10 @@ ja:
       period: "%{from} ~ %{to}"
       printed_at: "出力日時 %{time}"
       day_count: "%{count}件"
-      slot_override: "枠 %{slots}（変更）"
+      slot_count: "列数 %{slots}"
+      slot_usage: "使用 %{used}/%{capacity}分"
+      legend_emergency: "緊急 = 網掛け"
+      legend_off_slot: "枠外 = 薄い網掛け"
       no_surgeries: "手術予定なし"
       columns:
         time: "開始時刻"

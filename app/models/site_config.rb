@@ -48,6 +48,12 @@ class SiteConfig
   # Required-field name that only makes sense with the teams feature on.
   TEAM_FIELD = "team_id".freeze
 
+  # weekly_pdf: the weekly surgery schedule PDF's look.
+  WEEKLY_PDF_KEYS = %w[font_size title].freeze
+  WEEKLY_PDF_FONT_SIZES = (6..10).freeze
+  WEEKLY_PDF_DEFAULT_FONT_SIZE = 8
+  WEEKLY_PDF_TITLE_MAX = 100
+
   # top-level key => validator method (receives the raw value, returns the
   # normalized one, raises Error).
   SCHEMA = {
@@ -55,7 +61,8 @@ class SiteConfig
     "patient" => :normalize_patient,
     "features" => :normalize_features,
     "masters" => :normalize_masters,
-    "ledger_columns" => :normalize_ledger_columns
+    "ledger_columns" => :normalize_ledger_columns,
+    "weekly_pdf" => :normalize_weekly_pdf
   }.freeze
 
   class << self
@@ -175,6 +182,17 @@ class SiteConfig
     @values.fetch("ledger_columns").fetch(ledger.to_s) { LedgerColumn.default_keys(ledger) }
   end
 
+  # The PDF's starting font size in points (it may shrink a few steps to fit
+  # the columns, see LedgerColumnFitting).
+  def weekly_pdf_font_size
+    @values.fetch("weekly_pdf").fetch(:font_size, WEEKLY_PDF_DEFAULT_FONT_SIZE)
+  end
+
+  # The title the site wants on the PDF instead of the translated default, or nil.
+  def weekly_pdf_title
+    @values.fetch("weekly_pdf")[:title]
+  end
+
   private
 
     def reject_team_fields_without_teams_feature!
@@ -290,6 +308,32 @@ class SiteConfig
       raise Error, "#{source}: #{label} has unknown column(s) #{unknown.join(', ')} (known: #{known.join(', ')})" if unknown.any?
 
       keys.map(&:to_sym).freeze
+    end
+
+    def normalize_weekly_pdf(value)
+      return {}.freeze if value.nil?
+      raise Error, "#{source}: weekly_pdf must be a mapping" unless value.is_a?(Hash)
+
+      unknown = value.keys - WEEKLY_PDF_KEYS
+      raise Error, "#{source}: weekly_pdf has unknown key(s) #{unknown.join(', ')} (known: #{WEEKLY_PDF_KEYS.join(', ')})" if unknown.any?
+
+      result = {}
+      size = value["font_size"]
+      unless size.nil?
+        unless size.is_a?(Numeric) && WEEKLY_PDF_FONT_SIZES.cover?(size)
+          raise Error, "#{source}: weekly_pdf.font_size must be a number from #{WEEKLY_PDF_FONT_SIZES.first} to #{WEEKLY_PDF_FONT_SIZES.last}"
+        end
+        result[:font_size] = size
+      end
+
+      title = value["title"]
+      unless title.nil?
+        raise Error, "#{source}: weekly_pdf.title must be a string or null" unless title.is_a?(String)
+        raise Error, "#{source}: weekly_pdf.title must be at most #{WEEKLY_PDF_TITLE_MAX} characters" if title.strip.length > WEEKLY_PDF_TITLE_MAX
+
+        result[:title] = title.strip if title.strip.present?
+      end
+      result.freeze
     end
 
     def normalize_patient(value)

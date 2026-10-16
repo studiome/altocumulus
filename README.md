@@ -46,7 +46,7 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Surgery records | `/surgeries` | Surgery date (may be "undecided"), procedures (up to 5), anesthesia method, duration, elective/emergency type, slot category (regular / joint / backup / off-slot), operator/assistant/operation order. Linked to patient diagnoses. Searchable by operator |
 | Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / chemoradiotherapy / other, the last requiring a reason), referral source, administrator confirmation, soft delete/restore, and rebooking (copy) |
 | Reservation form (入約) | `/reservations/new`, `/reservations/:hospitalization_id/edit` | One screen that creates or edits a hospitalization and, for the purpose surgery, its surgery together (see below). The calendar's booking flow goes through it; the separate hospitalization and surgery forms remain for administration and detail edits |
-| Surgery slot schedule | `/surgery_schedule` | Weekly calendar showing the surgeries and used time per slot, warning about slot overruns, unassigned surgeries, and holidays. The same week can be printed as a landscape A4 PDF (`/surgery_schedule/pdf?start_date=YYYY-MM-DD`, any start date) in black and white, with operator/assistant, referral source, holiday names, and day notes |
+| Surgery slot schedule | `/surgery_schedule` | Weekly calendar showing the surgeries and used time per slot, warning about slot overruns, unassigned surgeries, and holidays. The same week can be printed as a landscape A4 PDF (`/surgery_schedule/pdf?start_date=YYYY-MM-DD`, any start date) in black and white, with operator/assistant, referral source, and a heading per day (date, closed-day name / note, slot count when overridden, slot usage in minutes, case count); emergency rows are shaded and rows outside the regular slot time lightly shaded (legend under the title) |
 | Dashboard | `/dashboard` | Statistics filterable by year (patient counts, inpatients, monthly counts, average length of stay, procedure ranking) |
 | Cross-entity search | `/search` | Search patients, hospitalizations, and surgeries with a single keyword |
 | Audit log | `/audit_events` | Records and displays create/update/delete of patients, surgeries, hospitalizations, and case databases with the operator, IP address, and before/after values |
@@ -457,6 +457,11 @@ Keys:
   `patient`, `age_sex`, `diagnosis_procedure_name`, `purpose`, `team`, `category`, `reservation`,
   `referral_adl`, `status`. Omit a ledger for its built-in default. Unknown or duplicate columns, an empty
   list, or `team` without `features.teams` stop the boot. See `config/site.yml` for the column meanings.
+- `weekly_pdf`: `font_size` (6-10, default 8) and `title` (replaces the translated PDF title; keep
+  site-specific wording here, not in code). Columns have a preferred and a minimum width in the registry:
+  spare page width goes to the flexible text columns (diagnosis/procedure, category, referral/ADL), a too
+  wide set shrinks towards the minimums, and only then does the font step down (8 -> 7.5 -> 7 -> 6.5)
+  before a final proportional squeeze (`LedgerColumnFitting`).
 
 In tests, `with_site_config(hash) { ... }` swaps the config temporarily.
 

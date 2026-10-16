@@ -51,7 +51,7 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     text = render_text(Date.new(2026, 3, 1)) # surgeries(:one) runs 1.5 hours
 
     assert_includes text, "1.5 h"
-    assert_no_match(/\d min\b/, text)
+    assert_no_match(/\d min\b/, text.gsub(%r{Usage \d+/\d+ min}, "")) # the day headings' slot usage is in minutes
   end
 
   test "shows the surgery duration in hours in Japanese" do
@@ -164,9 +164,9 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
   test "the day heading says when the slot count is overridden" do
     Holiday.create!(date: Date.new(2030, 1, 8), holiday: false, note: "Reduced", slot_count: 2, slot_duration_minutes: 120)
 
-    assert_includes render_text(Date.new(2030, 1, 7)), "Slots: 2 (changed)"
-    assert_includes render_text(Date.new(2030, 1, 7), locale: :ja), "枠 2（変更）"
-    assert_not_includes render_text(Date.new(2030, 2, 4)), "changed"
+    assert_includes render_text(Date.new(2030, 1, 7)), "Slots 2"
+    assert_includes render_text(Date.new(2030, 1, 7), locale: :ja), "列数 2"
+    assert_not_includes render_text(Date.new(2030, 2, 4)), "Slots 2"
   end
 
   test "department and location add no queries per surgery" do
@@ -271,23 +271,113 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     end
   end
 
-  test "column widths use the registry defaults, the last column taking the remainder" do
-    widths = WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1)).column_widths(LedgerColumn.for_ledger(:weekly_pdf), 785.89)
+  test "the default columns keep the base font and use the whole printable width" do
+    pdf = WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1))
 
-    defaults = LedgerColumn.for_ledger(:weekly_pdf).map(&:width)
-    assert_equal defaults[0...-1], widths[0...-1]
-    assert_in_delta 785.89, widths.sum, 0.001
-    assert_operator widths.last, :>=, defaults.last
+    assert_equal 8, pdf.column_fit.font_size
+    assert_in_delta pdf.content_width, pdf.column_fit.widths.sum, 0.1
+    assert_operator pdf.column_fit.widths.sum, :<=, pdf.content_width
   end
 
-  test "column widths shrink proportionally when the defaults exceed the printable width" do
-    columns = LedgerColumn.keys(:surgery).reject { |key| key == :team }.map { |key| LedgerColumn.find(:surgery, key) }
-    widths = WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1)).column_widths(columns, 600)
+  test "a column set too wide at the base font steps the font down instead of squeezing" do
+    all = LedgerColumn.keys(:surgery).map(&:to_s)
+    with_site_config("features" => { "teams" => true }, "ledger_columns" => { "weekly_pdf" => all }) do
+      pdf = WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1))
 
-    assert_operator widths.sum, :<=, 600
-    assert_in_delta 600, widths.sum, 0.1
-    ratio = widths.first / columns.first.width
-    columns.zip(widths).each { |column, width| assert_in_delta ratio * column.width, width, 0.02 }
+      assert_equal 7.5, pdf.column_fit.font_size
+      assert_includes font_sizes(pdf.render), 7.5
+      pdf.send(:columns).zip(pdf.column_fit.widths).each { |column, width| assert_operator width, :>=, column.min_width * 7.5 / 8 - 0.05 }
+    end
+  end
+
+  test "the configured font size is the starting point and reaches the page" do
+    with_site_config("weekly_pdf" => { "font_size" => 9 }, "ledger_columns" => { "weekly_pdf" => %w[time_slot patient] }) do
+      pdf = WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1))
+
+      assert_equal 9, pdf.column_fit.font_size
+      assert_includes font_sizes(pdf.render), 9.0
+    end
+  end
+
+  test "a configured title replaces the translated one on the page and in the document info" do
+    with_site_config("weekly_pdf" => { "title" => "Ward 5 Weekly Plan" }) do
+      bytes = WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1)).render
+      reader = PDF::Reader.new(StringIO.new(bytes))
+
+      assert_includes reader.pages.first.text, "Ward 5 Weekly Plan"
+      assert_not_includes reader.pages.first.text, "Weekly Surgery Schedule"
+      assert_equal "Ward 5 Weekly Plan", reader.info[:Title]
+    end
+    assert_includes render_text(Date.new(2026, 3, 1)), "Weekly Surgery Schedule"
+  end
+
+  test "a one-line legend under the title explains the two shadings" do
+    assert_match(/Emergency = shaded\s+Outside slots = lightly shaded/, render_text(Date.new(2026, 3, 1)))
+    assert_match(/緊急 = 網掛け\s+枠外 = 薄い網掛け/, render_text(Date.new(2026, 3, 1), locale: :ja))
+  end
+
+  test "the day heading has the date, note, slot count, slot usage and case count" do
+    date = Date.new(2030, 1, 8) # a Tuesday
+    Holiday.create!(date: date, holiday: false, note: "Fire\n  drill", slot_count: 2, slot_duration_minutes: 120)
+    create_surgery(new_patient, date).update!(slot_number: 1, duration_hours: 1.5)
+
+    assert_match(%r{2030-01-08 \(\w+\)\s+Fire drill\s+Slots 2\s+Usage 90/240 min\s+1 case\(s\)}, render_text(Date.new(2030, 1, 7)))
+    assert_match(%r{2030年01月08日 \(\S+\)\s+Fire drill\s+列数 2\s+使用 90/240分\s+1件}, render_text(Date.new(2030, 1, 7), locale: :ja))
+  end
+
+  test "an ordinary day heading shows the weekday rule's usage and no slot count" do
+    create_surgery(new_patient, Date.new(2030, 1, 8)).update!(slot_number: 1, duration_hours: 2)
+
+    text = render_text(Date.new(2030, 1, 7))
+    assert_match(%r{2030-01-08 \(\w+\)\s+Usage 120/720 min\s+1 case\(s\)}, text)
+    assert_no_match(/Slots \d/, text)
+  end
+
+  test "a closed day shows its name but no slot usage, and a day without a rule none either" do
+    Holiday.create!(date: Date.new(2030, 1, 8), name: "Clinic closed")
+
+    text = render_text(Date.new(2030, 1, 7))
+    assert_match(%r{2030-01-08 \(\w+\)\s+Clinic closed\s+0 case\(s\)}, text)
+    assert_match(%r{2030-01-13 \(\w+\)\s+0 case\(s\)}, text) # no Sunday slot rule
+  end
+
+  test "emergency rows and off-slot rows get two different light grays, regular rows none" do
+    # The legend paints one swatch of each gray, so compare against a week
+    # with only a regular row: extra fills of a gray mean extra shaded rows.
+    emergency_gray = (WeeklySurgerySchedulePdf::EMERGENCY_COLOR[0, 2].to_i(16) / 255.0).round(2)
+    off_slot_gray = (WeeklySurgerySchedulePdf::OFF_SLOT_COLOR[0, 2].to_i(16) / 255.0).round(2)
+    assert_operator off_slot_gray, :>, emergency_gray # off-slot is the lighter one
+    week = Date.new(2030, 1, 7)
+    cells_per_row = LedgerColumn.for_ledger(:weekly_pdf).size
+
+    baseline = gray_fills(week) { create_surgery(new_patient, Date.new(2030, 1, 8)) }
+    base_emergency = baseline[emergency_gray].to_i
+    base_off_slot = baseline[off_slot_gray].to_i
+
+    emergency = gray_fills(week) { create_surgery(new_patient, Date.new(2030, 1, 9)).update!(scheduling_type: "emergency") }
+    assert_operator emergency[emergency_gray].to_i, :>, base_emergency
+    assert_equal base_off_slot, emergency[off_slot_gray].to_i
+
+    off_slot = gray_fills(week) { create_surgery(new_patient, Date.new(2030, 1, 10)).update!(slot_category: "off_slot") }
+    assert_operator off_slot[off_slot_gray].to_i, :>, emergency[off_slot_gray].to_i
+    assert_equal emergency[emergency_gray].to_i, off_slot[emergency_gray].to_i
+
+    gray_fills(week) { create_surgery(new_patient, Date.new(2030, 1, 11)).update!(slot_category: "backup", backup_intervention: "involved") }
+    both = gray_fills(week) { create_surgery(new_patient, Date.new(2030, 1, 12)).update!(scheduling_type: "emergency", slot_category: "off_slot") }
+    # The earlier surgeries stay (no rollback between steps): the backup row added one
+    # off-slot fill per cell, and the emergency + off-slot row added an emergency fill but no off-slot one.
+    assert_equal off_slot[off_slot_gray].to_i + cells_per_row, both[off_slot_gray].to_i
+    assert_operator both[emergency_gray].to_i, :>, off_slot[emergency_gray].to_i
+  end
+
+  test "the slot usage in day headings adds no queries per surgery" do
+    date = Date.new(2030, 1, 8)
+    create_surgery(new_patient, date)
+    one = count_queries { WeeklySurgerySchedulePdf.new(Date.new(2030, 1, 7)).render }
+    4.times { create_surgery(new_patient, date).update!(slot_category: "simultaneous") }
+    many = count_queries { WeeklySurgerySchedulePdf.new(Date.new(2030, 1, 7)).render }
+
+    assert_equal one, many
   end
 
   test "category, location and team columns add no queries per surgery" do
@@ -313,6 +403,20 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
   end
 
   private
+
+    # Font sizes of the text the PDF sets (the `Tf` operators of every page).
+    def font_sizes(bytes)
+      PDF::Reader.new(StringIO.new(bytes)).pages.flat_map { |page| page.raw_content.scan(/\/\S+ ([\d.]+) Tf/).flatten.map(&:to_f) }.uniq
+    end
+
+    # How often each gray level (rounded to 2 places) is used as a fill, after
+    # running the block to create data.
+    def gray_fills(start_date)
+      yield
+      reader = PDF::Reader.new(StringIO.new(WeeklySurgerySchedulePdf.new(start_date).render))
+      reader.pages.flat_map { |page| page.raw_content.scan(/(-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (?:rg|scn)\b/) }
+            .select { |r, g, b| r == g && g == b }.map { |r, _, _| r.to_f.round(2) }.tally
+    end
 
     def new_patient
       @patient_sequence = (@patient_sequence || 0) + 1

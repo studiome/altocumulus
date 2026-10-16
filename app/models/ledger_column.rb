@@ -81,15 +81,24 @@ class LedgerColumn
   # Columns that only make sense with features.teams on.
   TEAM_COLUMN = :team
 
-  attr_reader :key, :subject, :width, :css_class
+  # `width` is the preferred PDF width (points, at the base font size) and
+  # `min_width` the narrowest it may get before the PDF shrinks the font (see
+  # LedgerColumnFitting); a `flex` column takes the page's spare width.
+  attr_reader :key, :subject, :width, :min_width, :css_class
 
-  def initialize(subject:, key:, width:, css_class: nil, includes: [], &builder)
+  def initialize(subject:, key:, width:, min_width: width, flex: false, css_class: nil, includes: [], &builder)
     @subject = subject
     @key = key
     @width = width
+    @min_width = min_width
+    @flex = flex
     @css_class = css_class
     @includes = includes
     @builder = builder
+  end
+
+  def flex?
+    @flex
   end
 
   def header_upper

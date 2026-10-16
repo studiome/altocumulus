@@ -12,15 +12,19 @@ class WeeklySurgerySchedulePdf
   FONT_PATH = Rails.root.join("vendor/fonts/ipaexg.ttf")
   DAYS = 7
   MARGIN = 28
+  PAGE_WIDTH = 841.89 # A4 landscape
   # Black, white and grays only: the sheet is meant for a monochrome printer, so
   # nothing may depend on hue. Emergency cases are told apart by the "Emergency"
-  # label in the type column plus a light gray fill (badges print as text).
-  HEAD_COLOR = "D0D0D0".freeze
-  DAY_COLOR = "E6E6E6".freeze
+  # label in the type column plus a gray fill, cases outside the regular slot
+  # time (the category column says which) by a lighter one (badges print as
+  # text). Four distinct grays: column heads, day headings, emergency, off-slot.
+  HEAD_COLOR = "BFBFBF".freeze
+  DAY_COLOR = "D4D4D4".freeze
+  EMERGENCY_COLOR = "E2E2E2".freeze
+  OFF_SLOT_COLOR = "F2F2F2".freeze
   LINE_COLOR = "666666".freeze
   TEXT_COLOR = "000000".freeze
   MUTED_TEXT_COLOR = "555555".freeze
-  EMERGENCY_COLOR = "F2F2F2".freeze
 
   attr_reader :start_date
 
@@ -28,27 +32,23 @@ class WeeklySurgerySchedulePdf
     @start_date = start_date.to_date
   end
 
-  # Widths (points) for the columns, fitting `total`. Each column brings a
-  # default width; when they add up to less than the page the last column takes
-  # the remainder (a hard-coded total would be off by a fraction of a point, and
-  # Prawn refuses a table wider than the page), and when they add up to more
-  # they are all scaled down in proportion (rounded down, never over).
-  def column_widths(columns, total)
-    defaults = columns.map(&:width)
-    sum = defaults.sum
-    return defaults[0...-1] + [ total - defaults[0...-1].sum ] if sum <= total
-
-    factor = total.to_f / sum
-    defaults.map { |width| (width * factor).floor(2) }
-  end
-
   def end_date
     start_date + (DAYS - 1).days
   end
 
+  # The page width the table may use (points).
+  def content_width
+    PAGE_WIDTH - (2 * MARGIN)
+  end
+
+  # Column widths and font size for the configured columns on this page.
+  def column_fit
+    @column_fit ||= LedgerColumnFitting.fit(columns, content_width, font_size: SiteConfig.current.weekly_pdf_font_size)
+  end
+
   def render
     pdf = Prawn::Document.new(page_size: "A4", page_layout: :landscape, margin: MARGIN,
-                              info: { Title: I18n.t("surgery_schedules.pdf.title") })
+                              info: { Title: title })
     pdf.font_families.update("IPAex" => { normal: FONT_PATH.to_s })
     pdf.font "IPAex"
     pdf.fill_color TEXT_COLOR
@@ -60,6 +60,10 @@ class WeeklySurgerySchedulePdf
   end
 
   private
+
+    def title
+      SiteConfig.current.weekly_pdf_title || I18n.t("surgery_schedules.pdf.title")
+    end
 
     def dates
       @dates ||= (start_date..end_date).to_a
@@ -98,19 +102,40 @@ class WeeklySurgerySchedulePdf
     end
 
     def draw_title(pdf)
-      pdf.text I18n.t("surgery_schedules.pdf.title"), size: 15
+      pdf.text title, size: 15
       pdf.text I18n.t("surgery_schedules.pdf.period", from: I18n.l(start_date, format: :default), to: I18n.l(end_date, format: :default)),
                size: 10
-      pdf.move_down 8
+      pdf.move_down 3
+      draw_legend(pdf)
+      pdf.move_down 6
+    end
+
+    # One line under the title saying what the two fills mean, each next to a
+    # swatch of its own gray.
+    def draw_legend(pdf)
+      size = 8
+      swatch = size
+      y = pdf.cursor
+      x = 0
+      [ [ EMERGENCY_COLOR, "surgery_schedules.pdf.legend_emergency" ], [ OFF_SLOT_COLOR, "surgery_schedules.pdf.legend_off_slot" ] ].each do |color, key|
+        label = I18n.t(key)
+        pdf.fill_color color
+        pdf.stroke_color LINE_COLOR
+        pdf.line_width 0.5
+        pdf.fill_and_stroke_rectangle [ x, y ], swatch * 1.6, swatch
+        pdf.fill_color TEXT_COLOR
+        pdf.text_box label, at: [ x + (swatch * 1.6) + 4, y ], size: size, height: swatch + 2, overflow: :truncate
+        x += (swatch * 1.6) + 4 + pdf.width_of(label, size: size) + 16
+      end
+      pdf.move_down swatch + 2
     end
 
     def draw_table(pdf)
       rows = [ heading_row ]
       dates.each { |date| rows.concat(day_rows(date)) }
 
-      widths = column_widths(columns, pdf.bounds.width)
-      pdf.table(rows, header: true, column_widths: widths,
-                      cell_style: { size: 8, padding: [ 3, 4 ], border_width: 0.5, border_color: LINE_COLOR }) do |table|
+      pdf.table(rows, header: true, column_widths: column_fit.widths,
+                      cell_style: { size: column_fit.font_size, padding: [ 3, 4 ], border_width: 0.5, border_color: LINE_COLOR }) do |table|
         table.row(0).background_color = HEAD_COLOR
         table.row(0).text_color = TEXT_COLOR
       end
@@ -132,24 +157,42 @@ class WeeklySurgerySchedulePdf
       rows
     end
 
+    # Date (weekday), the closed-day name and/or day note (notes squished to
+    # one line), the slot count when the day overrides it, the slot usage in
+    # minutes (used/capacity, only when the day has slots) and the case count.
     def day_heading(date, surgeries)
       parts = [ "#{I18n.l(date, format: :default)} (#{I18n.l(date, format: :weekday)})" ]
       holiday = holidays[date]
-      # A Holiday row is either a closed day (name) or a plain day comment
-      # (note); show whichever of the two it has, notes flattened to one line.
       parts.concat([ holiday&.name, holiday&.note&.squish ].select(&:present?))
-      parts << slot_override_label(holiday) if holiday&.slot_override?
+      parts << I18n.t("surgery_schedules.pdf.slot_count", slots: holiday.slot_count_display) if holiday&.slot_override?
+      usage = slot_usage(date, surgeries)
+      parts << I18n.t("surgery_schedules.pdf.slot_usage", used: usage.used_minutes, capacity: usage.capacity_minutes) if usage.configured?
       parts << I18n.t("surgery_schedules.pdf.day_count", count: surgeries.size)
       parts.join("   ")
     end
 
-    def slot_override_label(holiday)
-      I18n.t("surgery_schedules.pdf.slot_override", slots: holiday.slot_count_display)
+    # The day's slot usage, built from the surgeries already loaded for the
+    # page (and the one-query rule/holiday lookups), not queried again.
+    def slot_usage(date, surgeries)
+      ElectiveSlotUsage.new(date: date, rule: slot_rules[date.wday], holiday: holidays[date],
+                            elective_surgeries: surgeries.select(&:elective?), emergency_surgeries: surgeries.select(&:emergency?))
+    end
+
+    def slot_rules
+      @slot_rules ||= ElectiveSlotRule.by_day_of_week
     end
 
     def surgery_row(surgery)
       cells = columns.map { |column| column.cell(surgery, context).plain_text }
-      surgery.emergency? ? cells.map { |content| { content: content, background_color: EMERGENCY_COLOR } } : cells
+      fill = row_fill(surgery)
+      fill ? cells.map { |content| { content: content, background_color: fill } } : cells
+    end
+
+    # Emergency shading wins over the lighter off-slot shading.
+    def row_fill(surgery)
+      return EMERGENCY_COLOR if surgery.emergency?
+
+      OFF_SLOT_COLOR unless surgery.regular_slot?
     end
 
     def draw_page_numbers(pdf)

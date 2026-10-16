@@ -296,4 +296,49 @@ class SiteConfigTest < ActiveSupport::TestCase
     assert_equal %i[time_slot patient age_sex diagnosis_procedure duration_anesthesia team category referral_adl],
                  config.ledger_column_keys(:weekly_pdf)
   end
+
+  # --- weekly_pdf -------------------------------------------------------
+
+  test "weekly_pdf defaults to an 8pt font and no custom title" do
+    config = SiteConfig.from_hash({})
+    assert_equal 8, config.weekly_pdf_font_size
+    assert_nil config.weekly_pdf_title
+  end
+
+  test "weekly_pdf accepts a font size from 6 to 10 and a title" do
+    config = SiteConfig.from_hash("weekly_pdf" => { "font_size" => 7.5, "title" => "  Weekly Plan  " })
+    assert_equal 7.5, config.weekly_pdf_font_size
+    assert_equal "Weekly Plan", config.weekly_pdf_title
+
+    assert_equal 6, SiteConfig.from_hash("weekly_pdf" => { "font_size" => 6 }).weekly_pdf_font_size
+    assert_equal 10, SiteConfig.from_hash("weekly_pdf" => { "font_size" => 10 }).weekly_pdf_font_size
+  end
+
+  test "weekly_pdf treats null and a blank title as no title" do
+    assert_nil SiteConfig.from_hash("weekly_pdf" => { "font_size" => 8, "title" => nil }).weekly_pdf_title
+    assert_nil SiteConfig.from_hash("weekly_pdf" => { "title" => "   " }).weekly_pdf_title
+    assert_equal 8, SiteConfig.from_hash("weekly_pdf" => nil).weekly_pdf_font_size
+  end
+
+  test "weekly_pdf rejects font sizes outside 6-10 and non-numbers" do
+    [ 5.9, 10.5, 0, -1, "8", true, [ 8 ] ].each do |bad|
+      error = assert_raises(SiteConfig::Error, "font_size #{bad.inspect}") { SiteConfig.from_hash("weekly_pdf" => { "font_size" => bad }) }
+      assert_match(/weekly_pdf.font_size/, error.message)
+    end
+  end
+
+  test "weekly_pdf rejects unknown keys, a non-mapping and a non-string title" do
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("weekly_pdf" => { "colour" => "red" }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("weekly_pdf" => "big") }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("weekly_pdf" => { "title" => 5 }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("weekly_pdf" => { "title" => "x" * 101 }) }
+  end
+
+  test "the shipped site.yml and site.example.yml load with their weekly_pdf settings" do
+    assert_equal 8, SiteConfig.load(Rails.root.join("config/site.yml")).weekly_pdf_font_size
+    assert_nil SiteConfig.load(Rails.root.join("config/site.yml")).weekly_pdf_title
+    example = SiteConfig.load(Rails.root.join("config/site.example.yml"))
+    assert_equal 8, example.weekly_pdf_font_size
+    assert example.weekly_pdf_title.present?
+  end
 end

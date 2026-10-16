@@ -1255,7 +1255,10 @@ en:
       period: "%{from} - %{to}"
       printed_at: "Printed %{time}"
       day_count: "%{count} case(s)"
-      slot_override: "Slots: %{slots} (changed)"
+      slot_count: "Slots %{slots}"
+      slot_usage: "Usage %{used}/%{capacity} min"
+      legend_emergency: "Emergency = shaded"
+      legend_off_slot: "Outside slots = lightly shaded"
       no_surgeries: "No surgeries scheduled"
       columns:
         time: "Time"
