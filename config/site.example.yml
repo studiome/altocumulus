@@ -22,5 +22,10 @@ patient:
 
 masters:
   departments: [消化器内科, 泌尿器科, 産婦人科, 放射線科]
-  surgery_locations: [手術室, ハイブリッド室, カテ室, 病棟処置室]
+  surgery_locations:
+    - 手術室
+    - ハイブリッド室
+    - name: カテ室
+      asks_performing_department: true
+    - 病棟処置室
   surgical_devices: [da Vinci, hinotori]

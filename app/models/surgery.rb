@@ -8,8 +8,16 @@ class Surgery < ApplicationRecord
   SCHEDULING_TYPE_KEYS = %w[elective emergency].freeze
   SURGERY_DATE_STATUS_KEYS = %w[scheduled undecided].freeze
   SLOT_CATEGORY_KEYS = %w[regular simultaneous backup off_slot].freeze
+  # Whether a backup (standby) case ended up needing an intervention; asked
+  # only for the backup slot category.
+  BACKUP_INTERVENTION_KEYS = %w[involved not_involved].freeze
 
   belongs_to :patient
+  # The hospitalization this surgery is part of (same patient), when known.
+  belongs_to :hospitalization, optional: true
+  # Who performed it when not our own department (blank = our own), e.g. a
+  # catheter-lab case done by radiology.
+  belongs_to :performing_department, class_name: "Department", optional: true
   # Site vocabulary kept in admin-editable masters (see MasterRecord). All
   # optional: department only means something for simultaneous/backup cases,
   # see clear_fields_the_slot_category_does_not_use.
@@ -29,7 +37,10 @@ class Surgery < ApplicationRecord
   validates :duration_hours, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :scheduling_type, presence: true, inclusion: { in: SCHEDULING_TYPE_KEYS }
   validates :slot_category, presence: true, inclusion: { in: SLOT_CATEGORY_KEYS }
+  validates :backup_intervention, presence: true, if: :backup_slot?
+  validates :backup_intervention, inclusion: { in: BACKUP_INTERVENTION_KEYS }, allow_blank: true
   validate :patient_diagnoses_must_belong_to_patient
+  validate :hospitalization_must_belong_to_patient
   validate :must_have_at_least_one_procedure_selection
   validate :no_more_than_five_procedure_selections
   validate :no_duplicate_procedure_selections
@@ -46,6 +57,9 @@ class Surgery < ApplicationRecord
   # value. Clear what the new category cannot mean, or a surgery moved back to
   # the regular slots would keep claiming a partner department forever.
   before_validation :clear_fields_the_slot_category_does_not_use
+  # Moving an existing surgery to another patient must not leave it pointing at
+  # the previous patient's hospitalization.
+  before_validation :unlink_hospitalization_of_previous_patient, if: -> { persisted? && patient_id_changed? }
 
   scope :anesthesia_methods, -> { distinct.order(:anesthesia_method).pluck(:anesthesia_method).compact_blank }
   scope :elective, -> { where(scheduling_type: "elective") }
@@ -71,6 +85,14 @@ class Surgery < ApplicationRecord
 
   def self.slot_category_options
     SLOT_CATEGORY_KEYS.index_with { |key| I18n.t("models.surgery.slot_category_options.#{key}") }
+  end
+
+  def self.backup_intervention_options
+    BACKUP_INTERVENTION_KEYS.index_with { |key| I18n.t("models.surgery.backup_intervention_options.#{key}") }
+  end
+
+  def self.backup_intervention_form_options
+    backup_intervention_options.map { |k, v| [ v, k ] }
   end
 
   def self.scheduling_type_form_options
@@ -178,6 +200,10 @@ class Surgery < ApplicationRecord
     self.class.slot_category_options[slot_category] || slot_category
   end
 
+  def backup_intervention_label
+    self.class.backup_intervention_options[backup_intervention]
+  end
+
   def slot_category_badge_class
     case slot_category
     when "simultaneous" then "badge-info"
@@ -241,6 +267,18 @@ class Surgery < ApplicationRecord
   def clear_fields_the_slot_category_does_not_use
     self.department = nil unless simultaneous_slot? || backup_slot?
     self.surgery_location = nil if simultaneous_slot? || backup_slot?
+    self.backup_intervention = nil unless backup_slot?
+  end
+
+  def unlink_hospitalization_of_previous_patient
+    self.hospitalization = nil if hospitalization && hospitalization.patient_id != patient_id
+  end
+
+  def hospitalization_must_belong_to_patient
+    return if hospitalization.nil? || patient_id.blank?
+    return if hospitalization.patient_id == patient_id
+
+    errors.add(:hospitalization, :must_belong_to_selected_patient)
   end
 
   def patient_diagnoses_must_belong_to_patient

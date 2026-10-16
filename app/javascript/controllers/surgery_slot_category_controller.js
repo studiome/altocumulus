@@ -5,6 +5,7 @@ export default class extends Controller {
     "categoryRadio",
     "slotNumberSection",
     "targetDepartmentSection",
+    "backupInterventionSection",
     "locationSection",
     "schedulingTypeRadio"
   ]
@@ -27,6 +28,11 @@ export default class extends Controller {
     if (this.hasTargetDepartmentSectionTarget) {
       const showTargetDept = selectedCategory === "simultaneous" || selectedCategory === "backup"
       this.targetDepartmentSectionTarget.classList.toggle("hidden", !showTargetDept)
+    }
+
+    // The intervention answer is only asked for backup cases
+    if (this.hasBackupInterventionSectionTarget) {
+      this.backupInterventionSectionTarget.classList.toggle("hidden", selectedCategory !== "backup")
     }
 
     // Location is relevant for off_slot (procedure room, catheter lab, etc.)

@@ -63,6 +63,6 @@ class MasterRecordsController < ApplicationController
     end
 
     def record_params
-      params.expect(master_class.model_name.param_key => [ :name, :position, :active ])
+      params.expect(master_class.model_name.param_key => [ :name, :position, :active, *master_class.extra_form_attributes ])
     end
 end

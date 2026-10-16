@@ -81,6 +81,61 @@ class SurgeryReferralLookupTest < ActiveSupport::TestCase
     assert_nil lookup.referred_from_for(surgery)
   end
 
+  test "prefers the linked hospitalization over the one the dates would pick" do
+    date = Date.new(2031, 5, 10)
+    patient = new_patient
+    create_hospitalization(patient, scheduled_admission_date: date - 20, discharge_date: date - 15,
+                                    outcome: "recovered", referred_from: "Linked Clinic")
+    create_hospitalization(patient, scheduled_admission_date: date, referred_from: "Covering Clinic")
+    surgery = create_surgery(patient, date)
+    surgery.update!(hospitalization: patient.hospitalizations.find_by!(referred_from: "Linked Clinic"))
+
+    assert_equal "Linked Clinic", lookup_for(surgery).referred_from_for(surgery)
+  end
+
+  test "a linked hospitalization without a referral gives no referral rather than falling back" do
+    date = Date.new(2031, 5, 10)
+    patient = new_patient
+    linked = create_hospitalization(patient, scheduled_admission_date: date - 20, discharge_date: date - 15, outcome: "recovered")
+    create_hospitalization(patient, scheduled_admission_date: date, referred_from: "Covering Clinic")
+    surgery = create_surgery(patient, date)
+    surgery.update!(hospitalization: linked)
+
+    assert_nil lookup_for(surgery).referred_from_for(surgery)
+  end
+
+  test "falls back to the date lookup when the linked hospitalization was discarded" do
+    date = Date.new(2031, 5, 10)
+    patient = new_patient
+    linked = create_hospitalization(patient, scheduled_admission_date: date - 20, discharge_date: date - 15,
+                                             outcome: "recovered", referred_from: "Linked Clinic")
+    create_hospitalization(patient, scheduled_admission_date: date, referred_from: "Covering Clinic")
+    surgery = create_surgery(patient, date)
+    surgery.update!(hospitalization: linked)
+    linked.discard!
+
+    reloaded = Surgery.includes(:hospitalization).find(surgery.id)
+    assert_equal "Covering Clinic", lookup_for(reloaded).referred_from_for(reloaded)
+  end
+
+  test "linked lookups add no queries per surgery" do
+    date = Date.new(2031, 5, 10)
+    surgeries = 3.times.map do
+      patient = new_patient
+      h = create_hospitalization(patient, scheduled_admission_date: date - 1, referred_from: "Clinic")
+      create_surgery(patient, date).tap { |s| s.update!(hospitalization: h) }
+    end
+    loaded = Surgery.includes(:hospitalization).where(id: surgeries.map(&:id)).to_a
+    lookup = lookup_for(*loaded)
+
+    queries = 0
+    counter = ->(*, payload) { queries += 1 unless payload[:name] == "SCHEMA" }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      loaded.each { |surgery| assert_equal "Clinic", lookup.referred_from_for(surgery) }
+    end
+    assert_equal 0, queries
+  end
+
   private
 
     def lookup_for(*surgeries)

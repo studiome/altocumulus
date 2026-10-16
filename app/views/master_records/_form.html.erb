@@ -24,6 +24,16 @@
     <p class="app-helper"><%= t(".position_helper") %></p>
   </div>
 
+  <% if record.respond_to?(:asks_performing_department) %>
+    <div class="app-field">
+      <label class="label cursor-pointer justify-start gap-2 py-0">
+        <%= form.check_box :asks_performing_department, class: "checkbox checkbox-primary" %>
+        <span class="app-field-label mb-0"><%= t(".asks_performing_department_label") %></span>
+      </label>
+      <p class="app-helper"><%= t(".asks_performing_department_helper") %></p>
+    </div>
+  <% end %>
+
   <div class="app-field">
     <label class="label cursor-pointer justify-start gap-2 py-0">
       <%= form.check_box :active, class: "checkbox checkbox-primary" %>

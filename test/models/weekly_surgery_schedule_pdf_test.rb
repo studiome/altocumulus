@@ -189,6 +189,21 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     assert_equal one, many
   end
 
+  test "linked hospitalizations add no queries per surgery" do
+    date = Date.new(2030, 1, 8)
+    link_new_surgery = lambda do
+      patient = new_patient
+      hospitalization = create_hospitalization(patient, scheduled_admission_date: date - 2, referred_from: "Clinic")
+      create_surgery(patient, date).update!(hospitalization: hospitalization)
+    end
+    link_new_surgery.call
+    one = count_queries { WeeklySurgerySchedulePdf.new(Date.new(2030, 1, 7)).render }
+    3.times { link_new_surgery.call }
+    many = count_queries { WeeklySurgerySchedulePdf.new(Date.new(2030, 1, 7)).render }
+
+    assert_equal one, many
+  end
+
   private
 
     def new_patient

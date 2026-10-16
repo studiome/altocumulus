@@ -388,7 +388,8 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
       scheduled_surgery_date: "2026-10-12", planned_days: 3,
       hospitalization_diagnoses_attributes: { "0" => { diagnosis_id: diagnoses(:pneumonia).id } }
     } }
-    assert_redirected_to new_surgery_url(patient_id: patients(:two).id, surgery_date: "2026-10-12")
+    assert_redirected_to new_surgery_url(patient_id: patients(:two).id, surgery_date: "2026-10-12",
+                                         hospitalization_id: Hospitalization.order(:id).last.id)
 
     travel_to Date.new(2026, 10, 5) do
       post surgeries_url, params: { surgery: valid_surgery_params(surgery_date: "2026-10-12") }

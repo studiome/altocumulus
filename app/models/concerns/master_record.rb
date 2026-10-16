@@ -23,6 +23,12 @@ module MasterRecord
   end
 
   class_methods do
+    # Attributes besides name/position/active the master's admin form edits;
+    # a model that has some overrides this (see SurgeryLocation).
+    def extra_form_attributes
+      []
+    end
+
     # The records a form may offer: every active one, plus the one the record
     # being edited already points at (even if it has been deactivated since).
     def choices_for(current_id)

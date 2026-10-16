@@ -363,6 +363,7 @@ class SurgeryTest < ActiveSupport::TestCase
     surgery = Surgery.find(surgeries(:one).id)
     %w[regular simultaneous backup off_slot].each do |category|
       surgery.slot_category = category
+      surgery.backup_intervention = "involved" if category == "backup"
       assert surgery.valid?, "Expected #{category} to be valid"
     end
   end
@@ -520,6 +521,7 @@ class SurgeryTest < ActiveSupport::TestCase
     assert_nil surgery.slot_number
 
     surgery.slot_category = "backup"
+    surgery.backup_intervention = "involved"
     assert surgery.valid?
     assert_nil surgery.slot_number
 
@@ -547,7 +549,7 @@ class SurgeryTest < ActiveSupport::TestCase
 
   test "a backup surgery keeps its department" do
     surgery = surgeries(:one)
-    surgery.update!(slot_category: "backup", department: departments(:cardiovascular_surgery))
+    surgery.update!(slot_category: "backup", backup_intervention: "involved", department: departments(:cardiovascular_surgery))
 
     assert_equal departments(:cardiovascular_surgery), surgery.reload.department
   end
@@ -583,7 +585,7 @@ class SurgeryTest < ActiveSupport::TestCase
   test "a surgery can record a surgical device in any slot category" do
     Surgery::SLOT_CATEGORY_KEYS.each do |category|
       surgery = surgeries(:one)
-      surgery.update!(slot_category: category, surgical_device: surgical_devices(:robot_a))
+      surgery.update!(slot_category: category, surgical_device: surgical_devices(:robot_a), backup_intervention: ("involved" if category == "backup"))
       assert_equal surgical_devices(:robot_a), surgery.reload.surgical_device
     end
   end

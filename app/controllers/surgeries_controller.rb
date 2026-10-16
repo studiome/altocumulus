@@ -27,7 +27,8 @@ class SurgeriesController < ApplicationController
   end
 
   def new
-    @surgery = Surgery.new(patient_id: params[:patient_id], surgery_date: parse_date(params[:surgery_date]))
+    @surgery = Surgery.new(patient_id: params[:patient_id], surgery_date: parse_date(params[:surgery_date]),
+                           hospitalization_id: linkable_hospitalization_id)
     set_form_collections
     build_surgery_procedure_selections
   end
@@ -150,6 +151,14 @@ class SurgeriesController < ApplicationController
       nil
     end
 
+    # The prefill is untrusted like the others: only an active hospitalization
+    # of the prefilled patient is carried onto the form.
+    def linkable_hospitalization_id
+      return nil unless params[:hospitalization_id].is_a?(String) && params[:patient_id].is_a?(String)
+
+      Hospitalization.active.find_by(id: params[:hospitalization_id], patient_id: params[:patient_id])&.id
+    end
+
     def build_surgery_procedure_selections
       @surgery.surgery_procedure_selections.build if @surgery.surgery_procedure_selections.empty?
     end
@@ -158,6 +167,7 @@ class SurgeriesController < ApplicationController
       params.expect(surgery: [
         :surgery_date, :surgery_date_status, :duration_hours, :anesthesia_method, :patient_id,
         :scheduling_type, :slot_category, :department_id, :surgery_location_id, :surgical_device_id, :start_time, :slot_number,
+        :hospitalization_id, :backup_intervention, :performing_department_id,
         :operator_name, :assistant_name, :operation_order,
         { patient_diagnosis_ids: [] },
         { surgery_procedure_selections_attributes: [ [ :id, :surgery_procedure_id, :laterality, :_destroy ] ] }

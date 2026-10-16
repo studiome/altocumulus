@@ -37,6 +37,7 @@ class Hospitalization < ApplicationRecord
   # (set from Current.user on create, never from params).
   belongs_to :reservation_doctor, class_name: "User", optional: true
   belongs_to :created_by, class_name: "User", optional: true
+  has_many :surgeries, dependent: :nullify
   has_many :hospitalization_diagnoses, -> { order(:id) }, dependent: :destroy, inverse_of: :hospitalization
   has_many :diagnoses, through: :hospitalization_diagnoses
   accepts_nested_attributes_for :hospitalization_diagnoses,

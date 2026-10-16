@@ -33,6 +33,10 @@
     </div>
   <% end %>
 
+  <%# Set when the surgery follows from a hospitalization (see
+      HospitalizationsController#redirect_after_create); not user-editable here. %>
+  <%= form.hidden_field :hospitalization_id %>
+
   <%= render "shared/patient_picker_field", form: form, patient: surgery.patient,
         label: Surgery.human_attribute_name(:patient_id),
         input_data: { action: "change->surgery-patient-fields#reload" } %>
@@ -95,11 +99,31 @@
     <p class="app-helper"><%= t(".target_department_helper") %></p>
   </div>
 
+  <div class="app-field hidden" data-surgery-slot-category-target="backupInterventionSection">
+    <span class="app-field-label app-field-label-required"><%= t(".backup_intervention_label") %></span>
+    <div class="flex gap-6 pt-1">
+      <% Surgery.backup_intervention_options.each do |value, label| %>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <%= form.radio_button :backup_intervention, value, class: "radio radio-primary" %>
+          <%= label %>
+        </label>
+      <% end %>
+    </div>
+    <p class="app-helper"><%= t(".backup_intervention_helper") %></p>
+  </div>
+
   <div class="app-field hidden" data-surgery-slot-category-target="locationSection">
     <%= form.label :surgery_location_id, t(".location_label"), class: "app-field-label" %>
     <%= form.collection_select :surgery_location_id, SurgeryLocation.choices_for(surgery.surgery_location_id), :id, :name,
                                { include_blank: true }, { class: "select w-full focus:select-primary" } %>
     <p class="app-helper"><%= t(".location_helper") %></p>
+  </div>
+
+  <div class="app-field">
+    <%= form.label :performing_department_id, t(".performing_department_label"), class: "app-field-label" %>
+    <%= form.collection_select :performing_department_id, Department.choices_for(surgery.performing_department_id), :id, :name,
+                               { include_blank: true }, { class: "select w-full focus:select-primary" } %>
+    <p class="app-helper"><%= t(".performing_department_helper") %></p>
   </div>
 
   <div class="app-field">

@@ -48,7 +48,7 @@ class ElectiveSlotUsage
     rules = ElectiveSlotRule.by_day_of_week
     holidays = Holiday.by_date(dates)
     surgeries_by_date = Surgery.where(surgery_date: dates)
-                                .includes(:patient, :department, :surgery_location, :surgical_device,
+                                .includes(:patient, :department, :surgery_location, :surgical_device, :hospitalization,
                                           { surgery_procedure_selections: :surgery_procedure })
                                 .order(:slot_number, :start_time, :id)
                                 .group_by(&:surgery_date)

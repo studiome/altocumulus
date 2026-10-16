@@ -463,6 +463,7 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
       surgery_date: TUESDAY,
       scheduling_type: "elective",
       slot_category: "backup",
+      backup_intervention: "not_involved",
       department: departments(:cardiovascular_surgery),
       anesthesia_method: "General",
       duration_hours: 2.0,

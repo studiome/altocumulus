@@ -143,7 +143,8 @@ class HospitalizationsController < ApplicationController
     # registering that surgery, which is what the calendar's day link is for.
     def redirect_after_create
       if @hospitalization.purpose == "surgery" && @hospitalization.scheduled_surgery_date.present?
-        redirect_to new_surgery_path(patient_id: @hospitalization.patient_id, surgery_date: @hospitalization.scheduled_surgery_date),
+        redirect_to new_surgery_path(patient_id: @hospitalization.patient_id, surgery_date: @hospitalization.scheduled_surgery_date,
+                                          hospitalization_id: @hospitalization.id),
                     notice: t(".surgery_followup_notice")
       else
         redirect_to @hospitalization, notice: t(".success_notice")

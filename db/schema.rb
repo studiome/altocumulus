@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_000100) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -223,8 +223,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
     t.integer "surgery_location_id"
     t.integer "surgical_device_id"
     t.datetime "updated_at", null: false
+    t.integer "hospitalization_id"
+    t.string "backup_intervention"
+    t.integer "performing_department_id"
     t.index ["department_id"], name: "index_surgeries_on_department_id"
+    t.index ["hospitalization_id"], name: "index_surgeries_on_hospitalization_id"
     t.index ["patient_id"], name: "index_surgeries_on_patient_id"
+    t.index ["performing_department_id"], name: "index_surgeries_on_performing_department_id"
     t.index ["surgery_date", "scheduling_type"], name: "index_surgeries_on_surgery_date_and_scheduling_type"
     t.index ["surgery_date", "slot_number"], name: "index_surgeries_on_surgery_date_and_slot_number"
     t.index ["surgery_location_id"], name: "index_surgeries_on_surgery_location_id"
@@ -247,6 +252,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
     t.string "name", null: false
     t.integer "position", null: false
     t.datetime "updated_at", null: false
+    t.boolean "asks_performing_department", default: false, null: false
     t.index ["name"], name: "index_surgery_locations_on_name", unique: true
   end
 
@@ -312,6 +318,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
   add_foreign_key "patient_diagnoses", "diagnoses"
   add_foreign_key "patient_diagnoses", "patients"
   add_foreign_key "surgeries", "departments"
+  add_foreign_key "surgeries", "departments", column: "performing_department_id"
+  add_foreign_key "surgeries", "hospitalizations"
   add_foreign_key "surgeries", "patients"
   add_foreign_key "surgeries", "surgery_locations"
   add_foreign_key "surgeries", "surgical_devices"

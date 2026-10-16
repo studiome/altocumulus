@@ -302,6 +302,9 @@ ja:
         surgery_date: "手術日"
         surgery_location_id: "実施場所"
         surgical_device_id: "手術支援機器"
+        backup_intervention: "介入の有無"
+        hospitalization_id: "入院"
+        performing_department_id: "実施診療科"
       surgery_diagnosis_link:
         patient_diagnosis_id: "患者診断"
         surgery_id: "手術"
@@ -309,6 +312,7 @@ ja:
         name: "名称"
         position: "表示順"
         active: "有効"
+        asks_performing_department: "実施診療科を確認する"
       surgery_procedure:
         name: "術式名"
       surgery_procedure_selection:
@@ -380,6 +384,8 @@ ja:
           attributes:
             patient_diagnoses:
               must_all_belong_to_selected_patient: "はすべて選択した患者のものにしてください"
+            hospitalization:
+              must_belong_to_selected_patient: "は選択した患者の入院にしてください"
             surgery_procedure_selections:
               must_include_at_least_one_procedure: "を1件以上入力してください"
               too_many_procedure_selections: "は5件以下にしてください"
@@ -449,6 +455,9 @@ ja:
       scheduling_type_options:
         elective: "予定"
         emergency: "緊急"
+      backup_intervention_options:
+        involved: "介入あり"
+        not_involved: "介入なし"
       slot_category_options:
         regular: "通常枠"
         simultaneous: "他科同時手術"
@@ -650,6 +659,7 @@ ja:
       empty: "%{records}はまだ登録されていません。"
       active_badge: "有効"
       inactive_badge: "無効"
+      asks_performing_badge: "実施診療科を確認"
     new:
       title: "新規%{record}"
     edit:
@@ -664,6 +674,8 @@ ja:
       errors_heading:
         other: "%{count}件のエラーがあるため保存できませんでした:"
       position_helper: "数字が小さいほど先に表示されます。空欄の場合は末尾に追加されます。"
+      asks_performing_department_label: "実施診療科を確認する"
+      asks_performing_department_helper: "手術フォームへのヒントです。この場所の症例は他の診療科が実施することがあるため、実施診療科の入力欄を表示します。"
       active_label: "有効"
       active_helper: "無効にすると新規入力の選択肢には表示されなくなりますが、すでに使用しているレコードには引き続き表示されます。使用中のレコードは削除できないため、無効にしてください。"
 
@@ -1014,6 +1026,10 @@ ja:
       target_department_helper: "同時手術やバックアップを行う相手先の診療科を選択します。選択肢はマスタ管理で登録します。"
       location_label: "実施場所・形態"
       location_helper: "手術を実施する場所を選択します。選択肢はマスタ管理で登録します。"
+      backup_intervention_label: "介入の有無"
+      backup_intervention_helper: "バックアップ・待機の症例で、介入があったかどうかを選択します。"
+      performing_department_label: "実施診療科"
+      performing_department_helper: "自診療科で実施する場合は空欄のままにします。選択肢はマスタ管理で登録します。"
       surgical_device_label: "手術支援機器"
       surgical_device_helper: "支援機器を使用しない場合は空欄のままにします。選択肢はマスタ管理で登録します。"
       start_time_helper: "緊急手術は夜間を含め、いつでも設定できます。"
@@ -1056,6 +1072,9 @@ ja:
       target_department: "相手先診療科"
       location: "実施場所"
       surgical_device: "手術支援機器"
+      backup_intervention: "介入の有無"
+      performing_department: "実施診療科"
+      hospitalization: "入院"
       no_slot_assigned: "枠未割り当て"
       unknown_patient_name: "患者 #%{id}"
       unknown_patient: "不明"

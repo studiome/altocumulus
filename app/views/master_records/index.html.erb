@@ -30,7 +30,12 @@
           <% if @records.any? %>
             <% @records.each do |record| %>
               <tr class="row-hover">
-                <td class="master-name font-semibold"><%= record.name %></td>
+                <td class="master-name font-semibold">
+                  <%= record.name %>
+                  <% if record.respond_to?(:asks_performing_department) && record.asks_performing_department? %>
+                    <span class="badge badge-info badge-sm ml-2"><%= t(".asks_performing_badge") %></span>
+                  <% end %>
+                </td>
                 <td class="font-mono"><%= record.position %></td>
                 <td>
                   <% if record.active? %>

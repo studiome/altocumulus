@@ -143,6 +143,7 @@ class SurgerySchedulesControllerTest < ActionDispatch::IntegrationTest
 
     def create_week_surgery(slot_category:, department: nil, surgery_location: nil, duration_hours: 1.0)
       Surgery.create!(
+        backup_intervention: ("involved" if slot_category == "backup"),
         patient: patients(:one),
         surgery_date: Date.new(2026, 3, 3),
         scheduling_type: "elective",

@@ -104,6 +104,7 @@ class SiteConfigTest < ActiveSupport::TestCase
     assert_includes config.master_names(:departments), "泌尿器科"
     assert_includes config.master_names("surgery_locations"), "ハイブリッド室"
     assert_equal [ "da Vinci", "hinotori" ], config.master_names(:surgical_devices)
+    assert_equal [ "カテ室" ], config.surgery_locations_asking_performing_department
   end
 
   test "masters are normalized: stripped, de-duplicated, order kept" do

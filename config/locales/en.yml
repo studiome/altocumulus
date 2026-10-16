@@ -270,6 +270,8 @@ en:
           attributes:
             patient_diagnoses:
               must_all_belong_to_selected_patient: "must all belong to the selected patient"
+            hospitalization:
+              must_belong_to_selected_patient: "must belong to the selected patient"
             surgery_procedure_selections:
               must_include_at_least_one_procedure: "must include at least one procedure"
               too_many_procedure_selections: "must be five or fewer"
@@ -342,6 +344,9 @@ en:
       scheduling_type_options:
         elective: "Elective"
         emergency: "Emergency"
+      backup_intervention_options:
+        involved: "Intervention involved"
+        not_involved: "No intervention"
       slot_category_options:
         regular: "Regular Slot"
         simultaneous: "Joint/Simultaneous Surgery"
@@ -595,6 +600,7 @@ en:
       empty: "No %{records} registered yet."
       active_badge: "Active"
       inactive_badge: "Inactive"
+      asks_performing_badge: "Asks performing department"
     new:
       title: "New %{record}"
     edit:
@@ -610,6 +616,8 @@ en:
         one: "%{count} error prohibited this record from being saved:"
         other: "%{count} errors prohibited this record from being saved:"
       position_helper: "Smaller numbers are listed first. Leave blank to add it at the end."
+      asks_performing_department_label: "Ask for the performing department"
+      asks_performing_department_helper: "A hint for the surgery form: cases at this place may be performed by another department, so offer the performing-department control for them."
       active_label: "Active"
       active_helper: "An inactive record is no longer offered for new entries, but stays visible on the records that already use it. A record in use cannot be deleted; deactivate it instead."
 
@@ -1051,6 +1059,10 @@ en:
       target_department_helper: "The department whose slot the joint or backup case runs in. Choices are managed under Masters."
       location_label: "Location / Setting"
       location_helper: "Where the case is performed. Choices are managed under Masters."
+      backup_intervention_label: "Intervention"
+      backup_intervention_helper: "For a backup/standby case: whether an intervention was involved."
+      performing_department_label: "Performing Department"
+      performing_department_helper: "Leave blank when our own department performs it. Choices are managed under Masters."
       surgical_device_label: "Surgical Support Device"
       surgical_device_helper: "Leave blank when no support device is used. Choices are managed under Masters."
       start_time_helper: "Emergency surgeries can be scheduled at any time, including nights."
@@ -1095,6 +1107,9 @@ en:
       target_department: "Partner Department"
       location: "Location"
       surgical_device: "Surgical Device"
+      backup_intervention: "Intervention"
+      performing_department: "Performing Department"
+      hospitalization: "Hospitalization"
       no_slot_assigned: "No slot assigned"
       unknown_patient_name: "Patient #%{id}"
       unknown_patient: "Unknown"

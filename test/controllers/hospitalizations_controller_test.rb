@@ -706,7 +706,8 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
       hospitalization_diagnoses_attributes: { "0" => { diagnosis_id: diagnoses(:appendicitis).id } }
     } }
 
-    assert_redirected_to new_surgery_url(patient_id: patient.id, surgery_date: "2027-03-04")
+    assert_redirected_to new_surgery_url(patient_id: patient.id, surgery_date: "2027-03-04",
+                                         hospitalization_id: Hospitalization.find_by!(patient_id: patient.id).id)
     assert_equal "Hospitalization was successfully created. Now register the surgery.", flash[:notice]
   end
 

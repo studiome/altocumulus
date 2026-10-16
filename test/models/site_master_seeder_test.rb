@@ -38,6 +38,17 @@ class SiteMasterSeederTest < ActiveSupport::TestCase
     assert_equal before, existing.reload.attributes
   end
 
+  test "a surgery location mapping sets asks_performing_department only on the rows it creates" do
+    config = SiteConfig.from_hash("masters" => { "surgery_locations" => [ "Plain Room", { "name" => "Seed Cath", "asks_performing_department" => true },
+                                                                          { "name" => "Cath Lab", "asks_performing_department" => true } ] })
+
+    SiteMasterSeeder.call(config)
+
+    assert_not SurgeryLocation.find_by!(name: "Plain Room").asks_performing_department
+    assert SurgeryLocation.find_by!(name: "Seed Cath").asks_performing_department
+    assert_not surgery_locations(:cath_lab).reload.asks_performing_department
+  end
+
   test "never deletes rows that are not listed" do
     assert_difference -> { Department.count }, 1 do
       SiteMasterSeeder.call(SiteConfig.from_hash("masters" => { "departments" => [ "Only One" ] }))
