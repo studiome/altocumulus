@@ -33,4 +33,25 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to account_url
     assert @admin.reload.authenticate("newpassword")
   end
+
+  test "account page offers the language choice with the current language marked" do
+    get account_url
+    assert_select "main form[action=?]", locale_path(locale: "ja")
+    assert_select "main form[action=?] button.font-bold", locale_path(locale: "en")
+  end
+
+  test "changing language on the account page persists it and returns to the account page" do
+    patch locale_path(locale: "ja"), headers: { "HTTP_REFERER" => account_url }
+    assert_redirected_to account_url
+    assert_equal "ja", @admin.reload.locale
+    follow_redirect!
+    assert_select "h1", "アカウント"
+  end
+
+  test "language switcher is no longer in the signed-in navigation" do
+    get patients_url
+    assert_response :success
+    assert_select "header form[action=?]", locale_path(locale: "ja"), count: 0
+    assert_select "header form[action=?]", locale_path(locale: "en"), count: 0
+  end
 end

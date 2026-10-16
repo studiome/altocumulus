@@ -15,6 +15,12 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "the login page lets a signed-out visitor switch language" do
+    get login_url
+    assert_select "main form[action=?]", locale_path(locale: "en")
+    assert_select "main form[action=?]", locale_path(locale: "ja")
+  end
+
   test "the login page shows published announcements on a board but not drafts" do
     get login_url
 

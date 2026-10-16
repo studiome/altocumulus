@@ -43,3 +43,12 @@
     </div>
   </div>
 </div>
+
+<%# Signed-out visitors cannot reach the Account page, so the language choice
+    lives here instead of in the navigation. %>
+<div class="mt-4 text-center">
+  <p class="app-helper"><%= t("locale.switch_label") %></p>
+  <ul class="menu menu-horizontal justify-center">
+    <%= render "shared/locale_switcher" %>
+  </ul>
+</div>

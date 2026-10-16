@@ -56,4 +56,16 @@
       <% end %>
     </div>
   </div>
+
+  <%# Language is saved right away by LocalesController (users.locale), not
+      with the account form above, so it sits in its own panel. The switcher
+      redirects back here, now in the chosen language. %>
+  <div class="app-panel mt-6">
+    <div class="card-body">
+      <h2 class="app-field-label"><%= t(".language_heading") %></h2>
+      <ul class="menu menu-horizontal px-0">
+        <%= render "shared/locale_switcher" %>
+      </ul>
+    </div>
+  </div>
 </div>

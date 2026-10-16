@@ -1407,6 +1407,7 @@ ja:
       new_password_label: "新しいパスワード"
       confirm_new_password_label: "新しいパスワード(確認)"
       save_changes_submit: "変更を保存"
+      language_heading: "言語 / Language"
       errors_heading:
         other: "%{count}件のエラーによりこのアカウントを保存できませんでした:"
     update:

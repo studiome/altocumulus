@@ -71,8 +71,6 @@
               <li><%= link_to t("nav.account"), account_path %></li>
               <li><%= button_to t("nav.sign_out"), logout_path, method: :delete %></li>
             <% end %>
-            <li class="menu-title"><%= t("locale.switch_label") %></li>
-            <%= render "shared/locale_switcher" %>
           </ul>
         </div>
 
@@ -128,12 +126,6 @@
               </ul>
             </li>
           <% end %>
-          <li class="dropdown dropdown-end">
-            <button type="button" tabindex="0"><%= t("locale.switch_label") %></button>
-            <ul tabindex="0" class="dropdown-content menu z-10 w-40 rounded-box bg-base-100 p-2 shadow">
-              <%= render "shared/locale_switcher" %>
-            </ul>
-          </li>
         </ul>
         <% if current_user %>
           <div class="flex items-center gap-2">

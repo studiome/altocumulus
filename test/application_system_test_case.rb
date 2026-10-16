@@ -34,14 +34,13 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # ANONYMOUS_DEFAULT_LOCALE), and the fixture users have no saved locale, so
   # they would stay in Japanese after signing in too. The suite is written
   # against the English copy, so pick English the way a visitor would: through
-  # the nav's language menu, which stores it in the session and survives the
-  # sign-in. Opened by its "言語" label because that is the Japanese page's.
+  # the sign-in page's language buttons, which store it in the session and
+  # survive the sign-in.
   # A no-op when the browser session already holds English (it can outlive a
   # single test), so the page may open in either language.
   def switch_to_english
     return if page.has_button?("Sign In", wait: 0)
 
-    click_button "言語"
     click_button "English"
     assert_button "Sign In"
   end

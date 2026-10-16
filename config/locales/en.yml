@@ -1467,6 +1467,7 @@ en:
       new_password_label: "New Password"
       confirm_new_password_label: "Confirm New Password"
       save_changes_submit: "Save Changes"
+      language_heading: "Language"
       errors_heading:
         one: "%{count} error prohibited this account from being saved:"
         other: "%{count} errors prohibited this account from being saved:"
