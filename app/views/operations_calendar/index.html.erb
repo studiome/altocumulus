@@ -1,4 +1,5 @@
 <% content_for :title, t(".title") %>
+<% range_params = { start: @calendar.start_date.iso8601, days: @calendar.days }.merge(@filter.to_params) %>
 
 <div class="app-page">
 
@@ -13,6 +14,7 @@
         </p>
       </div>
       <%= form_with url: operations_calendar_path, method: :get, local: true, class: "flex items-end gap-2 flex-wrap print:hidden" do |f| %>
+        <%= f.hidden_field :view, value: @view, id: nil %>
         <div class="app-filter-field">
           <label class="app-filter-label"><%= t(".start_label") %></label>
           <%= f.date_field :start, value: @calendar.start_date, class: "input input-sm" %>
@@ -21,29 +23,65 @@
           <label class="app-filter-label"><%= t(".days_label") %></label>
           <%= f.number_field :days, value: @calendar.days, min: 1, max: OperationsCalendar::MAX_DAYS, class: "input input-sm w-24" %>
         </div>
+        <% if SiteConfig.current.teams_enabled? %>
+          <div class="app-filter-field">
+            <label class="app-filter-label" for="calendar_team_id"><%= t(".team_label") %></label>
+            <%= f.select :team_id, options_from_collection_for_select(Team.active.ordered, :id, :name, @filter.team_id),
+                  { include_blank: t(".team_all") }, id: "calendar_team_id", class: "select select-sm" %>
+          </div>
+        <% end %>
+        <label class="flex items-center gap-1.5 pb-1.5 text-xs cursor-pointer">
+          <%= check_box_tag :mine, "1", @filter.mine?, class: "checkbox checkbox-primary checkbox-sm", id: "calendar_mine" %>
+          <span><%= t(".mine_label") %></span>
+        </label>
         <%= f.submit t(".apply_submit"), class: "btn btn-primary btn-sm" %>
-        <%= link_to t(".today_link"), operations_calendar_path, class: "btn btn-ghost btn-sm" %>
+        <%= link_to t(".today_link"), operations_calendar_path(view: @view), class: "btn btn-ghost btn-sm" %>
       <% end %>
     </div>
   </section>
 
-  <div class="app-panel overflow-hidden print:overflow-visible">
-    <div class="overflow-x-auto">
-      <%# One ledger table for the whole range: each day is its own <tbody>
-          (see _day), so the day cell can span that day's surgery rows. %>
-      <table class="app-ledger oc-ledger">
-        <thead>
-          <tr>
-            <th><%= t("surgeries.labels.surgery_date") %></th>
-            <% @calendar.columns.each do |column| %>
-              <th><%= ledger_header(column) %></th>
+  <%# Tabs are plain links (a reload, so the filters/range ride in the URL). %>
+  <div role="tablist" aria-label="<%= t(".tabs_label") %>" class="tabs tabs-border print:hidden">
+    <% OperationsCalendarController::VIEWS.each do |view| %>
+      <% selected = view == @view %>
+      <%= link_to t(".tab_#{view}"), operations_calendar_path(range_params.merge(view: view)),
+            id: "oc-tab-#{view}", role: "tab", class: "tab #{"tab-active" if selected}",
+            aria: { selected: selected.to_s, controls: "oc-panel" }, tabindex: (selected ? 0 : -1) %>
+    <% end %>
+  </div>
+
+  <div id="oc-panel" role="tabpanel" aria-labelledby="oc-tab-<%= @view %>">
+    <% if @view == "surgery" %>
+      <%# What the row styling means. Stays in print (a printed sheet needs it too). %>
+      <ul class="oc-legend" aria-label="<%= t(".legend_label") %>">
+        <li><span class="oc-legend-swatch oc-legend-emergency" aria-hidden="true"></span><%= t(".legend_emergency") %></li>
+        <li><span class="oc-legend-swatch oc-legend-offslot" aria-hidden="true"></span><%= t(".legend_offslot") %></li>
+        <li><span class="oc-legend-swatch oc-legend-note" aria-hidden="true"></span><%= t(".legend_note") %></li>
+      </ul>
+    <% end %>
+
+    <div class="app-panel overflow-hidden print:overflow-visible">
+      <div class="overflow-x-auto">
+        <%# One ledger table for the whole range: each day is its own <tbody>
+            (see _day / _examination_day), so the day cell can span that day's rows. %>
+        <table class="app-ledger oc-ledger">
+          <thead>
+            <tr>
+              <th><%= @view == "surgery" ? t("surgeries.labels.surgery_date") : t(".date_header") %></th>
+              <% @calendar.columns.each do |column| %>
+                <th><%= ledger_header(column) %></th>
+              <% end %>
+            </tr>
+          </thead>
+          <% @calendar.dates.each_with_index do |date, index| %>
+            <% if @view == "surgery" %>
+              <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
+            <% else %>
+              <%= render "examination_day", date: date, calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
             <% end %>
-          </tr>
-        </thead>
-        <% @calendar.dates.each_with_index do |date, index| %>
-          <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
-        <% end %>
-      </table>
+          <% end %>
+        </table>
+      </div>
     </div>
   </div>
 </div>

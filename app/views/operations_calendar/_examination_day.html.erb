@@ -1,0 +1,49 @@
+<%# One day of the examination-admission tab, as its own <tbody> (see _day).
+    Rows are hospitalizations that are not surgeries, on their scheduled
+    procedure date or admission date. %>
+<% hospitalizations = calendar.hospitalizations_for(date) %>
+<% columns = calendar.columns.size + 1 %>
+<% note_context = day_note_context(calendar, view: "examination", alternate: alternate) %>
+<% new_examination_path = new_reservation_path(purpose: "examination", scheduled_procedure_date: date) %>
+<% context = calendar.ledger_context %>
+<tbody id="day-<%= date.iso8601 %>" class="oc-day group <%= "oc-day-alt" if alternate %> <%= "oc-day-highlight" if highlight %>"<% if highlight %> data-controller="calendar-highlight"<% end %>>
+  <%= render "operations_calendar/day_band", date: date, usage_holiday: calendar.holiday_for(date), columns: columns, context: note_context %>
+
+  <% day_cell = capture do %>
+    <td class="ledger-day" rowspan="<%= [ hospitalizations.size, 1 ].max %>">
+      <span class="ledger-primary"><%= l(date, format: :default) %></span>
+      <span class="ledger-secondary"><%= l(date, format: :weekday) %></span>
+      <%= link_to t("reservations.links.new_reservation"), new_examination_path,
+            class: "badge badge-sm badge-outline badge-primary print:hidden w-fit", aria: { label: t("reservations.links.new_reservation") + " " + l(date, format: :default) } %>
+      <span class="ledger-secondary <%= "text-warning font-bold" if calendar.admission_warning?(date) %>">
+        <%= t("operations_calendar.day.admissions_label") %> <span class="font-mono"><%= calendar.admission_count_for(date) %></span>
+      </span>
+      <% if calendar.admission_warning?(date) %>
+        <span class="badge badge-warning badge-sm mt-1"><%= t("operations_calendar.day.congestion_badge") %></span>
+      <% end %>
+      <%= render "operations_calendar/add_note_link", date: date, holiday: calendar.holiday_for(date), context: note_context %>
+    </td>
+  <% end %>
+
+  <% if hospitalizations.empty? %>
+    <tr class="oc-empty">
+      <%= day_cell %>
+      <td colspan="<%= columns - 1 %>" class="text-base-content/50 italic"><%= t(".no_examinations") %></td>
+    </tr>
+  <% else %>
+    <% hospitalizations.each_with_index do |hospitalization, row| %>
+      <tr class="oc-exam row-hover">
+        <%= day_cell if row.zero? %>
+        <% calendar.columns.each_with_index do |column, index| %>
+          <td<% if column.css_class %> class="<%= column.css_class %>"<% end %>>
+            <%= ledger_cell(column.cell(hospitalization, context)) %>
+            <% if index.zero? %>
+              <%= link_to t("reservations.links.edit_reservation"), edit_reservation_path(hospitalization),
+                    class: "app-inline-link text-xs print:hidden block", aria: { label: t("reservations.links.edit_reservation") + " " + hospitalization.patient.name.to_s } %>
+            <% end %>
+          </td>
+        <% end %>
+      </tr>
+    <% end %>
+  <% end %>
+</tbody>

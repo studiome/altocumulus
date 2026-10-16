@@ -1,0 +1,6 @@
+<%# The band above a day: its note frame in a full-width row. Administrators
+    always get the (possibly empty, then hidden) row, because the "add note"
+    link in the day cell opens its editor there. %>
+<% if usage_holiday || admin? %>
+  <tr class="ledger-band ledger-note-row"><td colspan="<%= columns %>"><%= day_note_frame(date, usage_holiday, context) %></td></tr>
+<% end %>

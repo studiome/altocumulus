@@ -518,6 +518,17 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_empty holiday_usage.warnings
   end
 
+  test "minutes_over? is true when a single slot is overbooked even if the day fits" do
+    usage = ElectiveSlotUsage.for_dates([ Date.new(2026, 3, 3) ])[Date.new(2026, 3, 3)]
+    assert usage.overrunning_slots.any?
+    assert usage.minutes_over?
+  end
+
+  test "minutes_over? is false within capacity" do
+    usage = ElectiveSlotUsage.for_dates([ Date.new(2026, 3, 4) ])[Date.new(2026, 3, 4)]
+    assert_not usage.minutes_over?
+  end
+
   private
 
     def out_of_range_surgery

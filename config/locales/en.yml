@@ -1526,6 +1526,17 @@ en:
       today_link: "Today"
       alert: "The requested date range was invalid. Showing the default range instead."
       slot_header: "Slot"
+      tabs_label: "Calendar view"
+      tab_surgery: "Surgery"
+      tab_examination: "Examination admission"
+      date_header: "Date"
+      team_label: "Team"
+      team_all: "All teams"
+      mine_label: "Only cases I am involved in"
+      legend_label: "Row legend"
+      legend_emergency: "Emergency surgery"
+      legend_offslot: "Does not use regular slot time"
+      legend_note: "Day note / closed day"
     day:
       closed_badge: "Closed: %{name}"
       note_badge: "Note"
@@ -1537,8 +1548,28 @@ en:
       no_slots_configured: "No slots configured"
       no_surgeries: "No surgeries scheduled"
       slot_override_label: "Slots: %{slots} (changed)"
+      slot_override_band: "Slots %{slots}"
+      changed_marker: " (changed)"
+      edit_note: "Edit"
+      edit_note_for: "Edit the note for %{date}"
+      add_note: "Add note"
+      add_note_for: "Add a note for %{date}"
+    examination_day:
+      no_examinations: "No examination admissions scheduled"
     labels:
       unknown_patient_name: "Patient #%{id}"
+
+  day_notes:
+    form:
+      closed_label: "Closed day"
+      name_label: "Name"
+      note_label: "Note"
+      slot_count_label: "Slots"
+      slot_duration_label: "Minutes per slot"
+      save: "Save"
+      cancel: "Cancel"
+      delete: "Delete this day's note"
+      delete_confirm: "Delete the note (and any slot change or closure) for this day?"
 
   dashboard:
     index:

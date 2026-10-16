@@ -1,0 +1,5 @@
+<% if admin? && holiday.nil? %>
+  <%= link_to t("operations_calendar.day.add_note"), edit_day_note_path(date, context), data: { turbo_frame: "day-note-#{date.iso8601}" },
+        class: "ledger-hover-action app-inline-link text-xs font-normal print:hidden",
+        aria: { label: t("operations_calendar.day.add_note_for", date: l(date, format: :default)) } %>
+<% end %>

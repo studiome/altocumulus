@@ -1,0 +1,53 @@
+<%# The day-note editor, shown in place of the band's text. The calendar's own
+    params ride along as hidden fields so the saved day is re-rendered the way
+    it was shown. Delete is a separate form (forms cannot nest). %>
+<div class="flex flex-col gap-2 font-normal">
+  <%= form_with(model: holiday, url: day_note_path(date), method: :patch, scope: :holiday, class: "flex flex-wrap items-end gap-2") do |form| %>
+    <% context_params.each do |name, value| %>
+      <%= hidden_field_tag name, value, id: nil %>
+    <% end %>
+
+    <% if holiday.errors.any? %>
+      <div role="alert" class="alert alert-error alert-soft w-full py-1 text-xs">
+        <ul class="list-disc ml-4">
+          <% holiday.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <label class="flex items-center gap-1.5 self-center">
+      <%= form.check_box :holiday, class: "checkbox checkbox-primary checkbox-sm" %>
+      <span><%= t("day_notes.form.closed_label") %></span>
+    </label>
+
+    <div class="app-filter-field">
+      <%= form.label :name, t("day_notes.form.name_label"), class: "app-filter-label" %>
+      <%= form.text_field :name, class: "input input-sm w-44", autocomplete: "off" %>
+    </div>
+
+    <div class="app-filter-field">
+      <%= form.label :note, t("day_notes.form.note_label"), class: "app-filter-label" %>
+      <%= form.text_area :note, class: "textarea textarea-sm w-64 min-h-0", rows: 2 %>
+    </div>
+
+    <div class="app-filter-field">
+      <%= form.label :slot_count, t("day_notes.form.slot_count_label"), class: "app-filter-label" %>
+      <%= form.number_field :slot_count, class: "input input-sm w-20", min: 0.5, step: 0.5 %>
+    </div>
+
+    <div class="app-filter-field">
+      <%= form.label :slot_duration_minutes, t("day_notes.form.slot_duration_label"), class: "app-filter-label" %>
+      <%= form.number_field :slot_duration_minutes, class: "input input-sm w-24", min: 1, step: 1 %>
+    </div>
+
+    <%= form.submit t("day_notes.form.save"), class: "btn btn-primary btn-sm" %>
+    <%= link_to t("day_notes.form.cancel"), day_note_path(date, context_params), class: "btn btn-ghost btn-sm" %>
+  <% end %>
+
+  <% if existing %>
+    <%= button_to t("day_notes.form.delete"), day_note_path(date), method: :delete, params: context_params,
+          class: "btn btn-ghost btn-xs text-error w-fit", form: { data: { turbo_confirm: t("day_notes.form.delete_confirm") } } %>
+  <% end %>
+</div>

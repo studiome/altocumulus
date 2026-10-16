@@ -80,6 +80,9 @@ Rails.application.routes.draw do
   resources :audit_events, only: %i[ index show ]
   get "surgery_schedule" => "surgery_schedules#index", as: :surgery_schedule
   get "surgery_schedule/pdf" => "surgery_schedules#pdf", as: :surgery_schedule_pdf
+  # The inline day-note editor of the operations calendar (admin only): `:date`
+  # is the day's ISO date and the record is that day's Holiday row.
+  resources :day_notes, only: %i[ show edit update destroy ], param: :date
   get "operations_calendar" => "operations_calendar#index", as: :operations_calendar
   get "dashboard" => "dashboard#index"
   get "search" => "searches#index", as: :search

@@ -22,6 +22,17 @@ class PrintLayoutTest < ActionDispatch::IntegrationTest
     assert_select ".oc-day.print\\:hidden", false
   end
 
+  test "operations calendar hides its tab bar and edit controls in print but keeps the legend" do
+    Holiday.create!(date: Date.new(2026, 3, 4), holiday: false, note: "Meeting")
+    get operations_calendar_url, params: { start: "2026-03-03", days: 3 }
+
+    assert_select "[role=tablist].print\\:hidden"
+    assert_select ".oc-legend"
+    assert_select ".oc-legend.print\\:hidden", false
+    assert_select "a.ledger-hover-action.print\\:hidden", minimum: 1
+    assert_select ".ledger-hover-action:not(.print\\:hidden)", false
+  end
+
   test "hospitalization detail hides edit/delete/admin controls in print but keeps the record content" do
     hospitalization = hospitalizations(:one)
 

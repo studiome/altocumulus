@@ -1,0 +1,15 @@
+<%# What the band above a day says (closed day / note / "列数 N" override), plus
+    an administrator's inline edit link. Rendered inside the day's note frame
+    and again by DayNotesController#show; prints nothing without a holiday. %>
+<% if holiday %>
+  <% text = [ holiday.name, holiday.note ].compact_blank.join(" – ") %>
+  <span><% if holiday.holiday? %><%= t("operations_calendar.day.closed_badge", name: holiday.name) %><% if holiday.note.present? %> &ndash; <%= holiday.note %><% end %><% else %><%= t("operations_calendar.day.note_badge") %>: <%= text %><% end %></span>
+  <% if holiday.slot_override? %>
+    <span class="badge badge-info badge-sm ml-1"><%= t("operations_calendar.day.slot_override_band", slots: holiday.slot_count_display) %></span>
+  <% end %>
+  <% if admin? %>
+    <%= link_to t("operations_calendar.day.edit_note"), edit_day_note_path(date, context), data: { turbo_frame: "day-note-#{date.iso8601}" },
+          class: "ledger-hover-action app-inline-link ml-2 text-xs font-normal print:hidden",
+          aria: { label: t("operations_calendar.day.edit_note_for", date: l(date, format: :default)) } %>
+  <% end %>
+<% end %>

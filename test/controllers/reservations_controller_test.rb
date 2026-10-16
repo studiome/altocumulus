@@ -349,4 +349,15 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
     get surgery_url(surgeries(:one))
     assert_select "a[href^='/reservations/']", count: 0
   end
+
+  test "new prefills the scheduled procedure date for an examination" do
+    get new_reservation_url(purpose: "examination", scheduled_procedure_date: "2026-05-12")
+    assert_select "input[name='reservation[hospitalization][scheduled_procedure_date]'][value='2026-05-12']"
+  end
+
+  test "new ignores an unparsable scheduled procedure date" do
+    get new_reservation_url(purpose: "examination", scheduled_procedure_date: "garbage")
+    assert_response :success
+    assert_select "input[name='reservation[hospitalization][scheduled_procedure_date]'][value]", false
+  end
 end

@@ -1429,6 +1429,17 @@ ja:
       today_link: "今日"
       alert: "指定された日付範囲が正しくありません。既定の範囲を表示します。"
       slot_header: "枠"
+      tabs_label: "カレンダーの表示"
+      tab_surgery: "手術"
+      tab_examination: "検査入院"
+      date_header: "日付"
+      team_label: "チーム"
+      team_all: "すべてのチーム"
+      mine_label: "自分が関与する症例のみ"
+      legend_label: "行の凡例"
+      legend_emergency: "緊急手術"
+      legend_offslot: "通常の枠時間を使わない"
+      legend_note: "日の備考・休診"
     day:
       closed_badge: "休診: %{name}"
       note_badge: "メモ"
@@ -1440,8 +1451,28 @@ ja:
       no_slots_configured: "手術枠未設定"
       no_surgeries: "手術の予定はありません"
       slot_override_label: "枠 %{slots}（変更）"
+      slot_override_band: "列数 %{slots}"
+      changed_marker: "（変更）"
+      edit_note: "編集"
+      edit_note_for: "%{date} の備考を編集"
+      add_note: "備考を追加"
+      add_note_for: "%{date} に備考を追加"
+    examination_day:
+      no_examinations: "予定なし"
     labels:
       unknown_patient_name: "患者 #%{id}"
+
+  day_notes:
+    form:
+      closed_label: "休診日"
+      name_label: "名称"
+      note_label: "備考"
+      slot_count_label: "列数"
+      slot_duration_label: "1枠の分数"
+      save: "保存"
+      cancel: "キャンセル"
+      delete: "この日の備考を削除"
+      delete_confirm: "この日の備考（列数の変更や休診を含む）を削除しますか？"
 
   dashboard:
     index:

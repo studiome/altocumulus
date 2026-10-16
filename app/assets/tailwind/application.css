@@ -245,6 +245,83 @@ html {
     background-color: color-mix(in oklab, var(--color-error) 14%, var(--color-base-100));
   }
 
+  /* Emergency surgeries: the urgent tint plus a red stripe on the row's first
+     column. A case outside the regular slot time (simultaneous / backup /
+     off-slot) is hatched instead, in the theme's own text colour so it reads in
+     light and dark mode; both together simply layer. */
+  .oc-ledger tbody tr.ledger-row-emergency td.ledger-stripe {
+    box-shadow: inset 4px 0 0 var(--color-error);
+  }
+
+  .oc-ledger tbody tr.ledger-row-offslot td:not(.ledger-day) {
+    background-image: var(--oc-hatch);
+  }
+
+  :root {
+    --oc-hatch: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in oklab, var(--color-base-content) 14%, transparent) 5px 6px);
+  }
+
+  /* Keep the tints, stripes and hatching on paper. */
+  .oc-ledger,
+  .oc-legend {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* The legend above the table: one swatch per row style. */
+  .oc-legend {
+    @apply mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs;
+  }
+
+  .oc-legend li {
+    @apply flex items-center gap-1.5;
+  }
+
+  .oc-legend-swatch {
+    @apply inline-block h-3.5 w-6 border;
+    border-color: var(--ledger-line);
+  }
+
+  .oc-legend-emergency {
+    background-color: color-mix(in oklab, var(--color-error) 14%, var(--color-base-100));
+    box-shadow: inset 4px 0 0 var(--color-error);
+  }
+
+  .oc-legend-offslot {
+    background-color: var(--color-base-100);
+    background-image: var(--oc-hatch);
+  }
+
+  .oc-legend-note {
+    background-color: var(--ledger-head);
+  }
+
+  /* Admin-only inline edit links stay out of the way until the day is hovered
+     or focused (they remain keyboard reachable) -- and are always visible on
+     touch screens, which cannot hover. */
+  .ledger-hover-action {
+    @apply transition-opacity;
+    opacity: 0;
+  }
+
+  .oc-day:hover .ledger-hover-action,
+  .oc-day:focus-within .ledger-hover-action,
+  .ledger-hover-action:focus {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    .ledger-hover-action {
+      opacity: 1;
+    }
+  }
+
+  /* The day's note row exists for admins even on days without a note (the
+     "add note" link opens its editor); hide it while its frame is empty. */
+  .ledger-note-row:has(turbo-frame:empty) {
+    display: none;
+  }
+
   .app-ledger tr.ledger-band td {
     @apply font-bold;
     background-color: var(--ledger-head);

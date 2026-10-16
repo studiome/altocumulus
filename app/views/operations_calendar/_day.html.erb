@@ -1,45 +1,44 @@
-<%# One day of the operations calendar, as its own <tbody> of the ledger table.
-    `oc-day` is a structural hook used by tests to count the rendered range.
-    The day cell (date, admissions, slot usage) spans every surgery row of the
-    day; closed-day and warning messages sit above them as full-width bands. %>
-<% surgeries = usage.elective_surgeries + usage.emergency_surgeries %>
+<%# One day of the operations calendar's surgery tab, as its own <tbody> of the
+    ledger table. `oc-day` is a structural hook used by tests to count the
+    rendered range. The day cell (date, admissions, slot usage) spans every
+    surgery row of the day; the note band and warnings sit above them as
+    full-width bands. DayNotesController re-renders this partial for one day. %>
+<% surgeries = calendar.surgeries_for(date) %>
 <% columns = calendar.columns.size + 1 %>
-<% context = calendar.ledger_context(href: ->(surgery) { surgery_path(surgery, from: "calendar", start: calendar.start_date.iso8601, days: calendar.days) }) %>
-<tbody id="day-<%= date.iso8601 %>" class="oc-day <%= "oc-day-alt" if alternate %> <%= "oc-day-highlight" if highlight %>"<% if highlight %> data-controller="calendar-highlight"<% end %>>
-  <% if usage.holiday? %>
-    <tr class="ledger-band"><td colspan="<%= columns %>"><%= t(".closed_badge", name: usage.holiday.name) %><% if usage.holiday.note.present? %> &ndash; <%= usage.holiday.note %><% end %></td></tr>
-  <% elsif usage.holiday&.note.present? %>
-    <tr class="ledger-band"><td colspan="<%= columns %>"><%= t(".note_badge") %>: <%= usage.holiday.note %></td></tr>
-  <% end %>
+<% note_context = day_note_context(calendar, view: "surgery", alternate: alternate) %>
+<% new_surgery_path = new_reservation_path(surgery_date: date, purpose: "surgery") %>
+<% context = calendar.ledger_context(href: ->(surgery) { surgery_path(surgery, from: "calendar", start: calendar.return_start.iso8601, days: calendar.return_days) }) %>
+<tbody id="day-<%= date.iso8601 %>" class="oc-day group <%= "oc-day-alt" if alternate %> <%= "oc-day-highlight" if highlight %>"<% if highlight %> data-controller="calendar-highlight"<% end %>>
+  <%= render "operations_calendar/day_band", date: date, usage_holiday: usage.holiday, columns: columns, context: note_context %>
   <% usage.warnings.each do |warning| %>
     <tr class="ledger-band-warning"><td colspan="<%= columns %>"><%= warning %></td></tr>
   <% end %>
 
   <% day_cell = capture do %>
     <td class="ledger-day" rowspan="<%= [ surgeries.size, 1 ].max %>">
-      <%= link_to l(date, format: :default), new_reservation_path(surgery_date: date, purpose: "surgery"), class: "ledger-primary app-inline-link" %>
+      <%= link_to l(date, format: :default), new_surgery_path, class: "ledger-primary app-inline-link" %>
       <span class="ledger-secondary"><%= l(date, format: :weekday) %></span>
-      <%= link_to t("reservations.links.new_reservation"), new_reservation_path(surgery_date: date, purpose: "surgery"),
+      <%= link_to t("reservations.links.new_reservation"), new_surgery_path,
             class: "badge badge-sm badge-outline badge-primary print:hidden w-fit", aria: { label: t("reservations.links.new_reservation") + " " + l(date, format: :default) } %>
       <span class="ledger-secondary <%= "text-warning font-bold" if calendar.admission_warning?(date) %>">
         <%= t(".admissions_label") %> <span class="font-mono"><%= calendar.admission_count_for(date) %></span>
       </span>
-      <span class="ledger-secondary">
-        <% if usage.configured? %>
-          <%= t(".slots_summary", used: usage.used_slots, total: usage.total_slots) %>
+      <% if usage.configured? %>
+        <span class="ledger-secondary">
+          <%= t(".slots_summary", used: usage.used_slots, total: usage.total_slots) %><% if usage.slot_override? %><span class="text-info font-semibold"><%= t(".changed_marker") %></span><% end %>
+        </span>
+        <span class="ledger-secondary font-mono <%= "text-error font-bold" if usage.minutes_over? %>">
           <%= t(".minutes_summary", used: usage.used_minutes, capacity: usage.capacity_minutes) %>
-          <% if usage.slot_override? %>
-            <span class="badge badge-info badge-sm"><%= t(".slot_override_label", slots: usage.slot_count_display) %></span>
-          <% end %>
-        <% elsif usage.holiday? %>
-          <%= t(".no_slots_holiday") %>
-        <% else %>
-          <%= t(".no_slots_configured") %>
-        <% end %>
-      </span>
+        </span>
+      <% elsif usage.holiday? %>
+        <span class="ledger-secondary"><%= t(".no_slots_holiday") %></span>
+      <% else %>
+        <span class="ledger-secondary"><%= t(".no_slots_configured") %></span>
+      <% end %>
       <% if calendar.admission_warning?(date) %>
         <span class="badge badge-warning badge-sm mt-1"><%= t(".congestion_badge") %></span>
       <% end %>
+      <%= render "operations_calendar/add_note_link", date: date, holiday: usage.holiday, context: note_context %>
     </td>
   <% end %>
 
@@ -50,10 +49,12 @@
     </tr>
   <% else %>
     <% surgeries.each_with_index do |surgery, row| %>
-      <tr class="oc-surgery row-hover <%= "ledger-row-urgent" if surgery.emergency? %>">
+      <% row_classes = [ "oc-surgery", "row-hover", ("ledger-row-urgent ledger-row-emergency" if surgery.emergency?), ("ledger-row-offslot" unless surgery.regular_slot?) ].compact.join(" ") %>
+      <tr class="<%= row_classes %>">
         <%= day_cell if row.zero? %>
         <% calendar.columns.each_with_index do |column, index| %>
-          <td<% if column.css_class %> class="<%= column.css_class %>"<% end %>>
+          <% cell_classes = [ column.css_class, ("ledger-stripe" if index.zero? && surgery.emergency?) ].compact.join(" ") %>
+          <td<% if cell_classes.present? %> class="<%= cell_classes %>"<% end %>>
             <%= ledger_cell(column.cell(surgery, context)) %>
             <% if index.zero? && surgery.hospitalization && !surgery.hospitalization.deleted? %>
               <%= link_to t("reservations.links.edit_reservation"), edit_reservation_path(surgery.hospitalization),

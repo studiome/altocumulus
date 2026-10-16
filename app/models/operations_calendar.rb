@@ -24,27 +24,49 @@ class OperationsCalendar
   end
 
   attr_reader :start_date, :days, :dates, :slot_usages, :admission_counts,
-              :admission_warning_threshold, :columns
+              :admission_warning_threshold, :columns, :filter, :return_start, :return_days
 
   # Parses the raw (and possibly invalid or crafted) request params into a
   # valid range before building the calendar, so a bad `start` or `days`
   # never reaches Date.parse/Integer directly in the controller and blows up
   # with an unhandled exception -- it becomes InvalidRangeError instead,
   # which the controller turns into a redirect.
-  def self.build(start: nil, days: nil)
-    new(start_date: parse_start(start), days: parse_days(days))
+  def self.build(start: nil, days: nil, filter: CalendarFilter.none)
+    new(start_date: parse_start(start), days: parse_days(days), filter: filter)
   end
 
-  def initialize(start_date:, days:)
+  # The validated [start_date, days] for raw params; shared with
+  # ExaminationCalendar so both tabs accept exactly the same ranges.
+  def self.parse_range(start: nil, days: nil)
+    [ parse_start(start), parse_days(days) ]
+  end
+
+  # `return_start` / `return_days` are the range the screen was opened with,
+  # which the surgery links carry back (a single day re-rendered by the day
+  # note editor still belongs to the whole range).
+  def initialize(start_date:, days:, filter: CalendarFilter.none, return_start: start_date, return_days: days)
     @start_date = start_date
     @days = days
+    @filter = filter
+    @return_start = return_start
+    @return_days = return_days
     @dates = (start_date..(start_date + days - 1)).to_a
     @admission_warning_threshold = Rails.application.config.x.admission_warning_threshold
 
     @columns = LedgerColumn.for_ledger(:operations_calendar)
     @slot_usages = ElectiveSlotUsage.for_dates(@dates, includes: LedgerColumn.includes_for(@columns))
-    @admission_counts = build_admission_counts
+    @admission_counts = Hospitalization.admission_counts_on(@dates)
+    @shown_surgery_ids = filter.surgery_ids(@dates)
     @referral_lookup = build_referral_lookup
+  end
+
+  # The surgeries of the day to list, elective then emergency. Under a filter
+  # only the matching ones (matched in SQL, see CalendarFilter); the day's slot
+  # usage numbers still count every case.
+  def surgeries_for(date)
+    usage = slot_usages[date]
+    surgeries = usage.elective_surgeries + usage.emergency_surgeries
+    @shown_surgery_ids ? surgeries.select { |surgery| @shown_surgery_ids.include?(surgery.id) } : surgeries
   end
 
   # The referral source of the patient's hospitalization whose period covers
@@ -88,36 +110,10 @@ class OperationsCalendar
     end
     private_class_method :parse_days
 
-    def effective_date_order
-      Arel.sql("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date)")
-    end
-
-    # One group(...).count query regardless of how many dates are in `dates`
-    # (it compiles to a single WHERE effective_date IN (...) GROUP BY), keyed
-    # by the same effective_admission_date (actual if present, otherwise
-    # scheduled) that the rest of the app already treats as the single
-    # canonical date of a hospitalization -- see Hospitalization#upcoming,
-    # #admitted_between, and #no_overlapping_hospitalization_period. Each
-    # hospitalization is counted exactly once, on that one day, never on both
-    # its scheduled and actual dates.
-    def build_admission_counts
-      # effective_date_order is our own fixed SQL fragment (not user input),
-      # but building the IN clause via Arel's #in -- rather than interpolating
-      # it into a "... IN (?)" string -- keeps `dates` properly bound instead
-      # of string-substituted, which is both correct and what satisfies
-      # Brakeman's SQL-injection check on this line.
-      counts = Hospitalization.active
-                               .where(effective_date_order.in(dates))
-                               .group(effective_date_order)
-                               .count
-
-      counts.transform_keys { |date| date.is_a?(Date) ? date : Date.parse(date.to_s) }
-    end
-
     # One query for every surgery on the calendar, narrowed by the range as a
     # whole (see SurgeryReferralLookup).
     def build_referral_lookup
-      patient_ids = slot_usages.values.flat_map { |usage| (usage.elective_surgeries + usage.emergency_surgeries).map(&:patient_id) }.uniq
+      patient_ids = dates.flat_map { |date| surgeries_for(date).map(&:patient_id) }.uniq
 
       SurgeryReferralLookup.new(patient_ids: patient_ids, dates: dates)
     end

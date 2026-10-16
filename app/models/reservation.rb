@@ -46,11 +46,12 @@ class Reservation
 
   # A blank reservation for the "new" screen. The prefill values come straight
   # from the query string, so anything unparsable simply leaves a field blank.
-  def self.build_new(user: nil, surgery_date: nil, scheduled_admission_date: nil, purpose: nil, patient_id: nil)
+  def self.build_new(user: nil, surgery_date: nil, scheduled_admission_date: nil, scheduled_procedure_date: nil, purpose: nil, patient_id: nil)
     reservation = new
     hospitalization = reservation.hospitalization
     hospitalization.purpose = purpose if Hospitalization::PURPOSE_KEYS.include?(purpose)
     hospitalization.scheduled_admission_date = parse_date(scheduled_admission_date)
+    hospitalization.scheduled_procedure_date = parse_date(scheduled_procedure_date)
     hospitalization.patient = Patient.find_by(id: patient_id) if patient_id.is_a?(String) || patient_id.is_a?(Integer)
     hospitalization.reservation_doctor = user
     hospitalization.submitted_on = Date.current

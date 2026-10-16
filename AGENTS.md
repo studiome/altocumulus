@@ -122,3 +122,7 @@ The operations calendar (HTML), the weekly PDF and the future examination calend
 ### Development demo data
 
 `bin/rails dev:demo_data` (`DevDemoData` in `lib/dev_demo_data.rb`) fills a development database with fictional, idempotently created data for UI review; it raises `DevDemoData::NotDevelopmentError` anywhere else. Never run `db:reset`/`db:schema:load` against the development database to "refresh" it; the task is additive.
+
+### Operations calendar tabs and day notes
+
+`OperationsCalendarController#index` renders one of two tabs chosen by `view` (`surgery` default / `examination`). `OperationsCalendar` (surgeries, via `ElectiveSlotUsage.for_dates`) and `ExaminationCalendar` (active non-surgery hospitalizations grouped by `scheduled_procedure_date || effective_admission_date`) each resolve their data in a fixed number of queries; both take a `CalendarFilter` (`mine` / `team_id`, matched in SQL; under a filter the slot-usage numbers still count every case). A day is one `<tbody id="day-DATE">` (`_day` / `_examination_day`). Admins edit a day's note through `DayNotesController` (`/day_notes/:date`, a turbo-frame per day, `require_admin`): a save re-renders that day's tbody by turbo stream, so the calendar's own params (`start`, `days`, `view`, `mine`, `team_id`, `alt`) travel with every request (`DayNotesHelper#day_note_context`).

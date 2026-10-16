@@ -43,7 +43,7 @@ class HolidaySlotOverrideControllerTest < ActionDispatch::IntegrationTest
     Holiday.create!(date: DAY, holiday: false, note: "Reduced", slot_count: 2)
 
     get operations_calendar_url, params: { start: DAY, days: 1 }
-    assert_select "td.ledger-day", text: /Slots: 2 \(changed\)/
+    assert_select "td.ledger-day", text: /2 slots \(changed\)/
 
     get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
     assert_select "td.ledger-day", text: /changed/, count: 0
@@ -54,7 +54,7 @@ class HolidaySlotOverrideControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:japanese_member))
 
     get operations_calendar_url, params: { start: DAY, days: 1 }
-    assert_select "td.ledger-day", text: /枠 2（変更）/
+    assert_select "td.ledger-day", text: /2枠（変更）/
   end
 
   test "the surgery show page counts slots with the override" do

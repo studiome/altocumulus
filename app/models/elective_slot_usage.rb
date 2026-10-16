@@ -178,6 +178,12 @@ class ElectiveSlotUsage
     slots.sum(&:used_minutes)
   end
 
+  # Whether the day's booked minutes exceed what its slots hold: in total, or
+  # because some single slot is overbooked even though the day as a whole fits.
+  def minutes_over?
+    used_minutes > capacity_minutes || overrunning_slots.any?
+  end
+
   def over_capacity?
     unscheduled_surgeries.any?
   end

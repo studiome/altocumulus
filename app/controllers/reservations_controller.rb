@@ -16,6 +16,7 @@ class ReservationsController < ApplicationController
   def new
     @reservation = Reservation.build_new(
       user: current_user, surgery_date: params[:surgery_date], scheduled_admission_date: params[:scheduled_admission_date],
+      scheduled_procedure_date: params[:scheduled_procedure_date],
       purpose: params[:purpose], patient_id: params[:patient_id]
     )
     prepare_form

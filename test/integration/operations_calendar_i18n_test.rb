@@ -94,4 +94,33 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_match "The requested date range was invalid. Showing the default range instead.", response.body
   end
+
+  test "tabs, filter, legend, day-note controls and the examination tab render in Japanese" do
+    get_as users(:japanese_admin), operations_calendar_url, WINDOW
+
+    assert_select "[role=tablist] a[role=tab]", text: "手術"
+    assert_select "[role=tablist] a[role=tab]", text: "検査入院"
+    assert_select "label", text: /自分が関与する症例のみ/
+    assert_select ".oc-legend li", text: /緊急手術/
+    assert_select ".oc-legend li", text: /通常の枠時間を使わない/
+    assert_select "tbody#day-2026-03-10 a", text: "編集"
+    assert_select "tbody#day-2026-03-04 a", text: "備考を追加"
+
+    get operations_calendar_url, params: WINDOW.merge(view: "examination")
+    assert_select "th", text: "日付"
+    assert_select "tr.oc-empty td", text: "予定なし", minimum: 1
+
+    get edit_day_note_url("2026-03-04", WINDOW)
+    assert_select "label", text: "列数"
+    assert_select "input[type=submit][value=?]", "保存"
+    assert_no_match(/[Tt]ranslation missing/, response.body)
+  end
+
+  test "the day cell reads 列数 in the band and （変更） in the cell" do
+    Holiday.create!(date: Date.new(2026, 3, 4), holiday: false, note: "短縮", slot_count: 1)
+    get_as users(:japanese_member), operations_calendar_url, WINDOW
+
+    assert_select "tbody#day-2026-03-04 tr.ledger-band", text: /列数 1/
+    assert_select "tbody#day-2026-03-04 td.ledger-day", text: /（変更）/
+  end
 end

@@ -118,6 +118,18 @@ class Hospitalization < ApplicationRecord
   # the label must follow the request's locale). The matching *_form_options
   # method's own [label, key] shape is unchanged from before the i18n
   # conversion, so existing view/form call sites keep working as-is.
+  # Admissions per day for the given dates, keyed by the effective admission
+  # date (actual if present, otherwise scheduled): each hospitalization counts
+  # once, on that one day. A single group(...).count query however many dates
+  # there are. The Arel #in (rather than interpolating into a string) keeps
+  # `dates` bound, which is also what Brakeman wants.
+  def self.admission_counts_on(dates)
+    date_sql = Arel.sql("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date)")
+    counts = active.where(date_sql.in(dates)).group(date_sql).count
+
+    counts.transform_keys { |date| date.is_a?(Date) ? date : Date.parse(date.to_s) }
+  end
+
   def self.outcome_options
     OUTCOME_KEYS.index_with { |key| I18n.t("models.hospitalization.outcome_options.#{key}") }
   end
