@@ -25,13 +25,13 @@ module LedgerColumns
           column(:admission_dates, 66, min: 56, includes: [ :hospitalization ]) { |surgery, _|
             admission_dates_cell(hospitalization_of(surgery))
           },
-          column(:patient, 108, min: 80, css_class: "ledger-patient", includes: [ :patient ]) { |surgery, context|
+          column(:patient, 108, min: 80, flex: 1, css_class: "ledger-patient", includes: [ :patient ]) { |surgery, context|
             patient_cell(surgery, context)
           },
           column(:age_sex, 46, min: 36, includes: [ :patient ]) { |surgery, _|
             age_sex_cell(surgery.patient, surgery.surgery_date)
           },
-          column(:diagnosis_procedure, 250, min: 150, flex: true, includes: [ { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure } ]) { |surgery, _|
+          column(:diagnosis_procedure, 170, min: 150, flex: 2, includes: [ { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure } ]) { |surgery, _|
             cell(segment(surgery.diagnosis_names_display, :secondary),
                  segment(surgery.display_procedure_name, :primary))
           },
@@ -43,24 +43,24 @@ module LedgerColumns
             cell(segment(hours.present? ? I18n.t("surgeries.labels.duration_value", hours: hours) : dash, :primary),
                  optional(surgery.anesthesia_method))
           },
-          column(:team, 80, min: 60, includes: [ { team: TEAM_INCLUDES }, { hospitalization: { team: TEAM_INCLUDES } } ]) { |surgery, _|
+          column(:team, 80, min: 60, flex: 2, includes: [ { team: TEAM_INCLUDES }, { hospitalization: { team: TEAM_INCLUDES } } ]) { |surgery, _|
             team_cell(surgery.effective_team, surgery.team_members_display)
           },
-          column(:category, 100, min: 90, flex: true, includes: [ :department, :surgery_location, :performing_department, :surgical_device,
+          column(:category, 100, min: 90, flex: 3, includes: [ :department, :surgery_location, :performing_department, :surgical_device,
                                               { hospitalization: :source_department } ]) { |surgery, _|
             hospitalization = hospitalization_of(surgery)
             cell(scheduling_segments(surgery, hospitalization), placement_segments(surgery, hospitalization))
           },
-          column(:reservation, 80, min: 60, includes: [ { hospitalization: [ :reservation_doctor, :created_by ] } ]) { |surgery, _|
+          column(:reservation, 80, min: 60, flex: 1, includes: [ { hospitalization: [ :reservation_doctor, :created_by ] } ]) { |surgery, _|
             reservation_cell(hospitalization_of(surgery))
           },
-          column(:referral_adl, 90, min: 70, flex: true, includes: [ :hospitalization ]) { |surgery, context|
+          column(:referral_adl, 90, min: 70, flex: 1.5, includes: [ :hospitalization ]) { |surgery, context|
             hospitalization = hospitalization_of(surgery)
             lookup = context.referral_lookup
             referral_adl_cell(hospitalization ? hospitalization.referred_from : lookup&.referred_from_for(surgery),
                               hospitalization ? hospitalization.adl : lookup&.adl_for(surgery))
           },
-          column(:status, 70, min: 56, includes: [ :hospitalization ]) { |surgery, _|
+          column(:status, 70, min: 56, flex: 1, includes: [ :hospitalization ]) { |surgery, _|
             status_cell(hospitalization_of(surgery))
           }
         ].freeze

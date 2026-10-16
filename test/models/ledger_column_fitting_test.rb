@@ -1,8 +1,9 @@
 require "test_helper"
 
 class LedgerColumnFittingTest < ActiveSupport::TestCase
+  # `flex` is the weight in sharing out spare width (0 = none).
   Col = Struct.new(:width, :min_width, :flex) do
-    def flex? = flex
+    def flex? = flex.to_f.positive?
   end
 
   def fit(columns, total, **options)
@@ -11,10 +12,10 @@ class LedgerColumnFittingTest < ActiveSupport::TestCase
 
   # fixed 40/30, flex 100/60, fixed 60/40, flex 100/60 => preferred 300, min 190
   def sample
-    [ Col.new(40, 30, false), Col.new(100, 60, true), Col.new(60, 40, false), Col.new(100, 60, true) ]
+    [ Col.new(40, 30, 0), Col.new(100, 60, 1), Col.new(60, 40, 0), Col.new(100, 60, 1) ]
   end
 
-  test "spare width goes to the flexible columns in proportion to their preferred widths" do
+  test "equal weights share the spare width equally" do
     result = fit(sample, 400)
 
     assert_equal 8, result.font_size
@@ -25,17 +26,26 @@ class LedgerColumnFittingTest < ActiveSupport::TestCase
     assert_operator result.widths[1], :>, 100
   end
 
-  test "an uneven split follows the preferred widths" do
-    columns = [ Col.new(40, 30, false), Col.new(100, 60, true), Col.new(200, 60, true) ]
+  test "the spare width follows the flex weights, not the preferred widths" do
+    columns = [ Col.new(40, 30, 0), Col.new(100, 60, 3), Col.new(200, 60, 1) ]
     result = fit(columns, 540) # preferred 340, 200 spare
 
     assert_in_delta 40, result.widths[0], 0.05
-    assert_in_delta 100 + 200 * (100 / 300.0), result.widths[1], 0.05
-    assert_in_delta 200 + 200 * (200 / 300.0), result.widths[2], 0.05
+    assert_in_delta 100 + 200 * (3 / 4.0), result.widths[1], 0.05
+    assert_in_delta 200 + 200 * (1 / 4.0), result.widths[2], 0.05
+  end
+
+  test "fractional weights work and a zero weight takes nothing" do
+    columns = [ Col.new(50, 40, 1.5), Col.new(50, 40, 0), Col.new(50, 40, 0.5) ]
+    result = fit(columns, 250) # 100 spare
+
+    assert_in_delta 50 + 75, result.widths[0], 0.05
+    assert_in_delta 50, result.widths[1], 0.05
+    assert_in_delta 50 + 25, result.widths[2], 0.05
   end
 
   test "without flexible columns the spare width is shared by all columns in proportion" do
-    result = fit([ Col.new(100, 50, false), Col.new(300, 50, false) ], 800)
+    result = fit([ Col.new(100, 50, 0), Col.new(300, 50, 0) ], 800)
 
     assert_in_delta 200, result.widths[0], 0.05
     assert_in_delta 600, result.widths[1], 0.05
@@ -109,15 +119,34 @@ class LedgerColumnFittingTest < ActiveSupport::TestCase
     end
   end
 
-  test "the registry flags the wide text columns as flexible and states the agreed minimums" do
+  test "the registry weights the columns that need the spare width and states the agreed minimums" do
     flex = LedgerColumn.registry.values.select(&:flex?).map(&:key).uniq.sort
-    assert_equal %i[category diagnosis_procedure diagnosis_procedure_name referral_adl], flex
+    assert_equal %i[category diagnosis_procedure diagnosis_procedure_name patient referral_adl reservation status team], flex
+
+    assert_equal 3, LedgerColumn.find(:surgery, :category).flex
+    assert_equal 2, LedgerColumn.find(:surgery, :team).flex
+    assert_equal 2, LedgerColumn.find(:surgery, :diagnosis_procedure).flex
+    assert_equal 1.5, LedgerColumn.find(:surgery, :referral_adl).flex
+    assert_equal 1, LedgerColumn.find(:surgery, :patient).flex
+    assert_equal 0, LedgerColumn.find(:surgery, :age_sex).flex
+    assert_equal 170, LedgerColumn.find(:surgery, :diagnosis_procedure).width
 
     assert_equal 80, LedgerColumn.find(:surgery, :patient).min_width
     assert_equal 150, LedgerColumn.find(:surgery, :diagnosis_procedure).min_width
     assert_equal 90, LedgerColumn.find(:surgery, :category).min_width
     assert_equal 36, LedgerColumn.find(:surgery, :age_sex).min_width
     assert_equal 44, LedgerColumn.find(:surgery, :duration_anesthesia).min_width
+  end
+
+  test "the example config's columns give the type and team columns most of the spare width" do
+    config = SiteConfig.load(Rails.root.join("config/site.example.yml"))
+    SiteConfig.with(config) do
+      columns = LedgerColumn.for_ledger(:weekly_pdf)
+      widths = fit(columns, 785.89).widths.zip(columns).to_h { |width, column| [ column.key, width ] }
+      assert_operator widths[:category], :>=, 120 # preferred 100
+      assert_operator widths[:team], :>=, 94      # preferred 80
+      assert_operator widths[:category] - 100, :>, widths[:team] - 80 # weight 3 vs 2
+    end
   end
 
   test "the default weekly PDF columns fit the page at the base font" do

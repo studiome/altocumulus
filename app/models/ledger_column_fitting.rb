@@ -4,7 +4,9 @@
 # #min_width, in points at the base font size of 8pt) and may be flexible. The
 # fit, in order of preference:
 #   1. the preferred widths fit: the spare width goes to the flexible columns
-#      in proportion to their preferred widths (to all columns when none is
+#      in proportion to their `flex` weights, not their widths, so a column
+#      that wraps a lot (the type badges) can be given more than a wide one
+#      with room to spare (to all columns, by preferred width, when none is
 #      flexible);
 #   2. only the minimums fit: every column shrinks towards its minimum by the
 #      same share of its slack, so nothing goes below the minimum;
@@ -60,11 +62,16 @@ module LedgerColumnFitting
       def grow(columns, prefs, total)
         extra = total - prefs.sum
         targets = columns.each_index.select { |index| columns[index].flex? }
-        targets = columns.each_index.to_a if targets.empty?
-        weight = targets.sum { |index| prefs[index] }
+        weights = if targets.empty?
+          targets = columns.each_index.to_a
+          prefs
+        else
+          columns.map { |column| column.flex.to_f }
+        end
+        total_weight = targets.sum { |index| weights[index] }
 
         widths = prefs.dup
-        targets.each { |index| widths[index] += extra * prefs[index] / weight }
+        targets.each { |index| widths[index] += extra * weights[index] / total_weight }
         widths = widths.map { |width| floor(width) }
 
         # Hand the rounding crumbs to the last flexible column.

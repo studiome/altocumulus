@@ -83,22 +83,24 @@ class LedgerColumn
 
   # `width` is the preferred PDF width (points, at the base font size) and
   # `min_width` the narrowest it may get before the PDF shrinks the font (see
-  # LedgerColumnFitting); a `flex` column takes the page's spare width.
-  attr_reader :key, :subject, :width, :min_width, :css_class
+  # LedgerColumnFitting). `flex` is the column's weight in sharing out the
+  # page's spare width: a column with weight 3 gets three times the extra of one
+  # with weight 1, whatever their preferred widths; 0 (the default) takes none.
+  attr_reader :key, :subject, :width, :min_width, :flex, :css_class
 
-  def initialize(subject:, key:, width:, min_width: width, flex: false, css_class: nil, includes: [], &builder)
+  def initialize(subject:, key:, width:, min_width: width, flex: 0, css_class: nil, includes: [], &builder)
     @subject = subject
     @key = key
     @width = width
     @min_width = min_width
-    @flex = flex
+    @flex = flex || 0
     @css_class = css_class
     @includes = includes
     @builder = builder
   end
 
   def flex?
-    @flex
+    @flex.positive?
   end
 
   def header_upper

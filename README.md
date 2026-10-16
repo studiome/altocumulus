@@ -459,8 +459,9 @@ Keys:
   list, or `team` without `features.teams` stop the boot. See `config/site.yml` for the column meanings.
 - `weekly_pdf`: `font_size` (6-10, default 8) and `title` (replaces the translated PDF title; keep
   site-specific wording here, not in code). Columns have a preferred and a minimum width in the registry:
-  spare page width goes to the flexible text columns (diagnosis/procedure, category, referral/ADL), a too
-  wide set shrinks towards the minimums, and only then does the font step down (8 -> 7.5 -> 7 -> 6.5)
+  spare page width is shared out by each column's `flex` weight (category 3, team 2, diagnosis/procedure 2,
+  referral/ADL 1.5, patient, reservation and status 1; others 0), not by width, so the columns that wrap
+  most grow most; a too wide set shrinks towards the minimums, and only then does the font step down (8 -> 7.5 -> 7 -> 6.5)
   before a final proportional squeeze (`LedgerColumnFitting`).
 - `exports`: named CSV exports for the clerk's admission list / registry (NCD) lists. Each entry is
   `<name>: {subject: surgery|hospitalization, fields: [...], label: optional}`; fields come from the export
