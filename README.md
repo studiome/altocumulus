@@ -25,10 +25,10 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Setup](#setup)
-- [Development commands](#development-commands)
+- [Configuration](#configuration)
+- [Development commands and testing](#development-commands-and-testing)
 - [Domain model](#domain-model)
 - [Design notes](#design-notes)
-- [Testing](#testing)
 - [Deployment](#deployment)
 - [Development rules](#development-rules)
 - [License](#license)
@@ -39,18 +39,19 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 
 | Feature | Screen | Description |
 | --- | --- | --- |
-| Login | `/login` | Login id (email or username, per `ACCOUNT_IDENTIFIER`) + password authentication. Sessions expire automatically after a period of inactivity. Published announcements are shown on this page, and it is displayed in Japanese for anonymous visitors |
-| Operations calendar (home) | `/operations_calendar` | Day-grouped ledger table spanning 50 days by default (start date and day count adjustable). Per day: surgeries by slot with the referral source, admission counts, congestion warnings, and holidays / per-day comments. The date heading and a small "+入約" link open the reservation form pre-filled with that day; each surgery row of a hospitalization has an edit link to the same form; two tabs, 手術 (surgeries) and 検査入院 (non-surgery admissions by scheduled procedure/admission date, columns from `ledger_columns.examination_calendar`), selected with `?view=`; emergency rows carry a red stripe and rows outside the regular slot time are hatched (legend above the table, kept in print); administrators edit a day's note/closure/slot override inline (`/day_notes/:date`); filters 自分が関与する症例のみ (`mine=1`) and, with `features.teams`, a team select (`team_id`) are kept across tabs and ranges |
+| Login | `/login` | Login id (email or username, per `ACCOUNT_IDENTIFIER`) + password authentication. Sessions expire automatically after a period of inactivity. Published announcements are shown on this page, and it is displayed in Japanese for anonymous visitors (a language switcher sits on the page) |
+| Operations calendar (home) | `/operations_calendar` | Day-grouped ledger table spanning 50 days by default (start date and day count adjustable). Per day: surgeries by slot with the referral source, admission counts, congestion warnings, special slot usage, and holidays / per-day comments. The date heading and a small "+入約" link open the reservation form pre-filled with that day; each surgery row of a hospitalization has an edit link to the same form; two tabs, 手術 (surgeries) and 検査入院 (non-surgery admissions by scheduled procedure/admission date, columns from `ledger_columns.examination_calendar`), selected with `?view=`; emergency rows carry a red stripe and rows outside the regular slot time are hatched (legend above the table, kept in print); administrators edit a day's note/closure/slot override inline (`/day_notes/:date`) and that day's special slot lanes through the day cell's "Edit special slots" link (`/day_special_slots/:date`); filters 自分が関与する症例のみ (`mine=1`) and, with `features.teams`, a team select (`team_id`) are kept across tabs and ranges |
 | Patient ledger | `/patients` | Patient master data, with keyword search by name or hospital ID and pagination |
 | Patient diagnoses | `/patients/:id/patient_diagnoses` | Per-patient diagnosis history referencing the diagnosis master, holding the diagnosis date and laterality |
-| Surgery records | `/surgeries` | Surgery date (may be "undecided"), procedures (up to 5), anesthesia method, duration, elective/emergency type, slot category (regular / joint / backup / off-slot), operator/assistant/operation order. Linked to patient diagnoses. Searchable by operator |
-| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / chemoradiotherapy / other, the last requiring a reason), referral source, administrator confirmation, soft delete/restore, and rebooking (copy) |
-| Reservation form (入約) | `/reservations/new`, `/reservations/:hospitalization_id/edit` | One screen that creates or edits a hospitalization and, for the purpose surgery, its surgery together (see below). The calendar's booking flow goes through it; the separate hospitalization and surgery forms remain for administration and detail edits |
-| Surgery slot schedule | `/surgery_schedule` | Weekly calendar showing the surgeries and used time per slot, warning about slot overruns, unassigned surgeries, and holidays. The same week can be printed as a landscape A4 PDF (`/surgery_schedule/pdf?start_date=YYYY-MM-DD`, any start date) in black and white, with operator/assistant, referral source, and a heading per day (date, closed-day name / note, slot count when overridden, slot usage in minutes, case count); emergency rows are shaded and rows outside the regular slot time lightly shaded (legend under the title) |
+| Surgery records | `/surgeries` | Surgery date (may be "undecided"), procedures (up to 5), anesthesia method, duration, elective/emergency type, slot category (regular / joint / backup / off-slot), operator/assistant/operation order, location / device / partner and performing department. Linked to patient diagnoses and, optionally, to the hospitalization it belongs to. Searchable by operator |
+| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / chemoradiotherapy / other, the last requiring a reason), emergency admission, transfer status, reservation doctor, referral source, administrator confirmation, soft delete/restore, and rebooking (copy) |
+| Reservation form (入約) | `/reservations/new`, `/reservations/:hospitalization_id/edit` | One screen that creates or edits a hospitalization and, for the purpose surgery, its surgery together (see [Reservation form](#reservation-form)). The calendar's booking flow goes through it; the separate hospitalization and surgery forms remain for administration and detail edits |
+| Surgery slot schedule | `/surgery_schedule` | Weekly calendar showing the surgeries and used time per slot, warning about slot overruns, unassigned surgeries, and holidays. The same week can be printed as a landscape A4 PDF (`/surgery_schedule/pdf?start_date=YYYY-MM-DD`, any start date) in black and white, with operator/assistant, referral source, and a heading per day (date, closed-day name / note, slot count when overridden, slot usage in minutes, case count, special slot usage); emergency rows are shaded and rows outside the regular slot time lightly shaded (legend under the title) |
+| Data download (admin / data manager only) | `/exports` | CSV exports defined in the site config, with a date range (and team) per export (see [CSV export](#csv-export)) |
 | Dashboard | `/dashboard` | Statistics filterable by year (patient counts, inpatients, monthly counts, average length of stay, procedure ranking) |
 | Cross-entity search | `/search` | Search patients, hospitalizations, and surgeries with a single keyword |
 | Audit log | `/audit_events` | Records and displays create/update/delete of patients, surgeries, hospitalizations, and case databases with the operator, IP address, and before/after values |
-| Master data | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` | Diagnosis names, procedures, per-weekday slot rules (fractional slot counts supported), holidays / per-day comments |
+| Master data | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` `/departments` `/surgery_locations` `/surgical_devices` `/teams` | Diagnosis names, procedures, per-weekday slot rules (fractional slot counts supported), holidays / per-day comments and slot overrides, departments, surgery locations and surgical devices (the latter two with weekly special slot lane counts), and teams with their terms and members (`/teams` only with `features.teams`) |
 | Case databases | `/case_databases` | Named patient registries with custom fields (text / number / select) defined by a data manager. Any signed-in user can add patients, enter values, and export the registry as CSV; only a data manager can create, edit, or delete a database, its fields, or a patient entry |
 | Account settings | `/account` | Change your own name, login id, and password, and switch the display language |
 | User management (admin only) | `/admin/users` | Create, edit, and deactivate users and reset passwords. The last active admin can be neither deactivated nor demoted |
@@ -66,21 +67,10 @@ them (and the "new" buttons) require the `admin` role; others are redirected wit
 notice. The one exception is data entry: any signed-in user may register a *new* diagnosis or surgery
 procedure from inside a picker modal (a turbo-frame request) while booking a hospitalization or surgery.
 
-**Reservation form.** `Reservation` (`app/models/reservation.rb`) is a form object around a
-`Hospitalization` and an optional `Surgery` (present only for the purpose "surgery"), saved in one
-transaction with the surgery linked to the hospitalization and the patient. Validation is the models' own
-plus the site's required fields (including the purpose-conditional ones); errors of both records are merged
-under `hospitalization.<attr>` / `surgery.<attr>` keys so each message shows next to its field, with a
-summary on top. Diagnosis rows (diagnosis + laterality) become the hospitalization's diagnoses and, for a
-surgery, links to the patient's diagnosis records (an existing one with the same diagnosis and laterality is
-reused, otherwise one is created, dated by the submission date); related diagnoses added on the surgery's
-own screen are left alone. Procedure rows (max 5) become the surgery's procedure selections. A surgery's
-team defaults from the hospitalization's. On edit, switching the purpose away from surgery is refused while
-the surgery exists (delete it from its own screen first). After saving, a dated surgery goes back to the
-operations calendar positioned and highlighted on its day; other purposes go to the hospitalization page.
-The screen has a patient confirmation card (chart ID, name, age/sex, last two hospitalizations), live
-admission counts / slot summary / team member previews, and a side panel with a month calendar of scheduled
-admissions (days above `ADMISSION_WARNING_THRESHOLD` are marked) and the published announcements.
+**Reservation form.** The calendar books through one form object (`Reservation`) that saves a
+hospitalization and, for the purpose "surgery", its surgery in a single transaction, with live
+previews of the patient, admission counts, slot usage and team members next to the form. Details are
+under [Reservation form](#reservation-form) in the design notes.
 
 **Authentication, user management, role separation (user / data manager / admin), access logging, and
 idle timeout are implemented.** Every application screen requires a logged-in user; the
@@ -131,26 +121,26 @@ login screen.
 
 In development, `bin/setup` also runs the seeds, so you can log in with the following
 demo account (see `db/seeds.rb`), which holds both the `admin` and `data_manager` roles. The sign-in
-screen is shown in Japanese for visitors who have not signed in; switch to English from the navigation
-after logging in.
+screen is shown in Japanese for visitors who have not signed in; switch the language on the sign-in
+page itself, or after logging in from the Account page (`/account`).
 
 | Login ID | Password |
 | --- | --- |
 | `admin@example.com` | `password` |
 
-In production, setting **both** of the environment variables below on first boot creates
-a bootstrap administrator account (named `Administrator`) when `db:seed` runs. If a user
-with the same login id already exists, nothing happens.
+The seeds contain only this account and the masters. To fill a development database with fictional
+patients, hospitalizations and surgeries for UI review, run `bin/rails dev:demo_data` (see
+[Development commands and testing](#development-commands-and-testing) and
+[Development demo data](#development-demo-data)).
 
-| Environment variable | Description |
-| --- | --- |
-| `BOOTSTRAP_ADMIN_LOGIN_ID` | Login id (email or username, depending on `ACCOUNT_IDENTIFIER`) of the first administrator |
-| `BOOTSTRAP_ADMIN_PASSWORD` | Password of the first administrator |
+For production, the first administrator and the other runtime settings are configured through
+environment variables and a site configuration file; see [Configuration](#configuration).
 
-`BOOTSTRAP_ADMIN_EMAIL` is kept as an older name for the same variable: it is still read as
-a fallback when `BOOTSTRAP_ADMIN_LOGIN_ID` is unset.
+## Configuration
 
-The following environment variables tune runtime behavior (`config/application.rb`).
+### Environment variables
+
+Runtime behavior is tuned with environment variables (`config/application.rb`, `db/seeds.rb`).
 
 | Environment variable | Description | Default |
 | --- | --- | --- |
@@ -158,8 +148,84 @@ The following environment variables tune runtime behavior (`config/application.r
 | `SESSION_IDLE_TIMEOUT_MINUTES` | Session idle timeout, in minutes | `10` |
 | `ADMISSION_WARNING_THRESHOLD` | Admissions per day above which the operations calendar flags congestion | `5` |
 | `APP_TITLE` | Application title used before an administrator sets one on `/admin/settings`. Useful for branding a fresh deploy without signing in first | `Altocumulus` |
+| `SITE_CONFIG_PATH` | Path of the site configuration YAML (see [Site configuration](#site-configuration)). In production, mount the file with a Kamal volume | `config/site.yml` |
+| `BOOTSTRAP_ADMIN_LOGIN_ID` | Login id (email or username, depending on `ACCOUNT_IDENTIFIER`) of the first administrator | *(unset)* |
+| `BOOTSTRAP_ADMIN_PASSWORD` | Password of the first administrator | *(unset)* |
 
-## Development commands
+Setting **both** `BOOTSTRAP_ADMIN_LOGIN_ID` and `BOOTSTRAP_ADMIN_PASSWORD` on first boot creates a
+bootstrap administrator account (named `Administrator`) when `db:seed` runs. If a user with the same
+login id already exists, nothing happens. `BOOTSTRAP_ADMIN_EMAIL` is kept as an older name for
+`BOOTSTRAP_ADMIN_LOGIN_ID`: it is still read as a fallback when that is unset. With Kamal these
+variables must be listed under `env:` in `config/deploy.yml` -- see
+[Before the first deploy](#before-the-first-deploy).
+
+### Site configuration
+
+Per-hospital customizations are not hardcoded; they live in a YAML file loaded once at boot by
+`SiteConfig` (`app/models/site_config.rb`). The file is the one at `SITE_CONFIG_PATH` if that
+environment variable is set (in production, mount it with a Kamal volume -- see the commented
+example in `config/deploy.yml`), otherwise the committed `config/site.yml`, a neutral default that
+keeps the stock behavior. `config/site.example.yml` shows every key filled in. A malformed file, an
+unknown key or an unknown field name stops the boot with a `SiteConfig::Error`. (Field names are not
+checked while migrations are pending, so `db:prepare` can boot and migrate first; the server's boot
+afterwards checks them.)
+
+Keys:
+
+- `features.teams` (default `false`): turns the care-team feature on (see [Teams](#teams-担当チーム)). While
+  `false`, the Teams screens, the team selects and the team displays are hidden and `team_id` may not
+  be listed under `required_fields` (the boot fails if it is).
+- `required_fields.hospitalization` / `required_fields.surgery`: attribute names that must be filled
+  in before saving. The red asterisk on the form follows the same list (`Model.required_attribute?`).
+- `required_fields.hospitalization_by_purpose`: the same, but only for hospitalizations of one purpose
+  (`surgery`, `examination`, `chemotherapy`, `chemoradiotherapy`, `other`), e.g.
+  `examination: [scheduled_procedure_date, procedure_name]`. The asterisk follows the purpose chosen
+  in the form (`Hospitalization.required_attribute?(attr, record)` or `(attr, purpose: ...)`).
+  The reservation doctor is the user reference `reservation_doctor_id` (not the old `reservation_doctor` string).
+- `patient.hospital_id_format` / `patient.hospital_id_format_hint`: a regular expression the patient's
+  hospital ID must match when it is set or changed, and a human-readable description for the error
+  message. Omit for no restriction.
+- `masters.departments` / `masters.surgery_locations` / `masters.surgical_devices`: lists of names
+  (for example a hospital's departments, its rooms such as a hybrid room or cath lab, and its
+  support devices) to make sure exist in the master tables. Nothing hospital-specific is hardcoded
+  in the app; the vocabulary lives in those admin-editable masters (Masters menu), and this key only
+  seeds them. Run `bin/rails site:seed_masters` after a deploy (it is also part of `db:seed`): it
+  only creates missing names, in the listed order after the existing rows, and never renames,
+  reorders or deletes anything. A deactivated master is no longer offered for new selections but
+  still shows on the surgeries that use it; a master in use cannot be deleted. A `surgery_locations`
+  entry may also be a mapping, `{name: ..., asks_performing_department: true}`, which flags a place whose
+  cases may be performed by another department (a hint for the surgery form; set only on newly created
+  rows, and editable on the Surgery Locations master screen). Special slot lane counts are not part of
+  this file; they are edited on the master screens.
+- `masters.teams`: team names (or `{name: ..., color: blue}`, color one of blue/red/green/orange/purple/
+  teal/gray), seeded the same additive way as the other masters. Terms and members are entered in
+  the app, not in this file.
+- `ledger_columns.operations_calendar` / `weekly_pdf` / `examination_calendar`: the columns each ledger
+  table shows, in order (the calendar's and PDF's day cell is always first and not listed). Columns come
+  from the ledger column registry (`LedgerColumn`, `app/models/ledger_column.rb` and
+  `app/models/ledger_columns/`): surgery ledgers use `time_slot`, `admission_dates`, `patient`, `age_sex`,
+  `diagnosis_procedure`, `operator_assistant`, `duration_anesthesia`, `team` (needs `features.teams`),
+  `category`, `reservation`, `referral_adl`, `status`; the examination ledger uses `admission_dates`,
+  `patient`, `age_sex`, `diagnosis_procedure_name`, `purpose`, `team`, `category`, `reservation`,
+  `referral_adl`, `status`. Omit a ledger for its built-in default. Unknown or duplicate columns, an empty
+  list, or `team` without `features.teams` stop the boot. See `config/site.yml` for the column meanings.
+- `weekly_pdf`: `font_size` (6-10, default 8) and `title` (replaces the translated PDF title; keep
+  site-specific wording here, not in code). Columns have a preferred and a minimum width in the registry:
+  spare page width is shared out by each column's `flex` weight (category 3, team 2, diagnosis/procedure 2,
+  referral/ADL 1.5, patient, reservation and status 1; others 0), not by width, so the columns that wrap
+  most grow most; a too wide set shrinks towards the minimums, and only then does the font step down (8 -> 7.5 -> 7 -> 6.5)
+  before a final proportional squeeze (`LedgerColumnFitting`).
+- `exports`: named CSV exports for the clerk's admission list / registry (NCD) lists. Each entry is
+  `<name>: {subject: surgery|hospitalization, fields: [...], label: optional}`; fields come from the export
+  field registry (`ExportField`, `app/models/export_field.rb` and `app/models/export_fields/`), which yields
+  one plain value per column (unlike the stacked ledger cells). Omit the key for the built-in `surgery_list`
+  and `admission_list` (every field of the subject); `exports: {}` switches exports off. Unknown
+  subjects/fields, duplicates, an empty list, a bad name or `team`/`team_members` without `features.teams`
+  stop the boot. See `config/site.yml` for every field and `config/site.example.yml` for an `ncd_list`.
+
+In tests, `with_site_config(hash) { ... }` swaps the config temporarily.
+
+## Development commands and testing
 
 ```bash
 bin/dev                                        # dev server + Tailwind watcher
@@ -178,6 +244,29 @@ bin/ci                                         # the same checks CI runs (config
 the seeds. GitHub Actions (`.github/workflows/ci.yml`) runs an equivalent job on pushes
 to `main` and on pull requests.
 
+Rake tasks (`lib/tasks/`):
+
+| Task | Purpose |
+| --- | --- |
+| `bin/rails site:seed_masters` | Creates the departments, surgery locations, surgical devices and teams listed under `masters` in the site config. Additive and idempotent: it never renames, reorders or deletes existing rows. Also run from `db/seeds.rb` |
+| `bin/rails dev:demo_data` | Development only. Fills the database with fictional, idempotently created demo data for UI review. `REFRESH=1` also rewrites the clinical content of the demo cases in place (see [Development demo data](#development-demo-data)) |
+| `bin/rails surgeries:move_special_off_slot_to_regular` | Moves elective off-slot surgeries that use a special slot resource (hybrid room, cath lab, robot...) to the regular slots, slot unassigned. A dry run that only lists the candidates by default; `APPLY=1` performs the move (`DRY_RUN=1` always wins). Idempotent |
+
+### Testing
+
+Development follows Red/Green TDD. Tests are Minitest + fixtures.
+
+```bash
+bin/rails test          # model, controller, and integration tests (no system tests)
+bin/rails test:system   # Capybara + Selenium
+```
+
+`test/` is split into `models` / `controllers` / `integration` / `system` / `helpers` / `views`
+(plus `scripts` for the backup script, see [Database backup](#database-backup)).
+The fixtures (`test/fixtures/`) deliberately encode cases such as "a day where two surgeries fit in
+one slot", "a day where one slot overruns", and "a surgery with no slot assigned", so check the
+comments before changing them.
+
 ## Domain model
 
 ```mermaid
@@ -185,6 +274,7 @@ erDiagram
     Patient          ||--o{ PatientDiagnosis        : "diagnosis history"
     Patient          ||--o{ Surgery                 : "surgeries"
     Patient          ||--o{ Hospitalization         : "hospitalizations"
+    Hospitalization  |o--o{ Surgery                 : "optional link"
     Diagnosis        ||--o{ PatientDiagnosis        : "reference"
     Diagnosis        ||--o{ HospitalizationDiagnosis: "reference"
     Hospitalization  ||--o{ HospitalizationDiagnosis: ""
@@ -192,6 +282,20 @@ erDiagram
     PatientDiagnosis ||--o{ SurgeryDiagnosisLink    : ""
     Surgery          ||--o{ SurgeryProcedureSelection : ""
     SurgeryProcedure ||--o{ SurgeryProcedureSelection : "reference"
+    Department       |o--o{ Surgery                 : "partner / performing"
+    Department       |o--o{ Hospitalization         : "source department"
+    SurgeryLocation  |o--o{ Surgery                 : "where"
+    SurgicalDevice   |o--o{ Surgery                 : "device"
+    SurgeryLocation  ||--o{ SpecialSlotRule         : "weekly lanes"
+    SurgicalDevice   ||--o{ SpecialSlotRule         : "weekly lanes"
+    SurgeryLocation  ||--o{ SpecialSlotDayOverride  : "per-date lanes"
+    SurgicalDevice   ||--o{ SpecialSlotDayOverride  : "per-date lanes"
+    Team             |o--o{ Hospitalization         : "optional"
+    Team             |o--o{ Surgery                 : "optional"
+    Team             ||--o{ TeamTerm                : "date ranges"
+    TeamTerm         ||--o{ TeamTermMember          : "members"
+    User             |o--o{ TeamTermMember          : "optional"
+    User             |o--o{ Hospitalization         : "reservation_doctor / created_by"
     User             ||--o{ AuditEvent              : "operator"
     User             ||--o{ UserRole                : "roles"
     CaseDatabase     ||--o{ CaseDatabaseField       : "custom fields"
@@ -214,18 +318,24 @@ erDiagram
         string anesthesia_method
         string scheduling_type "elective/emergency"
         string slot_category "regular/simultaneous/backup/off_slot"
+        string backup_intervention "involved/not_involved (backup only)"
         int    slot_number "slot it occupies / null when unassigned"
         int    operation_order "order within the day"
         string operator_name
         string assistant_name
+        boolean team_undecided
     }
     Hospitalization {
         date   scheduled_admission_date "planned date (reservation stage)"
         date   scheduled_surgery_date "planned surgery date"
+        date   scheduled_procedure_date "non-surgery admissions"
+        string procedure_name "non-surgery admissions"
         date   admission_date "actual date"
         date   discharge_date
         string reservation_status "requested/waiting/date_fixed/.../discharged"
         string purpose "surgery/examination/chemotherapy/chemoradiotherapy/other"
+        boolean emergency_admission
+        string transfer_status "none/transferred_in/operated_without_transfer"
         string referred_from "referral source"
         string admin_status "unconfirmed/confirmed"
         string outcome
@@ -233,9 +343,21 @@ erDiagram
         int    planned_days
         datetime deleted_at "soft delete"
         string patient_name_snapshot "patient snapshot at reservation time"
+        boolean team_undecided
     }
     SurgeryProcedureSelection {
         string laterality
+    }
+    SpecialSlotRule {
+        int day_of_week "0..6"
+        int slot_count "lanes"
+    }
+    SpecialSlotDayOverride {
+        date date
+        int  slot_count "0 = closed that day"
+    }
+    TeamTermMember {
+        string role "main/sub/member"
     }
     User {
         string login_id UK
@@ -250,16 +372,25 @@ erDiagram
     }
 ```
 
+The diagram omits most columns and the polymorphic details (`SpecialSlotRule` and
+`SpecialSlotDayOverride` point at a `SurgeryLocation` or a `SurgicalDevice` through
+`resource_type` / `resource_id`); `db/schema.rb` is the authority.
+
 In addition to the above there are `ElectiveSlotRule` (per-weekday slot count and minutes
-per slot; the count may be fractional), `Holiday` (holidays and per-day comments),
-`Announcement`, `AdminNote`, `AppSetting`, and `AccessLog` (login/logout/timeout/failed authentication).
+per slot; the count may be fractional), `Holiday` (holidays and per-day comments, optionally a
+day-level slot override), `Announcement`, `AdminNote`, `AppSetting`, and `AccessLog`
+(login/logout/timeout/failed authentication/export).
 `UserRole` holds one row per role a user has (`user` / `data_manager` / `admin`), so a user can hold
-several at once. `CaseDatabase` / `CaseDatabaseField` / `CaseDatabaseEntry` back the case databases;
+several at once. `Department`, `SurgeryLocation`, `SurgicalDevice` and `Team` are admin-editable
+master tables sharing the `MasterRecord` concern (unique name, `position` ordering, `active` flag).
+`CaseDatabase` / `CaseDatabaseField` / `CaseDatabaseEntry` back the case databases;
 an entry stores its values as a JSON hash keyed by field id.
 
 Key constraints:
 
-- `Diagnosis` / `SurgeryProcedure` use `restrict_with_error`: master records in use cannot be deleted.
+- `Diagnosis` / `SurgeryProcedure` and the other masters (`Department`, `SurgeryLocation`,
+  `SurgicalDevice`, `Team`) use `restrict_with_error`: master records in use cannot be deleted. An
+  inactive master stays selectable on the records that already use it.
 - A `Surgery` holds **1–5 procedures** with no duplicates. Linked patient diagnoses must belong
   to that surgery's patient. `surgery_date` may be "undecided", in which case it is stored as `null`.
 - A `Hospitalization` requires **at least one diagnosis**, with no duplicates. At the reservation
@@ -269,24 +400,32 @@ Key constraints:
 - Deleting a `Hospitalization` is a soft delete (`deleted_at`) and can be undone. An update by a
   regular user forcibly resets `admin_status` to `unconfirmed`; only an administrator can set it
   to `confirmed`.
-- `Surgery` and `Hospitalization` are not linked to each other. A hospitalization carries its own
-  `scheduled_surgery_date` (never earlier than `scheduled_admission_date`); the calendar and the
-  schedule PDF show a hospitalization's `referred_from` beside the patient's surgeries it covers.
-- A `Hospitalization` whose `purpose` is `other` requires a free-text `reason`.
+- A `Surgery` optionally belongs to the `Hospitalization` it is part of (`hospitalization_id`, which
+  must be the same patient's); the reservation form and the hospitalization create flow set it, and
+  `SurgeryHospitalizationBackfill` linked the surgeries that existed before the column. The referral
+  source shown beside a surgery comes from that link (`SurgeryReferralLookup`), falling back, for an
+  unlinked surgery, to the date rule: the patient's hospitalization whose stay covers the surgery date
+  (`HospitalizationCoverage`). A hospitalization also carries its own `scheduled_surgery_date` (never
+  earlier than `scheduled_admission_date`).
+- A `Hospitalization` whose `purpose` is `other` requires a free-text `reason`. Admissions that are not
+  for surgery may carry `scheduled_procedure_date` / `procedure_name`.
+- `Hospitalization#transfer_status` is `none`, `transferred_in` or `operated_without_transfer`; unless
+  it is `none` a `source_department` is required, otherwise it is cleared. `reservation_doctor` is a
+  `User` (the old free-text value survives as `reservation_doctor_legacy_name` and is shown only while
+  no user is chosen). `created_by` is set from `Current.user` on create only, never from params.
 - `Surgery#slot_category` is `regular`, `simultaneous`, `backup` or `off_slot`. Only regular surgeries
   consume elective slots and can be "unassigned"; the other categories are shown outside the slot limits.
-  `off_slot` means "uses no regular slot" (a ward procedure room, say). A hybrid room / cath lab
-  (`SurgeryLocation`) or surgical robot (`SurgicalDevice`) case is a regular case that additionally
-  takes one lane (列) of that resource: the masters carry weekly lane counts (`SpecialSlotRule`, Monday
-  to Sunday, blank = none; a resource with no positive count is only recorded). Per day,
-  `ElectiveSlotUsage#special_slots` counts elective cases per resource against the weekday's lanes
-  (0 on a closed holiday; emergencies never take a lane). A specific date can differ from the weekly
-  pattern: an admin uses "Edit special slots" on the calendar's day cell to set that day's lanes per
-  resource (blank = weekly count, 0 = none that day; works for a resource with no weekly count too and
-  shows "(changed)" on the calendar). It shows "Cath Lab 1/2 lanes" on the calendar
-  day cell, the schedule board and the weekly PDF heading, and warns when a resource is over.
-  `bin/rails surgeries:move_special_off_slot_to_regular` converts older off-slot entries (see the
-  task's header).
+  `off_slot` means "uses no regular slot" (a ward procedure room, say). A backup surgery requires
+  `backup_intervention` (`involved` / `not_involved`), cleared for other categories. The partner
+  `department` is kept only for simultaneous / backup surgeries, and an optional
+  `performing_department` records who performs it (cleared unless the location asks for it).
+- A hybrid room / cath lab (`SurgeryLocation`) or surgical robot (`SurgicalDevice`) case is a regular
+  case that additionally takes one lane of that resource, counted per day against weekly lane counts
+  (`SpecialSlotRule`) that a date-specific `SpecialSlotDayOverride` can replace; see
+  [Elective slot utilization](#elective-slot-utilization).
+- `Holiday` rows with `holiday: false` may carry `slot_count` / `slot_duration_minutes`, which replace the
+  weekday `ElectiveSlotRule` for that date (a closed day must not carry them; the duration is required
+  when the weekday has no rule).
 - `Surgery#slot_number` / `#operation_order` are integers of 1 or more (`null` when unassigned).
   Exceeding the slot count or a slot's time budget does not block saving; it surfaces as a warning
   on the schedule board and the operations calendar.
@@ -318,7 +457,7 @@ Main objects:
 
 | Element | Role |
 | --- | --- |
-| `ElectiveSlotUsage` | Slot usage for one day (a PORO). Provides `slots` / `unscheduled_surgeries` / `warnings` |
+| `ElectiveSlotUsage` | Slot usage for one day (a PORO). Provides `slots` / `unscheduled_surgeries` / `warnings` / `special_slots` |
 | `ElectiveSlotUsage::Slot` | A single slot. `surgeries` / `used_minutes` / `remaining_minutes` / `overrun?` / `overrun_minutes` |
 | `ElectiveSlotRule` | Per-weekday slot count (`slot_count`) and minutes per slot (`slot_duration_minutes`) |
 
@@ -330,6 +469,33 @@ slots, and the fraction means **only the last slot of the day is shorter**
 (see `ElectiveSlotRule#slot_durations` / `#total_slots`). When counting slots, always use
 `total_slots` (`slot_count.ceil`) rather than `slot_count` itself: a range such as
 `(1..slot_count)` silently drops the last short slot, because Ruby truncates a fractional endpoint.
+
+A `Holiday` that is not a closed day may carry its own `slot_count` / `slot_duration_minutes`, which
+replace the weekday rule for that date (`Holiday#effective_rule_for` returns an unsaved
+`ElectiveSlotRule`, so `ElectiveSlotUsage` needs no special case). `ElectiveSlotUsage#slot_override?`
+drives the "Slots: N (changed)" marker on the calendar day cell and the weekly PDF day heading.
+
+**Special slots (特殊枠).** A hybrid room / cath lab (`SurgeryLocation`) or surgical robot
+(`SurgicalDevice`) case is a *regular* case (slot number and time as usual) that also takes one lane
+(列) of that resource; `off_slot` stays "uses no regular slot". The masters carry weekly lane counts
+(`SpecialSlotRule`, Monday to Sunday, whole numbers, blank or 0 = none; a resource with no positive count
+is not special and is only recorded). Per day, `ElectiveSlotUsage#special_slots` counts elective cases
+per resource (`used`; emergencies never take a lane) against `capacity`: the weekday's lanes, replaced by
+that date's `SpecialSlotDayOverride` when there is one, and 0 on a closed holiday whatever an override
+says. A resource over capacity adds a warning. The calendar day cell, the schedule board and the weekly PDF
+heading print the summary (for example "Cath Lab 1/2 lanes").
+
+A specific date can differ from the weekly pattern. An override (blank row = weekly count, a number =
+that day's lanes, 0 = no lane that day) also works for a resource with no weekly count, which is then
+special on that date only. Administrators edit them from the calendar's surgery tab: the day cell's hover
+link "Edit special slots" opens `DaySpecialSlotsController` (`/day_special_slots/:date`, admin only) in a
+turbo frame above the day with one number input per active location / device, saves all-or-nothing with
+errors inline, and re-renders the day. The calendar marks an overridden resource with "(changed)"; the
+board and the PDF show the effective count (the PDF without the marker). Like holidays and day notes,
+overrides are not audited. The overrides are loaded for all dates at once, so there is no N+1.
+
+Older data entered as `off_slot` is converted by `bin/rails surgeries:move_special_off_slot_to_regular`
+(`SpecialOffSlotMove`; see [Development commands and testing](#development-commands-and-testing)).
 
 ### Authentication, authorization, and sessions
 
@@ -362,6 +528,13 @@ and planned dates apart.
   admitted_other_dept/on_hold/discharged) tracks the reservation's progress, and `purpose`
   (surgery/examination/chemotherapy/chemoradiotherapy/other) the reason for admission. `referred_from` records where
   the patient was referred from, and `scheduled_surgery_date` the planned surgery day.
+- `emergency_admission` flags an emergency admission. `transfer_status` (none / transferred_in /
+  operated_without_transfer) records a transfer, with the `source_department` required unless it is
+  `none`. `reservation_doctor` is a user (the older free-text name is only displayed while no user is
+  chosen), and `created_by` is stamped from `Current.user` when the record is created. Admissions that are
+  not for surgery carry `scheduled_procedure_date` and `procedure_name` instead of a surgery.
+- A surgery optionally belongs to its hospitalization through `Surgery#hospitalization_id` (same
+  patient); the referral source shown for it follows that link (see [Domain model](#domain-model)).
 - `admin_status` (unconfirmed/confirmed) is **forced back to unconfirmed on every update by a
   regular user**; only an administrator can set it to confirmed via the `confirm` action
   (`before_update :reset_admin_status_for_non_admin_update`). Saves without a `Current.user`
@@ -375,6 +548,24 @@ and planned dates apart.
 - The patient's name, age, and sex at the time of reservation are kept as a **snapshot**
   (`patient_name_snapshot` and friends), so later changes to the patient do not alter the record
   as it stood then.
+
+### Reservation form
+
+`Reservation` (`app/models/reservation.rb`) is a form object around a
+`Hospitalization` and an optional `Surgery` (present only for the purpose "surgery"), saved in one
+transaction with the surgery linked to the hospitalization and the patient. Validation is the models' own
+plus the site's required fields (including the purpose-conditional ones); errors of both records are merged
+under `hospitalization.<attr>` / `surgery.<attr>` keys so each message shows next to its field, with a
+summary on top. Diagnosis rows (diagnosis + laterality) become the hospitalization's diagnoses and, for a
+surgery, links to the patient's diagnosis records (an existing one with the same diagnosis and laterality is
+reused, otherwise one is created, dated by the submission date); related diagnoses added on the surgery's
+own screen are left alone. Procedure rows (max 5) become the surgery's procedure selections. A surgery's
+team defaults from the hospitalization's. On edit, switching the purpose away from surgery is refused while
+the surgery exists (delete it from its own screen first). After saving, a dated surgery goes back to the
+operations calendar positioned and highlighted on its day; other purposes go to the hospitalization page.
+The screen has a patient confirmation card (chart ID, name, age/sex, last two hospitalizations), live
+admission counts / slot summary / team member previews, and a side panel with a month calendar of scheduled
+admissions (days above `ADMISSION_WARNING_THRESHOLD` are marked) and the published announcements.
 
 ### Nested multi-row forms (diagnosis / procedure pickers)
 
@@ -422,76 +613,11 @@ an administrator edits on `/admin/settings`. When nothing has been saved there, 
 `APP_TITLE` environment variable read at boot, and then to the built-in name -- so a fresh deploy can
 be branded with an environment variable alone.
 
-### Site configuration
-
-Per-hospital customizations are not hardcoded; they live in a YAML file loaded once at boot by
-`SiteConfig` (`app/models/site_config.rb`). The file is the one at `SITE_CONFIG_PATH` if that
-environment variable is set (in production, mount it with a Kamal volume -- see the commented
-example in `config/deploy.yml`), otherwise the committed `config/site.yml`, a neutral default that
-keeps the stock behavior. `config/site.example.yml` shows every key filled in. A malformed file, an
-unknown key or an unknown field name stops the boot with a `SiteConfig::Error`. (Field names are not
-checked while migrations are pending, so `db:prepare` can boot and migrate first; the server's boot
-afterwards checks them.)
-
-Keys:
-
-- `features.teams` (default `false`): turns the care-team feature on (see "Teams" below). While
-  `false`, the Teams screens, the team selects and the team displays are hidden and `team_id` may not
-  be listed under `required_fields` (the boot fails if it is).
-- `required_fields.hospitalization` / `required_fields.surgery`: attribute names that must be filled
-  in before saving. The red asterisk on the form follows the same list (`Model.required_attribute?`).
-- `required_fields.hospitalization_by_purpose`: the same, but only for hospitalizations of one purpose
-  (`surgery`, `examination`, `chemotherapy`, `chemoradiotherapy`, `other`), e.g.
-  `examination: [scheduled_procedure_date, procedure_name]`. The asterisk follows the purpose chosen
-  in the form (`Hospitalization.required_attribute?(attr, record)` or `(attr, purpose: ...)`).
-  The reservation doctor is the user reference `reservation_doctor_id` (not the old `reservation_doctor` string).
-- `patient.hospital_id_format` / `patient.hospital_id_format_hint`: a regular expression the patient's
-  hospital ID must match when it is set or changed, and a human-readable description for the error
-  message. Omit for no restriction.
-- `masters.departments` / `masters.surgery_locations` / `masters.surgical_devices`: lists of names
-  (for example a hospital's departments, its rooms such as a hybrid room or cath lab, and its
-  support devices) to make sure exist in the master tables. Nothing hospital-specific is hardcoded
-  in the app; the vocabulary lives in those admin-editable masters (Masters menu), and this key only
-  seeds them. Run `bin/rails site:seed_masters` after a deploy (it is also part of `db:seed`): it
-  only creates missing names, in the listed order after the existing rows, and never renames,
-  reorders or deletes anything. A deactivated master is no longer offered for new selections but
-  still shows on the surgeries that use it; a master in use cannot be deleted. A `surgery_locations`
-  entry may also be a mapping, `{name: ..., asks_performing_department: true}`, which flags a place whose
-  cases may be performed by another department (a hint for the surgery form; set only on newly created
-  rows, and editable on the Surgery Locations master screen).
-- `masters.teams`: team names (or `{name: ..., color: blue}`, color one of blue/red/green/orange/purple/
-  teal/gray), seeded the same additive way as the other masters. Terms and members are entered in
-  the app, not in this file.
-- `ledger_columns.operations_calendar` / `weekly_pdf` / `examination_calendar`: the columns each ledger
-  table shows, in order (the calendar's and PDF's day cell is always first and not listed). Columns come
-  from the ledger column registry (`LedgerColumn`, `app/models/ledger_column.rb` and
-  `app/models/ledger_columns/`): surgery ledgers use `time_slot`, `admission_dates`, `patient`, `age_sex`,
-  `diagnosis_procedure`, `operator_assistant`, `duration_anesthesia`, `team` (needs `features.teams`),
-  `category`, `reservation`, `referral_adl`, `status`; the examination ledger uses `admission_dates`,
-  `patient`, `age_sex`, `diagnosis_procedure_name`, `purpose`, `team`, `category`, `reservation`,
-  `referral_adl`, `status`. Omit a ledger for its built-in default. Unknown or duplicate columns, an empty
-  list, or `team` without `features.teams` stop the boot. See `config/site.yml` for the column meanings.
-- `weekly_pdf`: `font_size` (6-10, default 8) and `title` (replaces the translated PDF title; keep
-  site-specific wording here, not in code). Columns have a preferred and a minimum width in the registry:
-  spare page width is shared out by each column's `flex` weight (category 3, team 2, diagnosis/procedure 2,
-  referral/ADL 1.5, patient, reservation and status 1; others 0), not by width, so the columns that wrap
-  most grow most; a too wide set shrinks towards the minimums, and only then does the font step down (8 -> 7.5 -> 7 -> 6.5)
-  before a final proportional squeeze (`LedgerColumnFitting`).
-- `exports`: named CSV exports for the clerk's admission list / registry (NCD) lists. Each entry is
-  `<name>: {subject: surgery|hospitalization, fields: [...], label: optional}`; fields come from the export
-  field registry (`ExportField`, `app/models/export_field.rb` and `app/models/export_fields/`), which yields
-  one plain value per column (unlike the stacked ledger cells). Omit the key for the built-in `surgery_list`
-  and `admission_list` (every field of the subject); `exports: {}` switches exports off. Unknown
-  subjects/fields, duplicates, an empty list, a bad name or `team`/`team_members` without `features.teams`
-  stop the boot. See `config/site.yml` for every field and `config/site.example.yml` for an `ncd_list`.
-
-In tests, `with_site_config(hash) { ... }` swaps the config temporarily.
-
 ### CSV export
 
 Admins and data managers (nobody else; enforced in `ExportsController`, the nav entry hidden otherwise) get a
 "データダウンロード / Data download" tab (`/exports`) listing every configured export (the entry is hidden
-while `exports` is empty). Each card has a from / to date range (default: the current month, at most one year)
+while `exports` is empty). Each card has a from / to date range (default: the current month, at most 366 days)
 and, with `features.teams`, a team filter (including "Undecided"); hospitalization exports choose between
 all admissions (by admission date) and examination admissions (by scheduled procedure date). Download is
 `GET /exports/:key?view=...&from=...&to=...` (`ExportSource`; a bad range goes back to the page with an alert).
@@ -550,7 +676,7 @@ If recording an audit event fails, the whole save is rolled back, so nothing goe
 
 ### Switching between Japanese and English
 
-The language can be switched between Japanese and English at any time from the navigation. New
+The language can be switched between Japanese and English at any time, from the Account page (`/account`) once signed in and from the sign-in page before that (the shared `shared/_locale_switcher` partial, posting to `PATCH /locale`). New
 users default to Japanese (`users.locale`), as does the sign-in screen for anonymous visitors;
 `I18n.default_locale` stays English only as the translation fallback. While logged in, the choice is persisted to `users.locale` and carried
 over to later logins; when logged out it is kept temporarily in the cookie session
@@ -562,20 +688,6 @@ always stay as English keys. Only the display labels are translated** — each m
 `*_form_options` methods look the labels up through `I18n.t` on the spot. As a result, switching
 languages later never changes the meaning of stored data, and the list of keys is maintained
 entirely in `config/locales/*.yml`.
-
-## Testing
-
-Development follows Red/Green TDD. Tests are Minitest + fixtures.
-
-```bash
-bin/rails test          # model, controller, and integration tests (no system tests)
-bin/rails test:system   # Capybara + Selenium
-```
-
-`test/` is split into `models` / `controllers` / `integration` / `system` / `helpers` / `views`.
-The fixtures (`test/fixtures/`) deliberately encode cases such as "a day where two surgeries fit in
-one slot", "a day where one slot overruns", and "a surgery with no slot assigned", so check the
-comments before changing them.
 
 ## Deployment
 
@@ -591,8 +703,12 @@ The health check is exposed at `/up` (`rails/health#show`).
 
 If `BOOTSTRAP_ADMIN_LOGIN_ID` (or the older `BOOTSTRAP_ADMIN_EMAIL`) / `BOOTSTRAP_ADMIN_PASSWORD` are set, the first administrator account is
 created automatically on the first deploy, through the `db:prepare` (plus `db:seed` when the
-database is created fresh) run by `bin/docker-entrypoint` at container start. See [Setup](#setup)
+database is created fresh) run by `bin/docker-entrypoint` at container start. See [Configuration](#environment-variables)
 for details.
+
+The site configuration file (`SITE_CONFIG_PATH`, see [Site configuration](#site-configuration)) is
+mounted into the container with a Kamal volume; `config/deploy.yml` has a commented example. After a
+deploy that changes the `masters` key, run `bin/rails site:seed_masters`.
 
 This configuration assumes a single web server: `SOLID_QUEUE_IN_PUMA` runs the Solid Queue
 supervisor inside the same Puma process, and `config/deploy.yml` bind-mounts SQLite's storage
@@ -651,7 +767,7 @@ Add the secret to `.kamal/secrets` too (never the raw value):
 BOOTSTRAP_ADMIN_PASSWORD=$BOOTSTRAP_ADMIN_PASSWORD
 ```
 
-As the [Setup](#setup) table notes, decide `ACCOUNT_IDENTIFIER` now and don't change it later.
+As the [Configuration](#environment-variables) table notes, decide `ACCOUNT_IDENTIFIER` now and don't change it later.
 
 **Prepare the server.** Create the bind-mounted storage directory, owned by the container's
 `rails` user:
@@ -840,12 +956,17 @@ Only `storage/production.sqlite3` is backed up. The cache/queue/cable databases 
 `config/deploy.yml` bind-mounts the storage directory to a host path (`/srv/altocumulus/storage`)
 rather than a named Docker volume, so the backup script can run directly on the host.
 
-Install it on the server and run it from cron:
+The backups live on the host (`/srv/backup/altocumulus` by default), outside any container, so
+recreating containers or images never touches them. They do not protect against a failing disk,
+though; see the `rsync` advice below.
+
+Install it on the server and run it from cron. The example keeps the newest 7 artifacts (about one
+week of daily backups):
 
 ```bash
 sudo install -m 755 bin/backup-db /usr/local/bin/altocumulus-backup
 # crontab -e
-0 2 * * * BACKUP_GPG_RECIPIENT=backup@example.org /usr/local/bin/altocumulus-backup >> /var/log/altocumulus-backup.log 2>&1
+0 2 * * * BACKUP_KEEP=7 BACKUP_GPG_RECIPIENT=backup@example.org /usr/local/bin/altocumulus-backup >> /var/log/altocumulus-backup.log 2>&1
 ```
 
 Environment variables:
@@ -858,11 +979,15 @@ Environment variables:
 | `BACKUP_GPG_RECIPIENT` | *(unset)* | GPG recipient (key ID/email) to encrypt the backup for; encryption is skipped when unset |
 
 Since this data is patient data, always set `BACKUP_GPG_RECIPIENT` so backups are encrypted at
-rest, and `rsync` the encrypted artifacts to a separate machine or NAS — not just the same server's
-disk.
+rest, and `rsync` the encrypted artifacts to a separate machine or NAS — a second disk or NAS is still
+needed against disk failure, not just the same server's disk.
 
 `.kamal/hooks/pre-deploy` runs the backup on every server before each deploy automatically. Set
-`SKIP_PRE_DEPLOY_BACKUP=1` to skip it for a given deploy.
+`SKIP_PRE_DEPLOY_BACKUP=1` to skip it for a given deploy. Pre-deploy backups are written to the same
+directory and count toward `BACKUP_KEEP` (retention is by count, not by age), so a week with many
+deploys covers fewer days. Raise `BACKUP_KEEP` (for example to 10-14) if that matters.
+
+The backup script is covered by `test/scripts/backup_db_test.rb`, which `bin/rails test` runs.
 
 To restore:
 
