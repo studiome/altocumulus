@@ -35,12 +35,10 @@ class SearchesI18nTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a", text: "クリア"
-    assert_select "h2", text: "患者"
-    assert_select "h2", text: "入院"
-    assert_select "h2", text: "手術"
-    assert_select "a", text: "患者の一覧をすべて見る"
+    assert_select "a[role=tab]", text: /\A入院 \(\d+\)\z/
+    assert_select "a[role=tab]", text: /\A手術 \(\d+\)\z/
+    assert_select "a[role=tab]", text: "患者 (1)"
     assert_select "a", text: "入院の一覧をすべて見る"
-    assert_select "a", text: "手術の一覧をすべて見る"
     assert_match "John Doe", response.body
     assert_match "2026年03月01日", response.body
 
@@ -48,29 +46,27 @@ class SearchesI18nTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a", text: "Clear"
-    assert_select "h2", text: "Patients"
-    assert_select "h2", text: "Hospitalizations"
-    assert_select "h2", text: "Surgeries"
-    assert_select "a", text: "See all in Patients"
+    assert_select "a[role=tab]", text: /\AHospitalizations \(\d+\)\z/
+    assert_select "a[role=tab]", text: /\ASurgeries \(\d+\)\z/
+    assert_select "a[role=tab]", text: "Patients (1)"
     assert_select "a", text: "See all in Hospitalizations"
-    assert_select "a", text: "See all in Surgeries"
     assert_match "John Doe", response.body
     assert_match "2026-03-01", response.body
   end
 
-  test "index with no matches renders the empty-state copy in every section in both locales" do
-    get_as users(:japanese_member), search_url, { keyword: "zzzznotfound" }
+  test "index with no matches renders the empty-state copy in every tab in both locales" do
+    { japanese_member: [ "一致する入院がありません。", "一致する手術がありません。", "一致する患者がいません。", "入院 (0)" ],
+      member: [ "No matching hospitalizations.", "No matching surgeries.", "No matching patients.", "Hospitalizations (0)" ] }.each do |user, (hospitalizations, surgeries, patients, first_tab)|
+      get_as users(user), search_url, { keyword: "zzzznotfound" }
+      assert_response :success
+      assert_select "a[role=tab][aria-selected=true]", text: first_tab
+      assert_match hospitalizations, response.body
 
-    assert_response :success
-    assert_match "一致する患者がいません。", response.body
-    assert_match "一致する入院がありません。", response.body
-    assert_match "一致する手術がありません。", response.body
+      get_as users(user), search_url, { keyword: "zzzznotfound", tab: "surgeries" }
+      assert_match surgeries, response.body
 
-    get_as users(:member), search_url, { keyword: "zzzznotfound" }
-
-    assert_response :success
-    assert_match "No matching patients.", response.body
-    assert_match "No matching hospitalizations.", response.body
-    assert_match "No matching surgeries.", response.body
+      get_as users(user), search_url, { keyword: "zzzznotfound", tab: "patients" }
+      assert_match patients, response.body
+    end
   end
 end

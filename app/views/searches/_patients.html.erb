@@ -1,0 +1,28 @@
+<table class="app-ledger">
+  <thead>
+    <tr>
+      <th><%= t("patients.labels.hospital_id") %></th>
+      <th><%= Patient.human_attribute_name(:name) %></th>
+      <th><%= t("patients.labels.date_of_birth") %></th>
+      <th class="text-center"><%= t("common.actions") %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if results.any? %>
+      <% results.each do |patient| %>
+        <tr class="row-hover">
+          <td class="font-mono"><%= patient.hospital_id %></td>
+          <td><%= link_to patient.name, patient, class: "app-inline-link font-semibold" %></td>
+          <td class="whitespace-nowrap"><%= l(patient.date_of_birth, format: :default) if patient.date_of_birth %></td>
+          <td class="ledger-actions">
+            <%= link_to t("common.view"), patient, class: "app-inline-link" %>
+          </td>
+        </tr>
+      <% end %>
+    <% else %>
+      <tr>
+        <td colspan="4" class="text-center py-10 text-base-content/50 italic"><%= t("searches.index.no_matching_patients") %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

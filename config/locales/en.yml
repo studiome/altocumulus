@@ -1636,6 +1636,14 @@ en:
       no_reason: "(no reason)"
       undated: "Undated"
       unknown_patient_name: "Patient #%{id}"
+      tabs_label: "Search results by kind"
+      tab_label: "%{label} (%{count})"
+      showing_limited: "Showing the first %{shown} of %{count}."
+      patient_name_header: "Patient name"
+      diagnosis_header: "Diagnosis"
+      status_header: "Status"
+      type_header: "Type"
+      scheduled_suffix: "(scheduled)"
 
   case_databases:
     index:

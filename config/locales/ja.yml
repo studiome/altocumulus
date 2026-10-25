@@ -1547,6 +1547,14 @@ ja:
       no_reason: "(理由未登録)"
       undated: "未定"
       unknown_patient_name: "患者 #%{id}"
+      tabs_label: "検索結果の種類"
+      tab_label: "%{label} (%{count})"
+      showing_limited: "%{count}件中、先頭の%{shown}件を表示しています。"
+      patient_name_header: "患者氏名"
+      diagnosis_header: "診断名"
+      status_header: "ステータス"
+      type_header: "区分"
+      scheduled_suffix: "(予定)"
 
   case_databases:
     index:

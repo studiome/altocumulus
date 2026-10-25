@@ -1,0 +1,53 @@
+<table class="app-ledger">
+  <thead>
+    <tr>
+      <th><span class="block"><%= t("hospitalizations.labels.admission_date_header") %></span><span class="block"><%= t("hospitalizations.labels.discharge_date") %></span></th>
+      <th><span class="block"><%= t("hospitalizations.labels.patient_id") %></span><span class="block"><%= t("searches.index.patient_name_header") %></span></th>
+      <th><span class="block"><%= t("hospitalizations.labels.diagnoses_header") %></span><span class="block"><%= Hospitalization.human_attribute_name(:reason) %></span></th>
+      <th><%= Hospitalization.human_attribute_name(:purpose) %></th>
+      <th><%= t("searches.index.status_header") %></th>
+      <th class="text-center"><%= t("common.actions") %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if results.any? %>
+      <% results.each do |hospitalization| %>
+        <tr class="row-hover <%= "ledger-row-active" if hospitalization.in_hospital? %>">
+          <td class="whitespace-nowrap font-mono">
+            <span class="ledger-primary">
+              <% if hospitalization.admission_date.present? %>
+                <%= date_with_weekday(hospitalization.admission_date, holidays: holidays) %>
+              <% elsif hospitalization.scheduled_admission_date.present? %>
+                <%= date_with_weekday(hospitalization.scheduled_admission_date, holidays: holidays) %> <span class="text-base-content/50 italic font-sans"><%= t("searches.index.scheduled_suffix") %></span>
+              <% else %>
+                <%= t("searches.index.undated") %>
+              <% end %>
+            </span>
+            <span class="ledger-secondary"><%= hospitalization.discharge_date ? date_with_weekday(hospitalization.discharge_date, holidays: holidays) : "-" %></span>
+          </td>
+          <td class="ledger-patient">
+            <span class="ledger-secondary font-mono"><%= hospitalization.patient&.hospital_id %></span>
+            <% if hospitalization.patient %>
+              <%= link_to hospitalization.patient.name.presence || t("searches.index.unknown_patient_name", id: hospitalization.patient_id), hospitalization.patient, class: "ledger-primary app-inline-link" %>
+            <% end %>
+          </td>
+          <td>
+            <span class="ledger-primary"><%= hospitalization.diagnosis_names_display %></span>
+            <span class="ledger-secondary"><%= hospitalization.reason.presence || t("searches.index.no_reason") %></span>
+          </td>
+          <td><%= Hospitalization.purpose_options[hospitalization.purpose] %></td>
+          <td>
+            <span class="badge badge-sm <%= hospitalization.in_hospital? ? "badge-warning" : "badge-ghost" %>"><%= hospitalization.status_label %></span>
+          </td>
+          <td class="ledger-actions">
+            <%= link_to t("common.view"), hospitalization, class: "app-inline-link" %>
+          </td>
+        </tr>
+      <% end %>
+    <% else %>
+      <tr>
+        <td colspan="6" class="text-center py-10 text-base-content/50 italic"><%= t("searches.index.no_matching_hospitalizations") %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

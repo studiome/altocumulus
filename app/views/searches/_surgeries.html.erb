@@ -1,0 +1,63 @@
+<table class="app-ledger">
+  <thead>
+    <tr>
+      <th><span class="block"><%= t("surgeries.labels.surgery_date") %></span><span class="block"><%= t("surgeries.labels.start_time") %></span></th>
+      <th><span class="block"><%= t("hospitalizations.labels.patient_id") %></span><span class="block"><%= t("searches.index.patient_name_header") %></span></th>
+      <th><span class="block"><%= t("searches.index.diagnosis_header") %></span><span class="block"><%= t("surgeries.labels.procedures") %></span></th>
+      <th><span class="block"><%= t("surgeries.labels.operator") %></span><span class="block"><%= t("surgeries.labels.assistant") %></span></th>
+      <th><%= t("searches.index.type_header") %></th>
+      <th class="text-center"><%= t("common.actions") %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if results.any? %>
+      <% results.each do |surgery| %>
+        <tr class="row-hover <%= "ledger-row-urgent" if surgery.emergency? %>">
+          <td class="whitespace-nowrap">
+            <span class="ledger-primary font-mono">
+              <% if surgery.surgery_date %>
+                <%= date_with_weekday(surgery.surgery_date, holidays: holidays) %>
+              <% else %>
+                <span class="badge badge-ghost badge-sm"><%= t("models.surgery.surgery_date_display_undated") %></span>
+              <% end %>
+            </span>
+            <span class="ledger-secondary font-mono"><%= surgery.start_time_display %></span>
+          </td>
+          <td class="ledger-patient">
+            <span class="ledger-secondary font-mono"><%= surgery.patient&.hospital_id %></span>
+            <% if surgery.patient %>
+              <%= link_to surgery.patient.name.presence || t("searches.index.unknown_patient_name", id: surgery.patient_id), surgery.patient, class: "ledger-primary app-inline-link" %>
+            <% end %>
+          </td>
+          <td>
+            <span class="ledger-secondary"><%= surgery.diagnosis_names_display %></span>
+            <span class="ledger-primary leading-snug"><%= surgery.display_procedure_name %></span>
+          </td>
+          <td class="ledger-operator">
+            <span class="ledger-primary"><%= surgery.operator_name.presence || t("common.none") %></span>
+            <% if surgery.assistant_name.present? %>
+              <span class="ledger-secondary"><%= surgery.assistant_name %></span>
+            <% end %>
+          </td>
+          <td>
+            <div class="flex flex-col gap-1 items-start">
+              <span class="badge badge-sm <%= surgery.emergency? ? "badge-error" : "badge-ghost" %>"><%= surgery.scheduling_type_label %></span>
+              <% unless surgery.regular_slot? %>
+                <span class="badge <%= surgery.slot_category_badge_class %> badge-xs whitespace-nowrap">
+                  <%= surgery.slot_category_label %><% if surgery.slot_category_detail.present? %>: <%= surgery.slot_category_detail %><% end %>
+                </span>
+              <% end %>
+            </div>
+          </td>
+          <td class="ledger-actions">
+            <%= link_to t("common.view"), surgery, class: "app-inline-link" %>
+          </td>
+        </tr>
+      <% end %>
+    <% else %>
+      <tr>
+        <td colspan="6" class="text-center py-10 text-base-content/50 italic"><%= t("searches.index.no_matching_surgeries") %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
