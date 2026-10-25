@@ -66,7 +66,7 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
       click_on "Save"
     end
 
-    within("tbody#day-#{DAY.iso8601}") { assert_text "Cath Lab 0/3 lanes (changed)" }
+    within("tbody#day-#{DAY.iso8601}") { assert_text "Cath Lab 0/3 lanes (0/540 min) (changed)" }
     assert page.evaluate_script("window.__stays"), "the page was reloaded"
     assert_equal 3, SpecialSlotDayOverride.find_by!(resource: surgery_locations(:cath_lab), date: DAY).slot_count
   end
