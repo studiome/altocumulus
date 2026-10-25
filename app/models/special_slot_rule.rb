@@ -1,7 +1,8 @@
 # How many lanes (列) of a special slot resource -- a SurgeryLocation or a
-# SurgicalDevice, see SpecialSlotResource -- are open on a weekday. Counted in
-# cases only: a case occupies one lane of each special resource it names, on
-# top of its regular slot. Zero (or no row) means no lane that weekday.
+# SurgicalDevice, see SpecialSlotResource -- are open on a weekday. A lane is
+# one regular slot's length of time that cases share while they fit (see
+# ElectiveSlotUsage::SpecialSlot), used on top of their regular slot. Zero (or
+# no row) means no lane that weekday.
 class SpecialSlotRule < ApplicationRecord
   RESOURCE_TYPES = %w[SurgeryLocation SurgicalDevice].freeze
 

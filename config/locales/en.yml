@@ -429,6 +429,7 @@ en:
       to_s: "%{day} - %{count} slots x %{minutes} min"
     elective_slot_usage:
       special_slot: "%{name} %{used}/%{capacity} lanes"
+      special_slot_with_minutes: "%{name} %{used}/%{capacity} lanes (%{used_minutes}/%{capacity_minutes} min)"
       warnings:
         holiday: "%{holiday_name} is a holiday: no elective slots are available."
         not_configured: "No elective slots are configured for %{day}."
@@ -439,7 +440,7 @@ en:
           single: "Slot %{number} is booked %{overrun} min past its %{limit} min limit."
           same_limit: "Slots %{numbers} are booked past their %{limit} min limit."
           item: "Slot %{number} is booked past its %{limit} min limit."
-        special_over: "%{name} is used by %{used} cases but has %{capacity} lanes."
+        special_over: "%{name} needs %{used} lanes for %{minutes} min of cases but has %{capacity} lanes."
     user:
       role_options:
         user: "User"
@@ -679,7 +680,7 @@ en:
       position_helper: "Smaller numbers are listed first. Leave blank to add it at the end."
       color_helper: "Used for the badge that shows the team on cases."
       special_slot_counts_label: "Special slots (lanes per weekday)"
-      special_slot_counts_helper: "How many cases may use this place or device on each weekday, in addition to their regular slot (a hybrid room, cath lab or surgical robot, say). Leave blank or 0 for no lane that day; with every day blank it is not a special slot and is only recorded on cases. A case using it sits in a regular slot and takes one lane here."
+      special_slot_counts_helper: "How many lanes this place or device has on each weekday, in addition to the regular slots (a hybrid room, cath lab or surgical robot, say). A lane lasts one regular slot, and cases share it while their durations fit. Leave blank or 0 for no lane that day; with every day blank it is not a special slot and is only recorded on cases. A case using it sits in a regular slot and uses these lanes for its duration."
       asks_performing_department_label: "Ask for the performing department"
       asks_performing_department_helper: "A hint for the surgery form: cases at this place may be performed by another department, so offer the performing-department control for them."
       active_label: "Active"

@@ -9,9 +9,12 @@
 #
 # Besides the regular slots, a day can have special slots (特殊枠): lanes of a
 # hybrid room / cath lab or a surgical robot (SpecialSlotRule). A case using
-# one still sits in a regular slot and also takes one lane of each special
-# resource it names. Lanes count elective cases only (no minutes), like the
-# regular slots, so emergencies never take one; a closed holiday has none. A
+# one still sits in a regular slot and also uses each special resource it
+# names. A lane is a block of time as long as one of the day's regular slots
+# (the slot rule's duration, a day override's included), so cases share a lane
+# while their minutes fit (see SpecialSlot.lanes_needed); a day without a slot
+# length falls back to one lane per case. Only elective cases use lanes, like
+# the regular slots, so emergencies never take one; a closed holiday has none. A
 # date can override a resource's weekly lanes (SpecialSlotDayOverride, set from
 # the calendar by an admin); the override wins, also for a resource without a
 # weekly rule, but a closed holiday stays at 0 like the regular slots do.
@@ -48,10 +51,38 @@ class ElectiveSlotUsage
     end
   end
 
-  # One special slot resource on the day: the lanes it has and the cases
-  # using it.
-  # `overridden` is true when the lanes come from a date override.
-  SpecialSlot = Struct.new(:resource, :capacity, :used, :overridden) do
+  # One special slot resource on the day: the lanes it has (`capacity`), the
+  # elective cases using it and the lanes they need (`used`).
+  # `lane_minutes` is the length of one lane (nil when the day has no slot
+  # length); `overridden` is true when the lanes come from a date override.
+  SpecialSlot = Struct.new(:resource, :capacity, :surgeries, :lane_minutes, :overridden) do
+    # The lanes the given case minutes need when no case is split across
+    # lanes: first-fit, longest first. A case longer than a lane takes one lane
+    # of its own (its overrun is the regular slot's to report), a case without
+    # a duration takes no time. Without a lane length, one lane per case.
+    def self.lanes_needed(minutes, lane_minutes)
+      return minutes.size unless lane_minutes&.positive?
+
+      lanes = []
+      minutes.sort.reverse_each do |length|
+        index = lanes.index { |used| used + length <= lane_minutes }
+        index ? lanes[index] += length : lanes << length
+      end
+      lanes.size
+    end
+
+    def used
+      @used ||= self.class.lanes_needed(surgeries.map { |surgery| surgery.duration_minutes || 0 }, lane_minutes)
+    end
+
+    def used_minutes
+      surgeries.sum { |surgery| surgery.duration_minutes || 0 }
+    end
+
+    def capacity_minutes
+      lane_minutes && capacity * lane_minutes
+    end
+
     def overridden?
       overridden.present?
     end
@@ -60,9 +91,12 @@ class ElectiveSlotUsage
       used > capacity
     end
 
-    # "Cath Lab 1/2 lanes" (one text for the calendar and the PDF).
+    # "Cath Lab 1/2 lanes (60/480 min)", without the minutes when the day has
+    # no lane length (one text for the calendar and the PDF).
     def summary
-      I18n.t("models.elective_slot_usage.special_slot", name: resource.name, used: used, capacity: capacity)
+      key = lane_minutes ? "special_slot_with_minutes" : "special_slot"
+      I18n.t("models.elective_slot_usage.#{key}", name: resource.name, used: used, capacity: capacity,
+                                                  used_minutes: used_minutes, capacity_minutes: capacity_minutes)
     end
   end
 
@@ -253,14 +287,14 @@ class ElectiveSlotUsage
       weekly = special_rules.select { |special| special.day_of_week == date.wday }.to_h { |special| [ [ special.resource_type, special.resource_id ], special.slot_count ] }
       overridden = special_overrides.select { |special| special.date == date }.to_h { |special| [ [ special.resource_type, special.resource_id ], special.slot_count ] }
       lanes = holiday? ? {} : weekly.merge(overridden)
-      used = Hash.new(0)
+      using = Hash.new { |hash, key| hash[key] = [] }
       elective_surgeries.each do |surgery|
-        used[[ "SurgeryLocation", surgery.surgery_location_id ]] += 1 if surgery.surgery_location_id
-        used[[ "SurgicalDevice", surgery.surgical_device_id ]] += 1 if surgery.surgical_device_id
+        using[[ "SurgeryLocation", surgery.surgery_location_id ]] << surgery if surgery.surgery_location_id
+        using[[ "SurgicalDevice", surgery.surgical_device_id ]] << surgery if surgery.surgical_device_id
       end
 
-      keys = (lanes.keys + used.keys).uniq.select { |key| resources.key?(key) }
-      keys.map { |key| SpecialSlot.new(resources[key], lanes.fetch(key, 0), used[key], overridden.key?(key) && !holiday?) }
+      keys = (lanes.keys + using.keys).uniq.select { |key| resources.key?(key) }
+      keys.map { |key| SpecialSlot.new(resources[key], lanes.fetch(key, 0), using.fetch(key, []), lane_minutes, overridden.key?(key) && !holiday?) }
           .sort_by { |special| [ SpecialSlotRule::RESOURCE_TYPES.index(special.resource.class.name), special.resource.position, special.resource.name ] }
     end
   end
@@ -292,9 +326,16 @@ class ElectiveSlotUsage
 
   private
 
+    # One special lane's length: a regular slot of the day. A closed holiday
+    # has no lanes, but the weekday's length still sizes what its cases need.
+    def lane_minutes
+      (effective_rule || rule)&.slot_duration_minutes
+    end
+
     def special_warnings
       special_slots.select(&:over?).map do |special|
-        I18n.t("models.elective_slot_usage.warnings.special_over", name: special.resource.name, used: special.used, capacity: special.capacity)
+        I18n.t("models.elective_slot_usage.warnings.special_over", name: special.resource.name, used: special.used,
+                                                                   capacity: special.capacity, minutes: special.used_minutes)
       end
     end
 

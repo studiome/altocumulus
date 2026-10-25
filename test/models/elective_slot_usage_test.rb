@@ -452,7 +452,7 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_equal 2, line.capacity
     assert_equal 1, line.used
     assert_not line.over?
-    assert_equal "Cath Lab 1/2 lanes", line.summary
+    assert_equal "Cath Lab 1/2 lanes (60/480 min)", line.summary
     assert_empty ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY].warnings.grep(/Cath Lab/)
   end
 
@@ -488,13 +488,73 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     assert_equal [ 0, 1 ], [ line.used, line.capacity ]
   end
 
-  test "using more lanes than the day has adds a warning naming the resource" do
+  # A lane is a block of time as long as one of the day's regular slots
+  # (Tuesday: 240 min), not one case: cases share a lane while they fit.
+  test "cases that fit in one lane's time together take one lane" do
+    lane(surgery_locations(:hybrid_room), TUESDAY.wday, 1)
+    [ :three, :four ].each { |name| surgeries(name).update_columns(surgery_location_id: surgery_locations(:hybrid_room).id, duration_hours: 2) }
+
+    usage = ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY]
+    line = usage.special_slots.sole
+    assert_equal [ 1, 1, 240, 240 ], [ line.used, line.capacity, line.used_minutes, line.capacity_minutes ]
+    assert_not line.over?
+    assert_empty usage.warnings.grep(/Hybrid Room/)
+  end
+
+  test "cases are not split across lanes: two cases that each take most of a lane need two" do
+    lane(surgery_locations(:hybrid_room), TUESDAY.wday, 2)
+    [ :three, :four, :five ].each { |name| surgeries(name).update_columns(surgery_location_id: surgery_locations(:hybrid_room).id) }
+    surgeries(:three).update_columns(duration_hours: 3)
+    surgeries(:four).update_columns(duration_hours: 3)
+    surgeries(:five).update_columns(duration_hours: 1)
+
+    line = special_lines.sole
+    assert_equal [ 2, 2, 420, 480 ], [ line.used, line.capacity, line.used_minutes, line.capacity_minutes ]
+    assert_not line.over?
+  end
+
+  test "a case longer than a lane still takes a single lane" do
+    lane(surgical_devices(:robot_a), TUESDAY.wday, 1)
+    surgeries(:three).update_columns(surgical_device_id: surgical_devices(:robot_a).id, duration_hours: 6)
+
+    line = special_lines.sole
+    assert_equal [ 1, 360 ], [ line.used, line.used_minutes ]
+  end
+
+  test "a case without a duration shares a lane with the others" do
     lane(surgery_locations(:cath_lab), TUESDAY.wday, 1)
     [ :three, :four ].each { |name| surgeries(name).update_columns(surgery_location_id: surgery_locations(:cath_lab).id) }
+    surgeries(:four).update_columns(duration_hours: nil)
+
+    assert_equal 1, special_lines.sole.used
+  end
+
+  test "a day with no regular slot length counts one lane per case" do
+    lane(surgery_locations(:cath_lab), SUNDAY.wday, 2)
+    surgeries(:one).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
+
+    line = special_lines(SUNDAY).sole
+    assert_equal [ 1, 2, nil ], [ line.used, line.capacity, line.capacity_minutes ]
+    assert_equal "Cath Lab 1/2 lanes", line.summary
+  end
+
+  test "a day's slot override sets the lane length too" do
+    lane(surgery_locations(:hybrid_room), TUESDAY.wday, 1)
+    Holiday.create!(date: TUESDAY, name: "Long day", holiday: false, slot_count: 2, slot_duration_minutes: 480)
+    [ :three, :four ].each { |name| surgeries(name).update_columns(surgery_location_id: surgery_locations(:hybrid_room).id, duration_hours: 3.5) }
+
+    line = special_lines.sole
+    assert_equal [ 1, 480 ], [ line.used, line.capacity_minutes ]
+  end
+
+  test "needing more lanes than the day has adds a warning naming the resource" do
+    lane(surgery_locations(:cath_lab), TUESDAY.wday, 1)
+    [ :three, :four ].each { |name| surgeries(name).update_columns(surgery_location_id: surgery_locations(:cath_lab).id, duration_hours: 3) }
 
     usage = ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY]
     assert usage.special_slots.sole.over?
-    assert_includes usage.warnings, I18n.t("models.elective_slot_usage.warnings.special_over", name: "Cath Lab", used: 2, capacity: 1)
+    assert_includes usage.warnings, I18n.t("models.elective_slot_usage.warnings.special_over", name: "Cath Lab", used: 2, capacity: 1, minutes: 360)
+    I18n.with_locale(:ja) { assert_match(/Cath Lab.*360分.*2列/, usage.warnings.last) }
     I18n.with_locale(:ja) { assert_match(/Cath Lab.*列/, usage.warnings.last) }
   end
 
@@ -545,7 +605,7 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
     line = special_lines.sole
     assert_equal 1, line.capacity
     assert line.overridden?
-    assert_equal "Cath Lab 0/1 lanes", line.summary
+    assert_equal "Cath Lab 0/1 lanes (0/240 min)", line.summary
     assert_not special_lines(TUESDAY + 7).first&.overridden?
   end
 
@@ -592,7 +652,7 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
   test "an override beats the weekly rule in warnings too" do
     lane(surgery_locations(:cath_lab), TUESDAY.wday, 1)
     day_override(surgery_locations(:cath_lab), TUESDAY, 2)
-    [ :three, :four ].each { |name| surgeries(name).update_columns(surgery_location_id: surgery_locations(:cath_lab).id) }
+    [ :three, :four ].each { |name| surgeries(name).update_columns(surgery_location_id: surgery_locations(:cath_lab).id, duration_hours: 3) }
 
     assert_empty ElectiveSlotUsage.for_dates([ TUESDAY ])[TUESDAY].warnings.grep(/Cath Lab/)
   end

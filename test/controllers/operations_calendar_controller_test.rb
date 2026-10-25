@@ -28,8 +28,8 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
 
     assert_select "td.ledger-day .special-slot-line", 2
-    assert_select "td.ledger-day .special-slot-line:not(.text-error)", text: "Cath Lab 1/2 lanes"
-    assert_select "td.ledger-day .special-slot-line.text-error", text: "Robot A 2/1 lanes"
+    assert_select "td.ledger-day .special-slot-line:not(.text-error)", text: "Cath Lab 1/2 lanes (60/480 min)"
+    assert_select "td.ledger-day .special-slot-line.text-error", text: "Robot A 2/1 lanes (360/240 min)"
     assert_select "tr.ledger-band-warning td", text: /Robot A/
   end
 
@@ -40,8 +40,8 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
 
     get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
 
-    assert_select "td.ledger-day .special-slot-line", text: "Cath Lab 0/1 lanes (changed)"
-    assert_select "td.ledger-day .special-slot-line", text: "Robot A 0/1 lanes"
+    assert_select "td.ledger-day .special-slot-line", text: "Cath Lab 0/1 lanes (0/240 min) (changed)"
+    assert_select "td.ledger-day .special-slot-line", text: "Robot A 0/1 lanes (0/240 min)"
   end
 
   test "admins get the edit-special-slots link and its frame, members do not" do

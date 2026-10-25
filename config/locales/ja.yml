@@ -561,6 +561,7 @@ ja:
       to_s: "%{day} - %{count}枠 x %{minutes}分"
     elective_slot_usage:
       special_slot: "%{name} %{used}/%{capacity}列"
+      special_slot_with_minutes: "%{name} %{used}/%{capacity}列（%{used_minutes}/%{capacity_minutes}分）"
       warnings:
         holiday: "%{holiday_name}は休日のため、利用できる手術枠がありません。"
         not_configured: "%{day}には手術枠が設定されていません。"
@@ -570,7 +571,7 @@ ja:
           single: "第%{number}枠は上限%{limit}分を%{overrun}分超過しています。"
           same_limit: "枠%{numbers}は上限%{limit}分を超過しています。"
           item: "第%{number}枠は上限%{limit}分を超過しています。"
-        special_over: "%{name}は%{capacity}列のところ%{used}件の症例が使用しています。"
+        special_over: "%{name}は%{capacity}列のところ、症例（計%{minutes}分）に%{used}列が必要です。"
     user:
       role_options:
         user: "利用者"
@@ -758,7 +759,7 @@ ja:
       position_helper: "数字が小さいほど先に表示されます。空欄の場合は末尾に追加されます。"
       color_helper: "症例に表示するチームのバッジに使う色です。"
       special_slot_counts_label: "特殊枠（曜日別の列数）"
-      special_slot_counts_helper: "ハイブリッド手術室・カテ室・手術支援ロボットなど、通常枠とは別に使用回数の上限がある場所・機器の、曜日ごとの列数（同時に使える症例数）です。空欄または 0 は、その曜日は設けないことを示します。すべて空欄なら特殊枠として扱わず、記録のみになります。この場所・機器を使う症例は通常枠に入ったうえで、1 列を使用します。"
+      special_slot_counts_helper: "ハイブリッド手術室・カテ室・手術支援ロボットなど、通常枠とは別に使用回数の上限がある場所・機器の、曜日ごとの列数です。1 列は通常枠 1 枠分の時間で、時間内に収まる限り複数の症例が同じ列を使えます。空欄または 0 は、その曜日は設けないことを示します。すべて空欄なら特殊枠として扱わず、記録のみになります。この場所・機器を使う症例は通常枠に入ったうえで、所要時間に応じて列を使用します。"
       asks_performing_department_label: "実施診療科を確認する"
       asks_performing_department_helper: "手術フォームへのヒントです。この場所の症例は他の診療科が実施することがあるため、実施診療科の入力欄を表示します。"
       active_label: "有効"

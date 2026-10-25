@@ -206,6 +206,6 @@ class SurgerySchedulesControllerTest < ActionDispatch::IntegrationTest
     surgeries(:three).update_columns(surgery_location_id: surgery_locations(:cath_lab).id)
 
     get surgery_schedule_url(week_of: "2026-03-03")
-    assert_select ".special-slot-line", text: "Cath Lab 1/1 lanes"
+    assert_select ".special-slot-line", text: "Cath Lab 1/1 lanes (60/240 min)"
   end
 end

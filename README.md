@@ -420,7 +420,8 @@ Key constraints:
   `department` is kept only for simultaneous / backup surgeries, and an optional
   `performing_department` records who performs it (cleared unless the location asks for it).
 - A hybrid room / cath lab (`SurgeryLocation`) or surgical robot (`SurgicalDevice`) case is a regular
-  case that additionally takes one lane of that resource, counted per day against weekly lane counts
+  case that additionally uses lanes of that resource (a lane is one regular slot's length of time, shared by
+  cases while they fit), counted per day against weekly lane counts
   (`SpecialSlotRule`) that a date-specific `SpecialSlotDayOverride` can replace; see
   [Elective slot utilization](#elective-slot-utilization).
 - `Holiday` rows with `holiday: false` may carry `slot_count` / `slot_duration_minutes`, which replace the
@@ -476,14 +477,18 @@ replace the weekday rule for that date (`Holiday#effective_rule_for` returns an 
 drives the "Slots: N (changed)" marker on the calendar day cell and the weekly PDF day heading.
 
 **Special slots (特殊枠).** A hybrid room / cath lab (`SurgeryLocation`) or surgical robot
-(`SurgicalDevice`) case is a *regular* case (slot number and time as usual) that also takes one lane
-(列) of that resource; `off_slot` stays "uses no regular slot". The masters carry weekly lane counts
+(`SurgicalDevice`) case is a *regular* case (slot number and time as usual) that also uses that
+resource's lanes (列); `off_slot` stays "uses no regular slot". A lane is a block of time as long as one of
+the day's regular slots (the slot rule's duration, or the day override's), so several cases share one lane
+while their durations fit; a case is never split across lanes (first-fit, longest first), and a day without
+a slot length counts one lane per case. The masters carry weekly lane counts
 (`SpecialSlotRule`, Monday to Sunday, whole numbers, blank or 0 = none; a resource with no positive count
-is not special and is only recorded). Per day, `ElectiveSlotUsage#special_slots` counts elective cases
-per resource (`used`; emergencies never take a lane) against `capacity`: the weekday's lanes, replaced by
+is not special and is only recorded). Per day, `ElectiveSlotUsage#special_slots` gives per resource the
+lanes its elective cases need (`used`, with `used_minutes`; emergencies never take a lane) against
+`capacity` (and `capacity_minutes`): the weekday's lanes, replaced by
 that date's `SpecialSlotDayOverride` when there is one, and 0 on a closed holiday whatever an override
 says. A resource over capacity adds a warning. The calendar day cell, the schedule board and the weekly PDF
-heading print the summary (for example "Cath Lab 1/2 lanes").
+heading print the summary (for example "Cath Lab 1/2 lanes (300/960 min)").
 
 A specific date can differ from the weekly pattern. An override (blank row = weekly count, a number =
 that day's lanes, 0 = no lane that day) also works for a resource with no weekly count, which is then

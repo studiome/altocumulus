@@ -1,6 +1,6 @@
 # A master (SurgeryLocation, SurgicalDevice) that may be a special slot
 # resource: it carries weekly lane counts (SpecialSlotRule). A case using it
-# keeps its regular slot and also takes one lane here. A resource without any
+# keeps its regular slot and also uses this resource's lanes (time blocks). A resource without any
 # positive count is an ordinary master, merely recorded on cases -- unless a
 # single date overrides it (SpecialSlotDayOverride), which makes it special
 # for that date even without any weekly count.
