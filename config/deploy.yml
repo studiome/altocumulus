@@ -23,6 +23,13 @@ servers:
 # proxy:
 #   ssl: true
 #   host: app.example.com
+#
+# When serving the app under a subpath (see RAILS_RELATIVE_URL_ROOT below), kamal-proxy's
+# default healthcheck at /up would 404, because the app then lives at <prefix>/up.
+# Point the healthcheck at the prefixed path:
+# proxy:
+#   healthcheck:
+#     path: /newsystem/up
 
 # Where you keep your container images.
 registry:
@@ -59,6 +66,10 @@ env:
     # config/site.example.yml and the "Site configuration" README section).
     # Mount your file with the volume below and point the app at it:
     # SITE_CONFIG_PATH: /rails/site/site.yml
+
+    # Serve the app under a URL subpath (e.g. http://host/newsystem/). The front proxy must pass
+    # the prefix through unchanged; also set proxy.healthcheck.path above to /newsystem/up.
+    # RAILS_RELATIVE_URL_ROOT: /newsystem
 
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug

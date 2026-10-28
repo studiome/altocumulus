@@ -75,6 +75,10 @@ Because Rails' `params.expect` only treats purely numeric keys as nested-attribu
 
 Controllers rescue `ActiveRecord::RecordNotUnique` around the save of these nested rows (see `HospitalizationsController#save_hospitalization`) and turn it into a validation error, since swapping two existing rows' values can transiently hit a unique index mid-save even though the end state is valid.
 
+### Subpath deployment
+
+With `RAILS_RELATIVE_URL_ROOT=/prefix` set, `config.ru` mounts the app there with `map` (Rack sets `SCRIPT_NAME`; the prefix is not stripped by the front proxy), and `/up` becomes `/prefix/up`. Use helpers (`asset_path`, `*_path`), never hardcoded root-relative paths, in views, controllers and JS. `test/integration/relative_url_root_test.rb` boots the app in a subprocess, because asset configuration is read at boot.
+
 ### Site configuration
 
 Site-specific customization is a deploy-time YAML file, not code: `SiteConfig` (`app/models/site_config.rb`) reads `ENV["SITE_CONFIG_PATH"]` if set (production mounts a file there via a Kamal volume), else the committed neutral default `config/site.yml` (`config/site.example.yml` is a fully filled example). It is validated at boot (`config/initializers/site_config.rb`): unknown keys, unknown field names or an uncompilable regex raise `SiteConfig::Error` (the field-name check is skipped while migrations are pending or the DB is unreachable, since `db:prepare` boots the app before migrating). New top-level keys go into `SiteConfig::SCHEMA` with a per-key normalizer. Current keys: `required_fields.{hospitalization,surgery}` (strict presence validation via the `ConfigurableRequiredFields` concern, evaluated at validation time; `required_fields.hospitalization_by_purpose.<purpose>` adds fields for one purpose only, so `required_attribute?` also takes the record or `purpose:`; forms mark labels with `required_label_class` / `Model.required_attribute?` so the asterisk and validation share one source) and `patient.hospital_id_format` / `hospital_id_format_hint` (`Patient` validation, only when the ID is set or changed). Tests swap it with `with_site_config(hash) { ... }`.

@@ -719,6 +719,20 @@ This configuration assumes a single web server: `SOLID_QUEUE_IN_PUMA` runs the S
 supervisor inside the same Puma process, and `config/deploy.yml` bind-mounts SQLite's storage
 directory from a specific host path (`/srv/altocumulus/storage`) rather than a shared volume.
 
+### Serving under a subpath
+
+To serve the app under a URL prefix such as `http://host/newsystem/`, set the environment variable
+`RAILS_RELATIVE_URL_ROOT=/newsystem` (under `env.clear` in `config/deploy.yml`; a commented example is
+included). Unset, the app is served at `/` as usual. Notes:
+
+- The front proxy (e.g. IIS URL Rewrite + ARR) must forward `/newsystem/*` **without stripping the
+  prefix** and must preserve the original `Host` header.
+- The health check moves to `/newsystem/up`. Set `proxy.healthcheck.path: /newsystem/up` in
+  `config/deploy.yml`, otherwise kamal-proxy's default `/up` check fails and the deploy is rolled back.
+- Paths outside the prefix (including `/up`) return 404.
+- Session cookies keep the path `/`, so do not run another Rails app on the same host name that uses
+  the same cookie name.
+
 ### Before the first deploy
 
 **`config/master.key`.** `.kamal/secrets` reads `RAILS_MASTER_KEY=$(cat config/master.key)`,

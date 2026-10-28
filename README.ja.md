@@ -678,6 +678,21 @@ supervisor を Puma プロセス内で動かしており、`config/deploy.yml` �
 ディレクトリを共有ボリュームではなくホストの特定パス（`/srv/altocumulus/storage`）に
 バインドマウントしています。
 
+### サブパスで公開する
+
+`http://host/newsystem/` のように URL のサブパス配下で公開するには、環境変数
+`RAILS_RELATIVE_URL_ROOT=/newsystem` を設定します（`config/deploy.yml` の `env.clear` に
+コメントアウトした例があります）。未設定の場合は従来どおり `/` で動作します。注意点:
+
+- フロントのプロキシ（IIS の URL Rewrite + ARR など）は、`/newsystem/*` を**プレフィックスを
+  除去せずに**転送し、元の `Host` ヘッダーを保持してください。
+- ヘルスチェックは `/newsystem/up` になります。`config/deploy.yml` で
+  `proxy.healthcheck.path: /newsystem/up` を設定してください（未設定だと kamal-proxy の既定の
+  `/up` が失敗し、デプロイがロールバックされます）。
+- プレフィックス外のパス（`/up` を含む）は 404 になります。
+- セッション Cookie のパスは `/` のままなので、同じホスト名で Cookie 名が同じ別の Rails アプリを
+  動かさないでください。
+
 ### 初回デプロイ前の準備
 
 **`config/master.key`。** `.kamal/secrets` は `RAILS_MASTER_KEY=$(cat config/master.key)` を
