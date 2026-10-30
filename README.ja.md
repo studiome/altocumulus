@@ -1,7 +1,7 @@
 # Altocumulus
 
 [![CI](https://github.com/studiome/altocumulus/actions/workflows/ci.yml/badge.svg)](https://github.com/studiome/altocumulus/actions/workflows/ci.yml)
-[![Ruby 4.0](https://img.shields.io/badge/Ruby-4.0.7-CC342D?logo=ruby&logoColor=white)](.ruby-version)
+[![Ruby 4.0](https://img.shields.io/badge/Ruby-4.0.9-CC342D?logo=ruby&logoColor=white)](.ruby-version)
 [![Rails 8.1](https://img.shields.io/badge/Rails-8.1-D30001?logo=rubyonrails&logoColor=white)](Gemfile)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -78,7 +78,7 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 
 | 領域 | 採用技術 |
 | --- | --- |
-| 言語 / フレームワーク | Ruby 4.0.7 / Rails 8.1 |
+| 言語 / フレームワーク | Ruby 4.0.9 / Rails 8.1 |
 | データベース | SQLite（アプリ本体・Solid Queue・Solid Cache・Solid Cable の 4 スキーマ） |
 | バックグラウンド処理 | Solid Queue / Solid Cache / Solid Cable |
 | アセット | Propshaft + importmap-rails（**Node / JS バンドラ不使用**） |
@@ -91,7 +91,7 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 
 ## セットアップ
 
-前提: Ruby 4.0.7（`.ruby-version` 参照）と Bundler。
+前提: Ruby 4.0.9（`.ruby-version` 参照）と Bundler。
 
 ```bash
 git clone https://github.com/studiome/altocumulus.git

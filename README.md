@@ -1,7 +1,7 @@
 # Altocumulus
 
 [![CI](https://github.com/studiome/altocumulus/actions/workflows/ci.yml/badge.svg)](https://github.com/studiome/altocumulus/actions/workflows/ci.yml)
-[![Ruby 4.0](https://img.shields.io/badge/Ruby-4.0.7-CC342D?logo=ruby&logoColor=white)](.ruby-version)
+[![Ruby 4.0](https://img.shields.io/badge/Ruby-4.0.9-CC342D?logo=ruby&logoColor=white)](.ruby-version)
 [![Rails 8.1](https://img.shields.io/badge/Rails-8.1-D30001?logo=rubyonrails&logoColor=white)](Gemfile)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -80,7 +80,7 @@ exceptions are `/login`, the language switcher (`PATCH /locale`), and the `/up` 
 
 | Area | Technology |
 | --- | --- |
-| Language / framework | Ruby 4.0.7 / Rails 8.1 |
+| Language / framework | Ruby 4.0.9 / Rails 8.1 |
 | Database | SQLite (four schemas: the app itself, Solid Queue, Solid Cache, Solid Cable) |
 | Background processing | Solid Queue / Solid Cache / Solid Cable |
 | Assets | Propshaft + importmap-rails (**no Node, no JS bundler**) |
@@ -93,7 +93,7 @@ exceptions are `/login`, the language switcher (`PATCH /locale`), and the `/up` 
 
 ## Setup
 
-Prerequisites: Ruby 4.0.7 (see `.ruby-version`) and Bundler.
+Prerequisites: Ruby 4.0.9 (see `.ruby-version`) and Bundler.
 
 ```bash
 git clone https://github.com/studiome/altocumulus.git
