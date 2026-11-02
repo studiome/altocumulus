@@ -189,7 +189,7 @@ class ReservationsTest < ApplicationSystemTestCase
     within(first("[data-hospitalization-diagnosis-fields-target='item']")) { assert_text "Brand new diagnosis" }
   end
 
-  test "editing from the calendar row's edit link updates the surgery" do
+  test "editing from the calendar row's patient name updates the surgery" do
     patient = patients(:two)
     Current.user = users(:admin)
     reservation = Reservation.new
@@ -203,7 +203,7 @@ class ReservationsTest < ApplicationSystemTestCase
     Current.reset
 
     visit operations_calendar_path(start: @surgery_date.iso8601, days: 1)
-    within("tbody#day-#{@surgery_date.iso8601}") { click_on "Edit" }
+    within("tbody#day-#{@surgery_date.iso8601}") { click_on patient.name }
 
     assert_field "Anesthesia Method", with: "Spinal"
     fill_in "Anesthesia Method", with: "General anesthesia"
