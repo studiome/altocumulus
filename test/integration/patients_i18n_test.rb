@@ -48,7 +48,7 @@ class PatientsI18nTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", text: "患者の詳細"
-    assert_select "span", text: "1980年01月01日"
+    assert_select "span", text: "1980/01/01"
 
     get_as users(:member), patient_url(@patient)
 

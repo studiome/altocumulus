@@ -114,8 +114,8 @@ class LedgerColumnTest < ActiveSupport::TestCase
   test "surgery admission_dates shows scheduled over actual admission date of the hospitalization" do
     surgery = linked_surgery(scheduled_admission_date: Date.new(2026, 2, 27))
     cell = cell(:surgery, :admission_dates, surgery)
-    assert_equal [ "2026-02-27" ], texts(cell.upper)
-    assert_equal [ "2026-03-01" ], texts(cell.lower)
+    assert_equal [ "2026-02-27 (Fri)" ], texts(cell.upper)
+    assert_equal [ "2026-03-01 (Sun)" ], texts(cell.lower)
   end
 
   test "surgery admission_dates shows dashes without a hospitalization" do
@@ -299,7 +299,7 @@ class LedgerColumnTest < ActiveSupport::TestCase
     surgery = linked_surgery(submitted_on: Date.new(2026, 2, 20),
                              reservation_doctor_id: users(:admin).id, created_by_id: users(:member).id)
     cell = cell(:surgery, :reservation, surgery)
-    assert_equal [ "2026-02-20" ], texts(cell.upper)
+    assert_equal [ "2026-02-20 (Fri)" ], texts(cell.upper)
     assert_equal [ users(:admin).name, "Entered by: #{users(:member).name}" ], texts(cell.lower)
   end
 
@@ -355,8 +355,8 @@ class LedgerColumnTest < ActiveSupport::TestCase
     hospitalization = hospitalizations(:one)
     hospitalization.scheduled_admission_date = Date.new(2026, 2, 27)
     cell = cell(:hospitalization, :admission_dates, hospitalization)
-    assert_equal [ "2026-02-27" ], texts(cell.upper)
-    assert_equal [ "2026-03-01" ], texts(cell.lower)
+    assert_equal [ "2026-02-27 (Fri)" ], texts(cell.upper)
+    assert_equal [ "2026-03-01 (Sun)" ], texts(cell.lower)
   end
 
   test "hospitalization patient links to the hospitalization when an href is given" do
@@ -388,7 +388,7 @@ class LedgerColumnTest < ActiveSupport::TestCase
     hospitalization.scheduled_procedure_date = Date.new(2026, 3, 2)
     cell = cell(:hospitalization, :purpose, hospitalization)
     assert_equal [ Hospitalization.purpose_options["examination"] ], texts(cell.upper)
-    assert_equal [ "2026-03-02" ], texts(cell.lower)
+    assert_equal [ "2026-03-02 (Mon)" ], texts(cell.lower)
   end
 
   test "hospitalization team follows the feature toggle and the case date" do
@@ -418,7 +418,7 @@ class LedgerColumnTest < ActiveSupport::TestCase
     hospitalization = hospitalizations(:one)
     hospitalization.assign_attributes(submitted_on: Date.new(2026, 2, 20), referred_from: "City Clinic", adl: "Independent",
                                       reservation_status: "date_fixed", admin_status: "confirmed")
-    assert_equal [ "2026-02-20" ], texts(cell(:hospitalization, :reservation, hospitalization).upper)
+    assert_equal [ "2026-02-20 (Fri)" ], texts(cell(:hospitalization, :reservation, hospitalization).upper)
     assert_equal [ "City Clinic" ], texts(cell(:hospitalization, :referral_adl, hospitalization).upper)
     assert_equal [ "Independent" ], texts(cell(:hospitalization, :referral_adl, hospitalization).lower)
     assert_equal [ Hospitalization.reservation_status_options["date_fixed"] ], texts(cell(:hospitalization, :status, hospitalization).upper)

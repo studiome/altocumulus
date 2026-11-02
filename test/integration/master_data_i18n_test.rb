@@ -87,12 +87,12 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
     assert_select "th", text: "日付"
     assert_select "th", text: "備考"
     assert_select "span", text: "休診"
-    assert_match(/2026年03月10日/, response.body)
+    assert_match(%r{2026/03/10}, response.body)
 
     get holiday_url(holiday)
     assert_select "h1", text: "休日の詳細"
     assert_select "span", text: "休診"
-    assert_match(/2026年03月10日\(火\)/, response.body)
+    assert_match(%r{2026/03/10（火）}, response.body)
 
     get edit_holiday_url(holiday)
     assert_select "h1", text: "休日を編集"

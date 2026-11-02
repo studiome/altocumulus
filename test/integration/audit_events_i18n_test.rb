@@ -31,7 +31,7 @@ class AuditEventsI18nTest < ActionDispatch::IntegrationTest
     assert_select "th", text: "項目"
     assert_select "th", text: "変更前"
     assert_select "th", text: "変更後"
-    assert_match(/\d{4}年\d{2}月\d{2}日 \d{2}:\d{2}:\d{2}/, response.body)
+    assert_match(%r{\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}}, response.body)
 
     get_as users(:member), audit_events_url
     assert_select "h1", text: "Audit Log"
@@ -86,8 +86,8 @@ class AuditEventsI18nTest < ActionDispatch::IntegrationTest
     )
 
     get_as users(:japanese_admin), audit_event_url(event)
-    assert_match "1990年01月01日", response.body
-    assert_match "1991年02月03日", response.body
+    assert_match "1990/01/01", response.body
+    assert_match "1991/02/03", response.body
 
     get_as users(:admin), audit_event_url(event)
     assert_match "1990-01-01", response.body

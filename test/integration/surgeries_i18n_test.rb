@@ -39,7 +39,7 @@ class SurgeriesI18nTest < ActionDispatch::IntegrationTest
     assert_select "th, th span", text: "麻酔"
     assert_select "th, th span", text: "患者"
     assert_select "th, th span", text: "操作"
-    assert_match "2026年03月01日", response.body
+    assert_match "2026/03/01", response.body
     assert_match(%r{第1枠 / 3}, response.body)
 
     get_as users(:member), surgeries_url
@@ -70,7 +70,7 @@ class SurgeriesI18nTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "手術の詳細"
     assert_select "span", text: "関連する診断名"
     assert_select "div", text: "詳細情報"
-    assert_match(/2026年03月01日\(日\)/, response.body)
+    assert_match(%r{2026/03/01（日）}, response.body)
 
     get surgery_url(@elective)
     assert_match(%r{第1枠 / 全3枠}, response.body)

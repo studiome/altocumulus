@@ -7,7 +7,7 @@ module LedgerColumns
     class << self
       def all
         @all ||= [
-          column(:admission_dates, 66, min: 56) { |hospitalization, _| admission_dates_cell(hospitalization) },
+          column(:admission_dates, 82, min: 81) { |hospitalization, _| admission_dates_cell(hospitalization) },
           column(:patient, 108, min: 80, flex: 1, css_class: "ledger-patient", includes: [ :patient ]) { |hospitalization, context|
             patient_cell(hospitalization, context)
           },
@@ -29,7 +29,7 @@ module LedgerColumns
           column(:category, 100, min: 90, flex: 3, includes: [ :source_department ]) { |hospitalization, _|
             cell(emergency_admission_segment(hospitalization), transfer_segment(hospitalization))
           },
-          column(:reservation, 80, min: 60, flex: 1, includes: [ :reservation_doctor, :created_by ]) { |hospitalization, _|
+          column(:reservation, 84, min: 81, flex: 1, includes: [ :reservation_doctor, :created_by ]) { |hospitalization, _|
             reservation_cell(hospitalization)
           },
           column(:referral_adl, 90, min: 70, flex: 1.5) { |hospitalization, _|

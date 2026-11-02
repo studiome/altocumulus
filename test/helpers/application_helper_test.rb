@@ -9,7 +9,7 @@ class ApplicationHelperTest < ActionView::TestCase
 
   test "date_with_weekday shows the abbreviated weekday in Japanese" do
     I18n.with_locale(:ja) do
-      assert_includes date_with_weekday(Date.new(2026, 10, 5)), "2026年10月05日(月)"
+      assert_includes date_with_weekday(Date.new(2026, 10, 5)), "2026/10/05（月）"
     end
   end
 

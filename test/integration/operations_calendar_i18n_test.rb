@@ -34,8 +34,10 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     assert_select "a", text: "今日"
     assert_select "th span", text: "術者"
     assert_select "th span", text: "枠"
-    assert_match "2026年03月01日", response.body
-    assert_match "2026年03月10日", response.body
+    assert_match "2026/03/01", response.body
+    assert_match "2026/03/10", response.body
+    assert_select "td.ledger-day", text: %r{2026/03/01（日）}
+    assert_select "td.ledger-day .ledger-secondary", text: "日曜日", count: 0
     assert_match(/10日/, response.body)
 
     get_as users(:member), operations_calendar_url, WINDOW
@@ -58,7 +60,7 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     get_as users(:japanese_member), operations_calendar_url, WINDOW
 
     assert_response :success
-    assert_match "火曜日", response.body
+    assert_match "2026/03/03（火）", response.body
     assert_match "休診: Vernal Equinox Day", response.body
     assert_match "手術枠なし(休日)", response.body
     assert_select "span.badge-error", text: "緊急"
@@ -71,7 +73,7 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     get_as users(:member), operations_calendar_url, WINDOW
 
     assert_response :success
-    assert_match "Tuesday", response.body
+    assert_match "2026-03-03 (Tue)", response.body
     assert_match "Closed: Vernal Equinox Day", response.body
     assert_match "No elective slots (holiday)", response.body
     assert_select "span.badge-error", text: "Emergency"

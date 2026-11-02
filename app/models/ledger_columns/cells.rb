@@ -21,7 +21,7 @@ module LedgerColumns
     end
 
     def date_text(date)
-      date ? I18n.l(date, format: :default) : dash
+      date ? I18n.l(date, format: :with_weekday) : dash
     end
 
     # Segment for a text only when it is present, so blank values leave the

@@ -3,12 +3,12 @@ ja:
 
   date:
     formats:
-      default: "%Y年%m月%d日"
+      default: "%Y/%m/%d"
       short: "%m/%d"
-      long: "%Y年%m月%d日"
-      long_with_weekday: "%Y年%m月%d日(%a)"
+      long: "%Y/%m/%d"
+      long_with_weekday: "%Y/%m/%d（%a）"
       # Compact date plus abbreviated weekday for list/detail pages.
-      with_weekday: "%Y年%m月%d日(%a)"
+      with_weekday: "%Y/%m/%d（%a）"
       weekday: "%A"
     day_names:
       - 日曜日
@@ -61,11 +61,11 @@ ja:
 
   time:
     formats:
-      default: "%Y年%m月%d日(%a) %H時%M分%S秒"
+      default: "%Y/%m/%d（%a） %H:%M:%S"
       short: "%y/%m/%d %H:%M"
-      long: "%Y年%m月%d日(%a) %H時%M分%S秒"
-      timestamp: "%Y年%m月%d日 %H:%M:%S"
-      short_timestamp: "%Y年%m月%d日 %H:%M"
+      long: "%Y/%m/%d（%a） %H:%M:%S"
+      timestamp: "%Y/%m/%d %H:%M:%S"
+      short_timestamp: "%Y/%m/%d %H:%M"
     am: "午前"
     pm: "午後"
 

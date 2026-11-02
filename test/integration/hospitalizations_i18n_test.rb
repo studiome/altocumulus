@@ -28,7 +28,7 @@ class HospitalizationsI18nTest < ActionDispatch::IntegrationTest
     assert_select "th, th span", text: "患者ID"
     assert_select "th, th span", text: "操作"
     assert_match(/5日/, response.body)
-    assert_match "2026年03月01日", response.body
+    assert_match "2026/03/01", response.body
 
     get_as users(:member), hospitalizations_url
 
@@ -58,7 +58,7 @@ class HospitalizationsI18nTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "入院の詳細"
     assert_select "span", text: "入院時の診断名"
     assert_select "div", text: "更新履歴"
-    assert_match(/2026年03月01日\(日\)/, response.body)
+    assert_match(%r{2026/03/01（日）}, response.body)
 
     get_as users(:member), hospitalization_url(@hospitalization)
 

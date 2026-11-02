@@ -40,7 +40,7 @@ class SearchesI18nTest < ActionDispatch::IntegrationTest
     assert_select "a[role=tab]", text: "患者 (1)"
     assert_select "a", text: "入院の一覧をすべて見る"
     assert_match "John Doe", response.body
-    assert_match "2026年03月01日", response.body
+    assert_match "2026/03/01", response.body
 
     get_as users(:member), search_url, { keyword: "John" }
 

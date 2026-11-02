@@ -22,7 +22,7 @@ module LedgerColumns
             end
             cell(segment(surgery.start_time_display, :mono), segment(slot, :secondary))
           },
-          column(:admission_dates, 66, min: 56, includes: [ :hospitalization ]) { |surgery, _|
+          column(:admission_dates, 82, min: 81, includes: [ :hospitalization ]) { |surgery, _|
             admission_dates_cell(hospitalization_of(surgery))
           },
           column(:patient, 108, min: 80, flex: 1, css_class: "ledger-patient", includes: [ :patient ]) { |surgery, context|
@@ -51,7 +51,7 @@ module LedgerColumns
             hospitalization = hospitalization_of(surgery)
             cell(scheduling_segments(surgery, hospitalization), placement_segments(surgery, hospitalization))
           },
-          column(:reservation, 80, min: 60, flex: 1, includes: [ { hospitalization: [ :reservation_doctor, :created_by ] } ]) { |surgery, _|
+          column(:reservation, 84, min: 81, flex: 1, includes: [ { hospitalization: [ :reservation_doctor, :created_by ] } ]) { |surgery, _|
             reservation_cell(hospitalization_of(surgery))
           },
           column(:referral_adl, 90, min: 70, flex: 1.5, includes: [ :hospitalization ]) { |surgery, context|

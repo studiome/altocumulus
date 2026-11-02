@@ -19,7 +19,7 @@ class PatientDiagnosesI18nTest < ActionDispatch::IntegrationTest
     assert_select "th", text: "診断日"
     assert_select "th", text: "操作"
     assert_select "a", text: "診断を追加"
-    assert_match "2026年03月20日", response.body
+    assert_match "2026/03/20", response.body
 
     get_as users(:member), patient_patient_diagnoses_url(@patient)
 

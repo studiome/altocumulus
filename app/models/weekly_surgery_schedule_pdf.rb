@@ -162,7 +162,7 @@ class WeeklySurgerySchedulePdf
     # minutes (used/capacity, only when the day has slots), the special slot
     # lanes (used/lanes per resource) and the case count.
     def day_heading(date, surgeries)
-      parts = [ "#{I18n.l(date, format: :default)} (#{I18n.l(date, format: :weekday)})" ]
+      parts = [ I18n.l(date, format: :with_weekday) ]
       holiday = holidays[date]
       parts.concat([ holiday&.name, holiday&.note&.squish ].select(&:present?))
       parts << I18n.t("surgery_schedules.pdf.slot_count", slots: holiday.slot_count_display) if holiday&.slot_override?

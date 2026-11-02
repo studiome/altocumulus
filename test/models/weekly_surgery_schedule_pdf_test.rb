@@ -309,9 +309,9 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     with_site_config("features" => { "teams" => true }, "ledger_columns" => { "weekly_pdf" => all }) do
       pdf = WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1))
 
-      assert_equal 7.5, pdf.column_fit.font_size
-      assert_includes font_sizes(pdf.render), 7.5
-      pdf.send(:columns).zip(pdf.column_fit.widths).each { |column, width| assert_operator width, :>=, column.min_width * 7.5 / 8 - 0.05 }
+      assert_equal 7.0, pdf.column_fit.font_size
+      assert_includes font_sizes(pdf.render), 7.0
+      pdf.send(:columns).zip(pdf.column_fit.widths).each { |column, width| assert_operator width, :>=, column.min_width * 7.0 / 8 - 0.05 }
     end
   end
 
@@ -347,7 +347,7 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
     create_surgery(new_patient, date).update!(slot_number: 1, duration_hours: 1.5)
 
     assert_match(%r{2030-01-08 \(\w+\)\s+Fire drill\s+Slots 2\s+Usage 90/240 min\s+1 case\(s\)}, render_text(Date.new(2030, 1, 7)))
-    assert_match(%r{2030年01月08日 \(\S+\)\s+Fire drill\s+列数 2\s+使用 90/240分\s+1件}, render_text(Date.new(2030, 1, 7), locale: :ja))
+    assert_match(%r{2030\/01\/08（\S）\s+Fire drill\s+列数 2\s+使用 90/240分\s+1件}, render_text(Date.new(2030, 1, 7), locale: :ja))
   end
 
   test "an ordinary day heading shows the weekday rule's usage and no slot count" do

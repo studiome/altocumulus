@@ -11,8 +11,7 @@
 
   <% day_cell = capture do %>
     <td class="ledger-day" rowspan="<%= [ hospitalizations.size, 1 ].max %>">
-      <span class="ledger-primary"><%= l(date, format: :default) %></span>
-      <span class="ledger-secondary"><%= l(date, format: :weekday) %></span>
+      <span class="ledger-primary"><%= l(date, format: :with_weekday) %></span>
       <%= link_to t("reservations.links.new_reservation"), new_examination_path,
             class: "badge badge-sm badge-outline badge-primary print:hidden w-fit", aria: { label: t("reservations.links.new_reservation") + " " + l(date, format: :default) } %>
       <span class="ledger-secondary <%= "text-warning font-bold" if calendar.admission_warning?(date) %>">

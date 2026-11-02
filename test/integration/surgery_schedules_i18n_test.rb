@@ -17,7 +17,7 @@ class SurgerySchedulesI18nTest < ActionDispatch::IntegrationTest
     assert_select "a", text: "次週"
     assert_select "a", text: "枠を設定"
     assert_select "a", text: "休日"
-    assert_match "2026年03月02日", response.body
+    assert_match "2026/03/02", response.body
     assert_match(%r{120 / 240分}, response.body)
     assert_match(/第1枠/, response.body)
     assert_match(/空き/, response.body)

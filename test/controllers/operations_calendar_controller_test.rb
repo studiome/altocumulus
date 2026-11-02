@@ -159,17 +159,13 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     assert_select "tbody.oc-day td.ledger-day", 1
   end
 
-  test "a day cell shows the date before the weekday" do
+  test "a day cell shows the date with its weekday in one label" do
     get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
 
-    date = Date.new(2026, 3, 3)
     text = css_select("tbody.oc-day td.ledger-day").first.text
-    date_index = text.index(I18n.l(date, format: :default))
-    weekday_index = text.index(I18n.l(date, format: :weekday))
 
-    assert date_index, "date text should be present"
-    assert weekday_index, "weekday text should be present"
-    assert_operator date_index, :<, weekday_index
+    assert_includes text, I18n.l(Date.new(2026, 3, 3), format: :with_weekday)
+    assert_select "tbody.oc-day td.ledger-day .ledger-secondary", text: I18n.l(Date.new(2026, 3, 3), format: :weekday), count: 0
   end
 
   test "each surgery row stacks patient id over name and links to the surgery" do
