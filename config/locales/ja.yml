@@ -1736,6 +1736,7 @@ ja:
     links:
       new_reservation: "+入約"
       edit_reservation: "編集"
+      show_details: "詳細"
       edit_in_reservation_form: "入約フォームで編集"
 
   # CSV出力（ExportField / ExportDefinition と site config の `exports`）:

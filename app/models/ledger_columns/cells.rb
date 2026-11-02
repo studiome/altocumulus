@@ -38,7 +38,7 @@ module LedgerColumns
       patient = record.patient
       name = patient&.name.presence || unknown_patient_name(record)
       cell(optional(patient&.hospital_id, :secondary_mono),
-           segment(name, :primary, href: context.href_for(record)))
+           segment(name, :patient_name, href: context.href_for(record)))
     end
 
     def age_sex_cell(patient, date)

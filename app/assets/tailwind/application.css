@@ -160,6 +160,19 @@ html {
     color: var(--app-link);
   }
 
+  /* A patient name link: bold, a step larger and not underlined, because an
+     underline crowds kanji such as 髙/齋. It stays recognisable as a link by
+     its link colour and by an underline on hover / keyboard focus. */
+  .app-patient-name-link {
+    @apply font-bold text-sm no-underline;
+    color: var(--app-link);
+  }
+
+  .app-patient-name-link:hover,
+  .app-patient-name-link:focus-visible {
+    @apply underline;
+  }
+
   /* Dense bordered table shared by every list screen. Scoped to .app-main
      (not .app-panel): several screens still wrap their table in a plain
      daisyUI .card, and they must look the same. Header cells are

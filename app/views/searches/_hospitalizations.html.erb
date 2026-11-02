@@ -28,7 +28,7 @@
           <td class="ledger-patient">
             <span class="ledger-secondary font-mono"><%= hospitalization.patient&.hospital_id %></span>
             <% if hospitalization.patient %>
-              <%= link_to hospitalization.patient.name.presence || t("searches.index.unknown_patient_name", id: hospitalization.patient_id), hospitalization.patient, class: "ledger-primary app-inline-link" %>
+              <%= link_to hospitalization.patient.name.presence || t("searches.index.unknown_patient_name", id: hospitalization.patient_id), hospitalization.patient, class: "ledger-primary app-patient-name-link" %>
             <% end %>
           </td>
           <td>

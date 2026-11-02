@@ -94,7 +94,7 @@
                 <td class="ledger-patient">
                   <% if hospitalization.patient %>
                     <span class="ledger-secondary font-mono"><%= hospitalization.patient.hospital_id %></span>
-                    <%= link_to hospitalization.patient.name.presence || t("hospitalizations.labels.unknown_patient_name", id: hospitalization.patient_id), hospitalization.patient, class: "ledger-primary app-inline-link" %>
+                    <%= link_to hospitalization.patient.name.presence || t("hospitalizations.labels.unknown_patient_name", id: hospitalization.patient_id), hospitalization.patient, class: "ledger-primary app-patient-name-link" %>
                   <% else %>
                     <span class="ledger-secondary italic"><%= t("hospitalizations.labels.unknown_patient") %></span>
                     <span class="ledger-primary"></span>

@@ -123,6 +123,9 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
 
     assert_select "tr.oc-surgery a[href=?]", edit_reservation_path(hospitalization), count: 1
     assert_select "tr.oc-surgery a[href=?]", edit_reservation_path(hospitalizations(:two)), count: 0
+    assert_select "tr.oc-surgery td.ledger-patient a.ledger-primary[href=?]", edit_reservation_path(hospitalization), text: "John Doe"
+    assert_select "tr.oc-surgery a.app-inline-link[href=?]", surgery_path(surgeries(:three), from: "calendar", start: "2026-03-03", days: 1),
+                  text: I18n.t("reservations.links.show_details")
   end
 
   test "no edit link for a surgery of a deleted hospitalization or one without a hospitalization" do
@@ -133,6 +136,8 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
 
     assert_select "tr.oc-surgery a[href$='/edit']", count: 0
+    assert_select "tr.oc-surgery a", text: I18n.t("reservations.links.show_details"), count: 0
+    assert_select "tr.oc-surgery td.ledger-patient a.ledger-primary[href=?]", surgery_path(surgeries(:three), from: "calendar", start: "2026-03-03", days: 1)
   end
 
   test "renders the days as one ledger table with a tbody per day" do
@@ -168,7 +173,8 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     assert_select "tbody.oc-day td.ledger-day .ledger-secondary", text: I18n.l(Date.new(2026, 3, 3), format: :weekday), count: 0
   end
 
-  test "each surgery row stacks patient id over name and links to the surgery" do
+  test "each surgery row stacks patient id over name and links to the surgery when it has no hospitalization" do
+    surgeries(:three).update_columns(hospitalization_id: nil)
     get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
 
     assert_select "tr.oc-surgery td.ledger-patient" do

@@ -11,13 +11,13 @@
 # A Cell has an upper and a lower part, each a list of Segments. A segment is
 # text plus a `kind` that tells the renderer how to dress it:
 #   text kinds:  :primary, :secondary, :mono (primary-sized monospace),
-#                :secondary_mono
+#                :secondary_mono, :patient_name (bold, larger, no underline)
 #   badge kinds: :scheduling, :emergency, :off_slot, :partner_department,
 #                :location, :transfer, :device, :team, :missing
 # The HTML renderer (LedgerHelper) maps kinds to daisyUI classes; the PDF
 # flattens them to plain text (Cell#plain_text), so it stays monochrome.
 class LedgerColumn
-  TEXT_KINDS = %i[primary secondary mono secondary_mono].freeze
+  TEXT_KINDS = %i[primary secondary mono secondary_mono patient_name].freeze
   BADGE_KINDS = %i[scheduling emergency off_slot partner_department location transfer device team missing].freeze
 
   # `href` links the text (HTML only); `color` is a Team color key for :team.

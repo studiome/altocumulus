@@ -1831,6 +1831,7 @@ en:
     links:
       new_reservation: "+ Reserve"
       edit_reservation: "Edit"
+      show_details: "Details"
       edit_in_reservation_form: "Edit in the reservation form"
 
   # CSV exports (see ExportField / ExportDefinition and the `exports` site

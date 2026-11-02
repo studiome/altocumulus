@@ -23,6 +23,28 @@ class LedgerHelperTest < ActionView::TestCase
     assert_select_in ledger_cell(cell), "span.badge.ledger-badge", 2
   end
 
+  test "a patient name link is bold-styled without the underlined inline link class" do
+    cell = LedgerColumn::Cell.new(upper: [ LedgerColumn::Segment.new("John Doe", :patient_name, "/x") ])
+    html = Nokogiri::HTML.fragment(ledger_cell(cell))
+
+    assert_select html, "a.ledger-primary.app-patient-name-link[href='/x']", 1
+    assert_select html, "a.app-inline-link", 0
+  end
+
+  test "a patient name without a link still gets the name style" do
+    cell = LedgerColumn::Cell.new(upper: [ LedgerColumn::Segment.new("John Doe", :patient_name) ])
+
+    assert_select_in ledger_cell(cell), "span.ledger-primary.app-patient-name-link", 1
+  end
+
+  test "the patient column builds its name as a patient_name segment" do
+    surgery = surgeries(:three)
+    cell = LedgerColumn.find(:surgery, :patient).cell(surgery, LedgerColumn::Context.new(href: ->(_) { "/x" }))
+
+    assert_equal [ :patient_name ], (cell.upper + cell.lower).map(&:kind) & [ :patient_name ]
+    assert_equal "John Doe", cell.plain_text.lines.last.strip
+  end
+
   private
 
     def assert_select_in(html, selector, count)

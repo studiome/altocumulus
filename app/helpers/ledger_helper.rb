@@ -5,7 +5,8 @@ module LedgerHelper
     primary: "ledger-primary",
     secondary: "ledger-secondary",
     mono: "ledger-primary font-mono",
-    secondary_mono: "ledger-secondary font-mono"
+    secondary_mono: "ledger-secondary font-mono",
+    patient_name: "ledger-primary app-patient-name-link"
   }.freeze
 
   # daisyUI badges are one line of fixed height; `ledger-badge` (see the CSS)
@@ -53,10 +54,18 @@ module LedgerHelper
       if segment.badge?
         tag.span(segment.text, class: ledger_badge_class(segment))
       elsif segment.href.present?
-        link_to segment.text, segment.href, class: "#{TEXT_CLASSES.fetch(segment.kind)} app-inline-link"
+        link_to segment.text, segment.href, class: ledger_link_class(segment)
       else
         tag.span(segment.text, class: TEXT_CLASSES.fetch(segment.kind))
       end
+    end
+
+    # Patient names carry their own link style (no underline, so kanji such as
+    # 髙/齋 stay legible); every other linked text is an inline link.
+    def ledger_link_class(segment)
+      return TEXT_CLASSES.fetch(segment.kind) if segment.kind == :patient_name
+
+      "#{TEXT_CLASSES.fetch(segment.kind)} app-inline-link"
     end
 
     def ledger_badge_class(segment)

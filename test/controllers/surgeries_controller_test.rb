@@ -17,6 +17,8 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "table.app-ledger td.ledger-patient" do
       assert_select ".ledger-primary"
       assert_select ".ledger-secondary"
+      assert_select "a.ledger-primary.app-patient-name-link"
+      assert_select "a.ledger-primary.app-inline-link", false
     end
   end
 

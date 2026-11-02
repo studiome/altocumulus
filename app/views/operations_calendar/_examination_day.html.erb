@@ -37,8 +37,8 @@
           <td<% if column.css_class %> class="<%= column.css_class %>"<% end %>>
             <%= ledger_cell(column.cell(hospitalization, context)) %>
             <% if index.zero? %>
-              <%= link_to t("reservations.links.edit_reservation"), edit_reservation_path(hospitalization),
-                    class: "app-inline-link text-xs print:hidden block", aria: { label: t("reservations.links.edit_reservation") + " " + hospitalization.patient.name.to_s } %>
+              <%= link_to t("reservations.links.show_details"), hospitalization_path(hospitalization),
+                    class: "app-inline-link text-xs print:hidden block", aria: { label: t("reservations.links.show_details") + " " + hospitalization.patient.name.to_s } %>
             <% end %>
           </td>
         <% end %>

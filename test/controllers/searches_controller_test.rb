@@ -33,6 +33,27 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "table a[href='#{patient_path(patient)}']", text: "Search Target Patient"
   end
 
+  test "patient names in every result tab use the bold, underline-free name link" do
+    patient = Patient.create!(hospital_id: "SRCH2", name: "Styled Name Patient", date_of_birth: "1980-01-01")
+    Hospitalization.create!(
+      patient: patient, reason: "Styled Name Reason",
+      scheduled_admission_date: Date.current + 10,
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:appendicitis).id } ]
+    )
+    surgery = Surgery.new(
+      patient: patient, anesthesia_method: "General",
+      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]
+    )
+    surgery.surgery_date_status = "undecided"
+    surgery.save!
+
+    %w[hospitalizations surgeries patients].each do |tab|
+      get search_url, params: { keyword: "Styled Name", tab: tab }
+      assert_select "a.app-patient-name-link[href='#{patient_path(patient)}']", text: "Styled Name Patient"
+      assert_select "a.app-inline-link", text: "Styled Name Patient", count: 0
+    end
+  end
+
   test "results are split into hospitalization, surgery and patient tabs with their counts" do
     get search_url, params: { keyword: "John" }
 

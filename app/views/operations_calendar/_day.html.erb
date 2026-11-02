@@ -8,7 +8,9 @@
 <% columns = calendar.columns.size + 1 %>
 <% note_context = day_note_context(calendar, view: "surgery", alternate: alternate) %>
 <% new_surgery_path = new_reservation_path(surgery_date: date, purpose: "surgery") %>
-<% context = calendar.ledger_context(href: ->(surgery) { surgery_path(surgery, from: "calendar", start: calendar.return_start.iso8601, days: calendar.return_days) }) %>
+<% surgery_details_path = ->(surgery) { surgery_path(surgery, from: "calendar", start: calendar.return_start.iso8601, days: calendar.return_days) } %>
+<%# The name opens the reservation form (every field editable); the surgery page stays one click away as "Details". %>
+<% context = calendar.ledger_context(href: ->(surgery) { surgery.hospitalization && !surgery.hospitalization.deleted? ? edit_reservation_path(surgery.hospitalization) : surgery_details_path.call(surgery) }) %>
 <tbody id="day-<%= date.iso8601 %>" class="oc-day group <%= "oc-day-alt" if alternate %> <%= "oc-day-highlight" if highlight %>"<% if highlight %> data-controller="calendar-highlight"<% end %>>
   <%= render "operations_calendar/day_band", date: date, usage_holiday: usage.holiday, columns: columns, context: note_context %>
   <% if admin? %>
@@ -64,8 +66,8 @@
           <td<% if cell_classes.present? %> class="<%= cell_classes %>"<% end %>>
             <%= ledger_cell(column.cell(surgery, context)) %>
             <% if index.zero? && surgery.hospitalization && !surgery.hospitalization.deleted? %>
-              <%= link_to t("reservations.links.edit_reservation"), edit_reservation_path(surgery.hospitalization),
-                    class: "app-inline-link text-xs print:hidden block", aria: { label: t("reservations.links.edit_reservation") + " " + surgery.patient.name } %>
+              <%= link_to t("reservations.links.show_details"), surgery_details_path.call(surgery),
+                    class: "app-inline-link text-xs print:hidden block", aria: { label: t("reservations.links.show_details") + " " + surgery.patient.name } %>
             <% end %>
           </td>
         <% end %>

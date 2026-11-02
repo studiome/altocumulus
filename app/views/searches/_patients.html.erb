@@ -12,7 +12,7 @@
       <% results.each do |patient| %>
         <tr class="row-hover">
           <td class="font-mono"><%= patient.hospital_id %></td>
-          <td><%= link_to patient.name, patient, class: "app-inline-link font-semibold" %></td>
+          <td><%= link_to patient.name, patient, class: "app-patient-name-link" %></td>
           <td class="whitespace-nowrap"><%= l(patient.date_of_birth, format: :default) if patient.date_of_birth %></td>
           <td class="ledger-actions">
             <%= link_to t("common.view"), patient, class: "app-inline-link" %>

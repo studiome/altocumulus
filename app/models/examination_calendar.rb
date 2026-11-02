@@ -59,9 +59,10 @@ class ExaminationCalendar
     admission_count_for(date) > admission_warning_threshold
   end
 
-  # The patient column links to the hospitalization.
+  # The patient column links to the reservation form (these are active
+  # hospitalizations, which is what it edits).
   def ledger_context
-    LedgerColumn::Context.new(href: ->(hospitalization) { Rails.application.routes.url_helpers.hospitalization_path(hospitalization) })
+    LedgerColumn::Context.new(href: ->(hospitalization) { Rails.application.routes.url_helpers.edit_reservation_path(hospitalization) })
   end
 
   private

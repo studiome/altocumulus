@@ -122,8 +122,8 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
     get operations_calendar_url, params: { start: "2026-05-11", days: 3, view: "examination" }
     assert_response :success
     assert_select "tbody#day-2026-05-12 tr.oc-exam", 1
-    assert_select "tbody#day-2026-05-12 a[href=?]", hospitalization_path(hospitalization)
-    assert_select "tbody#day-2026-05-12 a[href=?]", edit_reservation_path(hospitalization)
+    assert_select "tbody#day-2026-05-12 td.ledger-patient a.ledger-primary[href=?]", edit_reservation_path(hospitalization)
+    assert_select "tbody#day-2026-05-12 a[href=?]", hospitalization_path(hospitalization), text: I18n.t("reservations.links.show_details")
     assert_select "tbody#day-2026-05-12 td.ledger-day" do
       assert_select "a[href=?]", new_reservation_path(purpose: "examination", scheduled_procedure_date: "2026-05-12"), text: I18n.t("reservations.links.new_reservation")
       assert_select "*", text: /Admissions:/
@@ -151,7 +151,7 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
     hospitalizations(:two).update_columns(reservation_doctor_id: users(:admin).id)
     get operations_calendar_url, params: { start: "2026-05-12", days: 1, view: "examination", mine: "1" }
     assert_select "tr.oc-exam", 1
-    assert_select "tr.oc-exam a[href=?]", hospitalization_path(hospitalizations(:two))
+    assert_select "tr.oc-exam a[href=?]", edit_reservation_path(hospitalizations(:two))
   end
 
   test "the mine filter narrows the surgery tab but keeps the day's slot summary" do
