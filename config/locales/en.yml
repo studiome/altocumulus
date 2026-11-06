@@ -1760,6 +1760,8 @@ en:
       status:
         upper: "Reservation Status"
         lower: "Admin Status"
+      clinical_comment:
+        upper: "Clinical Comment"
     age_value: "%{age} y"
     entered_by: "Entered by: %{name}"
     emergency_admission: "Emergency admission"

@@ -62,6 +62,9 @@ module LedgerColumns
           },
           column(:status, 70, min: 56, flex: 1, includes: [ :hospitalization ]) { |surgery, _|
             status_cell(hospitalization_of(surgery))
+          },
+          column(:clinical_comment, 140, min: 90, flex: 3, includes: [ :hospitalization ]) { |surgery, _|
+            clinical_comment_cell(hospitalization_of(surgery))
           }
         ].freeze
       end

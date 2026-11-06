@@ -89,18 +89,19 @@ masters: {}
 #                        entered it, when different)
 #   referral_adl         referred from / ADL (of the linked hospitalization)
 #   status               reservation status / admin status
+#   clinical_comment     clinical comment (of the linked hospitalization), wrapped
 # Columns of the hospitalization ledger (examination_calendar):
 #   admission_dates, patient, age_sex, team (needs features.teams),
-#   reservation, referral_adl, status (as above) and
+#   reservation, referral_adl, status, clinical_comment (as above) and
 #   diagnosis_procedure_name   diagnoses / procedure name
 #   purpose                    purpose / scheduled procedure or surgery date
 #   category                   emergency admission / transfer
 # The PDF is monochrome: badges print as plain text. Its column widths come
 # from the columns themselves and shrink proportionally to fit the page.
 ledger_columns:
-  operations_calendar: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl]
+  operations_calendar: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl, clinical_comment]
   weekly_pdf: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl]
-  examination_calendar: [admission_dates, patient, age_sex, diagnosis_procedure_name, purpose, reservation, referral_adl, status]
+  examination_calendar: [admission_dates, patient, age_sex, diagnosis_procedure_name, purpose, reservation, referral_adl, status, clinical_comment]
 
 # weekly_pdf: the look of the weekly surgery schedule PDF (surgery schedule
 # screen). Both keys are optional.

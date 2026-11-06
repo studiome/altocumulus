@@ -305,7 +305,7 @@ class WeeklySurgerySchedulePdfTest < ActiveSupport::TestCase
   end
 
   test "a column set too wide at the base font steps the font down instead of squeezing" do
-    all = LedgerColumn.keys(:surgery).map(&:to_s)
+    all = LedgerColumn.keys(:surgery).map(&:to_s) - %w[clinical_comment]
     with_site_config("features" => { "teams" => true }, "ledger_columns" => { "weekly_pdf" => all }) do
       pdf = WeeklySurgerySchedulePdf.new(Date.new(2026, 3, 1))
 

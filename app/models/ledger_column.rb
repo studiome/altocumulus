@@ -11,13 +11,14 @@
 # A Cell has an upper and a lower part, each a list of Segments. A segment is
 # text plus a `kind` that tells the renderer how to dress it:
 #   text kinds:  :primary, :secondary, :mono (primary-sized monospace),
-#                :secondary_mono, :patient_name (bold, larger, no underline)
+#                :secondary_mono, :patient_name (bold, larger, no underline),
+#                :note (free text that wraps and keeps its line breaks)
 #   badge kinds: :scheduling, :emergency, :off_slot, :partner_department,
 #                :location, :transfer, :device, :team, :missing
 # The HTML renderer (LedgerHelper) maps kinds to daisyUI classes; the PDF
 # flattens them to plain text (Cell#plain_text), so it stays monochrome.
 class LedgerColumn
-  TEXT_KINDS = %i[primary secondary mono secondary_mono patient_name].freeze
+  TEXT_KINDS = %i[primary secondary mono secondary_mono patient_name note].freeze
   BADGE_KINDS = %i[scheduling emergency off_slot partner_department location transfer device team missing].freeze
 
   # `href` links the text (HTML only); `color` is a Team color key for :team.
@@ -66,7 +67,7 @@ class LedgerColumn
   LEDGERS = {
     operations_calendar: {
       subject: :surgery,
-      default: %i[time_slot patient diagnosis_procedure operator_assistant duration_anesthesia category referral_adl]
+      default: %i[time_slot patient diagnosis_procedure operator_assistant duration_anesthesia category referral_adl clinical_comment]
     },
     weekly_pdf: {
       subject: :surgery,
@@ -74,7 +75,7 @@ class LedgerColumn
     },
     examination_calendar: {
       subject: :hospitalization,
-      default: %i[admission_dates patient age_sex diagnosis_procedure_name purpose reservation referral_adl status]
+      default: %i[admission_dates patient age_sex diagnosis_procedure_name purpose reservation referral_adl status clinical_comment]
     }
   }.freeze
 

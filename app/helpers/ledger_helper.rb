@@ -6,7 +6,8 @@ module LedgerHelper
     secondary: "ledger-secondary",
     mono: "ledger-primary font-mono",
     secondary_mono: "ledger-secondary font-mono",
-    patient_name: "ledger-primary app-patient-name-link"
+    patient_name: "ledger-primary app-patient-name-link",
+    note: "ledger-secondary whitespace-pre-line break-words"
   }.freeze
 
   # daisyUI badges are one line of fixed height; `ledger-badge` (see the CSS)

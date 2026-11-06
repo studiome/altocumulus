@@ -270,17 +270,18 @@ class SiteConfigTest < ActiveSupport::TestCase
 
   test "ledger_column_keys defaults to the built-in columns when nothing is configured" do
     config = SiteConfig.from_hash({})
-    assert_equal %i[time_slot patient diagnosis_procedure operator_assistant duration_anesthesia category referral_adl],
+    assert_equal %i[time_slot patient diagnosis_procedure operator_assistant duration_anesthesia category referral_adl clinical_comment],
                  config.ledger_column_keys(:operations_calendar)
-    assert_equal config.ledger_column_keys(:operations_calendar), config.ledger_column_keys(:weekly_pdf)
-    assert_equal %i[admission_dates patient age_sex diagnosis_procedure_name purpose reservation referral_adl status],
+    assert_equal %i[time_slot patient diagnosis_procedure operator_assistant duration_anesthesia category referral_adl],
+                 config.ledger_column_keys(:weekly_pdf)
+    assert_equal %i[admission_dates patient age_sex diagnosis_procedure_name purpose reservation referral_adl status clinical_comment],
                  config.ledger_column_keys(:examination_calendar)
   end
 
   test "ledger_columns sets the order per ledger and leaves the others at their default" do
     config = SiteConfig.from_hash("ledger_columns" => { "weekly_pdf" => %w[patient time_slot] })
     assert_equal %i[patient time_slot], config.ledger_column_keys(:weekly_pdf)
-    assert_equal 7, config.ledger_column_keys(:operations_calendar).size
+    assert_equal 8, config.ledger_column_keys(:operations_calendar).size
   end
 
   test "ledger_columns rejects an unknown ledger" do

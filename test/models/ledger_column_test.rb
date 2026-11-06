@@ -2,9 +2,9 @@ require "test_helper"
 
 class LedgerColumnTest < ActiveSupport::TestCase
   SURGERY_KEYS = %i[time_slot admission_dates patient age_sex diagnosis_procedure operator_assistant
-                    duration_anesthesia team category reservation referral_adl status].freeze
+                    duration_anesthesia team category reservation referral_adl status clinical_comment].freeze
   HOSPITALIZATION_KEYS = %i[admission_dates patient age_sex diagnosis_procedure_name purpose team category
-                            reservation referral_adl status].freeze
+                            reservation referral_adl status clinical_comment].freeze
 
   setup do
     @context = LedgerColumn::Context.new
@@ -63,16 +63,16 @@ class LedgerColumnTest < ActiveSupport::TestCase
     assert_equal :surgery, LedgerColumn.subject_for(:weekly_pdf)
     assert_equal :hospitalization, LedgerColumn.subject_for(:examination_calendar)
 
-    assert_equal %i[time_slot patient diagnosis_procedure operator_assistant duration_anesthesia category referral_adl],
+    assert_equal %i[time_slot patient diagnosis_procedure operator_assistant duration_anesthesia category referral_adl clinical_comment],
                  LedgerColumn.for_ledger(:operations_calendar).map(&:key)
-    assert_equal %i[admission_dates patient age_sex diagnosis_procedure_name purpose reservation referral_adl status],
+    assert_equal %i[admission_dates patient age_sex diagnosis_procedure_name purpose reservation referral_adl status clinical_comment],
                  LedgerColumn.for_ledger(:examination_calendar).map(&:key)
   end
 
   test "for_ledger follows the site config order" do
     with_site_config("ledger_columns" => { "weekly_pdf" => %w[patient time_slot] }) do
       assert_equal %i[patient time_slot], LedgerColumn.for_ledger(:weekly_pdf).map(&:key)
-      assert_equal 7, LedgerColumn.for_ledger(:operations_calendar).size
+      assert_equal 8, LedgerColumn.for_ledger(:operations_calendar).size
     end
   end
 
@@ -422,6 +422,30 @@ class LedgerColumnTest < ActiveSupport::TestCase
     assert_equal [ "City Clinic" ], texts(cell(:hospitalization, :referral_adl, hospitalization).upper)
     assert_equal [ "Independent" ], texts(cell(:hospitalization, :referral_adl, hospitalization).lower)
     assert_equal [ Hospitalization.reservation_status_options["date_fixed"] ], texts(cell(:hospitalization, :status, hospitalization).upper)
+  end
+
+  test "surgery clinical_comment reads the linked hospitalization's comment" do
+    surgery = linked_surgery(clinical_comment: "Needs interpreter\nAllergic to latex")
+    cell = cell(:surgery, :clinical_comment, surgery)
+    assert_equal [ "Needs interpreter\nAllergic to latex" ], texts(cell.upper)
+    assert_equal [ :note ], kinds(cell.upper)
+    assert_empty cell.lower
+    assert_equal [ :hospitalization ], LedgerColumn.find(:surgery, :clinical_comment).includes
+  end
+
+  test "surgery clinical_comment is empty without a comment or hospitalization" do
+    assert cell(:surgery, :clinical_comment, linked_surgery(clinical_comment: "  ")).empty?
+    assert cell(:surgery, :clinical_comment, surgeries(:one)).empty?
+  end
+
+  test "hospitalization clinical_comment reads its own comment" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.clinical_comment = "Fasting from midnight"
+    cell = cell(:hospitalization, :clinical_comment, hospitalization)
+    assert_equal [ "Fasting from midnight" ], texts(cell.upper)
+    assert_empty cell.lower
+    hospitalization.clinical_comment = nil
+    assert cell(:hospitalization, :clinical_comment, hospitalization).empty?
   end
 
   # --- preloads ---------------------------------------------------------

@@ -35,7 +35,10 @@ module LedgerColumns
           column(:referral_adl, 90, min: 70, flex: 1.5) { |hospitalization, _|
             referral_adl_cell(hospitalization.referred_from, hospitalization.adl)
           },
-          column(:status, 70, min: 56, flex: 1) { |hospitalization, _| status_cell(hospitalization) }
+          column(:status, 70, min: 56, flex: 1) { |hospitalization, _| status_cell(hospitalization) },
+          column(:clinical_comment, 140, min: 90, flex: 3) { |hospitalization, _|
+            clinical_comment_cell(hospitalization)
+          }
         ].freeze
       end
 

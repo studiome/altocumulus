@@ -74,6 +74,11 @@ module LedgerColumns
       cell(optional(referred_from, :primary), optional(adl))
     end
 
+    def clinical_comment_cell(hospitalization)
+      comment = hospitalization&.clinical_comment.to_s.strip
+      comment.empty? ? cell : cell(segment(comment, :note))
+    end
+
     def status_cell(hospitalization)
       return cell(segment(I18n.t("ledger_columns.no_hospitalization"), :missing)) unless hospitalization
 

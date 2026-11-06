@@ -1668,6 +1668,8 @@ ja:
       status:
         upper: "予約状況"
         lower: "管理状況"
+      clinical_comment:
+        upper: "臨床コメント"
     age_value: "%{age}歳"
     entered_by: "入力: %{name}"
     emergency_admission: "緊急入院"

@@ -274,8 +274,19 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".ledger-patient", text: /Riverside Clinic/, count: 0
-    assert_select "tr.oc-surgery td:last-child .ledger-primary", text: "Riverside Clinic"
-    assert_select "tr.oc-surgery td:last-child .ledger-secondary", text: "Walker"
+    assert_select "tr.oc-surgery td:nth-last-child(2) .ledger-primary", text: "Riverside Clinic"
+    assert_select "tr.oc-surgery td:nth-last-child(2) .ledger-secondary", text: "Walker"
+  end
+
+  test "shows the clinical comment of the linked hospitalization in the last column, wrapping its lines" do
+    surgery = surgeries(:one)
+    surgery.update_columns(hospitalization_id: hospitalizations(:one).id)
+    hospitalizations(:one).update_columns(clinical_comment: "Interpreter needed\nLatex allergy")
+
+    get operations_calendar_url, params: { start: surgery.surgery_date.to_s, days: 1 }
+
+    assert_response :success
+    assert_select "tr.oc-surgery td:last-child .whitespace-pre-line", text: /Interpreter needed.*Latex allergy/m
   end
 
   test "shows nothing in the referral column when there is no referral source" do
@@ -284,17 +295,18 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
     get operations_calendar_url, params: { start: surgery.surgery_date.to_s, days: 1 }
 
     assert_response :success
-    assert_select "tr.oc-surgery td:last-child .ledger-primary", count: 0
+    assert_select "tr.oc-surgery td:nth-last-child(2) .ledger-primary", count: 0
   end
 
   test "the default header is the day cell plus the default columns, two tiers each" do
     get operations_calendar_url, params: { start: "2026-03-03", days: 1 }
 
-    assert_select "thead th", 8
+    assert_select "thead th", 9
     assert_select "thead th:nth-child(2) span", count: 2
     assert_select "thead th:nth-child(2) span:nth-child(1)", text: "Start Time"
     assert_select "thead th:nth-child(2) span:nth-child(2)", text: "Slot"
-    assert_select "thead th:last-child", text: /Referred From.*ADL/m
+    assert_select "thead th:nth-last-child(2)", text: /Referred From.*ADL/m
+    assert_select "thead th:last-child", text: /Clinical Comment/
     assert_select "thead th:nth-child(7)", text: "Type"
   end
 
@@ -318,8 +330,8 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
       assert_select "tr.oc-empty td[colspan='2']"
     end
     get operations_calendar_url, params: { start: "2026-03-03", days: 3 }
-    assert_select "tr.ledger-band-warning td[colspan='8']"
-    assert_select "tr.oc-empty td[colspan='7']"
+    assert_select "tr.ledger-band-warning td[colspan='9']"
+    assert_select "tr.oc-empty td[colspan='8']"
   end
 
   test "the category column renders badges for emergency and partner department cases" do

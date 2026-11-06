@@ -121,7 +121,7 @@ class LedgerColumnFittingTest < ActiveSupport::TestCase
 
   test "the registry weights the columns that need the spare width and states the agreed minimums" do
     flex = LedgerColumn.registry.values.select(&:flex?).map(&:key).uniq.sort
-    assert_equal %i[category diagnosis_procedure diagnosis_procedure_name patient referral_adl reservation status team], flex
+    assert_equal %i[category clinical_comment diagnosis_procedure diagnosis_procedure_name patient referral_adl reservation status team], flex
 
     assert_equal 3, LedgerColumn.find(:surgery, :category).flex
     assert_equal 2, LedgerColumn.find(:surgery, :team).flex
