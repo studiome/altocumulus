@@ -446,4 +446,53 @@ class SiteConfigTest < ActiveSupport::TestCase
     example = SiteConfig.load(Rails.root.join("config/site.example.yml"))
     assert_includes example.export_definitions.map(&:key), :ncd_list
   end
+
+  # --- reservation_defaults ---------------------------------------------
+
+  test "reservation_defaults is empty by default and admission is one day before surgery" do
+    config = SiteConfig.from_hash({})
+    assert_equal 1, config.admission_days_before_surgery
+    assert_nil config.reservation_default(:surgery, :anesthesia_method)
+    assert_nil config.reservation_default(:hospitalization, :adl)
+  end
+
+  test "reservation_defaults accepts the documented shape" do
+    config = SiteConfig.from_hash("reservation_defaults" => {
+      "admission_days_before_surgery" => 0,
+      "surgery" => { "surgery_location" => " Room A ", "anesthesia_method" => "GA" },
+      "hospitalization" => { "adl" => "Good", "infection" => "None" }
+    })
+    assert_equal 0, config.admission_days_before_surgery
+    assert_equal "Room A", config.reservation_default(:surgery, :surgery_location)
+    assert_equal "GA", config.reservation_default(:surgery, :anesthesia_method)
+    assert_equal "Good", config.reservation_default(:hospitalization, :adl)
+    assert_equal "None", config.reservation_default(:hospitalization, :infection)
+    assert_equal 30, SiteConfig.from_hash("reservation_defaults" => { "admission_days_before_surgery" => 30 }).admission_days_before_surgery
+    assert_equal 1, SiteConfig.from_hash("reservation_defaults" => nil).admission_days_before_surgery
+  end
+
+  test "reservation_defaults rejects unknown keys at any level" do
+    [ { "bogus" => 1 }, { "surgery" => { "bogus" => "x" } }, { "hospitalization" => { "bogus" => "x" } },
+      { "hospitalization" => { "anesthesia_method" => "x" } } ].each do |bad|
+      error = assert_raises(SiteConfig::Error, bad.inspect) { SiteConfig.from_hash("reservation_defaults" => bad) }
+      assert_match(/reservation_defaults.*unknown key/, error.message)
+    end
+  end
+
+  test "reservation_defaults rejects bad types and values" do
+    [ "x", [ 1 ], { "admission_days_before_surgery" => -1 }, { "admission_days_before_surgery" => 31 },
+      { "admission_days_before_surgery" => "1" }, { "admission_days_before_surgery" => 1.5 },
+      { "surgery" => "x" }, { "surgery" => { "anesthesia_method" => 3 } }, { "surgery" => { "anesthesia_method" => "  " } },
+      { "surgery" => { "anesthesia_method" => "a" * 101 } }, { "hospitalization" => { "adl" => [ "x" ] } },
+      { "hospitalization" => { "infection" => "" } } ].each do |bad|
+      assert_raises(SiteConfig::Error, bad.inspect) { SiteConfig.from_hash("reservation_defaults" => bad) }
+    end
+  end
+
+  test "the shipped configs load with reservation_defaults, the example filled in" do
+    assert_equal 1, SiteConfig.load(Rails.root.join("config/site.yml")).admission_days_before_surgery
+    example = SiteConfig.load(Rails.root.join("config/site.example.yml"))
+    location = example.reservation_default(:surgery, :surgery_location)
+    assert_includes example.master_names("surgery_locations"), location
+  end
 end

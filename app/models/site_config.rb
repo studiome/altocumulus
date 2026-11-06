@@ -58,6 +58,16 @@ class SiteConfig
   EXPORT_KEYS = %w[subject fields label].freeze
   EXPORT_LABEL_MAX = 40
 
+  # reservation_defaults: what the new reservation form starts with.
+  RESERVATION_DEFAULT_SECTIONS = {
+    "surgery" => %w[surgery_location anesthesia_method],
+    "hospitalization" => %w[adl infection]
+  }.freeze
+  RESERVATION_DEFAULT_KEYS = (%w[admission_days_before_surgery] + RESERVATION_DEFAULT_SECTIONS.keys).freeze
+  RESERVATION_DEFAULT_TEXT_MAX = 100
+  ADMISSION_DAYS_BEFORE_SURGERY = (0..30).freeze
+  DEFAULT_ADMISSION_DAYS_BEFORE_SURGERY = 1
+
   # top-level key => validator method (receives the raw value, returns the
   # normalized one, raises Error).
   SCHEMA = {
@@ -67,7 +77,8 @@ class SiteConfig
     "masters" => :normalize_masters,
     "ledger_columns" => :normalize_ledger_columns,
     "weekly_pdf" => :normalize_weekly_pdf,
-    "exports" => :normalize_exports
+    "exports" => :normalize_exports,
+    "reservation_defaults" => :normalize_reservation_defaults
   }.freeze
 
   class << self
@@ -202,6 +213,19 @@ class SiteConfig
   # The title the site wants on the PDF instead of the translated default, or nil.
   def weekly_pdf_title
     @values.fetch("weekly_pdf")[:title]
+  end
+
+  # Days before the surgery date the new reservation form's admission date
+  # starts at (reservation_defaults.admission_days_before_surgery, default 1).
+  def admission_days_before_surgery
+    @values.fetch("reservation_defaults").fetch("admission_days_before_surgery", DEFAULT_ADMISSION_DAYS_BEFORE_SURGERY)
+  end
+
+  # The configured starting text for a field of a new reservation ("surgery" /
+  # "hospitalization" section, attribute name), or nil. For surgery_location
+  # this is the master row's name; see Reservation.build_new.
+  def reservation_default(section, attribute)
+    @values.fetch("reservation_defaults").dig(section.to_s, attribute.to_s)
   end
 
   # The CSV exports on offer (ExportDefinition), in file order: the configured
@@ -423,6 +447,51 @@ class SiteConfig
       raise Error, "#{source}: #{label}.label must be at most #{EXPORT_LABEL_MAX} characters" if value.strip.length > EXPORT_LABEL_MAX
 
       value.strip.presence
+    end
+
+    def normalize_reservation_defaults(value)
+      return {}.freeze if value.nil?
+      raise Error, "#{source}: reservation_defaults must be a mapping" unless value.is_a?(Hash)
+
+      unknown = value.keys - RESERVATION_DEFAULT_KEYS
+      if unknown.any?
+        raise Error, "#{source}: reservation_defaults has unknown key(s) #{unknown.join(', ')} (known: #{RESERVATION_DEFAULT_KEYS.join(', ')})"
+      end
+
+      result = {}
+      days = value["admission_days_before_surgery"]
+      unless days.nil?
+        unless days.is_a?(Integer) && ADMISSION_DAYS_BEFORE_SURGERY.cover?(days)
+          raise Error, "#{source}: reservation_defaults.admission_days_before_surgery must be an integer from #{ADMISSION_DAYS_BEFORE_SURGERY.first} to #{ADMISSION_DAYS_BEFORE_SURGERY.last}"
+        end
+        result["admission_days_before_surgery"] = days
+      end
+
+      RESERVATION_DEFAULT_SECTIONS.each do |section, attributes|
+        next if value[section].nil?
+
+        result[section] = normalize_reservation_default_section(section, attributes, value[section])
+      end
+      result.freeze
+    end
+
+    def normalize_reservation_default_section(section, attributes, value)
+      label = "reservation_defaults.#{section}"
+      raise Error, "#{source}: #{label} must be a mapping" unless value.is_a?(Hash)
+
+      unknown = value.keys - attributes
+      raise Error, "#{source}: #{label} has unknown key(s) #{unknown.join(', ')} (known: #{attributes.join(', ')})" if unknown.any?
+
+      value.to_h do |attribute, text|
+        unless text.is_a?(String) && text.strip.present?
+          raise Error, "#{source}: #{label}.#{attribute} must be a non-blank string"
+        end
+        if text.strip.length > RESERVATION_DEFAULT_TEXT_MAX
+          raise Error, "#{source}: #{label}.#{attribute} must be at most #{RESERVATION_DEFAULT_TEXT_MAX} characters"
+        end
+
+        [ attribute, text.strip ]
+      end.freeze
     end
 
     def normalize_patient(value)

@@ -51,6 +51,30 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=patient-card]", text: /H800/
   end
 
+  test "new shows the site's reservation defaults, in the hidden surgery section too" do
+    config = { "reservation_defaults" => {
+      "surgery" => { "surgery_location" => "Cath Lab", "anesthesia_method" => "GA" },
+      "hospitalization" => { "adl" => "Good", "infection" => "None" }
+    } }
+    with_site_config(config) do
+      [ "surgery", "examination" ].each do |purpose|
+        get new_reservation_url, params: { purpose: purpose }
+        assert_select "input[name='reservation[hospitalization][adl]'][value=Good]"
+        assert_select "input[name='reservation[hospitalization][infection]'][value=None]"
+        assert_select "input[name='reservation[surgery][anesthesia_method]'][value=GA]"
+        assert_select "select[name='reservation[surgery][surgery_location_id]'] option[selected]", text: "Cath Lab"
+      end
+
+      get edit_reservation_url(hospitalizations(:one))
+      assert_select "input[name='reservation[hospitalization][adl]'][value=Good]", count: 0
+    end
+  end
+
+  test "creating saves the infection" do
+    post reservations_url, params: valid_params(reservation: { hospitalization: { infection: "MRSA" } })
+    assert_equal "MRSA", Hospitalization.order(:id).last.infection
+  end
+
   test "new ignores a non-surgery purpose prefill for the surgery section but shows procedure fields" do
     get new_reservation_url, params: { purpose: "examination" }
     assert_select "select[name='reservation[hospitalization][purpose]'] option[selected][value=examination]"

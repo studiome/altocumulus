@@ -190,6 +190,11 @@
     </div>
 
     <div class="app-field">
+      <%= form.label :infection, t("hospitalizations.labels.infection"), class: "app-field-label" %>
+      <%= form.text_field :infection, class: "input w-full focus:input-primary" %>
+    </div>
+
+    <div class="app-field">
       <%= form.label :outcome, Hospitalization.human_attribute_name(:outcome), class: "app-field-label" %>
       <%= form.select :outcome, Hospitalization.outcome_form_options, { include_blank: true }, class: "select w-full focus:select-primary" %>
     </div>

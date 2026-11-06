@@ -142,12 +142,12 @@ weekly_pdf:
 #   performing_department partner_department backup_intervention
 #   and, from the surgery's hospitalization: scheduled_admission_date
 #   admission_date discharge_date emergency_admission transfer_status
-#   source_department referred_from adl reservation_doctor created_by
+#   source_department referred_from adl infection reservation_doctor created_by
 #   submitted_on reservation_status purpose clinical_comment
 # Fields of subject hospitalization:
 #   hospital_id patient_name patient_kana age (on the admission date) sex
 #   diagnoses scheduled_admission_date admission_date discharge_date
-#   emergency_admission transfer_status source_department referred_from adl
+#   emergency_admission transfer_status source_department referred_from adl infection
 #   reservation_doctor created_by submitted_on reservation_status purpose
 #   clinical_comment scheduled_procedure_date procedure_name planned_days
 #   scheduled_surgery_date attending_doctor ward team team_members
@@ -155,3 +155,26 @@ weekly_pdf:
 # The built-in defaults (what is used while `exports` is omitted):
 #   surgery_list:   {subject: surgery, fields: every surgery field}
 #   admission_list: {subject: hospitalization, fields: every hospitalization field}
+
+# reservation_defaults: what the NEW reservation form (入約フォーム) starts
+# with. Applied only when the form is first opened, never on edit and never
+# over a value the link already carries. All keys are optional; the default
+# is {} (nothing prefilled, admission one day before the surgery date).
+#   admission_days_before_surgery: integer 0 to 30 (default 1). The admission
+#       date starts at the surgery date minus this many days when the form is
+#       opened with a surgery date (the calendar's day link), and follows the
+#       surgery date input while the admission date has not been edited by hand.
+#   surgery:
+#     surgery_location:  name of a surgery location master row. Resolved when
+#                        the form opens; a missing or inactive row leaves the
+#                        field blank.
+#     anesthesia_method: free text, at most 100 characters
+#   hospitalization:
+#     adl:       free text, at most 100 characters
+#     infection: free text, at most 100 characters (the Infections field)
+# Example:
+#   reservation_defaults:
+#     admission_days_before_surgery: 1
+#     surgery: {surgery_location: <room name>, anesthesia_method: <text>}
+#     hospitalization: {adl: <text>, infection: <text>}
+reservation_defaults: {}

@@ -266,6 +266,7 @@ ja:
         slot_duration_minutes: "1枠の時間（分）"
       hospitalization:
         adl: "ADL"
+        infection: "感染症"
         admin_status: "確認ステータス"
         admission_date: "入院日"
         attending_doctor: "主治医"
@@ -1095,6 +1096,7 @@ ja:
       reason_other_details: "その他の内容（入院理由）"
       referred_from: "紹介元"
       adl: "ADL"
+      infection: "感染症"
       reservation_doctor: "予約医師"
       attending_doctor: "主治医"
       submitted_on: "提出日"
@@ -1780,6 +1782,7 @@ ja:
       source_department: "転院元診療科"
       referred_from: "紹介元"
       adl: "ADL"
+      infection: "感染症"
       reservation_doctor: "入約医"
       created_by: "入力者"
       submitted_on: "入約日"

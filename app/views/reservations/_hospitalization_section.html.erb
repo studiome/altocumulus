@@ -126,6 +126,10 @@
         <%= hf.text_field :adl, class: "input w-full focus:input-primary" %>
       </div>
       <div class="app-field">
+        <%= hf.label :infection, t("hospitalizations.labels.infection"), class: "app-field-label" %>
+        <%= hf.text_field :infection, class: "input w-full focus:input-primary" %>
+      </div>
+      <div class="app-field">
         <%= hf.label :room_preference, t("hospitalizations.form.room_preference_label"), class: "app-field-label" %>
         <%= hf.text_field :room_preference, class: "input w-full focus:input-primary", placeholder: t("hospitalizations.form.room_preference_placeholder") %>
       </div>

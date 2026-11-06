@@ -57,6 +57,7 @@ class Reservation
     hospitalization.submitted_on = Date.current
     reservation.send(:ensure_surgery) if reservation.surgery_applicable?
     reservation.surgery&.surgery_date = parse_date(surgery_date)
+    reservation.send(:apply_site_defaults)
     reservation
   end
 
@@ -195,6 +196,23 @@ class Reservation
 
     def ensure_surgery
       @surgery ||= Surgery.new
+    end
+
+    # The site's starting values for a NEW form (reservation_defaults), only
+    # where nothing is set yet. The surgery ones go to the record the surgery
+    # section renders, which exists (hidden) for any purpose. A location that
+    # is missing or inactive is simply left blank.
+    def apply_site_defaults
+      config = SiteConfig.current
+      hospitalization.adl = config.reservation_default(:hospitalization, :adl) if hospitalization.adl.blank?
+      hospitalization.infection = config.reservation_default(:hospitalization, :infection) if hospitalization.infection.blank?
+
+      form_surgery = surgery_for_form
+      form_surgery.anesthesia_method = config.reservation_default(:surgery, :anesthesia_method) if form_surgery.anesthesia_method.blank?
+      location_name = config.reservation_default(:surgery, :surgery_location)
+      if location_name && form_surgery.surgery_location_id.nil?
+        form_surgery.surgery_location = SurgeryLocation.active.find_by(name: location_name)
+      end
     end
 
     # Rows can arrive as an index-keyed hash (the form), or an array.

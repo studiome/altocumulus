@@ -86,6 +86,10 @@
           <span class="text-lg font-medium"><%= @hospitalization.adl.presence || t("common.none") %></span>
         </div>
         <div>
+          <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.infection") %></span>
+          <span class="text-lg font-medium"><%= @hospitalization.infection.presence || t("common.none") %></span>
+        </div>
+        <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.reservation_doctor") %></span>
           <span class="text-lg font-medium"><%= @hospitalization.reservation_doctor_display || t("common.none") %></span>
         </div>

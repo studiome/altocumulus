@@ -129,7 +129,7 @@ class ReservationsController < ApplicationController
           *team_params,
           :patient_id, :purpose, :reason, :scheduled_admission_date, :planned_days, :emergency_admission,
           :transfer_status, :source_department_id, :referred_from, :reservation_doctor_id, :attending_doctor,
-          :adl, :room_preference, :scheduled_procedure_date, :procedure_name, :clinical_comment
+          :adl, :infection, :room_preference, :scheduled_procedure_date, :procedure_name, :clinical_comment
         ] },
         { surgery: [
           :surgery_date, :surgery_date_status, :scheduling_type, :slot_category, :department_id, :backup_intervention,

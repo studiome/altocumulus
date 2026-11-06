@@ -84,3 +84,12 @@ exports:
   admission_list:
     subject: hospitalization
     fields: [scheduled_admission_date, admission_date, hospital_id, patient_name, age, sex, diagnoses, purpose, referred_from, adl, reservation_doctor, team, reservation_status]
+
+reservation_defaults:
+  admission_days_before_surgery: 1
+  surgery:
+    surgery_location: 手術室
+    anesthesia_method: 全身麻酔
+  hospitalization:
+    adl: 良好
+    infection: なし

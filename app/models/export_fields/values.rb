@@ -56,6 +56,7 @@ module ExportFields
         source_department: ->(h) { h&.source_department&.name },
         referred_from: ->(h) { h&.referred_from },
         adl: ->(h) { h&.adl },
+        infection: ->(h) { h&.infection },
         reservation_doctor: ->(h) { h&.reservation_doctor_display },
         created_by: ->(h) { h&.created_by&.name },
         submitted_on: ->(h) { iso(h&.submitted_on) },

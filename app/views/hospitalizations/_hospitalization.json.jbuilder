@@ -1,6 +1,6 @@
 json.extract! hospitalization, :id, :patient_id, :admission_date, :scheduled_admission_date, :scheduled_surgery_date,
               :reservation_status, :purpose, :admin_status, :planned_days, :reason, :room_preference,
-              :ward, :referred_from, :adl, :attending_doctor,
+              :ward, :referred_from, :adl, :infection, :attending_doctor,
               :submitted_on, :clinical_comment,
               :discharge_date, :outcome, :discharge_destination,
               :patient_name_snapshot, :patient_age_snapshot, :patient_sex_snapshot,

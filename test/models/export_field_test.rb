@@ -5,10 +5,10 @@ class ExportFieldTest < ActiveSupport::TestCase
                     patient_kana age sex diagnoses procedures surgical_device duration_hours anesthesia_method operator
                     assistant team team_members location performing_department partner_department backup_intervention
                     scheduled_admission_date admission_date discharge_date emergency_admission transfer_status
-                    source_department referred_from adl reservation_doctor created_by submitted_on reservation_status
+                    source_department referred_from adl infection reservation_doctor created_by submitted_on reservation_status
                     purpose clinical_comment].freeze
   HOSPITALIZATION_KEYS = %i[hospital_id patient_name patient_kana age sex diagnoses scheduled_admission_date admission_date
-                            discharge_date emergency_admission transfer_status source_department referred_from adl
+                            discharge_date emergency_admission transfer_status source_department referred_from adl infection
                             reservation_doctor created_by submitted_on reservation_status purpose clinical_comment
                             scheduled_procedure_date procedure_name planned_days scheduled_surgery_date attending_doctor
                             ward team team_members].freeze
@@ -90,7 +90,7 @@ class ExportFieldTest < ActiveSupport::TestCase
   test "hospitalization-side fields are nil for a surgery without a hospitalization" do
     surgery = surgeries(:one)
     %i[scheduled_admission_date admission_date discharge_date emergency_admission transfer_status source_department
-       referred_from adl reservation_doctor created_by submitted_on reservation_status purpose clinical_comment].each do |key|
+       referred_from adl infection reservation_doctor created_by submitted_on reservation_status purpose clinical_comment].each do |key|
       assert_nil value(:surgery, key, surgery), key.to_s
     end
   end
@@ -105,7 +105,7 @@ class ExportFieldTest < ActiveSupport::TestCase
 
   test "hospitalization-side fields read the linked hospitalization" do
     doctor = users(:member)
-    surgery = linked_surgery(scheduled_admission_date: Date.new(2026, 2, 27), referred_from: "Clinic A", adl: "Independent",
+    surgery = linked_surgery(scheduled_admission_date: Date.new(2026, 2, 27), referred_from: "Clinic A", adl: "Independent", infection: "HBs positive",
                              reservation_doctor_id: doctor.id, created_by_id: users(:admin).id, submitted_on: Date.new(2026, 2, 20),
                              emergency_admission: true, clinical_comment: "Note")
     assert_equal "2026-02-27", value(:surgery, :scheduled_admission_date, surgery)
@@ -113,6 +113,7 @@ class ExportFieldTest < ActiveSupport::TestCase
     assert_equal "2026-03-06", value(:surgery, :discharge_date, surgery)
     assert_equal "Clinic A", value(:surgery, :referred_from, surgery)
     assert_equal "Independent", value(:surgery, :adl, surgery)
+    assert_equal "HBs positive", value(:surgery, :infection, surgery)
     assert_equal doctor.name, value(:surgery, :reservation_doctor, surgery)
     assert_equal users(:admin).name, value(:surgery, :created_by, surgery)
     assert_equal "2026-02-20", value(:surgery, :submitted_on, surgery)
@@ -152,7 +153,7 @@ class ExportFieldTest < ActiveSupport::TestCase
   test "hospitalization fields read the hospitalization and its patient" do
     hospitalization = hospitalizations(:one)
     hospitalization.update_columns(purpose: "examination", scheduled_procedure_date: Date.new(2026, 3, 2), procedure_name: "Endoscopy",
-                                   attending_doctor: "Dr. A", ward: "5A", transfer_status: "transferred_in")
+                                   attending_doctor: "Dr. A", ward: "5A", transfer_status: "transferred_in", infection: "HCV")
     assert_equal "H001", value(:hospitalization, :hospital_id, hospitalization)
     assert_equal "46", value(:hospitalization, :age, hospitalization)
     assert_equal "2026-03-01", value(:hospitalization, :admission_date, hospitalization)
@@ -161,6 +162,7 @@ class ExportFieldTest < ActiveSupport::TestCase
     assert_equal "5", value(:hospitalization, :planned_days, hospitalization)
     assert_equal "Dr. A", value(:hospitalization, :attending_doctor, hospitalization)
     assert_equal "5A", value(:hospitalization, :ward, hospitalization)
+    assert_equal "HCV", value(:hospitalization, :infection, hospitalization)
     assert_equal "Examination / Procedure", value(:hospitalization, :purpose, hospitalization)
     assert_equal "Hypertension, Pneumonia".split(", ").sort, value(:hospitalization, :diagnoses, hospitalization).split(", ").sort
     assert_not_nil value(:hospitalization, :transfer_status, hospitalization)

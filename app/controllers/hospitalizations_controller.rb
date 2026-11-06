@@ -164,7 +164,7 @@ class HospitalizationsController < ApplicationController
       params.expect(hospitalization: [
         *team_params,
         :patient_id, :admission_date, :scheduled_admission_date, :scheduled_surgery_date, :reservation_status, :purpose,
-        :planned_days, :reason, :room_preference, :ward, :referred_from, :adl,
+        :planned_days, :reason, :room_preference, :ward, :referred_from, :adl, :infection,
         :reservation_doctor_id, :attending_doctor, :submitted_on, :clinical_comment,
         :emergency_admission, :transfer_status, :source_department_id, :scheduled_procedure_date, :procedure_name,
         :discharge_date, :outcome, :discharge_destination,

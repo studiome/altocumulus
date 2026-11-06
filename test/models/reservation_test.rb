@@ -307,6 +307,65 @@ class ReservationTest < ActiveSupport::TestCase
     assert_equal 1, reservation.procedure_rows_for_form.size
   end
 
+  DEFAULTS = {
+    "reservation_defaults" => {
+      "surgery" => { "surgery_location" => "Cath Lab", "anesthesia_method" => "GA" },
+      "hospitalization" => { "adl" => "Good", "infection" => "None" }
+    }
+  }.freeze
+
+  test "build_new applies the site's reservation defaults" do
+    with_site_config(DEFAULTS) do
+      reservation = Reservation.build_new(user: @user, purpose: "surgery")
+      assert_equal "Good", reservation.hospitalization.adl
+      assert_equal "None", reservation.hospitalization.infection
+      assert_equal "GA", reservation.surgery.anesthesia_method
+      assert_equal surgery_locations(:cath_lab), reservation.surgery.surgery_location
+    end
+  end
+
+  test "build_new fills the hidden surgery section too when the purpose is not surgery" do
+    with_site_config(DEFAULTS) do
+      reservation = Reservation.build_new(user: @user, purpose: "examination")
+      assert_equal "GA", reservation.surgery_for_form.anesthesia_method
+      assert_equal surgery_locations(:cath_lab), reservation.surgery_for_form.surgery_location
+      assert_equal "Good", reservation.hospitalization.adl
+    end
+  end
+
+  test "an unknown or inactive default location leaves the location blank" do
+    [ "Nowhere", "Closed Room" ].each do |name|
+      config = { "reservation_defaults" => { "surgery" => { "surgery_location" => name } } }
+      with_site_config(config) do
+        assert_nil Reservation.build_new(user: @user, purpose: "surgery").surgery.surgery_location, name
+      end
+    end
+  end
+
+  test "defaults never apply to an existing reservation or a plain new one" do
+    with_site_config(DEFAULTS) do
+      assert_nil Reservation.new.hospitalization.adl
+      hospitalization = hospitalizations(:one)
+      hospitalization.update_columns(adl: nil)
+      assert_nil Reservation.for_hospitalization(hospitalization.reload).hospitalization.adl
+    end
+  end
+
+  test "build_new does not override values the form object already has" do
+    with_site_config(DEFAULTS) do
+      reservation = Reservation.build_new(user: @user, purpose: "surgery")
+      reservation.assign(hospitalization: { adl: "" }, surgery: { anesthesia_method: "" })
+      assert_equal "", reservation.hospitalization.adl
+      assert_equal "", reservation.surgery.anesthesia_method
+    end
+  end
+
+  test "the infection field is saved with the reservation" do
+    reservation = build(hospitalization: { infection: "MRSA" })
+    reservation.save!
+    assert_equal "MRSA", reservation.hospitalization.reload.infection
+  end
+
   test "build_new ignores junk prefill values" do
     reservation = Reservation.build_new(user: @user, surgery_date: [ "x" ], scheduled_admission_date: "nope",
                                         purpose: "bogus", patient_id: "9999999")

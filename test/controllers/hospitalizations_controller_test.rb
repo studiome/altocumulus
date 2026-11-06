@@ -65,6 +65,21 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "span", text: "2026-03-06 (Fri)"
   end
 
+  test "show displays the infection next to the ADL" do
+    @hospitalization.update_columns(infection: "HBs positive")
+    get hospitalization_url(@hospitalization)
+    assert_select "span", text: "Infections"
+    assert_select "span", text: "HBs positive"
+  end
+
+  test "the standalone form edits and saves the infection" do
+    get edit_hospitalization_url(@hospitalization)
+    assert_select "input[name='hospitalization[infection]']"
+
+    patch hospitalization_url(@hospitalization), params: { hospitalization: { infection: "MRSA" } }
+    assert_equal "MRSA", @hospitalization.reload.infection
+  end
+
   test "deleted list shows the admission date with its weekday" do
     @hospitalization.discard!
 
