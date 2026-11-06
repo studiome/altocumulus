@@ -15,6 +15,13 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes ids, @hospitalization.id
   end
 
+  test "index new button starts from the reservation form" do
+    get hospitalizations_url
+    assert_response :success
+    assert_select "a.btn-primary[href=?]", new_reservation_path
+    assert_select "a[href=?]", new_hospitalization_path, false
+  end
+
   test "index does not error out on a crafted Array page param" do
     get hospitalizations_url, params: { page: [ "1" ] }
     assert_response :success
