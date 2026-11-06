@@ -783,6 +783,91 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to surgeries_url
   end
 
+  test "edit shows the hospitalization clinical comment textarea" do
+    hosp = hospitalizations(:one)
+    hosp.update!(clinical_comment: "経過観察")
+    @surgery.update_columns(hospitalization_id: hosp.id)
+
+    get edit_surgery_url(@surgery)
+
+    assert_select "textarea[name='surgery[hospitalization_clinical_comment]']", text: /経過観察/
+  end
+
+  test "edit has no clinical comment textarea without a hospitalization" do
+    get edit_surgery_url(@surgery)
+
+    assert_select "textarea[name='surgery[hospitalization_clinical_comment]']", false
+  end
+
+  test "update changes the hospitalization clinical comment and the surgery" do
+    hosp = hospitalizations(:one)
+    @surgery.update_columns(hospitalization_id: hosp.id)
+
+    patch surgery_url(@surgery), params: { surgery: { duration_hours: 3.0, hospitalization_clinical_comment: "新コメント" } }
+
+    assert_response :see_other
+    assert_equal "新コメント", hosp.reload.clinical_comment
+    assert_equal 3.0, @surgery.reload.duration_hours
+  end
+
+  test "update without the param leaves the clinical comment alone" do
+    hosp = hospitalizations(:one)
+    hosp.update!(clinical_comment: "keep")
+    @surgery.update_columns(hospitalization_id: hosp.id)
+
+    patch surgery_url(@surgery), params: { surgery: { duration_hours: 3.0 } }
+
+    assert_equal "keep", hosp.reload.clinical_comment
+  end
+
+  test "update with the same clinical comment does not write the hospitalization" do
+    hosp = hospitalizations(:one)
+    hosp.update!(clinical_comment: "same")
+    hosp.update_columns(updated_at: 1.day.ago)
+    stamp = hosp.reload.updated_at
+    @surgery.update_columns(hospitalization_id: hosp.id)
+
+    patch surgery_url(@surgery), params: { surgery: { duration_hours: 3.0, hospitalization_clinical_comment: "same" } }
+
+    assert_equal stamp, hosp.reload.updated_at
+  end
+
+  test "failed surgery update does not change the clinical comment" do
+    hosp = hospitalizations(:one)
+    hosp.update!(clinical_comment: "before")
+    @surgery.update_columns(hospitalization_id: hosp.id)
+
+    patch surgery_url(@surgery), params: { surgery: { patient_id: "", hospitalization_clinical_comment: "after" } }
+
+    assert_response :unprocessable_entity
+    assert_equal "before", hosp.reload.clinical_comment
+  end
+
+  test "failed hospitalization update rolls back the surgery change" do
+    hosp = hospitalizations(:one)
+    @surgery.update_columns(hospitalization_id: hosp.id)
+
+    with_site_config("required_fields" => { "hospitalization" => [ "room_preference" ] }) do
+      hosp.update_columns(room_preference: nil)
+      patch surgery_url(@surgery), params: { surgery: { duration_hours: 4.0, hospitalization_clinical_comment: "x" } }
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal 1.5, @surgery.reload.duration_hours
+    assert_nil hosp.reload.clinical_comment
+  end
+
+  test "create from a hospitalization sets its clinical comment" do
+    hosp = hospitalizations(:one)
+
+    post surgeries_url, params: { surgery: valid_surgery_params(
+      surgery_date: "2026-10-12", hospitalization_id: hosp.id, hospitalization_clinical_comment: "入院時コメント"
+    ) }
+
+    assert_equal hosp.id, Surgery.order(:id).last.hospitalization_id
+    assert_equal "入院時コメント", hosp.reload.clinical_comment
+  end
+
   private
 
     def capture_query_count

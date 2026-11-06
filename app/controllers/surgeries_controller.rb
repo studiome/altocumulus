@@ -42,7 +42,7 @@ class SurgeriesController < ApplicationController
     @surgery = Surgery.new(surgery_params)
 
     respond_to do |format|
-      if save_surgery { @surgery.save }
+      if save_surgery { @surgery.save && save_clinical_comment }
         format.html { redirect_after_save(t(".success_notice")) }
         format.json { render :show, status: :created, location: @surgery }
       else
@@ -56,7 +56,7 @@ class SurgeriesController < ApplicationController
 
   def update
     respond_to do |format|
-      if save_surgery { @surgery.update(surgery_params) }
+      if save_surgery { @surgery.update(surgery_params) && save_clinical_comment }
         format.html { redirect_after_save(t(".success_notice"), status: :see_other) }
         format.json { render :show, status: :ok, location: @surgery }
       else
@@ -133,7 +133,12 @@ class SurgeriesController < ApplicationController
     # two existing rows hits the unique index mid-save even though the final
     # state is valid. Surface that as a validation error instead of a 500.
     def save_surgery
-      yield
+      saved = false
+      Surgery.transaction do
+        saved = yield
+        raise ActiveRecord::Rollback unless saved
+      end
+      saved
     rescue ActiveRecord::RecordNotUnique => e
       if e.message.include?("surgery_procedure_selections")
         @surgery.errors.add(:surgery_procedure_selections, :cannot_swap_procedures_between_rows)
@@ -141,6 +146,23 @@ class SurgeriesController < ApplicationController
       else
         raise e
       end
+    end
+
+    # The clinical comment lives on the surgery's hospitalization. Runs inside
+    # save_surgery's transaction; a false return rolls the surgery back too.
+    # Only a submitted, changed value touches the hospitalization, and only
+    # the one the saved surgery is linked to.
+    def save_clinical_comment
+      submitted = params.fetch(:surgery, {}).permit(:hospitalization_clinical_comment)
+      return true unless submitted.key?(:hospitalization_clinical_comment)
+
+      hospitalization = @surgery.hospitalization
+      comment = submitted[:hospitalization_clinical_comment]
+      return true if hospitalization.nil? || comment.to_s == hospitalization.clinical_comment.to_s
+      return true if hospitalization.update(clinical_comment: comment)
+
+      hospitalization.errors.full_messages.each { |message| @surgery.errors.add(:base, message) }
+      false
     end
 
     # Prefill params are untrusted: anything that is not a parsable date

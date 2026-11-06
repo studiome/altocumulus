@@ -1205,6 +1205,7 @@ en:
       operator_placeholder: "e.g. Dr. Smith"
       assistant_placeholder: "e.g. Dr. Lee"
       operation_order_placeholder: "e.g. 1"
+      clinical_comment_hint: "Saved as the hospitalization's clinical comment and shown on the calendar."
     surgery_procedure_selection_fields:
       procedure_label: "Procedure"
       remove_button: "Remove"

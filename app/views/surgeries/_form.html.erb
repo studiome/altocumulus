@@ -223,6 +223,16 @@
     <%= form.number_field :operation_order, class: "input w-full focus:input-primary", min: 1, step: 1, placeholder: t(".operation_order_placeholder") %>
   </div>
 
+  <% if surgery.hospitalization %>
+    <div class="app-field">
+      <%= label_tag "surgery_hospitalization_clinical_comment", t("hospitalizations.labels.clinical_comment"), class: "app-field-label" %>
+      <%= text_area_tag "surgery[hospitalization_clinical_comment]",
+                        (params.dig(:surgery, :hospitalization_clinical_comment) if params[:surgery].respond_to?(:key?) && params[:surgery].key?(:hospitalization_clinical_comment)) || surgery.hospitalization.clinical_comment,
+                        id: "surgery_hospitalization_clinical_comment", class: "textarea w-full focus:textarea-primary", rows: 3 %>
+      <p class="text-xs text-base-content/60 mt-1"><%= t(".clinical_comment_hint") %></p>
+    </div>
+  <% end %>
+
   <div class="pt-4">
     <%= form.submit class: "btn btn-primary w-full" %>
   </div>

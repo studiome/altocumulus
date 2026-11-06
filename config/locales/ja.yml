@@ -1193,6 +1193,7 @@ ja:
       operator_placeholder: "例: 山田太郎"
       assistant_placeholder: "例: 佐藤花子"
       operation_order_placeholder: "例: 1"
+      clinical_comment_hint: "入院情報の臨床コメントとして保存され、カレンダーに表示されます。"
     surgery_procedure_selection_fields:
       procedure_label: "術式"
       remove_button: "削除"
