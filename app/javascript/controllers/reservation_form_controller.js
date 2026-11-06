@@ -17,11 +17,53 @@ export default class extends Controller {
   ]
   static values = {
     patientCardUrl: String, admissionCountUrl: String, admissionCalendarUrl: String,
-    slotSummaryUrl: String, teamMembersUrl: String
+    slotSummaryUrl: String, teamMembersUrl: String,
+    followSurgeryDate: Boolean, admissionDaysBeforeSurgery: { type: Number, default: 1 }
   }
 
   connect() {
     this.toggleTransfer()
+    this.admissionEdited = this.admissionDiffersFromSurgery()
+  }
+
+  // A new form's admission date follows the surgery date (surgery date minus
+  // the site's admission_days_before_surgery) until the admission date is
+  // edited by hand.
+  surgeryDateChanged() {
+    this.refreshSlot()
+    this.refreshTeam()
+    if (!this.followSurgeryDateValue || this.admissionEdited) return
+    if (!this.hasAdmissionDateTarget || !this.hasSurgeryDateTarget) return
+
+    const suggested = this.suggestedAdmissionDate()
+    if (!suggested) return
+
+    this.admissionDateTarget.value = suggested
+    this.refreshAdmission()
+    this.refreshTeam()
+  }
+
+  // Fired by the user's own input on the admission date field; setting
+  // `value` from here does not fire it.
+  admissionEditedByUser() {
+    this.admissionEdited = true
+  }
+
+  suggestedAdmissionDate() {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(this.hasSurgeryDateTarget ? this.surgeryDateTarget.value : "")
+    if (!match) return null
+
+    const date = new Date(Date.UTC(+match[1], +match[2] - 1, +match[3] - this.admissionDaysBeforeSurgeryValue))
+    return date.toISOString().slice(0, 10)
+  }
+
+  // A field that already holds something other than the suggestion (an
+  // explicit date from the link, an edited reservation) is not overwritten.
+  admissionDiffersFromSurgery() {
+    if (!this.hasAdmissionDateTarget) return false
+
+    const current = this.admissionDateTarget.value
+    return current !== "" && current !== this.suggestedAdmissionDate()
   }
 
   refreshPatient() {

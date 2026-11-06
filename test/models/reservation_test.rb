@@ -366,6 +366,29 @@ class ReservationTest < ActiveSupport::TestCase
     assert_equal "MRSA", reservation.hospitalization.reload.infection
   end
 
+  # --- admission date default --------------------------------------------
+
+  test "admission defaults to one day before the surgery date" do
+    reservation = Reservation.build_new(user: @user, surgery_date: "2026-12-10", purpose: "surgery")
+    assert_equal Date.new(2026, 12, 9), reservation.hospitalization.scheduled_admission_date
+  end
+
+  test "the configured number of days before surgery is used" do
+    [ [ 0, 10 ], [ 3, 7 ] ].each do |days, day|
+      with_site_config("reservation_defaults" => { "admission_days_before_surgery" => days }) do
+        reservation = Reservation.build_new(user: @user, surgery_date: "2026-12-10", purpose: "surgery")
+        assert_equal Date.new(2026, 12, day), reservation.hospitalization.scheduled_admission_date
+      end
+    end
+  end
+
+  test "an explicit admission date wins and no surgery date leaves it blank" do
+    reservation = Reservation.build_new(user: @user, surgery_date: "2026-12-10", scheduled_admission_date: "2026-12-01", purpose: "surgery")
+    assert_equal Date.new(2026, 12, 1), reservation.hospitalization.scheduled_admission_date
+    assert_nil Reservation.build_new(user: @user, purpose: "surgery").hospitalization.scheduled_admission_date
+    assert_nil Reservation.build_new(user: @user, surgery_date: "bogus", purpose: "surgery").hospitalization.scheduled_admission_date
+  end
+
   test "build_new ignores junk prefill values" do
     reservation = Reservation.build_new(user: @user, surgery_date: [ "x" ], scheduled_admission_date: "nope",
                                         purpose: "bogus", patient_id: "9999999")

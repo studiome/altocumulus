@@ -201,7 +201,9 @@ class Reservation
     # The site's starting values for a NEW form (reservation_defaults), only
     # where nothing is set yet. The surgery ones go to the record the surgery
     # section renders, which exists (hidden) for any purpose. A location that
-    # is missing or inactive is simply left blank.
+    # is missing or inactive is simply left blank. With a surgery date, the
+    # admission date starts that many days (admission_days_before_surgery)
+    # earlier.
     def apply_site_defaults
       config = SiteConfig.current
       hospitalization.adl = config.reservation_default(:hospitalization, :adl) if hospitalization.adl.blank?
@@ -212,6 +214,11 @@ class Reservation
       location_name = config.reservation_default(:surgery, :surgery_location)
       if location_name && form_surgery.surgery_location_id.nil?
         form_surgery.surgery_location = SurgeryLocation.active.find_by(name: location_name)
+      end
+
+      surgery_date = surgery&.surgery_date
+      if surgery_date && hospitalization.scheduled_admission_date.nil?
+        hospitalization.scheduled_admission_date = surgery_date - config.admission_days_before_surgery
       end
     end
 

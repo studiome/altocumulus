@@ -13,7 +13,9 @@
      data-reservation-form-admission-count-url-value="<%= admission_count_reservations_path %>"
      data-reservation-form-admission-calendar-url-value="<%= admission_calendar_reservations_path %>"
      data-reservation-form-slot-summary-url-value="<%= slot_summary_reservations_path %>"
-     data-reservation-form-team-members-url-value="<%= team_members_reservations_path %>">
+     data-reservation-form-team-members-url-value="<%= team_members_reservations_path %>"
+     data-reservation-form-follow-surgery-date-value="<%= !reservation.persisted? %>"
+     data-reservation-form-admission-days-before-surgery-value="<%= SiteConfig.current.admission_days_before_surgery %>">
   <div class="min-w-0">
     <%= form_with model: reservation, scope: :reservation, url: url, method: http_method, class: "app-form space-y-6" do |form| %>
       <% if reservation.errors.any? %>

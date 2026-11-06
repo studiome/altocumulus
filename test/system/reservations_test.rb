@@ -53,6 +53,29 @@ class ReservationsTest < ApplicationSystemTestCase
     assert_selector "tbody#day-#{@surgery_date.iso8601}.oc-day-highlight"
   end
 
+  test "the admission date follows the surgery date until it is edited by hand" do
+    visit new_reservation_path(purpose: "surgery")
+    admission = "reservation_hospitalization_scheduled_admission_date"
+
+    set_date "reservation_surgery_surgery_date", @surgery_date
+    assert_field "Scheduled Admission Date", with: (@surgery_date - 1).iso8601
+    assert_selector "turbo-frame#reservation_admission_count", text: "Admissions already scheduled that day"
+
+    set_date "reservation_surgery_surgery_date", @surgery_date + 3
+    assert_field "Scheduled Admission Date", with: (@surgery_date + 2).iso8601
+
+    set_date admission, @admission
+    set_date "reservation_surgery_surgery_date", @surgery_date + 5
+    assert_field "Scheduled Admission Date", with: @admission.iso8601
+    assert_equal @admission.iso8601, find("##{admission}").value
+  end
+
+  test "an admission date from the link is not overwritten by a surgery date change" do
+    visit new_reservation_path(purpose: "surgery", scheduled_admission_date: @admission.iso8601)
+    set_date "reservation_surgery_surgery_date", @surgery_date
+    assert_field "Scheduled Admission Date", with: @admission.iso8601
+  end
+
   test "choosing a non-surgery purpose hides the surgery section and shows the procedure fields" do
     visit new_reservation_path(purpose: "surgery")
 

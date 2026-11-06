@@ -26,7 +26,7 @@
         <%= hf.date_field :scheduled_admission_date,
               { class: "input w-full focus:input-primary",
                 data: { reservation_form_target: "admissionDate",
-                        action: "change->reservation-form#refreshAdmission change->reservation-form#refreshTeam" } }.deep_merge(reservation_aria(reservation, "hospitalization.scheduled_admission_date", "hospitalization.admission_date")) %>
+                        action: "input->reservation-form#admissionEditedByUser change->reservation-form#refreshAdmission change->reservation-form#refreshTeam" } }.deep_merge(reservation_aria(reservation, "hospitalization.scheduled_admission_date", "hospitalization.admission_date")) %>
         <%= reservation_field_error(reservation, "hospitalization.scheduled_admission_date", "hospitalization.admission_date") %>
         <%= render "admission_count", date: hospitalization.scheduled_admission_date,
               count: (AdmissionCalendar.count_on(hospitalization.scheduled_admission_date) if hospitalization.scheduled_admission_date),

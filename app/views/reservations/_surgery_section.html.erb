@@ -28,7 +28,7 @@
         <%= sf.date_field :surgery_date,
               { class: "input w-full focus:input-primary mt-2",
                 data: { reservation_form_target: "surgeryDate",
-                        action: "change->reservation-form#refreshSlot change->reservation-form#refreshTeam" } }.deep_merge(reservation_aria(reservation, "surgery.surgery_date", "surgery.surgery_date_status")) %>
+                        action: "change->reservation-form#surgeryDateChanged" } }.deep_merge(reservation_aria(reservation, "surgery.surgery_date", "surgery.surgery_date_status")) %>
         <%= reservation_field_error(reservation, "surgery.surgery_date", "surgery.surgery_date_status") %>
         <%= render "slot_summary", date: surgery.surgery_date,
               usage: (ElectiveSlotUsage.for_dates([ surgery.surgery_date ])[surgery.surgery_date] if surgery.surgery_date) %>
