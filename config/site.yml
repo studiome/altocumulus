@@ -90,7 +90,9 @@ masters: {}
 #   referral_adl         referred from / ADL (of the linked hospitalization)
 #   status               reservation status / admin status
 #   clinical_comment     clinical comment (of the linked hospitalization), wrapped
-# Columns of the hospitalization ledger (examination_calendar):
+# Columns of the hospitalization ledgers (examination_calendar, the examination
+# tab, and admission_calendar, the admission tab listing every purpose by
+# admission date):
 #   admission_dates, patient, age_sex, team (needs features.teams),
 #   reservation, referral_adl, status, clinical_comment (as above) and
 #   diagnosis_procedure_name   diagnoses / procedure name
@@ -102,6 +104,7 @@ ledger_columns:
   operations_calendar: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl, clinical_comment]
   weekly_pdf: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl]
   examination_calendar: [admission_dates, patient, age_sex, diagnosis_procedure_name, purpose, reservation, referral_adl, status, clinical_comment]
+  admission_calendar: [admission_dates, patient, age_sex, purpose, diagnosis_procedure_name, category, referral_adl, clinical_comment, status]
 
 # weekly_pdf: the look of the weekly surgery schedule PDF (surgery schedule
 # screen). Both keys are optional.
@@ -119,7 +122,8 @@ weekly_pdf:
 # exports: named CSV exports (CSV出力), offered to admins and data managers
 # only, as a "CSV出力" menu on the operations calendar (surgery tab: exports
 # with subject surgery; examination tab: subject hospitalization, the
-# non-surgery admissions listed there) and on the hospitalization list (all
+# non-surgery admissions listed there; admission tab: subject hospitalization,
+# every admission by admission date) and on the hospitalization list (all
 # admissions of its current filter). The file covers the screen's date range
 # and active filters (mine, team) and is named <name>_<start>_<end>.csv. It is
 # UTF-8 with a byte order mark, CRLF line endings, one header row and every

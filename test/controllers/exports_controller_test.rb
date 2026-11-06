@@ -117,6 +117,14 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/filename="admission_list_2026-03-01_2026-03-03\.csv"/, response.headers["Content-Disposition"])
   end
 
+  test "the admission tab exports every purpose by admission date" do
+    hospitalizations(:one).update_columns(purpose: "examination", scheduled_admission_date: Date.new(2026, 3, 2), admission_date: nil, procedure_name: "Endoscopy")
+    hospitalizations(:two).update_columns(purpose: "surgery", scheduled_admission_date: Date.new(2026, 3, 2), admission_date: nil)
+    get export_url(:admission_list), params: RANGE.merge(view: "admission")
+    assert_response :success
+    assert_equal 2, rows.size - 1
+  end
+
   test "the hospitalization list export applies the list's filters" do
     get export_url(:admission_list), params: { view: "hospitalizations", keyword: "Jane" }
     table = rows
@@ -200,7 +208,7 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
         assert_select "input[name=to][value='2026-03-31']"
         assert_select "select[name=team_id]", false
       end
-      assert_select "section#export-admission_list select[name=view] option", count: 2
+      assert_select "section#export-admission_list select[name=view] option", count: 3
     end
   end
 

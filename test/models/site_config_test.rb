@@ -276,12 +276,22 @@ class SiteConfigTest < ActiveSupport::TestCase
                  config.ledger_column_keys(:weekly_pdf)
     assert_equal %i[admission_dates patient age_sex diagnosis_procedure_name purpose reservation referral_adl status clinical_comment],
                  config.ledger_column_keys(:examination_calendar)
+    assert_equal %i[admission_dates patient age_sex purpose diagnosis_procedure_name category referral_adl clinical_comment status],
+                 config.ledger_column_keys(:admission_calendar)
   end
 
   test "ledger_columns sets the order per ledger and leaves the others at their default" do
     config = SiteConfig.from_hash("ledger_columns" => { "weekly_pdf" => %w[patient time_slot] })
     assert_equal %i[patient time_slot], config.ledger_column_keys(:weekly_pdf)
     assert_equal 8, config.ledger_column_keys(:operations_calendar).size
+  end
+
+  test "ledger_columns accepts the admission ledger but only hospitalization columns, and team only with the feature" do
+    config = SiteConfig.from_hash("ledger_columns" => { "admission_calendar" => %w[patient purpose] })
+    assert_equal %i[patient purpose], config.ledger_column_keys(:admission_calendar)
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "admission_calendar" => %w[patient time_slot] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "admission_calendar" => %w[patient team] }) }
+    assert SiteConfig.from_hash("features" => { "teams" => true }, "ledger_columns" => { "admission_calendar" => %w[patient team] })
   end
 
   test "ledger_columns rejects an unknown ledger" do

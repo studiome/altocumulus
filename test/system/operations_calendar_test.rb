@@ -21,6 +21,21 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
     assert_text "No examination admissions scheduled", minimum: 1
   end
 
+  test "the admission tab lists a surgery and an examination admission on the same day with the count" do
+    day = Date.new(2026, 3, 5)
+    hospitalizations(:one).update_columns(purpose: "surgery", scheduled_admission_date: day, admission_date: nil, discharge_date: nil)
+    hospitalizations(:two).update_columns(purpose: "examination", scheduled_procedure_date: day + 3, scheduled_admission_date: day, admission_date: nil, discharge_date: nil)
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    click_on "Admissions"
+
+    assert_selector "[role=tab][aria-selected=true]", text: "Admissions"
+    assert_current_path(/view=admission/)
+    within("tbody#day-#{day.iso8601}") do
+      assert_selector "tr.oc-admission", count: 2
+      assert_text(/Admissions:\s*2/)
+    end
+  end
+
   test "an admin edits a day's note in place and the day re-renders without a page load" do
     visit operations_calendar_path(start: "2026-03-01", days: 7)
     page.execute_script("window.__stays = true")

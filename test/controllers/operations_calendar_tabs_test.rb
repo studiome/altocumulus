@@ -29,7 +29,7 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
       assert_select "input[type=checkbox][name=mine][checked]"
       assert_select "select[name=team_id] option[selected]", text: "Blue Team"
     end
-    assert_select "a[role=tab][href*='mine=1']", count: 2
+    assert_select "a[role=tab][href*='mine=1']", count: 3
   end
 
   test "the team select only exists with the teams feature" do
@@ -170,6 +170,58 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
     make_examination(hospitalizations(:three), Date.new(2026, 5, 13))
     make_examination(hospitalizations(:four), Date.new(2026, 5, 14))
     many = request_query_count { get operations_calendar_url, params: { start: "2026-05-11", days: 5, view: "examination" } }
+    assert_equal few, many
+  end
+
+  # --- admission tab -----------------------------------------------------------
+
+  test "the admission tab is the third tab and keeps the range" do
+    get operations_calendar_url, params: RANGE
+    assert_select "a[role=tab]", 3
+    assert_select "a[role=tab]:nth-of-type(3)", text: "Admissions"
+    assert_select "a[role=tab][href=?]", operations_calendar_path(start: "2026-03-01", days: 7, view: "admission")
+  end
+
+  test "the admission tab lists every purpose on its admission date with the count" do
+    hospitalizations(:one).update_columns(purpose: "surgery", scheduled_admission_date: Date.new(2026, 5, 12), admission_date: nil, discharge_date: nil)
+    hospitalizations(:two).update_columns(purpose: "chemotherapy", scheduled_admission_date: Date.new(2026, 5, 12), admission_date: nil, discharge_date: nil)
+    get operations_calendar_url, params: { start: "2026-05-11", days: 3, view: "admission" }
+    assert_response :success
+    assert_select "tbody#day-2026-05-12 tr.oc-admission", 2
+    assert_select "tbody#day-2026-05-12 td.ledger-patient a.ledger-primary[href=?]", edit_reservation_path(hospitalizations(:one))
+    assert_select "tbody#day-2026-05-12 td.ledger-day" do
+      assert_select "a[href=?]", new_reservation_path(scheduled_admission_date: "2026-05-12"), text: I18n.t("reservations.links.new_reservation")
+      assert_select "*", text: /Admissions:\s*2 \/ #{Rails.application.config.x.admission_warning_threshold}/
+      assert_select ".badge-warning", false
+    end
+    assert_select "tbody#day-2026-05-11 tr.oc-empty", text: /No admissions scheduled/
+    assert_select ".oc-legend", false
+  end
+
+  test "the admission tab warns above the threshold" do
+    original = Rails.application.config.x.admission_warning_threshold
+    Rails.application.config.x.admission_warning_threshold = 1
+    begin
+      hospitalizations(:one).update_columns(scheduled_admission_date: Date.new(2026, 5, 12), admission_date: nil)
+      hospitalizations(:two).update_columns(scheduled_admission_date: Date.new(2026, 5, 12), admission_date: nil)
+      get operations_calendar_url, params: { start: "2026-05-12", days: 1, view: "admission" }
+      assert_select "tbody#day-2026-05-12 td.ledger-day .badge-warning"
+    ensure
+      Rails.application.config.x.admission_warning_threshold = original
+    end
+  end
+
+  test "an invalid range on the admission tab redirects" do
+    get operations_calendar_url, params: { view: "admission", days: "999" }
+    assert_redirected_to operations_calendar_path
+  end
+
+  test "the admission tab query count does not grow with rows" do
+    hospitalizations(:two).update_columns(scheduled_admission_date: Date.new(2026, 5, 12), admission_date: nil)
+    few = request_query_count { get operations_calendar_url, params: { start: "2026-05-11", days: 5, view: "admission" } }
+    hospitalizations(:one).update_columns(scheduled_admission_date: Date.new(2026, 5, 13), admission_date: nil)
+    hospitalizations(:three).update_columns(scheduled_admission_date: Date.new(2026, 5, 13), admission_date: nil)
+    many = request_query_count { get operations_calendar_url, params: { start: "2026-05-11", days: 5, view: "admission" } }
     assert_equal few, many
   end
 

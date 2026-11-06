@@ -37,7 +37,11 @@ module CalendarDayRendering
     end
 
     def day_partial
-      view_name == "examination" ? "operations_calendar/examination_day" : "operations_calendar/day"
+      case view_name
+      when "examination" then "operations_calendar/examination_day"
+      when "admission" then "operations_calendar/admission_day"
+      else "operations_calendar/day"
+      end
     end
 
     def day_locals
@@ -57,6 +61,10 @@ module CalendarDayRendering
       end
       options = { start_date: @date, days: 1, filter: CalendarFilter.from_params(params, user: current_user),
                   return_start: start, return_days: days }
-      view_name == "examination" ? ExaminationCalendar.new(**options) : OperationsCalendar.new(**options)
+      case view_name
+      when "examination" then ExaminationCalendar.new(**options)
+      when "admission" then AdmissionLedgerCalendar.new(**options)
+      else OperationsCalendar.new(**options)
+      end
     end
 end

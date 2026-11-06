@@ -80,6 +80,12 @@ class DayNotesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "No examination admissions"
   end
 
+  test "update can replace the admission tbody" do
+    patch day_note_url(DATE), params: CONTEXT.merge(view: "admission", holiday: { holiday: "0", note: "Meeting" }), headers: TURBO
+    assert_includes response.body, "oc-empty"
+    assert_includes response.body, "No admissions scheduled"
+  end
+
   test "validation errors render inline in the frame with 422 and save nothing" do
     assert_no_difference "Holiday.count" do
       patch day_note_url(DATE), params: CONTEXT.merge(holiday: { holiday: "1", name: "" }), headers: frame_headers

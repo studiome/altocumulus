@@ -62,6 +62,9 @@ class LedgerColumnTest < ActiveSupport::TestCase
     assert_equal :surgery, LedgerColumn.subject_for(:operations_calendar)
     assert_equal :surgery, LedgerColumn.subject_for(:weekly_pdf)
     assert_equal :hospitalization, LedgerColumn.subject_for(:examination_calendar)
+    assert_equal :hospitalization, LedgerColumn.subject_for(:admission_calendar)
+    assert_equal %i[admission_dates patient age_sex purpose diagnosis_procedure_name category referral_adl clinical_comment status],
+                 LedgerColumn.for_ledger(:admission_calendar).map(&:key)
 
     assert_equal %i[time_slot patient diagnosis_procedure operator_assistant duration_anesthesia category referral_adl clinical_comment],
                  LedgerColumn.for_ledger(:operations_calendar).map(&:key)

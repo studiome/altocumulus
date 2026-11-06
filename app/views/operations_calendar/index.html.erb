@@ -77,6 +77,8 @@
           <% @calendar.dates.each_with_index do |date, index| %>
             <% if @view == "surgery" %>
               <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
+            <% elsif @view == "admission" %>
+              <%= render "admission_day", date: date, calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
             <% else %>
               <%= render "examination_day", date: date, calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
             <% end %>

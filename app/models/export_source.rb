@@ -5,6 +5,8 @@
 #                     in start/days, under the mine / team_id filter
 #   examination       its examination tab: the non-surgery admissions listed
 #                     there, same range and filter
+#   admission         its admission tab: every active admission by effective
+#                     admission date (AdmissionLedgerCalendar), same range and filter
 #   hospitalizations  the hospitalization list: Hospitalization.filtered with
 #                     the list's own filter params (keyword, diagnosis_id,
 #                     status, admitted_from, admitted_to)
@@ -16,8 +18,8 @@
 # OperationsCalendar::InvalidRangeError.
 # `from` / `to` in the Result are the covered dates as the file name shows them (nil = open).
 class ExportSource
-  VIEWS = %w[surgery examination hospitalizations].freeze
-  SUBJECTS = { "surgery" => :surgery, "examination" => :hospitalization, "hospitalizations" => :hospitalization }.freeze
+  VIEWS = %w[surgery examination admission hospitalizations].freeze
+  SUBJECTS = { "surgery" => :surgery, "examination" => :hospitalization, "admission" => :hospitalization, "hospitalizations" => :hospitalization }.freeze
   HOSPITALIZATION_FILTERS = %i[keyword diagnosis_id status admitted_from admitted_to].freeze
   MAX_DAYS = 366
 
@@ -35,6 +37,7 @@ class ExportSource
     case view
     when "surgery" then surgeries(params, user, includes)
     when "examination" then examinations(params, user, includes)
+    when "admission" then admissions(params, user, includes)
     else hospitalizations(params, includes)
     end
   end
@@ -53,6 +56,13 @@ class ExportSource
     dates = dates_for(params)
     scope = ExaminationCalendar.scope_for(dates, filter: CalendarFilter.from_params(params, user: user))
     records = ExaminationCalendar.order_scope(scope.includes(*includes)).to_a
+    Result.new(records: records, from: dates.first, to: dates.last)
+  end
+
+  def self.admissions(params, user, includes)
+    dates = dates_for(params)
+    scope = AdmissionLedgerCalendar.scope_for(dates, filter: CalendarFilter.from_params(params, user: user))
+    records = AdmissionLedgerCalendar.order_scope(scope.includes(*includes)).to_a
     Result.new(records: records, from: dates.first, to: dates.last)
   end
 
@@ -111,5 +121,5 @@ class ExportSource
   rescue Date::Error
     nil
   end
-  private_class_method :surgeries, :examinations, :hospitalizations, :dates_for, :download_range?, :download_range, :with_team, :parse_date
+  private_class_method :surgeries, :examinations, :admissions, :hospitalizations, :dates_for, :download_range?, :download_range, :with_team, :parse_date
 end

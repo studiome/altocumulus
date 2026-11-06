@@ -76,6 +76,10 @@ class LedgerColumn
     examination_calendar: {
       subject: :hospitalization,
       default: %i[admission_dates patient age_sex diagnosis_procedure_name purpose reservation referral_adl status clinical_comment]
+    },
+    admission_calendar: {
+      subject: :hospitalization,
+      default: %i[admission_dates patient age_sex purpose diagnosis_procedure_name category referral_adl clinical_comment status]
     }
   }.freeze
 

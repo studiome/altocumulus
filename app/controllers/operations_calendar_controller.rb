@@ -1,10 +1,11 @@
-# The day-by-day operations view with two tabs: surgeries (elective slot usage,
-# admission load, holidays/comments) and examination admissions. All the actual
-# work is in OperationsCalendar / ExaminationCalendar; this controller only
+# The day-by-day operations view with three tabs: surgeries (elective slot usage,
+# admission load, holidays/comments), examination admissions and all admissions
+# by admission date. All the actual work is in OperationsCalendar /
+# ExaminationCalendar / AdmissionLedgerCalendar; this controller only
 # turns request params into a calendar (or a friendly redirect when they don't
 # make sense).
 class OperationsCalendarController < ApplicationController
-  VIEWS = %w[surgery examination].freeze
+  VIEWS = %w[surgery examination admission].freeze
 
   def index
     @view = VIEWS.include?(params[:view]) ? params[:view] : "surgery"
@@ -19,7 +20,11 @@ class OperationsCalendarController < ApplicationController
 
     def build_calendar
       options = { start: params[:start], days: params[:days], filter: @filter }
-      @view == "examination" ? ExaminationCalendar.build(**options) : OperationsCalendar.build(**options)
+      case @view
+      when "examination" then ExaminationCalendar.build(**options)
+      when "admission" then AdmissionLedgerCalendar.build(**options)
+      else OperationsCalendar.build(**options)
+      end
     end
 
     # The day to briefly emphasize after a surgery was saved; anything that

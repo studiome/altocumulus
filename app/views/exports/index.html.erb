@@ -30,7 +30,7 @@
             <% else %>
               <div class="app-filter-field">
                 <label class="app-filter-label" for="<%= id %>-view"><%= t(".target_label") %></label>
-                <%= f.select :view, [ [ t(".target_hospitalizations"), "hospitalizations" ], [ t(".target_examination"), "examination" ] ],
+                <%= f.select :view, [ [ t(".target_hospitalizations"), "hospitalizations" ], [ t(".target_examination"), "examination" ], [ t(".target_admission"), "admission" ] ],
                       {}, id: "#{id}-view", class: "select select-sm" %>
               </div>
             <% end %>
