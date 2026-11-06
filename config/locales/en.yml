@@ -1058,7 +1058,8 @@ en:
       diagnoses_helper: "Add one or more diagnosis names for this hospitalization."
       diagnosis_row_helper: "If the right diagnosis is not listed, create a new one first."
       add_diagnosis_button: "Add Diagnosis"
-      room_preference_placeholder: "e.g. Private room"
+      room_preference_label: "Preferred room (up to 2nd choice)"
+      room_preference_placeholder: "e.g. Private room, 4-bed room"
       comments_heading: "Comments"
     hospitalization_diagnosis_fields:
       remove_button: "Remove"

@@ -1074,7 +1074,8 @@ ja:
       diagnoses_helper: "この入院に対する診断名を1つ以上追加してください。"
       diagnosis_row_helper: "該当する診断名がない場合は、先に新規作成してください。"
       add_diagnosis_button: "診断を追加"
-      room_preference_placeholder: "例: 個室"
+      room_preference_label: "希望病室（第二希望まで記載）"
+      room_preference_placeholder: "例: 個室、4床室"
       comments_heading: "コメント"
     hospitalization_diagnosis_fields:
       remove_button: "削除"

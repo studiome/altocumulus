@@ -185,6 +185,13 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "the room preference field asks for up to a second choice" do
+    get new_reservation_url
+
+    assert_select "label[for='reservation_hospitalization_room_preference']", text: I18n.t("hospitalizations.form.room_preference_label")
+    assert_includes I18n.t("hospitalizations.form.room_preference_label"), "2nd"
+  end
+
   test "the surgery section shows the performing department only for flagged locations" do
     surgery_locations(:cath_lab).update!(asks_performing_department: true)
 
