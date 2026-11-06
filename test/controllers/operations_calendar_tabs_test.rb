@@ -15,6 +15,15 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
     assert_select "[role=tabpanel][aria-labelledby]"
   end
 
+  test "the tab bar is a large boxed bar and the selected tab is filled with the primary color" do
+    get operations_calendar_url, params: RANGE
+    assert_select "[role=tablist].tabs.tabs-box.tabs-lg.mb-4.print\\:hidden"
+    assert_select "a[role=tab].tab.font-semibold", count: 3
+    assert_select "a[role=tab][aria-selected=true].bg-primary.text-primary-content", count: 1
+    assert_select "a[role=tab][aria-selected=false].bg-primary", false
+    assert_select "a[role=tab][aria-selected=false].hover\\:bg-base-300", count: 2
+  end
+
   test "an unknown view falls back to surgery" do
     get operations_calendar_url, params: RANGE.merge(view: "bogus")
     assert_select "a[role=tab][aria-selected=true]", text: "Surgery"
