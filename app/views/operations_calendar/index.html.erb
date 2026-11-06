@@ -42,11 +42,11 @@
   </section>
 
   <%# Tabs are plain links (a reload, so the filters/range ride in the URL). %>
-  <div role="tablist" aria-label="<%= t(".tabs_label") %>" class="tabs tabs-box tabs-lg mb-4 flex-wrap print:hidden">
+  <div role="tablist" aria-label="<%= t(".tabs_label") %>" class="<%= tab_bar_class %>">
     <% OperationsCalendarController::VIEWS.each do |view| %>
       <% selected = view == @view %>
       <%= link_to t(".tab_#{view}"), operations_calendar_path(range_params.merge(view: view)),
-            id: "oc-tab-#{view}", role: "tab", class: "tab font-semibold #{selected ? "tab-active bg-primary text-primary-content" : "hover:bg-base-300"}",
+            id: "oc-tab-#{view}", role: "tab", class: tab_link_class(selected),
             aria: { selected: selected.to_s, controls: "oc-panel" }, tabindex: (selected ? 0 : -1) %>
     <% end %>
   </div>

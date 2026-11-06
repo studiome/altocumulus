@@ -67,6 +67,16 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[role=tabpanel] table.app-ledger"
   end
 
+  test "the tab bar looks like the operations calendar's: large, boxed, selected tab filled" do
+    get search_url, params: { keyword: "John" }
+
+    assert_select "[role=tablist].tabs.tabs-box.tabs-lg.mb-4.print\\:hidden"
+    assert_select "a[role=tab].tab.font-semibold", count: 3
+    assert_select "a[role=tab][aria-selected=true].tab-active.bg-primary.text-primary-content", count: 1
+    assert_select "a[role=tab][aria-selected=false].bg-primary", false
+    assert_select "a[role=tab][aria-selected=false].hover\\:bg-base-300", count: 2
+  end
+
   test "only the selected tab's rows are shown" do
     get search_url, params: { keyword: "John", tab: "surgeries" }
 

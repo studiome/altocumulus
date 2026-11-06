@@ -1,6 +1,15 @@
 require "test_helper"
 
 class ApplicationHelperTest < ActionView::TestCase
+  test "tab_bar_class is the large boxed tab bar" do
+    assert_equal "tabs tabs-box tabs-lg mb-4 flex-wrap print:hidden", tab_bar_class
+  end
+
+  test "tab_link_class fills the selected tab and hovers the others" do
+    assert_equal "tab font-semibold tab-active bg-primary text-primary-content", tab_link_class(true)
+    assert_equal "tab font-semibold hover:bg-base-300", tab_link_class(false)
+  end
+
   test "date_with_weekday shows the abbreviated weekday in English" do
     I18n.with_locale(:en) do
       assert_includes date_with_weekday(Date.new(2026, 10, 5)), "2026-10-05 (Mon)"

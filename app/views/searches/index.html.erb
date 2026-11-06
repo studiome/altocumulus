@@ -26,11 +26,11 @@
     <div class="app-empty-state"><%= t(".empty_state") %></div>
   <% else %>
     <%# Tabs are plain links (a reload, so the keyword rides in the URL). %>
-    <div role="tablist" aria-label="<%= t(".tabs_label") %>" class="tabs tabs-border">
+    <div role="tablist" aria-label="<%= t(".tabs_label") %>" class="<%= tab_bar_class %>">
       <% SearchesController::TABS.each do |tab| %>
         <% selected = tab == @tab %>
         <%= link_to t(".tab_label", label: t(".#{tab}_heading"), count: @counts[tab]), search_path(keyword: @keyword, tab: tab),
-              id: "search-tab-#{tab}", role: "tab", class: "tab #{"tab-active" if selected}",
+              id: "search-tab-#{tab}", role: "tab", class: tab_link_class(selected),
               aria: { selected: selected.to_s, controls: "search-panel" }, tabindex: (selected ? 0 : -1) %>
       <% end %>
     </div>

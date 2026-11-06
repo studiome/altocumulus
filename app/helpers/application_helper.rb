@@ -1,4 +1,13 @@
 module ApplicationHelper
+  # Shared look of the page-level tab bars (operations calendar, search).
+  def tab_bar_class
+    "tabs tabs-box tabs-lg mb-4 flex-wrap print:hidden"
+  end
+
+  def tab_link_class(selected)
+    "tab font-semibold " + (selected ? "tab-active bg-primary text-primary-content" : "hover:bg-base-300")
+  end
+
   # CSS class for the label of a field whose requiredness is chosen by the
   # site config (see ConfigurableRequiredFields): the asterisk comes from the
   # same source as the validation, so the two cannot disagree.
