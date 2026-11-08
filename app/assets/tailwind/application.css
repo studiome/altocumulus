@@ -415,11 +415,10 @@ html {
     word-break: keep-all;
   }
 
-  /* Page-level sideways scroll (screen only): the body grows to the table, so
-     the navbar background (an oversized shadow) reaches the far edge, and the
-     navbar, page header, tabs and legend stay one viewport wide at the left
-     while only the ledger moves. The navbar is also pinned to the top
-     (sticky top: 0) while the page scrolls vertically. min() falls back to
+  /* Page-level sideways scroll (screen only): the body grows to the table;
+     the navbar (fixed, see below), page header, tabs and legend stay one
+     viewport wide at the left, and the full-width band rows' content stays in
+     view (.ledger-band-content), while only the ledger moves. min() falls back to
      the container width when nothing overflows. --oc-viewport-width (viewport_width_controller.js)
      is the visible width without a classic scrollbar; 100vw is only its
      fallback.
@@ -482,14 +481,23 @@ html {
       min-width: fit-content;
     }
 
-    /* The shadow's spread is shifted up by its own size, so it covers the sides
-       and the area above the bar but its bottom edge is exactly the bar's.
-       No clip-path to trim it: that would clip the whole subtree to the bar,
-       cutting off the dropdown panels that open below it. */
+    /* On the calendar the navbar is fixed to the viewport, not sticky: a
+       sticky box can only move inside its containing block (the body), and
+       WebKit (Safari) does not always grow the body to the wide ledger, so a
+       sticky bar scrolled away sideways there. Fixed needs no room. The body's
+       top padding is the spacer (--oc-navbar-height is measured by
+       viewport_width_controller.js; 3.5rem until it has run). The bar is
+       exactly the visible viewport wide, so it needs no side-extending
+       background. */
+    body.oc-page {
+      padding-top: var(--oc-navbar-height, 3.5rem);
+    }
+
     body.oc-page .app-navbar {
+      position: fixed;
+      top: 0;
       left: 0;
       width: var(--oc-viewport-width, 100vw);
-      box-shadow: 0 -100vmax 0 100vmax var(--app-bar-bg);
     }
 
     body.oc-page .app-page-header,
@@ -678,6 +686,31 @@ html {
      "add note" link opens its editor); hide it while its frame is empty. */
   .ledger-note-row:has(turbo-frame:empty) {
     display: none;
+  }
+
+  /* Full-width band rows (day note, special slot editor, warnings): the cell's
+     background spans the whole table, but its content sticks at the page's
+     left gutter and is at most one visible viewport wide, so it stays in view
+     while the page scrolls sideways. Screen only; print lays the band out
+     normally. */
+  .app-ledger .ledger-band-content {
+    padding-inline: 0.375rem;
+  }
+
+  @media screen {
+    .app-ledger .ledger-band-content {
+      position: sticky;
+      left: var(--oc-gutter, 0px);
+      width: max-content;
+      max-width: calc(var(--oc-viewport-width, 100vw) - 2 * var(--oc-gutter, 0px));
+    }
+  }
+
+  /* The inset moves from the cell to the sticky content, so the text starts at
+     the same place and sticks exactly at the gutter. */
+  .app-ledger tr.ledger-band td,
+  .app-ledger tr.ledger-band-warning td {
+    padding-inline: 0;
   }
 
   .app-ledger tr.ledger-band td {

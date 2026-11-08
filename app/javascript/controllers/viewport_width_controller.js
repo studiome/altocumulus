@@ -11,6 +11,9 @@ export default class extends Controller {
         this.update()
         this.observer = new ResizeObserver(this.update)
         this.observer.observe(document.documentElement)
+        // The navbar is fixed on this page: its height becomes the body's top padding.
+        const navbar = document.querySelector(".app-navbar")
+        if (navbar) this.observer.observe(navbar)
         window.addEventListener("resize", this.update)
     }
 
@@ -18,9 +21,12 @@ export default class extends Controller {
         this.observer.disconnect()
         window.removeEventListener("resize", this.update)
         this.element.style.removeProperty("--oc-viewport-width")
+        this.element.style.removeProperty("--oc-navbar-height")
     }
 
     update() {
         this.element.style.setProperty("--oc-viewport-width", `${document.documentElement.clientWidth}px`)
+        const navbar = document.querySelector(".app-navbar")
+        if (navbar) this.element.style.setProperty("--oc-navbar-height", `${navbar.offsetHeight}px`)
     }
 }

@@ -15,10 +15,10 @@
 <tbody id="day-<%= date.iso8601 %>" class="oc-day group <%= "oc-day-highlight" if highlight %>"<% if highlight %> data-controller="calendar-highlight"<% end %>>
   <%= render "operations_calendar/day_band", date: date, usage_holiday: usage.holiday, columns: columns, context: note_context %>
   <% if admin? %>
-    <tr class="ledger-band ledger-note-row"><td colspan="<%= columns %>"><%= turbo_frame_tag "day-special-slots-#{date.iso8601}" %></td></tr>
+    <tr class="ledger-band ledger-note-row"><td colspan="<%= columns %>"><div class="ledger-band-content"><%= turbo_frame_tag "day-special-slots-#{date.iso8601}" %></div></td></tr>
   <% end %>
   <% usage.warnings.each do |warning| %>
-    <tr class="ledger-band-warning"><td colspan="<%= columns %>"><%= warning %></td></tr>
+    <tr class="ledger-band-warning"><td colspan="<%= columns %>"><div class="ledger-band-content"><%= warning %></div></td></tr>
   <% end %>
 
   <% day_cell = capture do %>
