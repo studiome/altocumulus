@@ -33,7 +33,7 @@
               path: search_path(keyword: @keyword, tab: tab), id: "search-tab-#{tab}", selected: tab == @tab }
           } %>
 
-    <div id="search-panel" role="tabpanel" aria-labelledby="search-tab-<%= @tab %>" class="app-panel overflow-hidden">
+    <div id="search-panel" role="tabpanel" aria-labelledby="search-tab-<%= @tab %>" class="app-panel overflow-hidden print:break-inside-auto">
       <div class="app-panel-body">
         <div class="flex items-center justify-between gap-2 mb-2 text-sm">
           <span class="text-base-content/60">

@@ -212,6 +212,10 @@ html {
   /* Badges inside ledger cells: daisyUI's are single-line and fixed-height, so a
      long team / category label overflowed or was crushed. Let them wrap (at word
      boundaries; mid-word only when a single word is wider than the cell).
+     overflow-wrap: break-word, not anywhere: "anywhere" lets the badge's
+     min-content width shrink to one character, so in print (where the header
+     min-width is 0) the auto table layout crushed the Type column to one or two
+     characters per line.
      shrink-0: the cell is a column flexbox of definite height inside a stretched
      table row, which would otherwise squash a wrapped badge to one line. */
   .badge.ledger-badge {
@@ -220,7 +224,7 @@ html {
        this (components) one. */
     height: auto !important;
     word-break: keep-all;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   .ledger-primary {
@@ -270,6 +274,17 @@ html {
   @media print {
     .oc-ledger thead th {
       min-width: 0;
+    }
+
+    .oc-ledger tbody tr {
+      break-inside: avoid;
+    }
+
+    /* Paper is narrow: the nowrap day cell and headers would push the table
+       past the page edge (the wrapper clips it), so let them wrap. */
+    .oc-ledger thead th,
+    .oc-ledger tbody td.ledger-day {
+      white-space: normal;
     }
   }
 

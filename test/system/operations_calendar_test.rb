@@ -121,4 +121,36 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
     assert_no_link "Edit", exact: true, visible: :all
     assert_no_link "Add note", visible: :all
   end
+
+  test "print layout lets the ledger panel break across pages and keeps badges on one line" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    assert_selector "table.oc-ledger .badge.ledger-badge", minimum: 1
+    page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", media: "print")
+    # A printed page is far narrower than the test window; the badge column is
+    # only crushed when the table has to share a narrow width.
+    page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 720, height: 1000, deviceScaleFactor: 1, mobile: false)
+    begin
+      break_inside = page.evaluate_script(
+        "getComputedStyle(document.querySelector('table.oc-ledger').closest('.app-panel')).breakInside")
+      assert_not_equal "avoid", break_inside
+
+      multi_line = page.evaluate_script(<<~JS)
+        Array.from(document.querySelectorAll('.oc-ledger .badge.ledger-badge')).filter(function (badge) {
+          var text = badge.textContent.trim();
+          if (text === "" || /\\s/.test(text)) return false;
+          var range = document.createRange();
+          range.selectNodeContents(badge);
+          return range.getClientRects().length > 1;
+        }).map(function (badge) { return badge.textContent.trim(); })
+      JS
+      assert_empty multi_line, "single-word badges wrapped inside the word"
+
+      overflow = page.evaluate_script(
+        "document.querySelector('table.oc-ledger').getBoundingClientRect().right - document.documentElement.clientWidth")
+      assert_operator overflow, :<=, 1, "the ledger table runs past the printable width"
+    ensure
+      page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+      page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", media: "")
+    end
+  end
 end
