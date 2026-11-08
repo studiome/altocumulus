@@ -36,14 +36,32 @@ module LedgerHelper
   # Header cell attributes: the column's own narrowest width (a CSS variable the
   # stylesheet turns into min-width, and drops again for print), so the table
   # scrolls sideways before a column is squeezed.
-  def ledger_header_attributes(column)
-    if column.screen_width
-      # Pinned: the width is also the preferred one, so in the auto table
-      # layout the spare width goes to the unpinned columns.
-      { style: "--ledger-col-min: #{column.screen_width}px; --ledger-col-width: #{column.screen_width}px" }
-    else
-      { style: "--ledger-col-min: #{(column.min_width * MIN_WIDTH_PX_PER_POINT).round}px" }
-    end
+  def ledger_header_attributes(column, frozen_keys = [])
+    style =
+      if column.screen_width
+        # Pinned: the width is also the preferred one, so in the auto table
+        # layout the spare width goes to the unpinned columns.
+        "--ledger-col-min: #{column.screen_width}px; --ledger-col-width: #{column.screen_width}px"
+      else
+        "--ledger-col-min: #{(column.min_width * MIN_WIDTH_PX_PER_POINT).round}px"
+      end
+    return { style: style } unless frozen_keys.include?(column.key)
+
+    frozen = ledger_frozen_attributes(column, frozen_keys, css_class: false)
+    { style: "#{style}; #{frozen[:style]}", class: frozen[:class], data: frozen[:data] }
+  end
+
+  # Attributes of a body cell (or, with css_class: false, a header cell) of a
+  # column: its css class, and for a frozen column (LedgerColumn.frozen_keys)
+  # the sticky markers. The left offset is a variable the ledger-freeze
+  # controller fills in from the measured widths of the columns before it.
+  def ledger_frozen_attributes(column, frozen_keys, extra_classes: [], css_class: true)
+    classes = [ (column.css_class if css_class), *extra_classes ]
+    return { class: classes.compact.join(" ").presence } unless frozen_keys.include?(column.key)
+
+    classes += [ "ledger-frozen", ("ledger-frozen-last" if column.key == frozen_keys.last) ]
+    { class: classes.compact.join(" "), data: { freeze_key: column.key },
+      style: "left: var(--oc-freeze-#{column.key}, 0px)" }
   end
 
   # A cell's upper and lower parts. Badges are stacked in a column; text

@@ -165,6 +165,15 @@ class LedgerColumn
       SiteConfig.current.ledger_column_keys(ledger).map { |key| find(subject, key) }
     end
 
+    # Keys of the columns that stay in view while the ledger scrolls sideways
+    # (next to the always-frozen day column): every column up to and including
+    # the patient column. None when the patient column is not shown.
+    def frozen_keys(columns)
+      keys = columns.map(&:key)
+      index = keys.index(:patient)
+      index ? keys.first(index + 1) : []
+    end
+
     # Association list for Model.includes(*...) covering the given columns.
     def includes_for(columns)
       columns.flat_map(&:includes).uniq

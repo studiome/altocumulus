@@ -285,32 +285,38 @@ html {
      while only the ledger moves. min() falls back to the container width when
      nothing overflows. --oc-viewport-width (viewport_width_controller.js)
      is the visible width without a classic scrollbar; 100vw is only its
-     fallback. --oc-gutter mirrors .app-main's horizontal padding.
-     The page is left-aligned, not centered: .app-main keeps its max width and
-     padding but loses the auto left margin, so on wide screens the content
-     starts at the gutter, exactly where the sticky `left: var(--oc-gutter)`
-     elements (header, tabs, legend) and the ledger table sit. */
+     fallback.
+     --oc-gutter is the page's left/right margin and the single source for it:
+     .app-main's padding and the sticky `left: var(--oc-gutter)` elements
+     (header, tabs, legend) both use it, so they line up with the ledger table.
+     The page is left-aligned, not centered: .app-main keeps its max width but
+     loses the auto left margin.
+     One background: everything outside the ledger table sits on the page's own
+     colour (body.app-shell, base-200; html has none, so it also fills the
+     canvas). Header, tabs, legend and the table's panel draw no box, border or
+     shadow of their own; only the ledger's cells carry colour. */
   @media screen {
-    body.oc-page .app-main {
-      margin-left: 0;
-      margin-right: auto;
-    }
-
     body.oc-page {
-      --oc-gutter: 0.75rem;
+      --oc-gutter: 1.25rem;
       min-width: fit-content;
     }
 
     @media (min-width: 40rem) {
       body.oc-page {
-        --oc-gutter: 1rem;
+        --oc-gutter: 2rem;
       }
     }
 
     @media (min-width: 64rem) {
       body.oc-page {
-        --oc-gutter: 1.5rem;
+        --oc-gutter: 3rem;
       }
+    }
+
+    body.oc-page .app-main {
+      margin-left: 0;
+      margin-right: auto;
+      padding-inline: var(--oc-gutter);
     }
 
     body.oc-page .app-navbar {
@@ -321,28 +327,25 @@ html {
       clip-path: inset(0 -100vmax);
     }
 
-    /* The page header is a full-width band like the navbar (clipped shadow in
-       its own colour), its box stays where the content is. */
-    body.oc-page .app-page-header {
-      border-width: 1px 0;
+    body.oc-page .app-page-header,
+    body.oc-page .app-panel {
+      background: transparent;
+      border: 0;
       border-radius: 0;
-      box-shadow: 0 0 0 100vmax var(--color-base-200);
-      clip-path: inset(0 -100vmax);
-      /* The fill matches the page, so the band shows through its top/bottom
-         rules: border-image-outset draws them out to both screen edges (ink
-         overflow only, so the page does not scroll sideways because of it). */
-      border-style: solid;
-      border-image: linear-gradient(var(--color-base-300), var(--color-base-300)) 1 0 / 1px 0 / 0 100vmax;
+      box-shadow: none;
     }
 
-    /* The tab bar is a full-width band like the header: its own colour as a
-       clipped shadow instead of daisyUI's rounded box with inset shadows.
-       daisyUI's .tabs-box sits in the utilities layer, which outranks this
+    /* No box, so no inner inset: the text starts at the gutter too. */
+    body.oc-page .app-page-header-body {
+      padding-inline: 0;
+    }
+
+    /* daisyUI's .tabs-box sits in the utilities layer, which outranks this
        components layer, hence !important. */
     body.oc-page [role="tablist"] {
+      background: transparent !important;
       border-radius: 0 !important;
-      box-shadow: 0 0 0 100vmax var(--color-base-200) !important;
-      clip-path: inset(0 -100vmax);
+      box-shadow: none !important;
     }
 
     body.oc-page .app-page-header,
@@ -361,6 +364,27 @@ html {
       left: 0;
       z-index: 1;
       box-shadow: inset -1px 0 0 var(--ledger-line);
+    }
+
+    /* The columns up to the patient column (LedgerColumn.frozen_keys) stay in
+       view next to the day column. Their `left` is set inline from
+       --oc-freeze-<key>, which ledger_freeze_controller.js measures on the
+       table. Cells have an opaque background (the white default below, or a
+       row's tint), so scrolled columns do not show through. Full-width
+       colspan bands stay unfrozen. The last frozen column draws the edge line. */
+    .oc-ledger .ledger-frozen {
+      position: sticky;
+      z-index: 1;
+    }
+
+    .oc-ledger .ledger-frozen-last {
+      box-shadow: inset -1px 0 0 var(--ledger-line);
+    }
+
+    /* Both rules above set box-shadow: the emergency stripe (first column) must
+       keep winning on its cell, so it restates both shadows. */
+    .oc-ledger tbody tr.ledger-row-emergency td.ledger-stripe.ledger-frozen-last {
+      box-shadow: inset 4px 0 0 var(--color-error), inset -1px 0 0 var(--ledger-line);
     }
   }
 
@@ -391,6 +415,13 @@ html {
      colour fades out). Neutral accent so it reads in light and dark. */
   .oc-ledger tbody td {
     transition: background-color 1s ease;
+  }
+
+  /* Plain cells are white: the table's panel is transparent on the calendar
+     page. Declared before the tints below (day cell, zebra, highlight, bands,
+     urgent rows), which all have a higher specificity and so keep winning. */
+  .oc-ledger tbody td {
+    background-color: var(--color-base-100);
   }
 
   .oc-ledger tbody.oc-day-highlight td,

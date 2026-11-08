@@ -56,4 +56,28 @@ class LedgerHelperTest < ActionView::TestCase
     def assert_select_in(html, selector, count)
       assert_select Nokogiri::HTML.fragment(html), selector, count
     end
+
+  test "a frozen column gets the frozen class and its own sticky offset" do
+    column = LedgerColumn.find(:surgery, :admission_dates)
+    attrs = ledger_frozen_attributes(column, %i[time_slot admission_dates patient])
+
+    assert_includes attrs[:class], "ledger-frozen"
+    assert_equal "admission_dates", attrs[:data][:freeze_key].to_s
+    assert_equal "left: var(--oc-freeze-admission_dates, 0px)", attrs[:style]
+    assert_not_includes attrs[:class], "ledger-frozen-last"
+  end
+
+  test "the patient column is the last frozen one and keeps its own css class" do
+    attrs = ledger_frozen_attributes(LedgerColumn.find(:surgery, :patient), %i[patient])
+
+    assert_includes attrs[:class], "ledger-frozen-last"
+    assert_includes attrs[:class], "ledger-patient"
+  end
+
+  test "a column after the patient column is not frozen but keeps its css class" do
+    attrs = ledger_frozen_attributes(LedgerColumn.find(:surgery, :age_sex), %i[patient])
+
+    assert_nil attrs[:style]
+    assert_not_includes attrs[:class].to_s, "ledger-frozen"
+  end
 end

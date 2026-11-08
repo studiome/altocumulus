@@ -473,4 +473,22 @@ class LedgerColumnTest < ActiveSupport::TestCase
     assert_equal [ 170, 150 ], [ diagnosis.width, diagnosis.min_width ]
     assert_equal [ 100, 90 ], [ category.width, category.min_width ]
   end
+
+  test "frozen_keys lists the columns up to and including the patient column" do
+    columns = %i[time_slot admission_dates patient age_sex].map { |key| LedgerColumn.find(:surgery, key) }
+
+    assert_equal %i[time_slot admission_dates patient], LedgerColumn.frozen_keys(columns)
+  end
+
+  test "frozen_keys is just the patient column when it comes first" do
+    columns = %i[patient age_sex].map { |key| LedgerColumn.find(:hospitalization, key) }
+
+    assert_equal %i[patient], LedgerColumn.frozen_keys(columns)
+  end
+
+  test "frozen_keys is empty when the patient column is not shown" do
+    columns = %i[time_slot age_sex].map { |key| LedgerColumn.find(:surgery, key) }
+
+    assert_empty LedgerColumn.frozen_keys(columns)
+  end
 end

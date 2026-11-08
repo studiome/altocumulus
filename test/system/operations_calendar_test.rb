@@ -240,45 +240,110 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
     assert_operator lines.first, :>, lines.last * 3, "long names should wrap onto several lines"
   end
 
-  test "the page header band reaches both screen edges on the calendar page" do
+  test "header, tabs, legend and the table panel add no box of their own on the calendar page" do
     visit operations_calendar_path(start: "2026-03-01", days: 7)
 
-    style = page.evaluate_script(<<~JS)
+    boxes = page.evaluate_script(<<~JS)
       (() => {
-        const header = document.querySelector("body.oc-page .app-page-header");
-        const cs = getComputedStyle(header);
-        return { shadow: cs.boxShadow, clip: cs.clipPath, radius: cs.borderTopLeftRadius, left: cs.borderLeftWidth, right: cs.borderRightWidth, outset: cs.borderImageOutset, scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth };
+        const body = getComputedStyle(document.body).backgroundColor;
+        const targets = {
+          header: document.querySelector("body.oc-page .app-page-header"),
+          tablist: document.querySelector("body.oc-page [role='tablist']"),
+          legend: document.querySelector("body.oc-page .oc-legend"),
+          panel: document.querySelector("table.oc-ledger").closest(".app-panel")
+        };
+        const out = { body: body };
+        for (const [name, el] of Object.entries(targets)) {
+          const cs = getComputedStyle(el);
+          out[name] = { bg: cs.backgroundColor, shadow: cs.boxShadow,
+            borders: [cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth, cs.borderLeftWidth],
+            radius: cs.borderTopLeftRadius };
+        }
+        return out;
       })()
     JS
-    assert_match(/0px 0px 0px/, style["shadow"])
-    assert_match(/inset/, style["clip"])
-    assert_equal "0px", style["radius"]
-    assert_equal [ "0px", "0px" ], [ style["left"], style["right"] ]
-    # The top/bottom rules (the visible part of the band, as its fill matches the
-    # page) reach the screen edges too, without making the page scroll sideways.
-    assert_match(/\A0(px)? [1-9]\d*px\z/, style["outset"])
-    assert_operator style["scrollWidth"], :<=, style["clientWidth"]
+    %w[header tablist legend panel].each do |name|
+      box = boxes[name]
+      assert_includes [ "rgba(0, 0, 0, 0)", boxes["body"] ], box["bg"], "#{name} background"
+      assert_equal "none", box["shadow"], "#{name} box-shadow"
+      assert_equal %w[0px 0px 0px 0px], box["borders"], "#{name} borders"
+      assert_equal "0px", box["radius"], "#{name} radius"
+    end
   end
 
-  test "the calendar page is left-aligned instead of centered" do
+  test "the calendar page content starts at the gutter, aligned with the table" do
     visit operations_calendar_path(start: "2026-03-01", days: 7)
 
-    left = page.evaluate_script('document.querySelector("body.oc-page .app-page-header").getBoundingClientRect().left')
-    assert_operator left, :<=, 24.5
-  end
-
-  test "the tab bar is a full-width band on the calendar page" do
-    visit operations_calendar_path(start: "2026-03-01", days: 7)
-
-    style = page.evaluate_script(<<~JS)
+    left, table_left, gutter = page.evaluate_script(<<~JS)
       (() => {
-        const cs = getComputedStyle(document.querySelector("body.oc-page [role='tablist']"));
-        return { shadow: cs.boxShadow, clip: cs.clipPath, radius: cs.borderTopLeftRadius, scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth };
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        const g = parseFloat(getComputedStyle(document.body).getPropertyValue("--oc-gutter")) * rem;
+        return [document.querySelector("body.oc-page .app-page-header").getBoundingClientRect().left,
+                document.querySelector("table.oc-ledger").getBoundingClientRect().left, g];
       })()
     JS
-    assert_match(/0px 0px 0px/, style["shadow"])
-    assert_match(/inset/, style["clip"])
-    assert_equal "0px", style["radius"]
-    assert_operator style["scrollWidth"], :<=, style["clientWidth"]
+    assert_in_delta 3 * 13, gutter, 0.5, "the wide-screen gutter is 3rem"
+    assert_in_delta gutter, left, 1
+    assert_in_delta left, table_left, 1
+  end
+
+  test "the calendar page does not scroll sideways when the table fits" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+
+    widths = page.evaluate_script("[document.documentElement.scrollWidth, document.documentElement.clientWidth, document.querySelector('table.oc-ledger').getBoundingClientRect().right]")
+    skip "table is wider than the window" if widths[2] > widths[1]
+    assert_operator widths[0], :<=, widths[1]
+  end
+
+  test "a plain cell is white on a non-alt day" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+
+    color = page.evaluate_script(<<~JS)
+      (() => {
+        const td = document.querySelector("tbody.oc-day:not(.oc-day-alt):not(.oc-day-highlight) tr.oc-surgery:not(.ledger-row-urgent):not(.ledger-row-offslot) td.ledger-patient");
+        return td && getComputedStyle(td).backgroundColor;
+      })()
+    JS
+    assert_equal "rgb(255, 255, 255)", color
+  end
+
+  test "columns up to the patient column stay in view while the page scrolls sideways" do
+    page.driver.browser.manage.window.resize_to(700, 1000)
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    assert_frozen_columns "table.oc-ledger thead th:nth-child(4)", "tr.oc-surgery td.ledger-patient"
+  end
+
+  test "the examination tab freezes its patient column too" do
+    hospitalizations(:two).update_columns(purpose: "examination", scheduled_procedure_date: Date.new(2026, 3, 5),
+                                          scheduled_admission_date: Date.new(2026, 3, 5), admission_date: nil, discharge_date: nil)
+    page.driver.browser.manage.window.resize_to(500, 1000)
+    visit operations_calendar_path(start: "2026-03-01", days: 7, view: "examination")
+    assert_selector "tr.oc-exam td.ledger-patient"
+    assert_frozen_columns "table.oc-ledger thead th:nth-child(5)", "tr.oc-exam td.ledger-patient"
+  end
+
+  # Once the page has scrolled past the gutter, the patient header/cell keep
+  # their left however far it scrolls on (they stick right after the day and
+  # earlier columns), while a later column keeps moving with the page.
+  def assert_frozen_columns(later_header, patient_row_selector)
+    lefts = <<~JS
+      (() => {
+        const l = (el) => el.getBoundingClientRect().left;
+        return [l(document.querySelector("table.oc-ledger thead th[data-freeze-key=patient]")),
+                l(document.querySelector("#{patient_row_selector}")),
+                l(document.querySelector("#{later_header}"))];
+      })()
+    JS
+    max = page.evaluate_script("document.scrollingElement.scrollWidth - document.documentElement.clientWidth")
+    assert_operator max, :>, 150, "the window should be narrow enough to scroll sideways"
+    page.execute_script("window.scrollTo(100, 0)")
+    first = page.evaluate_script(lefts)
+    page.execute_script("window.scrollTo(#{max}, 0)")
+    second = page.evaluate_script(lefts)
+
+    assert_in_delta first[0], second[0], 1, "patient header moved"
+    assert_in_delta first[1], second[1], 1, "patient cell moved"
+    assert_operator first[2] - second[2], :>, max - 100 - 2, "a later column should scroll away"
+    assert_operator second[0], :>, 0
   end
 end

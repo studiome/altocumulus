@@ -6,6 +6,7 @@
     opens in). DayNotesController and DaySpecialSlotsController re-render this partial for one day. %>
 <% surgeries = calendar.surgeries_for(date) %>
 <% columns = calendar.columns.size + 1 %>
+<% frozen_keys = LedgerColumn.frozen_keys(calendar.columns) %>
 <% note_context = day_note_context(calendar, view: "surgery", alternate: alternate) %>
 <% new_surgery_path = new_reservation_path(surgery_date: date, purpose: "surgery") %>
 <% surgery_details_path = ->(surgery) { surgery_path(surgery, from: "calendar", start: calendar.return_start.iso8601, days: calendar.return_days) } %>
@@ -62,8 +63,7 @@
       <tr class="<%= row_classes %>">
         <%= day_cell if row.zero? %>
         <% calendar.columns.each_with_index do |column, index| %>
-          <% cell_classes = [ column.css_class, ("ledger-stripe" if index.zero? && surgery.emergency?) ].compact.join(" ") %>
-          <td<% if cell_classes.present? %> class="<%= cell_classes %>"<% end %>>
+          <td <%= tag.attributes(ledger_frozen_attributes(column, frozen_keys, extra_classes: [ ("ledger-stripe" if index.zero? && surgery.emergency?) ])) %>>
             <%= ledger_cell(column.cell(surgery, context)) %>
             <% if index.zero? && surgery.hospitalization && !surgery.hospitalization.deleted? %>
               <%= link_to t("reservations.links.show_details"), surgery_details_path.call(surgery),

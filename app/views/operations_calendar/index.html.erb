@@ -66,12 +66,13 @@
     <div class="app-panel w-max min-w-full print:w-auto print:break-inside-auto">
       <%# One ledger table for the whole range: each day is its own <tbody>
           (see _day / _examination_day), so the day cell can span that day's rows. %>
-      <table class="app-ledger oc-ledger">
+      <% frozen_keys = LedgerColumn.frozen_keys(@calendar.columns) %>
+      <table class="app-ledger oc-ledger" data-controller="ledger-freeze">
         <thead>
           <tr>
             <th><%= @view == "surgery" ? t("surgeries.labels.surgery_date") : t(".date_header") %></th>
             <% @calendar.columns.each do |column| %>
-              <th <%= tag.attributes(ledger_header_attributes(column)) %>><%= ledger_header(column) %></th>
+              <th <%= tag.attributes(ledger_header_attributes(column, frozen_keys)) %>><%= ledger_header(column) %></th>
             <% end %>
           </tr>
         </thead>

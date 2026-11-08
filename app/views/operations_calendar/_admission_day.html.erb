@@ -2,6 +2,7 @@
     every active hospitalization admitted that day, whatever its purpose. %>
 <% hospitalizations = calendar.hospitalizations_for(date) %>
 <% columns = calendar.columns.size + 1 %>
+<% frozen_keys = LedgerColumn.frozen_keys(calendar.columns) %>
 <% note_context = day_note_context(calendar, view: "admission", alternate: alternate) %>
 <% new_admission_path = new_reservation_path(scheduled_admission_date: date) %>
 <% context = calendar.ledger_context %>
@@ -33,7 +34,7 @@
       <tr class="oc-admission row-hover">
         <%= day_cell if row.zero? %>
         <% calendar.columns.each_with_index do |column, index| %>
-          <td<% if column.css_class %> class="<%= column.css_class %>"<% end %>>
+          <td <%= tag.attributes(ledger_frozen_attributes(column, frozen_keys)) %>>
             <%= ledger_cell(column.cell(hospitalization, context)) %>
             <% if index.zero? %>
               <%= link_to t("reservations.links.show_details"), hospitalization_path(hospitalization),
