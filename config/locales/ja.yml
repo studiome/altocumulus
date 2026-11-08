@@ -208,6 +208,7 @@ ja:
     attributes:
       app_setting:
         title: "アプリ名"
+        theme: "テーマカラー"
       access_log:
         event: "イベント"
         ip_address: "IPアドレス"
@@ -1285,6 +1286,7 @@ ja:
         title: "設定"
         description: "この設定はシステム全体に適用されます。"
         title_helper: "ナビゲーションバー・ブラウザのタブ・インストール時のアプリ名に表示されます。この環境専用の名称が必要な場合以外は既定値(%{default_title})のままで構いません。"
+        theme_helper: "全ユーザーに適用されます(ライト・ダーク両モード)。"
         submit_button: "設定を保存"
         errors_heading:
           other: "%{count}件のエラーにより設定を保存できませんでした:"
@@ -1820,3 +1822,10 @@ ja:
     labels:
       surgery_list: "手術一覧"
       admission_list: "入院一覧"
+
+  app_themes:
+    navy: "ネイビー"
+    green: "グリーン"
+    maroon: "えんじ"
+    teal: "ティール"
+    gray: "グレー"

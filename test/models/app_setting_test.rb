@@ -55,4 +55,35 @@ class AppSettingTest < ActiveSupport::TestCase
     ensure
       Rails.application.config.x.app_title = original
     end
+
+  test "theme defaults to navy when nothing is stored" do
+    AppSetting.delete_all
+
+    assert_equal "navy", AppSetting.theme
+  end
+
+  test "a stored theme is used" do
+    AppSetting.current.update!(title: "X", theme: "green")
+
+    assert_equal "green", AppSetting.theme
+  end
+
+  test "every preset theme is valid" do
+    AppTheme::KEYS.each do |key|
+      assert AppSetting.new(title: "X", theme: key).valid?, "#{key} should be valid"
+    end
+  end
+
+  test "an unknown theme is invalid" do
+    setting = AppSetting.new(title: "X", theme: "hotpink")
+
+    assert_not setting.valid?
+    assert setting.errors.key?(:theme)
+  end
+
+  test "a blank theme is allowed and means the default" do
+    AppSetting.current.update!(title: "X", theme: "")
+
+    assert_equal AppTheme::DEFAULT, AppSetting.theme
+  end
 end

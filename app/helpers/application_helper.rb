@@ -56,6 +56,11 @@ module ApplicationHelper
     @app_title ||= AppSetting.title
   end
 
+  # The installation's colour palette key (see AppTheme), memoized like app_title.
+  def app_theme
+    @app_theme ||= AppSetting.theme
+  end
+
   # A date with its weekday, coloured for days off: Saturday blue, Sunday and
   # closed days (a Holiday row with holiday: true) red. `holidays` is the
   # Holiday.by_date hash a list page loads once for all its dates; single-date

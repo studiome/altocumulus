@@ -5,6 +5,7 @@ module Admin
     def edit
       @app_setting = AppSetting.current
       @app_setting.title = AppSetting.title if @app_setting.title.blank?
+      @app_setting.theme = AppSetting.theme
     end
 
     def update
@@ -20,7 +21,7 @@ module Admin
     private
 
     def app_setting_params
-      params.expect(app_setting: [ :title ])
+      params.expect(app_setting: [ :title, :theme ])
     end
   end
 end

@@ -55,6 +55,139 @@ html {
   }
 }
 
+/* Preset palettes an administrator can pick (AppTheme, AppSetting#theme). The
+   plain :root above and its dark block are the default (navy); each preset
+   below overrides only the accent tokens. A new preset needs a light and a
+   dark block here and must pass test/models/app_theme_test.rb (contrast). */
+:root[data-app-theme="green"] {
+  --color-base-200: #f1f5f2;
+  --color-base-300: #d3e2d9;
+  --color-base-content: #10241a;
+  --color-primary: #1f6b47;
+  --color-primary-content: #fff;
+  --color-secondary: #2f7d58;
+  --color-secondary-content: #fff;
+  --app-bar-bg: #1f5c3f;
+  --app-bar-fg: #fff;
+  --app-link: #1a6b45;
+  --ledger-head: #dcebe2;
+  --ledger-line: #7fa593;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-app-theme="green"]:not([data-theme]) {
+    --color-base-100: #12201a;
+    --color-base-200: #0c1612;
+    --color-base-300: #25453a;
+    --color-base-content: #e2f0e8;
+    --color-primary: #8fd1ac;
+    --color-primary-content: #07200f;
+    --color-secondary: #6fbf93;
+    --color-secondary-content: #07200f;
+    --app-bar-bg: #17402c;
+    --app-bar-fg: #fff;
+    --app-link: #8fd1ac;
+    --ledger-head: #1d3a2c;
+    --ledger-line: #44705a;
+  }
+}
+:root[data-app-theme="maroon"] {
+  --color-base-200: #f6f1f2;
+  --color-base-300: #e6d6d9;
+  --color-base-content: #2b1216;
+  --color-primary: #7a1f2b;
+  --color-primary-content: #fff;
+  --color-secondary: #a8404f;
+  --color-secondary-content: #fff;
+  --app-bar-bg: #7a1f2b;
+  --app-bar-fg: #fff;
+  --app-link: #9b1c2e;
+  --ledger-head: #f0dfe2;
+  --ledger-line: #b58a91;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-app-theme="maroon"]:not([data-theme]) {
+    --color-base-100: #231519;
+    --color-base-200: #180d10;
+    --color-base-300: #4a2a31;
+    --color-base-content: #f3e3e6;
+    --color-primary: #f0a0ae;
+    --color-primary-content: #2a0a10;
+    --color-secondary: #e08797;
+    --color-secondary-content: #2a0a10;
+    --app-bar-bg: #501822;
+    --app-bar-fg: #fff;
+    --app-link: #f0a0ae;
+    --ledger-head: #3a1c24;
+    --ledger-line: #8a4a55;
+  }
+}
+:root[data-app-theme="teal"] {
+  --color-base-200: #eff5f6;
+  --color-base-300: #d0e2e5;
+  --color-base-content: #0e2326;
+  --color-primary: #0f6670;
+  --color-primary-content: #fff;
+  --color-secondary: #1f7f89;
+  --color-secondary-content: #fff;
+  --app-bar-bg: #0f5c66;
+  --app-bar-fg: #fff;
+  --app-link: #0b6670;
+  --ledger-head: #d9ecef;
+  --ledger-line: #78a7ad;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-app-theme="teal"]:not([data-theme]) {
+    --color-base-100: #0f2124;
+    --color-base-200: #0a1719;
+    --color-base-300: #1f464c;
+    --color-base-content: #e0f1f3;
+    --color-primary: #7fd0d8;
+    --color-primary-content: #04262a;
+    --color-secondary: #5fc0ca;
+    --color-secondary-content: #04262a;
+    --app-bar-bg: #0d4048;
+    --app-bar-fg: #fff;
+    --app-link: #7fd0d8;
+    --ledger-head: #17383d;
+    --ledger-line: #3f7c84;
+  }
+}
+:root[data-app-theme="gray"] {
+  --color-base-200: #f3f4f6;
+  --color-base-300: #d6dae0;
+  --color-base-content: #1a1d22;
+  --color-primary: #3f4650;
+  --color-primary-content: #fff;
+  --color-secondary: #5d6672;
+  --color-secondary-content: #fff;
+  --app-bar-bg: #3f4650;
+  --app-bar-fg: #fff;
+  --app-link: #1f4e8c;
+  --ledger-head: #e3e6ea;
+  --ledger-line: #8b929b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-app-theme="gray"]:not([data-theme]) {
+    --color-base-100: #1c1f24;
+    --color-base-200: #14161a;
+    --color-base-300: #373d46;
+    --color-base-content: #e6e8eb;
+    --color-primary: #aab4c2;
+    --color-primary-content: #12151a;
+    --color-secondary: #8f9bab;
+    --color-secondary-content: #12151a;
+    --app-bar-bg: #2c3138;
+    --app-bar-fg: #fff;
+    --app-link: #9fc0ee;
+    --ledger-head: #2a2f36;
+    --ledger-line: #5b6370;
+  }
+}
+
 @layer components {
   .app-shell {
     @apply min-h-screen bg-base-200 text-base-content;

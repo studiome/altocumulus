@@ -29,6 +29,24 @@
           <p class="app-helper"><%= t(".title_helper", default_title: AppSetting.default_title) %></p>
         </div>
 
+        <fieldset class="app-field">
+          <legend class="app-field-label"><%= AppSetting.human_attribute_name(:theme) %></legend>
+          <div class="grid gap-2 sm:grid-cols-2">
+            <% AppTheme::KEYS.each do |key| %>
+              <% swatch = AppTheme.swatch(key) %>
+              <label class="flex items-center gap-3 cursor-pointer border border-base-300 rounded-box px-3 py-2">
+                <%= form.radio_button :theme, key, class: "radio radio-primary radio-sm" %>
+                <span aria-hidden="true" class="inline-flex shrink-0">
+                  <span class="inline-block w-6 h-6 rounded-l-sm" style="background-color: <%= swatch[:bar] %>"></span>
+                  <span class="inline-block w-6 h-6 rounded-r-sm" style="background-color: <%= swatch[:primary] %>"></span>
+                </span>
+                <span><%= t("app_themes.#{key}") %></span>
+              </label>
+            <% end %>
+          </div>
+          <p class="app-helper"><%= t(".theme_helper") %></p>
+        </fieldset>
+
         <div class="pt-4">
           <%= form.submit t(".submit_button"), class: "btn btn-primary w-full" %>
         </div>

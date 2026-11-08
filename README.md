@@ -58,7 +58,7 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Bulk user registration (admin only) | `/admin/user_import/new` | Register users from a CSV of login ids and passwords. Existing login ids are skipped, and every line is reported back as registered / skipped / failed |
 | Announcement management (admin only) | `/admin/announcements` | Create announcements shown on the sign-in page and toggle their visibility |
 | Admin notes (admin only) | `/admin/admin_notes` | Free-text handover notes shared between administrators |
-| Application settings (admin only) | `/admin/settings` | Change the application title shown in the navigation bar, the browser tab, and the installable app |
+| Application settings (admin only) | `/admin/settings` | Change the application title shown in the navigation bar, the browser tab, and the installable app, and pick the theme color (one of a few preset palettes, light and dark, applied to every user) |
 
 **Master data is edited by administrators only.** Diagnoses, surgery procedures, holidays (closed
 days / day notes / slot overrides), elective slot rules, departments, surgery locations, surgical
@@ -624,12 +624,18 @@ validation message (never with the password in it). A login id that already exis
 left untouched** -- overwriting a colleague's password from a stale spreadsheet is the mistake this
 screen is built to avoid.
 
-### Application title
+### Application title and theme color
 
 The name in the navigation bar, the browser tab, and the PWA manifest comes from `AppSetting`, which
 an administrator edits on `/admin/settings`. When nothing has been saved there, it falls back to the
 `APP_TITLE` environment variable read at boot, and then to the built-in name -- so a fresh deploy can
 be branded with an environment variable alone.
+
+The same screen offers a theme color: a fixed set of preset palettes (`AppTheme`: navy, green, maroon, teal, gray)
+stored in `AppSetting#theme` and applied to every user. The layout puts the choice on `<html data-app-theme>`
+(and into `<meta name="theme-color">` and the manifest); the palettes are CSS variables in
+`app/assets/tailwind/application.css`, each with a light and a dark (`prefers-color-scheme`) block. A new preset
+needs both blocks and must pass the text-contrast check in `test/models/app_theme_test.rb`.
 
 ### CSV export
 

@@ -47,4 +47,55 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
     assert_not_equal "Hijacked", AppSetting.title
   end
+
+  test "the form offers one radio per theme with the current one checked" do
+    AppSetting.current.update!(title: "X", theme: "teal")
+
+    get edit_admin_settings_url
+
+    assert_select "fieldset input[type=radio][name='app_setting[theme]']", count: AppTheme::KEYS.size
+    assert_select "input[type=radio][name='app_setting[theme]'][value=teal][checked]"
+  end
+
+  test "admin can change the theme" do
+    patch admin_settings_url, params: { app_setting: { title: "Clinic", theme: "maroon" } }
+
+    assert_redirected_to edit_admin_settings_url
+    assert_equal "maroon", AppSetting.theme
+  end
+
+  test "an unknown theme is rejected" do
+    patch admin_settings_url, params: { app_setting: { title: "Clinic", theme: "hotpink" } }
+
+    assert_response :unprocessable_entity
+    assert_equal "navy", AppSetting.theme
+  end
+
+  test "member cannot change the theme" do
+    sign_out
+    sign_in_as(users(:member))
+
+    patch admin_settings_url, params: { app_setting: { title: "Clinic", theme: "green" } }
+
+    assert_redirected_to root_url
+    assert_equal "navy", AppSetting.theme
+  end
+
+  test "pages carry the default theme on the html element and in the theme-color meta" do
+    get patients_url
+
+    assert_select "html[data-app-theme=navy]"
+    assert_select "meta[name=theme-color][content=?]", AppTheme.theme_color("navy")
+  end
+
+  test "pages carry the saved theme for every user" do
+    AppSetting.current.update!(title: "X", theme: "green")
+    sign_out
+    sign_in_as(users(:member))
+
+    get patients_url
+
+    assert_select "html[data-app-theme=green]"
+    assert_select "meta[name=theme-color][content=?]", AppTheme.theme_color("green")
+  end
 end

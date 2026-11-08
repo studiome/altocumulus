@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html data-app-theme="<%= app_theme %>">
   <head>
     <title><%= content_for(:title) || app_title %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="<%= app_title %>">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="<%= AppTheme.theme_color(app_theme) %>">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -23,7 +24,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="app-shell flex flex-col <%= yield :body_class %>"<%= yield(:body_controller).presence&.then { |name| raw(%( data-controller="#{h(name)}")) } %>>
+  <body data-app-theme="<%= app_theme %>" class="app-shell flex flex-col <%= yield :body_class %>"<%= yield(:body_controller).presence&.then { |name| raw(%( data-controller="#{h(name)}")) } %>>
     <header class="app-navbar print:hidden">
       <div class="flex-1 flex items-center gap-1">
         <%# Mobile-only menu: everything flattened into one dropdown so the

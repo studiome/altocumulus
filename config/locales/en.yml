@@ -1338,6 +1338,7 @@ en:
         title: "Settings"
         description: "These settings apply to the whole installation."
         title_helper: "Shown in the navigation bar, the browser tab and the installable app. Leave the default (%{default_title}) unless this installation needs its own name."
+        theme_helper: "Applies to every user, in light and dark mode."
         submit_button: "Save Settings"
         errors_heading:
           one: "%{count} error prohibited these settings from being saved:"
@@ -1915,3 +1916,10 @@ en:
     labels:
       surgery_list: "Surgery list"
       admission_list: "Admission list"
+
+  app_themes:
+    navy: "Navy"
+    green: "Green"
+    maroon: "Maroon"
+    teal: "Teal"
+    gray: "Gray"
