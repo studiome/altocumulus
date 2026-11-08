@@ -415,8 +415,9 @@ html {
   /* Page-level sideways scroll (screen only): the body grows to the table, so
      the navbar background (an oversized shadow) reaches the far edge, and the
      navbar, page header, tabs and legend stay one viewport wide at the left
-     while only the ledger moves. min() falls back to the container width when
-     nothing overflows. --oc-viewport-width (viewport_width_controller.js)
+     while only the ledger moves. The navbar is also pinned to the top
+     (sticky top: 0) while the page scrolls vertically. min() falls back to
+     the container width when nothing overflows. --oc-viewport-width (viewport_width_controller.js)
      is the visible width without a classic scrollbar; 100vw is only its
      fallback.
      --oc-gutter is the page's left/right margin and the single source for it:
@@ -435,6 +436,12 @@ html {
        colour so the whole page is one background. */
     :root:has(body.oc-page) {
       --root-bg: var(--color-base-200);
+    }
+
+    /* The navbar is pinned to the top while the page scrolls; keep focused
+       elements and anchors from landing underneath it (WCAG 2.4.11). */
+    :root:has(body.oc-page) {
+      scroll-padding-top: 4.5rem;
     }
 
     body.oc-page {
@@ -472,6 +479,7 @@ html {
        cutting off the dropdown panels that open below it. */
     body.oc-page .app-navbar {
       position: sticky;
+      top: 0;
       left: 0;
       width: var(--oc-viewport-width, 100vw);
       box-shadow: 0 -100vmax 0 100vmax var(--app-bar-bg);

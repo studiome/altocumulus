@@ -60,12 +60,83 @@ class NavigationTest < ApplicationSystemTestCase
     assert panel_painted?("Masters"), "Masters panel was clipped"
   end
 
+  test "the mobile hamburger menu is painted after scrolling far right and down on the operations calendar" do
+    page.driver.browser.manage.window.resize_to(375, 812)
+    visit operations_calendar_path(start: "2026-03-01", days: 30)
+    page.execute_script("window.scrollTo(document.scrollingElement.scrollWidth, document.scrollingElement.scrollHeight)")
+    find(".app-navbar [role='button'][aria-label]").click
+    assert_selector ".app-navbar .dropdown-content a", text: "Patients", visible: true
+    assert panel_painted?(I18n.t("nav.open_menu", locale: :en)), "hamburger panel was clipped"
+  end
+
   test "the mobile hamburger menu is painted on the operations calendar" do
     page.driver.browser.manage.window.resize_to(375, 812)
     visit operations_calendar_path(start: "2026-03-01", days: 7)
     find(".app-navbar [role='button'][aria-label]").click
     assert_selector ".app-navbar .dropdown-content a", text: "Patients", visible: true
     assert panel_painted?(I18n.t("nav.open_menu", locale: :en)), "hamburger panel was clipped"
+  end
+
+  def navbar_pinned_state
+    page.evaluate_script(<<~JS)
+      (function () {
+        var bar = document.querySelector('.app-navbar');
+        var r = bar.getBoundingClientRect();
+        var hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        var edge = document.elementFromPoint(document.documentElement.clientWidth - 2, r.top + r.height / 2);
+        var items = Array.from(bar.querySelectorAll('a, button, [role="button"]')).filter(function (el) { return el.offsetParent !== null; });
+        return {
+          left: r.left, top: r.top, width: r.width, inner: document.documentElement.clientWidth,
+          covered: !(hit && bar.contains(hit)), edge_covered: !(edge && bar.contains(edge)),
+          items_right: Math.max.apply(null, items.map(function (el) { return el.getBoundingClientRect().right; })),
+          scrollY: window.scrollY, scrollX: window.scrollX
+        };
+      })()
+    JS
+  end
+
+  [ [ 1400, 900 ], [ 375, 812 ] ].each do |width, height|
+    test "on the operations calendar the navbar stays pinned to the top while scrolling at #{width}px" do
+      page.driver.browser.manage.window.resize_to(width, height)
+      visit operations_calendar_path(start: "2026-03-01", days: 30)
+
+      page.execute_script("window.scrollTo(0, 600)")
+      state = navbar_pinned_state
+      assert_operator state["scrollY"], :>, 0, "the page should scroll vertically"
+      assert_in_delta 0, state["top"], 1, "the navbar should stay at the viewport's top edge"
+      assert_not state["covered"], "the navbar must not be covered by the ledger"
+
+      page.execute_script("window.scrollTo(300, 600)")
+      state = navbar_pinned_state
+      assert_in_delta 0, state["left"], 1
+      assert_in_delta 0, state["top"], 1
+      assert_not state["covered"]
+
+      # Far right and far bottom at once: pinned in both directions.
+      page.execute_script("window.scrollTo(document.scrollingElement.scrollWidth, document.scrollingElement.scrollHeight)")
+      state = navbar_pinned_state
+      # Sideways scroll only exists when the ledger is wider than the window (not at 1400px with no cases).
+      if page.evaluate_script("document.scrollingElement.scrollWidth > document.documentElement.clientWidth")
+        assert_operator state["scrollX"], :>, 0, "the page should scroll sideways"
+      end
+      assert_operator state["scrollY"], :>, 0
+      assert_in_delta 0, state["left"], 1
+      assert_in_delta 0, state["top"], 1
+      assert_in_delta state["inner"], state["width"], 1, "the navbar should be one visible viewport wide"
+      assert_operator state["items_right"], :<=, state["inner"], "navbar controls must stay inside the viewport"
+      assert_not state["covered"]
+      assert_not state["edge_covered"], "the bar colour must reach the right edge of the viewport"
+      page.save_screenshot(Rails.root.join("tmp/screenshots/navbar_pinned_far_#{width}.png"))
+    end
+  end
+
+  test "the Masters menu is painted after scrolling down on the operations calendar" do
+    page.driver.browser.manage.window.resize_to(1400, 900)
+    visit operations_calendar_path(start: "2026-03-01", days: 30)
+    page.execute_script("window.scrollTo(document.scrollingElement.scrollWidth, document.scrollingElement.scrollHeight)")
+    find(".app-navbar [role='button']", text: "Masters").click
+    assert_selector ".app-navbar .dropdown-content a", text: "Diagnoses", visible: true
+    assert panel_painted?("Masters"), "Masters panel was clipped"
   end
 
   test "the Masters menu is painted on the patients page (control)" do
