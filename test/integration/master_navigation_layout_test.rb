@@ -38,7 +38,7 @@ class MasterNavigationLayoutTest < ActionDispatch::IntegrationTest
   test "navigation layer is above page content" do
     tailwind_source = File.read(Rails.root.join("app/assets/tailwind/application.css"))
 
-    assert_includes tailwind_source, "@apply navbar relative z-50"
+    assert_includes tailwind_source, "@apply navbar sticky top-0 z-50"
   end
 
   test "admin-only navigation links are hidden from a non-admin user" do

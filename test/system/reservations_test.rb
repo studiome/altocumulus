@@ -245,4 +245,21 @@ class ReservationsTest < ApplicationSystemTestCase
       assert_selector "turbo-frame#reservation_team_members", text: "Alpha"
     end
   end
+
+  test "the side panel sticks below the pinned navbar instead of sliding under it" do
+    page.driver.browser.manage.window.resize_to(1400, 700)
+    visit new_reservation_path
+    page.execute_script("document.body.style.minHeight = '4000px'; document.querySelector('main, .app-main').style.minHeight = '4000px'; window.scrollTo(0, 1500)")
+    rects = page.evaluate_script(<<~JS)
+      (function () {
+        var bar = document.querySelector('.app-navbar').getBoundingClientRect();
+        var side = document.querySelector('aside').getBoundingClientRect();
+        return { scrollY: window.scrollY, bar_top: bar.top, bar_bottom: bar.bottom, side_top: side.top };
+      })()
+    JS
+    assert_operator rects["scrollY"], :>, 0
+    assert_in_delta 0, rects["bar_top"], 1, "the navbar should be pinned"
+    assert_operator rects["side_top"], :>=, rects["bar_bottom"] - 0.5, "the side panel must not be hidden under the navbar"
+    page.save_screenshot(Rails.root.join("tmp/screenshots/reservation_side_panel_pinned.png"))
+  end
 end

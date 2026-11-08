@@ -146,4 +146,25 @@ class NavigationTest < ApplicationSystemTestCase
     assert_selector ".app-navbar .dropdown-content a", text: "Diagnoses", visible: true
     assert panel_painted?("Masters"), "Masters panel was clipped"
   end
+
+  test "on a non-calendar page the navbar stays pinned to the top while scrolling" do
+    page.driver.browser.manage.window.resize_to(1400, 300)
+    visit patients_path
+    page.execute_script("document.body.style.minHeight = '3000px'; window.scrollTo(0, 800)")
+    state = navbar_pinned_state
+    assert_operator state["scrollY"], :>, 0, "the page should scroll vertically"
+    assert_in_delta 0, state["top"], 1, "the navbar should stay at the viewport's top edge"
+    assert_not state["covered"], "the navbar must not be covered by the page"
+    page.save_screenshot(Rails.root.join("tmp/screenshots/navbar_pinned_patients.png"))
+  end
+
+  test "the Masters menu is painted after scrolling down on a non-calendar page" do
+    page.driver.browser.manage.window.resize_to(1400, 600)
+    visit patients_path
+    page.execute_script("document.body.style.minHeight = '3000px'; window.scrollTo(0, 800)")
+    assert_in_delta 0, navbar_pinned_state["top"], 1, "the navbar should be pinned"
+    find(".app-navbar [role='button']", text: "Masters").click
+    assert_selector ".app-navbar .dropdown-content a", text: "Diagnoses", visible: true
+    assert panel_painted?("Masters"), "Masters panel was clipped"
+  end
 end

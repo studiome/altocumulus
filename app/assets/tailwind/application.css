@@ -193,8 +193,11 @@ html {
     @apply min-h-screen bg-base-200 text-base-content;
   }
 
+  /* Pinned to the top of the viewport on every page. Anything else that sticks
+     to the top must sit below it: use --app-navbar-offset (bar height plus a
+     little air), see the :root rule further down. */
   .app-navbar {
-    @apply navbar relative z-50 min-h-0 border-b border-base-300 px-3 py-1 sm:px-6;
+    @apply navbar sticky top-0 z-50 min-h-0 border-b border-base-300 px-3 py-1 sm:px-6;
     background-color: var(--app-bar-bg);
     color: var(--app-bar-fg);
   }
@@ -429,19 +432,25 @@ html {
      colour (body.app-shell, base-200; html has none, so it also fills the
      canvas). Header, tabs, legend and the table's panel draw no box, border or
      shadow of their own; only the ledger's cells carry colour. */
+  /* The navbar is pinned to the top on every page. --app-navbar-offset is the
+     space it takes (bar ~3.5rem plus air): focused elements and anchors must
+     not land underneath it (WCAG 2.4.11), and other top-sticky elements (the
+     reservation side panel) use it as their `top`. */
+  :root {
+    --app-navbar-offset: 4.5rem;
+  }
+
   @media screen {
+    :root {
+      scroll-padding-top: var(--app-navbar-offset);
+    }
+
     /* The ledger can be wider than .app-main's max width, so it overflows the
        body; the area past the body's right edge shows the canvas (html), which
        daisyUI paints with --root-bg (base-100, white). Point it at the page
        colour so the whole page is one background. */
     :root:has(body.oc-page) {
       --root-bg: var(--color-base-200);
-    }
-
-    /* The navbar is pinned to the top while the page scrolls; keep focused
-       elements and anchors from landing underneath it (WCAG 2.4.11). */
-    :root:has(body.oc-page) {
-      scroll-padding-top: 4.5rem;
     }
 
     body.oc-page {
@@ -478,8 +487,6 @@ html {
        No clip-path to trim it: that would clip the whole subtree to the bar,
        cutting off the dropdown panels that open below it. */
     body.oc-page .app-navbar {
-      position: sticky;
-      top: 0;
       left: 0;
       width: var(--oc-viewport-width, 100vw);
       box-shadow: 0 -100vmax 0 100vmax var(--app-bar-bg);
