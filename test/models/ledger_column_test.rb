@@ -63,13 +63,32 @@ class LedgerColumnTest < ActiveSupport::TestCase
     assert_equal :surgery, LedgerColumn.subject_for(:weekly_pdf)
     assert_equal :hospitalization, LedgerColumn.subject_for(:examination_calendar)
     assert_equal :hospitalization, LedgerColumn.subject_for(:admission_calendar)
-    assert_equal %i[admission_dates patient age_sex purpose diagnosis_procedure_name category referral_adl clinical_comment status],
+    assert_equal %i[patient age_sex purpose diagnosis_procedure_name category admission_dates referral_adl clinical_comment status],
                  LedgerColumn.for_ledger(:admission_calendar).map(&:key)
 
     assert_equal %i[time_slot patient diagnosis_procedure operator_assistant duration_anesthesia category referral_adl clinical_comment],
                  LedgerColumn.for_ledger(:operations_calendar).map(&:key)
-    assert_equal %i[admission_dates patient age_sex diagnosis_procedure_name purpose reservation referral_adl status clinical_comment],
+    assert_equal %i[patient age_sex diagnosis_procedure_name purpose admission_dates reservation referral_adl status clinical_comment],
                  LedgerColumn.for_ledger(:examination_calendar).map(&:key)
+  end
+
+  test "admission_dates is not frozen in the examination and admission ledgers" do
+    %i[examination_calendar admission_calendar].each do |ledger|
+      assert_equal %i[patient], LedgerColumn.frozen_keys(LedgerColumn.for_ledger(ledger))
+    end
+  end
+
+  test "shipped site configs place admission_dates before reservation, or after category without one" do
+    %w[site.yml site.example.yml].each do |file|
+      config = SiteConfig.load(Rails.root.join("config", file))
+      %i[operations_calendar examination_calendar admission_calendar].each do |ledger|
+        keys = config.ledger_column_keys(ledger)
+        next unless keys.include?(:admission_dates)
+        anchor, offset = keys.include?(:reservation) ? [ :reservation, -1 ] : [ :category, 1 ]
+        assert_equal keys.index(:admission_dates), keys.index(anchor) + offset, "#{file} #{ledger}"
+      end
+      assert_includes %i[patient], LedgerColumn.frozen_keys(LedgerColumn.for_ledger(:examination_calendar)).last
+    end
   end
 
   test "for_ledger follows the site config order" do

@@ -103,8 +103,8 @@ masters: {}
 ledger_columns:
   operations_calendar: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl, clinical_comment]
   weekly_pdf: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl]
-  examination_calendar: [admission_dates, patient, age_sex, diagnosis_procedure_name, purpose, reservation, referral_adl, status, clinical_comment]
-  admission_calendar: [admission_dates, patient, age_sex, purpose, diagnosis_procedure_name, category, referral_adl, clinical_comment, status]
+  examination_calendar: [patient, age_sex, diagnosis_procedure_name, purpose, admission_dates, reservation, referral_adl, status, clinical_comment]
+  admission_calendar: [patient, age_sex, purpose, diagnosis_procedure_name, category, admission_dates, referral_adl, clinical_comment, status]
 
 # weekly_pdf: the look of the weekly surgery schedule PDF (surgery schedule
 # screen). Both keys are optional.

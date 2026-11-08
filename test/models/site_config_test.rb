@@ -274,9 +274,9 @@ class SiteConfigTest < ActiveSupport::TestCase
                  config.ledger_column_keys(:operations_calendar)
     assert_equal %i[time_slot patient diagnosis_procedure operator_assistant duration_anesthesia category referral_adl],
                  config.ledger_column_keys(:weekly_pdf)
-    assert_equal %i[admission_dates patient age_sex diagnosis_procedure_name purpose reservation referral_adl status clinical_comment],
+    assert_equal %i[patient age_sex diagnosis_procedure_name purpose admission_dates reservation referral_adl status clinical_comment],
                  config.ledger_column_keys(:examination_calendar)
-    assert_equal %i[admission_dates patient age_sex purpose diagnosis_procedure_name category referral_adl clinical_comment status],
+    assert_equal %i[patient age_sex purpose diagnosis_procedure_name category admission_dates referral_adl clinical_comment status],
                  config.ledger_column_keys(:admission_calendar)
   end
 
@@ -326,7 +326,7 @@ class SiteConfigTest < ActiveSupport::TestCase
 
   test "the example config lays out the richer calendar and PDF columns" do
     config = SiteConfig.load(Rails.root.join("config/site.example.yml"))
-    assert_equal %i[admission_dates patient age_sex diagnosis_procedure duration_anesthesia team category reservation referral_adl status],
+    assert_equal %i[patient age_sex diagnosis_procedure duration_anesthesia team category admission_dates reservation referral_adl status],
                  config.ledger_column_keys(:operations_calendar)
     assert_equal %i[time_slot patient age_sex diagnosis_procedure duration_anesthesia team category referral_adl],
                  config.ledger_column_keys(:weekly_pdf)
