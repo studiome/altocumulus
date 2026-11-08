@@ -40,12 +40,12 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Feature | Screen | Description |
 | --- | --- | --- |
 | Login | `/login` | Login id (email or username, per `ACCOUNT_IDENTIFIER`) + password authentication. Sessions expire automatically after a period of inactivity. Published announcements are shown on this page, and it is displayed in Japanese for anonymous visitors (a language switcher sits on the page) |
-| Operations calendar (home) | `/operations_calendar` | Day-grouped ledger table spanning 50 days by default (start date and day count adjustable). Per day: surgeries by slot with the referral source, admission counts, congestion warnings, special slot usage, and holidays / per-day comments. The date heading and a small "+入約" link open the reservation form pre-filled with that day; each surgery row of a hospitalization has an edit link to the same form; two tabs, 手術 (surgeries) and 検査入院 (non-surgery admissions by scheduled procedure/admission date, columns from `ledger_columns.examination_calendar`), selected with `?view=`; emergency rows carry a red stripe and rows outside the regular slot time are hatched (legend above the table, kept in print); administrators edit a day's note/closure/slot override inline (`/day_notes/:date`) and that day's special slot lanes through the day cell's "Edit special slots" link (`/day_special_slots/:date`); filters 自分が関与する症例のみ (`mine=1`) and, with `features.teams`, a team select (`team_id`) are kept across tabs and ranges |
+| Operations calendar (home) | `/operations_calendar` | Day-grouped ledger table spanning 50 days by default (start date and day count adjustable). Per day: surgeries by slot with the referral source, admission counts, congestion warnings, special slot usage, and holidays / per-day comments. The date heading and a small "+入約" link open the reservation form pre-filled with that day; a patient name opens its hospitalization in the same form, with a small "Details" link below it to the detail page; three tabs, selected with `?view=`: 手術 (surgeries, default), 検査入院 (non-surgery admissions by scheduled procedure/admission date, columns from `ledger_columns.examination_calendar`) and 入院 (active admissions of every purpose by admission date, columns from `ledger_columns.admission_calendar`); the ledger scrolls sideways with the page scrollbar while the day column and every column up to and including the patient stay frozen; emergency rows carry a red stripe and rows outside the regular slot time are hatched (legend above the table, kept in print); administrators edit a day's note/closure/slot override inline (`/day_notes/:date`) and that day's special slot lanes through the day cell's "Edit special slots" link (`/day_special_slots/:date`); filters 自分が関与する症例のみ (`mine=1`) and, with `features.teams`, a team select (`team_id`) are kept across tabs and ranges |
 | Patient ledger | `/patients` | Patient master data, with keyword search by name or hospital ID and pagination |
 | Patient diagnoses | `/patients/:id/patient_diagnoses` | Per-patient diagnosis history referencing the diagnosis master, holding the diagnosis date and laterality |
 | Surgery records | `/surgeries` | Surgery date (may be "undecided"), procedures (up to 5), anesthesia method, duration, elective/emergency type, slot category (regular / joint / backup / off-slot), operator/assistant/operation order, location / device / partner and performing department. Linked to patient diagnoses and, optionally, to the hospitalization it belongs to. Searchable by operator |
-| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / chemoradiotherapy / other, the last requiring a reason), emergency admission, transfer status, reservation doctor, referral source, administrator confirmation, soft delete/restore, and rebooking (copy) |
-| Reservation form (入約) | `/reservations/new`, `/reservations/:hospitalization_id/edit` | One screen that creates or edits a hospitalization and, for the purpose surgery, its surgery together (see [Reservation form](#reservation-form)). The calendar's booking flow goes through it; the separate hospitalization and surgery forms remain for administration and detail edits |
+| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / chemoradiotherapy / other, the last requiring a reason), emergency admission, transfer status, reservation doctor, referral source, ADL / infections, clinical comment (also editable from the surgery form), administrator confirmation, soft delete/restore, and rebooking (copy). The list's "New Hospitalization" button opens the reservation form |
+| Reservation form (入約) | `/reservations/new`, `/reservations/:hospitalization_id/edit` | One screen that creates or edits a hospitalization and, for the purpose surgery, its surgery together (see [Reservation form](#reservation-form)). The calendar's booking flow and the hospitalization list's "New Hospitalization" button go through it; the separate hospitalization and surgery forms remain for administration and detail edits |
 | Surgery slot schedule | `/surgery_schedule` | Weekly calendar showing the surgeries and used time per slot, warning about slot overruns, unassigned surgeries, and holidays. The same week can be printed as a landscape A4 PDF (`/surgery_schedule/pdf?start_date=YYYY-MM-DD`, any start date) in black and white, with operator/assistant, referral source, and a heading per day (date, closed-day name / note, slot count when overridden, slot usage in minutes, case count, special slot usage); emergency rows are shaded and rows outside the regular slot time lightly shaded (legend under the title) |
 | Data download (admin / data manager only) | `/exports` | CSV exports defined in the site config, with a date range (and team) per export (see [CSV export](#csv-export)) |
 | Dashboard | `/dashboard` | Statistics filterable by year (patient counts, inpatients, monthly counts, average length of stay, procedure ranking) |
@@ -194,20 +194,21 @@ Keys:
   reorders or deletes anything. A deactivated master is no longer offered for new selections but
   still shows on the surgeries that use it; a master in use cannot be deleted. A `surgery_locations`
   entry may also be a mapping, `{name: ..., asks_performing_department: true}`, which flags a place whose
-  cases may be performed by another department (a hint for the surgery form; set only on newly created
+  cases may be performed by another department (the reservation form then asks for the performing department; set only on newly created
   rows, and editable on the Surgery Locations master screen). Special slot lane counts are not part of
   this file; they are edited on the master screens.
 - `masters.teams`: team names (or `{name: ..., color: blue}`, color one of blue/red/green/orange/purple/
   teal/gray), seeded the same additive way as the other masters. Terms and members are entered in
   the app, not in this file.
-- `ledger_columns.operations_calendar` / `weekly_pdf` / `examination_calendar`: the columns each ledger
+- `ledger_columns.operations_calendar` / `weekly_pdf` / `examination_calendar` / `admission_calendar`: the columns each ledger
   table shows, in order (the calendar's and PDF's day cell is always first and not listed). Columns come
   from the ledger column registry (`LedgerColumn`, `app/models/ledger_column.rb` and
   `app/models/ledger_columns/`): surgery ledgers use `time_slot`, `admission_dates`, `patient`, `age_sex`,
   `diagnosis_procedure`, `operator_assistant`, `duration_anesthesia`, `team` (needs `features.teams`),
-  `category`, `reservation`, `referral_adl`, `status`; the examination ledger uses `admission_dates`,
-  `patient`, `age_sex`, `diagnosis_procedure_name`, `purpose`, `team`, `category`, `reservation`,
-  `referral_adl`, `status`. Omit a ledger for its built-in default. Unknown or duplicate columns, an empty
+  `category`, `reservation`, `referral_adl`, `status`, `clinical_comment` (the linked hospitalization's);
+  the examination and admission ledgers use `admission_dates`, `patient`, `age_sex`,
+  `diagnosis_procedure_name`, `purpose`, `team`, `category`, `reservation`, `referral_adl`, `status`,
+  `clinical_comment`. Omit a ledger for its built-in default. Unknown or duplicate columns, an empty
   list, or `team` without `features.teams` stop the boot. See `config/site.yml` for the column meanings.
 - `weekly_pdf`: `font_size` (6-10, default 8) and `title` (replaces the translated PDF title; keep
   site-specific wording here, not in code). Columns have a preferred and a minimum width in the registry:
@@ -222,6 +223,11 @@ Keys:
   and `admission_list` (every field of the subject); `exports: {}` switches exports off. Unknown
   subjects/fields, duplicates, an empty list, a bad name or `team`/`team_members` without `features.teams`
   stop the boot. See `config/site.yml` for every field and `config/site.example.yml` for an `ncd_list`.
+- `reservation_defaults`: what a *new* reservation form starts with (never applied on edit, on a re-rendered
+  create, or over a value the link already carries). `admission_days_before_surgery` (integer 0-30, default 1)
+  sets the admission date that many days before the surgery date when the form is opened with one;
+  `surgery.surgery_location` (a surgery location master name, left blank when missing or inactive),
+  `surgery.anesthesia_method`, `hospitalization.adl` and `hospitalization.infection` prefill those fields.
 
 In tests, `with_site_config(hash) { ... }` swaps the config temporarily.
 
@@ -343,6 +349,8 @@ erDiagram
         int    planned_days
         datetime deleted_at "soft delete"
         string patient_name_snapshot "patient snapshot at reservation time"
+        string infection "free text next to ADL"
+        text   clinical_comment "shown in the calendar ledgers"
         boolean team_undecided
     }
     SurgeryProcedureSelection {
@@ -572,6 +580,11 @@ The screen has a patient confirmation card (chart ID, name, age/sex, last two ho
 admission counts / slot summary / team member previews, and a side panel with a month calendar of scheduled
 admissions (days above `ADMISSION_WARNING_THRESHOLD` are marked) and the published announcements.
 
+A new form opened from the calendar's day link sets the scheduled admission date to the surgery date minus
+`reservation_defaults.admission_days_before_surgery` (default 1), and keeps it following the surgery date
+input until the admission date is edited by hand; an edit form never moves it. The other
+`reservation_defaults` (see [Site configuration](#site-configuration)) prefill a new form only.
+
 ### Nested multi-row forms (diagnosis / procedure pickers)
 
 `Hospitalization` and `Surgery` use `accepts_nested_attributes_for` to add and remove several join
@@ -624,7 +637,8 @@ Admins and data managers (nobody else; enforced in `ExportsController`, the nav 
 "データダウンロード / Data download" tab (`/exports`) listing every configured export (the entry is hidden
 while `exports` is empty). Each card has a from / to date range (default: the current month, at most 366 days)
 and, with `features.teams`, a team filter (including "Undecided"); hospitalization exports choose between
-all admissions (by admission date) and examination admissions (by scheduled procedure date). Download is
+all admissions (the hospitalization list, by admission date), examination admissions (the examination tab, by
+scheduled procedure date) and admissions of every purpose (the admission tab, by effective admission date). Download is
 `GET /exports/:key?view=...&from=...&to=...` (`ExportSource`; a bad range goes back to the page with an alert).
 The calendar and hospitalization list have no export button. The file is named
 `<export>_<start>_<end>.csv`, and is UTF-8 with BOM, CRLF, one header row and every value quoted
@@ -1035,7 +1049,8 @@ rehearse an actual restore.
 The conventions for the development flow, including AI agents, are documented here.
 
 - [AGENTS.md](AGENTS.md) — shared rules for agents (replies in Japanese, TDD, Git workflow)
-- [CLAUDE.md](CLAUDE.md) — repository-specific guidance for Claude Code
+- [CLAUDE.md](CLAUDE.md) — for Claude Code; only imports `AGENTS.md`, so edit `AGENTS.md` instead
+- [.github/instructions/instructions.md](.github/instructions/instructions.md) — GitHub Copilot reply-style instructions
 
 In short:
 

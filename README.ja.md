@@ -39,16 +39,16 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 | 機能 | 画面 | 概要 |
 | --- | --- | --- |
 | ログイン | `/login` | ログインID（`ACCOUNT_IDENTIFIER` によりメールアドレスまたはユーザー名） + パスワードによる認証。無操作が一定時間続くと自動的にセッションが失効。公開中のお知らせをこの画面に表示し、未ログインの訪問者には日本語で表示（言語切り替えもこの画面にあります） |
-| 運用カレンダー（トップ） | `/operations_calendar` | 既定 50 日分を日付ごとにまとめた台帳形式の表（開始日と日数は変更可）。日別に、枠ごとの手術と紹介元、入院件数、混雑注意、特殊枠の使用状況、休日/日別コメントを表示。日付見出しと小さな「+入約」リンクから、その日付を入力済みにした入約フォームを開き、入院に紐づく手術の各行には同じフォームへの編集リンクがあります。タブは 手術 と 検査入院（手術以外の入院を予定処置日/入院日ごとに表示。列は `ledger_columns.examination_calendar`）の 2 つで、`?view=` で切り替えます。緊急手術の行には赤い帯、通常枠の時間外の行には斜線が付きます（表の上に凡例があり、印刷時も保持）。管理者は日ごとのメモ・休診・枠数の上書きをその場で編集でき（`/day_notes/:date`）、日付セルの「特殊枠を変更」リンクからその日の特殊枠の列数も編集できます（`/day_special_slots/:date`）。「自分が関与する症例のみ」（`mine=1`）と、`features.teams` が有効ならチームの絞り込み（`team_id`）は、タブや期間を切り替えても維持されます |
+| 運用カレンダー（トップ） | `/operations_calendar` | 既定 50 日分を日付ごとにまとめた台帳形式の表（開始日と日数は変更可）。日別に、枠ごとの手術と紹介元、入院件数、混雑注意、特殊枠の使用状況、休日/日別コメントを表示。日付見出しと小さな「+入約」リンクから、その日付を入力済みにした入約フォームを開きます。患者名からはその入院を同じフォームで開き、その下の小さな「詳細」リンクから詳細画面へ移動します。タブは 手術（既定）、検査入院（手術以外の入院を予定処置日/入院日ごとに表示。列は `ledger_columns.examination_calendar`）、入院（全目的の有効な入院を入院日ごとに表示。列は `ledger_columns.admission_calendar`）の 3 つで、`?view=` で切り替えます。台帳はページのスクロールバーで横にスクロールし、日付列と患者列までの列は固定されます。緊急手術の行には赤い帯、通常枠の時間外の行には斜線が付きます（表の上に凡例があり、印刷時も保持）。管理者は日ごとのメモ・休診・枠数の上書きをその場で編集でき（`/day_notes/:date`）、日付セルの「特殊枠を変更」リンクからその日の特殊枠の列数も編集できます（`/day_special_slots/:date`）。「自分が関与する症例のみ」（`mine=1`）と、`features.teams` が有効ならチームの絞り込み（`team_id`）は、タブや期間を切り替えても維持されます |
 | 患者台帳 | `/patients` | 患者基本情報の管理。氏名・患者 ID でのキーワード検索、ページネーション対応 |
 | 患者診断 | `/patients/:id/patient_diagnoses` | 診断マスタを参照した患者ごとの診断履歴。診断日と左右区分（laterality）を保持 |
 | 手術記録 | `/surgeries` | 手術日（「未定」も選択可）・術式（最大 5 件）・麻酔法・所要時間・予定/緊急区分・術者/助手/手術順。枠区分（通常枠・同時手術・待機・枠外）、手術場所・機器・相手診療科/実施診療科。患者診断のほか、所属する入院にも（任意で）紐付け。術者で検索可能 |
-| 入院記録 | `/hospitalizations` | 予約段階（予定入院日・予定手術日）から実入院（実績入院日）・退院までのライフサイクル、入院目的（手術/検査・処置/化学療法/化学放射線療法/その他。その他は理由必須）、緊急入院、転入状況、予約医、紹介元、管理者確認、論理削除/復元、再予約（コピー）に対応 |
-| 入約フォーム | `/reservations/new`、`/reservations/:hospitalization_id/edit` | 入院と、目的が手術の場合はその手術を 1 画面でまとめて登録・編集（[入約フォーム](#入約フォーム)参照）。カレンダーからの予約はこのフォームを通ります。入院・手術それぞれの個別フォームは、管理や詳細編集用に残してあります |
+| 入院記録 | `/hospitalizations` | 予約段階（予定入院日・予定手術日）から実入院（実績入院日）・退院までのライフサイクル、入院目的（手術/検査・処置/化学療法/化学放射線療法/その他。その他は理由必須）、緊急入院、転入状況、予約医、紹介元、ADL/感染症、臨床コメント（手術フォームからも編集可）、管理者確認、論理削除/復元、再予約（コピー）に対応。一覧の「新規入院」ボタンは入約フォームを開きます |
+| 入約フォーム | `/reservations/new`、`/reservations/:hospitalization_id/edit` | 入院と、目的が手術の場合はその手術を 1 画面でまとめて登録・編集（[入約フォーム](#入約フォーム)参照）。カレンダーからの予約と入院一覧の「新規入院」ボタンはこのフォームを通ります。入院・手術それぞれの個別フォームは、管理や詳細編集用に残してあります |
 | 手術枠スケジュール | `/surgery_schedule` | 週表示のカレンダー。枠ごとの手術一覧と使用時間、枠の時間超過・未割当手術・祝日を警告表示。同じ週を横向き A4 の白黒 PDF として印刷可能（`/surgery_schedule/pdf?start_date=YYYY-MM-DD`、開始日は任意）。術者/助手・紹介元、日ごとの見出し（日付、休日名/メモ、枠数を上書きした場合の枠数、枠の使用時間（分）、症例数、特殊枠の使用状況）を掲載。緊急手術の行は網掛け、通常枠の時間外の行は薄い網掛けで表示（タイトル下に凡例） |
 | データダウンロード（管理者/データ管理者のみ） | `/exports` | サイト設定で定義した CSV の出力。出力ごとに期間（とチーム）を指定（[CSV 出力](#csv-出力)参照） |
 | ダッシュボード | `/dashboard` | 年次で絞り込める統計（患者数・在院患者数・月別件数・平均在院日数・術式ランキング） |
-| 横断検索 | `/search` | キーワード 1 つで患者・入院・手術を横断的に検索 |
+| 横断検索 | `/search` | キーワード 1 つで患者・入院・手術を横断的に検索。結果は 入院 / 手術 / 患者 のタブに分かれ（`?tab=`、各タブに件数。指定がなければ該当のある最初のタブを開く）、最大 20 行の表と全件一覧へのリンクで表示 |
 | 監査ログ | `/audit_events` | 患者・手術・入院・症例データベースの作成/更新/削除を、操作者・IP アドレス・変更前後の値つきで記録・閲覧 |
 | マスタ管理 | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` `/departments` `/surgery_locations` `/surgical_devices` `/teams` | 診断名・術式・曜日別の手術枠ルール（枠数は小数対応）・休日/日別コメントと枠数の上書き・診療科・手術場所と手術機器（後の 2 つは曜日別の特殊枠の列数つき）・チームとその任期/メンバー（`/teams` は `features.teams` が有効なときのみ） |
 | 症例データベース | `/case_databases` | データ管理者が定義した独自項目（テキスト/数値/選択）を持つ、名前付きの患者レジストリ。ログイン済みなら誰でも患者の追加・値の入力・CSV 出力ができ、データベース・項目・患者エントリの作成/編集/削除はデータ管理者のみ |
@@ -187,7 +187,7 @@ volume でマウントします。`config/deploy.yml` のコメント付きの�
   名前だけを、既存の行の後ろに記載順で作成し、名前の変更・並べ替え・削除は一切しません。無効化したマスタは
   新規の選択肢には出なくなりますが、それを使っている手術には表示され続け、使用中のマスタは削除できません。
   `surgery_locations` の要素は `{name: ..., asks_performing_department: true}` というマッピングにもでき、他の診療科が
-  実施することのある場所の印になります（手術フォームへのヒント。新規作成された行にのみ設定され、手術場所マスタの
+  実施することのある場所の印になります（入約フォームでその場所を選ぶと実施診療科を尋ねます。新規作成された行にのみ設定され、手術場所マスタの
   画面で編集できます）。特殊枠の列数はこのファイルには含まれず、マスタの画面で編集します。
 - `masters.teams`: チーム名（または `{name: ..., color: blue}`。色は blue/red/green/orange/purple/teal/gray のいずれか）。
   他のマスタと同じ追加のみの方式で投入されます。任期とメンバーはこのファイルではなくアプリ内で入力します。
@@ -195,9 +195,10 @@ volume でマウントします。`config/deploy.yml` のコメント付きの�
   指定します（カレンダーと PDF の日付セルは常に先頭で、列挙しません）。列は台帳列レジストリ（`LedgerColumn`、
   `app/models/ledger_column.rb` と `app/models/ledger_columns/`）から選びます。手術系の台帳では `time_slot`、
   `admission_dates`、`patient`、`age_sex`、`diagnosis_procedure`、`operator_assistant`、`duration_anesthesia`、
-  `team`（`features.teams` が必要）、`category`、`reservation`、`referral_adl`、`status`、検査入院の台帳では
-  `admission_dates`、`patient`、`age_sex`、`diagnosis_procedure_name`、`purpose`、`team`、`category`、`reservation`、
-  `referral_adl`、`status` を使えます。台帳ごと省略すると組み込みの既定になります。未知の列・重複・空のリスト、
+  `team`（`features.teams` が必要）、`category`、`reservation`、`referral_adl`、`status`、`clinical_comment`
+  （紐づく入院のもの）、検査入院と入院の台帳では `admission_dates`、`patient`、`age_sex`、
+  `diagnosis_procedure_name`、`purpose`、`team`、`category`、`reservation`、`referral_adl`、`status`、
+  `clinical_comment` を使えます。台帳ごと省略すると組み込みの既定になります。未知の列・重複・空のリスト、
   `features.teams` なしの `team` は起動を止めます。列の意味は `config/site.yml` を参照してください。
 - `weekly_pdf`: `font_size`（6〜10、既定 8）と `title`（翻訳済みの PDF タイトルを置き換えます。サイト固有の
   文言はコードではなくここに書いてください）。列にはレジストリ上で希望幅と最小幅があり、ページの余った幅は
@@ -212,6 +213,10 @@ volume でマウントします。`config/deploy.yml` のコメント付きの�
   `admission_list`（それぞれの対象の全フィールド）になり、`exports: {}` で出力機能を無効にできます。未知の
   対象/フィールド・重複・空のリスト・不正な名前、`features.teams` なしの `team` / `team_members` は起動を
   止めます。全フィールドは `config/site.yml`、`ncd_list` の例は `config/site.example.yml` を参照してください。
+- `reservation_defaults`: *新規*の入約フォームの初期値（編集時、登録失敗後の再表示時、リンクが既に値を持つ項目には
+  適用しません）。`admission_days_before_surgery`（0〜30 の整数、既定 1）は、手術日つきで開いたときに入院日を
+  手術日のその日数前にします。`surgery.surgery_location`（手術場所マスタの名前。存在しないか無効なら空欄）、
+  `surgery.anesthesia_method`、`hospitalization.adl`、`hospitalization.infection` はそれぞれの項目を事前入力します。
 
 テストでは `with_site_config(hash) { ... }` で設定を一時的に差し替えられます。
 
@@ -332,6 +337,8 @@ erDiagram
         int    planned_days
         datetime deleted_at "論理削除"
         string patient_name_snapshot "予約時点の患者スナップショット"
+        string infection "感染症（ADL の隣の自由記述）"
+        text   clinical_comment "カレンダーの台帳に表示"
         boolean team_undecided
     }
     SurgeryProcedureSelection {
@@ -542,6 +549,11 @@ erDiagram
 その場更新プレビュー、予定入院の月カレンダー（`ADMISSION_WARNING_THRESHOLD` を超える日に印）と公開中の
 お知らせを並べた側パネルがあります。
 
+カレンダーの日付リンクから開いた新規フォームでは、予定入院日を手術日から
+`reservation_defaults.admission_days_before_surgery`（既定 1）日前にし、入院日を手で編集するまでは手術日の入力に
+追従させます。編集フォームでは動かしません。その他の `reservation_defaults`（[サイト設定](#サイト設定)参照）も
+新規フォームにだけ事前入力します。
+
 ### ネストした複数行フォーム（診断ピッカー / 術式ピッカー）
 
 `Hospitalization` と `Surgery` は `accepts_nested_attributes_for` を使い、複数の中間レコードを
@@ -588,8 +600,8 @@ input と読み取り専用の表示で、選んだレコードがそこに入�
 管理者とデータ管理者だけ（`ExportsController` で強制。それ以外にはナビゲーションの項目も出しません）が、
 「データダウンロード / Data download」タブ（`/exports`）で、設定済みの出力を一覧できます（`exports` が空の間は
 項目を隠します）。各カードには開始日・終了日（既定は当月、最長 366 日）があり、`features.teams` が有効なら
-チームの絞り込み（「未決定」を含む）もあります。入院系の出力は、すべての入院（入院日基準）と検査入院
-（予定処置日基準）を選べます。ダウンロードは `GET /exports/:key?view=...&from=...&to=...`（`ExportSource`。
+チームの絞り込み（「未決定」を含む）もあります。入院系の出力は、すべての入院（入院一覧、入院日基準）、検査入院
+（検査入院タブ、予定処置日基準）、全目的の入院（入院タブ、実績または予定の入院日基準）から選べます。ダウンロードは `GET /exports/:key?view=...&from=...&to=...`（`ExportSource`。
 不正な期間はアラート付きでこの画面に戻ります）。カレンダーと入院一覧には出力ボタンはありません。ファイル名は
 `<export>_<start>_<end>.csv`、UTF-8（BOM 付き）・CRLF・ヘッダー 1 行・全値をクォートした形式です（`CsvExport`）。
 患者 ID は正確な文字列ですが、Excel はダブルクリックで開くと先頭の 0 を落とすので、列を文字列として取り込んで
@@ -1005,7 +1017,8 @@ file レプリカ、または MinIO のような S3 互換先など）を併用�
 AI エージェントを含む開発フローの取り決めは以下にまとめています。
 
 - [AGENTS.md](AGENTS.md) — エージェント共通のルール（日本語での応答、TDD、Git 運用）
-- [CLAUDE.md](CLAUDE.md) — Claude Code 向けのリポジトリ固有ガイド
+- [CLAUDE.md](CLAUDE.md) — Claude Code 用。`AGENTS.md` を読み込むだけなので、指示は `AGENTS.md` を編集する
+- [.github/instructions/instructions.md](.github/instructions/instructions.md) — GitHub Copilot 向けの応答スタイル指示
 
 要点:
 
