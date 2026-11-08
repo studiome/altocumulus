@@ -18,6 +18,7 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
   test "the tab bar is a large boxed bar and the selected tab is filled with the primary color" do
     get operations_calendar_url, params: RANGE
     assert_select "[role=tablist].tabs.tabs-box.tabs-lg.mb-4.print\\:hidden"
+    assert_select "[role=tablist][data-controller=tabs]"
     assert_select "a[role=tab].tab.font-semibold", count: 3
     assert_select "a[role=tab][aria-selected=true].bg-primary.text-primary-content", count: 1
     assert_select "a[role=tab][aria-selected=false].bg-primary", false

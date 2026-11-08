@@ -42,14 +42,11 @@
   </section>
 
   <%# Tabs are plain links (a reload, so the filters/range ride in the URL). %>
-  <div role="tablist" aria-label="<%= t(".tabs_label") %>" class="<%= tab_bar_class %>">
-    <% OperationsCalendarController::VIEWS.each do |view| %>
-      <% selected = view == @view %>
-      <%= link_to t(".tab_#{view}"), operations_calendar_path(range_params.merge(view: view)),
-            id: "oc-tab-#{view}", role: "tab", class: tab_link_class(selected),
-            aria: { selected: selected.to_s, controls: "oc-panel" }, tabindex: (selected ? 0 : -1) %>
-    <% end %>
-  </div>
+  <%= render "shared/tab_bar", label: t(".tabs_label"), panel_id: "oc-panel",
+        tabs: OperationsCalendarController::VIEWS.map { |view|
+          { label: t(".tab_#{view}"), path: operations_calendar_path(range_params.merge(view: view)),
+            id: "oc-tab-#{view}", selected: view == @view }
+        } %>
 
   <div id="oc-panel" role="tabpanel" aria-labelledby="oc-tab-<%= @view %>">
     <% if @view == "surgery" %>

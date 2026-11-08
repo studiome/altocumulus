@@ -1,13 +1,26 @@
 require "test_helper"
 
 class ApplicationHelperTest < ActionView::TestCase
-  test "tab_bar_class is the large boxed tab bar" do
-    assert_equal "tabs tabs-box tabs-lg mb-4 flex-wrap print:hidden", tab_bar_class
+  test "tab_bar_class is a large boxed tab bar that hides in print by default" do
+    classes = tab_bar_class.split
+    %w[tabs tabs-box tabs-lg].each { |c| assert_includes classes, c }
+    assert_includes classes, "print:hidden"
+  end
+
+  test "tab_bar_class keeps the bar in print when hide_in_print is false" do
+    assert_not_includes tab_bar_class(hide_in_print: false).split, "print:hidden"
+    assert_includes tab_bar_class(hide_in_print: false).split, "tabs"
   end
 
   test "tab_link_class fills the selected tab and hovers the others" do
-    assert_equal "tab font-semibold tab-active bg-primary text-primary-content", tab_link_class(true)
-    assert_equal "tab font-semibold hover:bg-base-300", tab_link_class(false)
+    selected = tab_link_class(true).split
+    assert_includes selected, "tab"
+    assert_includes selected, "tab-active"
+    assert_includes selected, "bg-primary"
+    unselected = tab_link_class(false).split
+    assert_includes unselected, "tab"
+    assert_not_includes unselected, "tab-active"
+    assert_includes unselected, "hover:bg-base-300"
   end
 
   test "date_with_weekday shows the abbreviated weekday in English" do

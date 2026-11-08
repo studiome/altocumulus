@@ -1,0 +1,10 @@
+<%# A tablist of plain links (a reload per tab). tabs: [{label:, path:, id:, selected:}];
+    arrow keys move focus only (see tabs_controller.js), Enter follows the link. %>
+<% hide_in_print = local_assigns.fetch(:hide_in_print, true) %>
+<div role="tablist" aria-label="<%= label %>" class="<%= tab_bar_class(hide_in_print: hide_in_print) %>"
+     data-controller="tabs" data-action="keydown->tabs#keydown">
+  <% tabs.each do |tab| %>
+    <%= link_to tab[:label], tab[:path], id: tab[:id], role: "tab", class: tab_link_class(tab[:selected]),
+          aria: { selected: tab[:selected].to_s, controls: panel_id }, tabindex: (tab[:selected] ? 0 : -1) %>
+  <% end %>
+</div>

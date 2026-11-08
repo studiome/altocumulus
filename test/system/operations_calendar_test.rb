@@ -21,6 +21,18 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
     assert_text "No examination admissions scheduled", minimum: 1
   end
 
+  test "arrow keys move focus between tabs without navigating" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    page.execute_script("document.getElementById('oc-tab-surgery').focus()")
+
+    find("#oc-tab-surgery").send_keys(:arrow_right)
+
+    assert_equal "oc-tab-examination", page.evaluate_script("document.activeElement.id")
+    assert_equal "0", find("#oc-tab-examination")[:tabindex]
+    assert_equal "-1", find("#oc-tab-surgery")[:tabindex]
+    assert_selector "[role=tab][aria-selected=true]", text: "Surgery"
+  end
+
   test "the admission tab lists a surgery and an examination admission on the same day with the count" do
     day = Date.new(2026, 3, 5)
     hospitalizations(:one).update_columns(purpose: "surgery", scheduled_admission_date: day, admission_date: nil, discharge_date: nil)

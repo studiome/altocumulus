@@ -1,11 +1,15 @@
 module ApplicationHelper
   # Shared look of the page-level tab bars (operations calendar, search).
-  def tab_bar_class
-    "tabs tabs-box tabs-lg mb-4 flex-wrap print:hidden"
+  # A bar whose labels carry information the printout needs (search counts)
+  # passes hide_in_print: false.
+  def tab_bar_class(hide_in_print: true)
+    class_names("tabs tabs-box tabs-lg mb-4 flex-wrap", "print:hidden": hide_in_print)
   end
 
   def tab_link_class(selected)
-    "tab font-semibold " + (selected ? "tab-active bg-primary text-primary-content" : "hover:bg-base-300")
+    class_names("tab font-semibold",
+                "tab-active bg-primary text-primary-content": selected,
+                "hover:bg-base-300": !selected)
   end
 
   # CSS class for the label of a field whose requiredness is chosen by the

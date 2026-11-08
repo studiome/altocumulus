@@ -25,15 +25,13 @@
   <% if @keyword.blank? %>
     <div class="app-empty-state"><%= t(".empty_state") %></div>
   <% else %>
-    <%# Tabs are plain links (a reload, so the keyword rides in the URL). %>
-    <div role="tablist" aria-label="<%= t(".tabs_label") %>" class="<%= tab_bar_class %>">
-      <% SearchesController::TABS.each do |tab| %>
-        <% selected = tab == @tab %>
-        <%= link_to t(".tab_label", label: t(".#{tab}_heading"), count: @counts[tab]), search_path(keyword: @keyword, tab: tab),
-              id: "search-tab-#{tab}", role: "tab", class: tab_link_class(selected),
-              aria: { selected: selected.to_s, controls: "search-panel" }, tabindex: (selected ? 0 : -1) %>
-      <% end %>
-    </div>
+    <%# Tabs are plain links (a reload, so the keyword rides in the URL). The
+        labels carry the counts, so the bar stays in print. %>
+    <%= render "shared/tab_bar", label: t(".tabs_label"), panel_id: "search-panel", hide_in_print: false,
+          tabs: SearchesController::TABS.map { |tab|
+            { label: t(".tab_label", label: t(".#{tab}_heading"), count: @counts[tab]),
+              path: search_path(keyword: @keyword, tab: tab), id: "search-tab-#{tab}", selected: tab == @tab }
+          } %>
 
     <div id="search-panel" role="tabpanel" aria-labelledby="search-tab-<%= @tab %>" class="app-panel overflow-hidden">
       <div class="app-panel-body">

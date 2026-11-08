@@ -70,7 +70,9 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
   test "the tab bar looks like the operations calendar's: large, boxed, selected tab filled" do
     get search_url, params: { keyword: "John" }
 
-    assert_select "[role=tablist].tabs.tabs-box.tabs-lg.mb-4.print\\:hidden"
+    assert_select "[role=tablist].tabs.tabs-box.tabs-lg.mb-4"
+    assert_select "[role=tablist].print\\:hidden", false, "the search tabs carry the counts, so they stay in print"
+    assert_select "[role=tablist][data-controller=tabs]"
     assert_select "a[role=tab].tab.font-semibold", count: 3
     assert_select "a[role=tab][aria-selected=true].tab-active.bg-primary.text-primary-content", count: 1
     assert_select "a[role=tab][aria-selected=false].bg-primary", false
