@@ -413,7 +413,7 @@ html {
   }
 
   /* Page-level sideways scroll (screen only): the body grows to the table, so
-     the navbar background (a clipped shadow) reaches the far edge, and the
+     the navbar background (an oversized shadow) reaches the far edge, and the
      navbar, page header, tabs and legend stay one viewport wide at the left
      while only the ledger moves. min() falls back to the container width when
      nothing overflows. --oc-viewport-width (viewport_width_controller.js)
@@ -466,12 +466,15 @@ html {
       min-width: fit-content;
     }
 
+    /* The shadow's spread is shifted up by its own size, so it covers the sides
+       and the area above the bar but its bottom edge is exactly the bar's.
+       No clip-path to trim it: that would clip the whole subtree to the bar,
+       cutting off the dropdown panels that open below it. */
     body.oc-page .app-navbar {
       position: sticky;
       left: 0;
       width: var(--oc-viewport-width, 100vw);
-      box-shadow: 0 0 0 100vmax var(--app-bar-bg);
-      clip-path: inset(0 -100vmax);
+      box-shadow: 0 -100vmax 0 100vmax var(--app-bar-bg);
     }
 
     body.oc-page .app-page-header,

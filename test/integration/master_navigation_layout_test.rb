@@ -11,7 +11,7 @@ class MasterNavigationLayoutTest < ActionDispatch::IntegrationTest
   test "master navigation uses an unclipped daisyUI dropdown with aligned trigger and working links" do
     get root_path
 
-    masters_triggers = css_select("li.dropdown.dropdown-end > button[type='button'][tabindex='0']")
+    masters_triggers = css_select("li.dropdown.dropdown-end > div[role='button'][tabindex='0']")
                           .select { |node| node.text.strip == "Masters" }
     assert_equal 1, masters_triggers.length, "expected exactly one Masters dropdown trigger"
 
@@ -20,8 +20,8 @@ class MasterNavigationLayoutTest < ActionDispatch::IntegrationTest
     assert_equal %w[dropdown dropdown-end], masters_li["class"].split
 
     assert_nil masters_li.at_css("details")
-    assert_nil masters_li.at_css("> button.btn")
-    assert_nil masters_li.at_css("> button.btn-ghost")
+    assert_nil masters_li.at_css("> [role='button'].btn")
+    assert_nil masters_li.at_css("> [role='button'].btn-ghost")
 
     masters_menu = masters_li.at_css("> ul.dropdown-content.menu")
     assert masters_menu, "expected the Masters trigger to have a sibling ul.dropdown-content.menu"
