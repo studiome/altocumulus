@@ -259,4 +259,26 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
     assert_match(/\A0(px)? [1-9]\d*px\z/, style["outset"])
     assert_operator style["scrollWidth"], :<=, style["clientWidth"]
   end
+
+  test "the calendar page is left-aligned instead of centered" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+
+    left = page.evaluate_script('document.querySelector("body.oc-page .app-page-header").getBoundingClientRect().left')
+    assert_operator left, :<=, 24.5
+  end
+
+  test "the tab bar is a full-width band on the calendar page" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+
+    style = page.evaluate_script(<<~JS)
+      (() => {
+        const cs = getComputedStyle(document.querySelector("body.oc-page [role='tablist']"));
+        return { shadow: cs.boxShadow, clip: cs.clipPath, radius: cs.borderTopLeftRadius, scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth };
+      })()
+    JS
+    assert_match(/0px 0px 0px/, style["shadow"])
+    assert_match(/inset/, style["clip"])
+    assert_equal "0px", style["radius"]
+    assert_operator style["scrollWidth"], :<=, style["clientWidth"]
+  end
 end

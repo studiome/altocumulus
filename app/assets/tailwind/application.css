@@ -285,8 +285,17 @@ html {
      while only the ledger moves. min() falls back to the container width when
      nothing overflows. --oc-viewport-width (viewport_width_controller.js)
      is the visible width without a classic scrollbar; 100vw is only its
-     fallback. --oc-gutter mirrors .app-main's horizontal padding. */
+     fallback. --oc-gutter mirrors .app-main's horizontal padding.
+     The page is left-aligned, not centered: .app-main keeps its max width and
+     padding but loses the auto left margin, so on wide screens the content
+     starts at the gutter, exactly where the sticky `left: var(--oc-gutter)`
+     elements (header, tabs, legend) and the ledger table sit. */
   @media screen {
+    body.oc-page .app-main {
+      margin-left: 0;
+      margin-right: auto;
+    }
+
     body.oc-page {
       --oc-gutter: 0.75rem;
       min-width: fit-content;
@@ -324,6 +333,16 @@ html {
          overflow only, so the page does not scroll sideways because of it). */
       border-style: solid;
       border-image: linear-gradient(var(--color-base-300), var(--color-base-300)) 1 0 / 1px 0 / 0 100vmax;
+    }
+
+    /* The tab bar is a full-width band like the header: its own colour as a
+       clipped shadow instead of daisyUI's rounded box with inset shadows.
+       daisyUI's .tabs-box sits in the utilities layer, which outranks this
+       components layer, hence !important. */
+    body.oc-page [role="tablist"] {
+      border-radius: 0 !important;
+      box-shadow: 0 0 0 100vmax var(--color-base-200) !important;
+      clip-path: inset(0 -100vmax);
     }
 
     body.oc-page .app-page-header,
