@@ -91,15 +91,22 @@ class LedgerColumn
   # LedgerColumnFitting). `flex` is the column's weight in sharing out the
   # page's spare width: a column with weight 3 gets three times the extra of one
   # with weight 1, whatever their preferred widths; 0 (the default) takes none.
-  attr_reader :key, :subject, :width, :min_width, :flex, :css_class
+  #
+  # `screen_width` (pixels, optional) is the HTML ledger's own preferred and
+  # narrowest width. Without it a screen column takes min_width scaled to pixels
+  # and shares out the spare table width; with it the column stays that narrow
+  # (long text wraps) and the spare goes to the other columns. The PDF ignores
+  # it, so its layout is unchanged.
+  attr_reader :key, :subject, :width, :min_width, :flex, :css_class, :screen_width
 
-  def initialize(subject:, key:, width:, min_width: width, flex: 0, css_class: nil, includes: [], &builder)
+  def initialize(subject:, key:, width:, min_width: width, flex: 0, css_class: nil, screen_width: nil, includes: [], &builder)
     @subject = subject
     @key = key
     @width = width
     @min_width = min_width
     @flex = flex || 0
     @css_class = css_class
+    @screen_width = screen_width
     @includes = includes
     @builder = builder
   end

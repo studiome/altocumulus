@@ -31,7 +31,7 @@ module LedgerColumns
           column(:age_sex, 46, min: 36, includes: [ :patient ]) { |surgery, _|
             age_sex_cell(surgery.patient, surgery.surgery_date)
           },
-          column(:diagnosis_procedure, 170, min: 150, flex: 2, includes: [ { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure } ]) { |surgery, _|
+          column(:diagnosis_procedure, 170, min: 150, flex: 2, screen_width: 200, includes: [ { patient_diagnoses: :diagnosis }, { surgery_procedure_selections: :surgery_procedure } ]) { |surgery, _|
             cell(segment(surgery.diagnosis_names_display, :secondary),
                  segment(surgery.display_procedure_name, :primary))
           },
@@ -46,7 +46,7 @@ module LedgerColumns
           column(:team, 80, min: 60, flex: 2, includes: [ { team: TEAM_INCLUDES }, { hospitalization: { team: TEAM_INCLUDES } } ]) { |surgery, _|
             team_cell(surgery.effective_team, surgery.team_members_display, undecided: surgery.effective_team_undecided?)
           },
-          column(:category, 100, min: 90, flex: 3, includes: [ :department, :surgery_location, :performing_department, :surgical_device,
+          column(:category, 100, min: 90, flex: 3, screen_width: 96, includes: [ :department, :surgery_location, :performing_department, :surgical_device,
                                               { hospitalization: :source_department } ]) { |surgery, _|
             hospitalization = hospitalization_of(surgery)
             cell(scheduling_segments(surgery, hospitalization), placement_segments(surgery, hospitalization))

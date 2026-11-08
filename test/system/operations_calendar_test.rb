@@ -215,4 +215,48 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
       end
     end
   end
+
+  test "long diagnosis and procedure names wrap inside a narrow column and the type column stays narrow" do
+    long = "Very long diagnosis name that keeps going and going well past any reasonable column width"
+    Diagnosis.find_each { |record| record.update_columns(name: "#{long} #{record.id}") }
+    SurgeryProcedure.find_each { |record| record.update_columns(name: "#{long} procedure #{record.id}") }
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+
+    widths = page.evaluate_script(<<~JS)
+      Array.from(document.querySelectorAll(".oc-ledger thead th")).map(th => [th.textContent.trim(), th.getBoundingClientRect().width])
+    JS
+    diagnosis = widths.find { |text, _| text.include?("Diagnosis") }.last
+    type = widths.find { |text, _| text.start_with?("Type") }.last
+    assert_operator diagnosis, :<=, 210, "diagnosis column is #{diagnosis}px"
+    assert_operator type, :<=, 110, "type column is #{type}px"
+
+    lines = page.evaluate_script(<<~JS)
+      (() => {
+        const row = document.querySelector("tbody#day-2026-03-01 tr.oc-surgery");
+        const cell = row.querySelector("td.ledger-diagnosis_procedure, td:nth-child(3)");
+        return [cell.getBoundingClientRect().height, parseFloat(getComputedStyle(cell).lineHeight) || 16];
+      })()
+    JS
+    assert_operator lines.first, :>, lines.last * 3, "long names should wrap onto several lines"
+  end
+
+  test "the page header band reaches both screen edges on the calendar page" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+
+    style = page.evaluate_script(<<~JS)
+      (() => {
+        const header = document.querySelector("body.oc-page .app-page-header");
+        const cs = getComputedStyle(header);
+        return { shadow: cs.boxShadow, clip: cs.clipPath, radius: cs.borderTopLeftRadius, left: cs.borderLeftWidth, right: cs.borderRightWidth, outset: cs.borderImageOutset, scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth };
+      })()
+    JS
+    assert_match(/0px 0px 0px/, style["shadow"])
+    assert_match(/inset/, style["clip"])
+    assert_equal "0px", style["radius"]
+    assert_equal [ "0px", "0px" ], [ style["left"], style["right"] ]
+    # The top/bottom rules (the visible part of the band, as its fill matches the
+    # page) reach the screen edges too, without making the page scroll sideways.
+    assert_match(/\A0(px)? [1-9]\d*px\z/, style["outset"])
+    assert_operator style["scrollWidth"], :<=, style["clientWidth"]
+  end
 end

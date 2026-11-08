@@ -459,4 +459,18 @@ class LedgerColumnTest < ActiveSupport::TestCase
     assert_kind_of Array, includes
     assert Surgery.includes(*includes).to_sql
   end
+
+  test "screen_width defaults to nil and is set only on the columns that need a narrower screen layout" do
+    assert_nil LedgerColumn.find(:surgery, :team).screen_width
+    assert_equal 200, LedgerColumn.find(:surgery, :diagnosis_procedure).screen_width
+    assert_equal 96, LedgerColumn.find(:surgery, :category).screen_width
+  end
+
+  test "screen_width does not change the PDF widths" do
+    diagnosis = LedgerColumn.find(:surgery, :diagnosis_procedure)
+    category = LedgerColumn.find(:surgery, :category)
+
+    assert_equal [ 170, 150 ], [ diagnosis.width, diagnosis.min_width ]
+    assert_equal [ 100, 90 ], [ category.width, category.min_width ]
+  end
 end

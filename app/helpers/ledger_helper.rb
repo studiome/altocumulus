@@ -37,7 +37,13 @@ module LedgerHelper
   # stylesheet turns into min-width, and drops again for print), so the table
   # scrolls sideways before a column is squeezed.
   def ledger_header_attributes(column)
-    { style: "--ledger-col-min: #{(column.min_width * MIN_WIDTH_PX_PER_POINT).round}px" }
+    if column.screen_width
+      # Pinned: the width is also the preferred one, so in the auto table
+      # layout the spare width goes to the unpinned columns.
+      { style: "--ledger-col-min: #{column.screen_width}px; --ledger-col-width: #{column.screen_width}px" }
+    else
+      { style: "--ledger-col-min: #{(column.min_width * MIN_WIDTH_PX_PER_POINT).round}px" }
+    end
   end
 
   # A cell's upper and lower parts. Badges are stacked in a column; text

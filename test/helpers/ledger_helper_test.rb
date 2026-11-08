@@ -10,8 +10,14 @@ class LedgerHelperTest < ActionView::TestCase
                  ledger_header_attributes(column)[:style]
   end
 
+  test "a column with a screen width pins both its minimum and preferred width to it" do
+    style = ledger_header_attributes(LedgerColumn.find(:surgery, :diagnosis_procedure))[:style]
+
+    assert_equal "--ledger-col-min: 200px; --ledger-col-width: 200px", style
+  end
+
   test "wider columns get a larger minimum than narrow ones" do
-    diagnosis = ledger_header_attributes(LedgerColumn.find(:surgery, :diagnosis_procedure))[:style][/\d+px/].to_i
+    diagnosis = ledger_header_attributes(LedgerColumn.find(:surgery, :operator_assistant))[:style][/\d+px/].to_i
     age_sex = ledger_header_attributes(LedgerColumn.find(:surgery, :age_sex))[:style][/\d+px/].to_i
 
     assert_operator diagnosis, :>, age_sex

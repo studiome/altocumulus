@@ -258,6 +258,23 @@ html {
     min-width: var(--ledger-col-min, 0);
   }
 
+  /* A column with a screen_width (LedgerColumn) also states it as its
+     preferred width: in the auto table layout the table's spare width then goes
+     to the other columns instead of widening long diagnosis names onto one
+     line, and the text wraps. Screen only (reset in the print block). */
+  @media screen {
+    .oc-ledger thead th {
+      width: var(--ledger-col-width, auto);
+    }
+
+    /* keep-all keeps a Japanese badge label (no spaces) on one line, which
+       would hold the narrow Type column open; on screen let it break anywhere.
+       Print keeps keep-all (see the crushing note above). */
+    .oc-ledger .badge.ledger-badge {
+      word-break: normal;
+    }
+  }
+
   .oc-ledger .ledger-patient {
     word-break: keep-all;
   }
@@ -295,6 +312,20 @@ html {
       clip-path: inset(0 -100vmax);
     }
 
+    /* The page header is a full-width band like the navbar (clipped shadow in
+       its own colour), its box stays where the content is. */
+    body.oc-page .app-page-header {
+      border-width: 1px 0;
+      border-radius: 0;
+      box-shadow: 0 0 0 100vmax var(--color-base-200);
+      clip-path: inset(0 -100vmax);
+      /* The fill matches the page, so the band shows through its top/bottom
+         rules: border-image-outset draws them out to both screen edges (ink
+         overflow only, so the page does not scroll sideways because of it). */
+      border-style: solid;
+      border-image: linear-gradient(var(--color-base-300), var(--color-base-300)) 1 0 / 1px 0 / 0 100vmax;
+    }
+
     body.oc-page .app-page-header,
     body.oc-page [role="tablist"],
     body.oc-page .oc-legend {
@@ -317,6 +348,7 @@ html {
   @media print {
     .oc-ledger thead th {
       min-width: 0;
+      width: auto;
     }
 
     .oc-ledger tbody tr {
