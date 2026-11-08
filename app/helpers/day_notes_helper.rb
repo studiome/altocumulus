@@ -3,9 +3,9 @@
 # that let the editor re-render its day as the calendar would have.
 module DayNotesHelper
   # The params that rebuild the surrounding calendar: its range (surgery links
-  # carry it back), tab, filters and the day's zebra shade.
-  def day_note_context(calendar, view:, alternate: false)
-    { start: calendar.return_start.iso8601, days: calendar.return_days, view: view, alt: ("1" if alternate) }
+  # carry it back), tab, and filters.
+  def day_note_context(calendar, view:)
+    { start: calendar.return_start.iso8601, days: calendar.return_days, view: view }
       .compact.merge(calendar.filter.to_params)
   end
 

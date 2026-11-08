@@ -24,7 +24,7 @@ module CalendarDayRendering
     end
 
     def context_params
-      params.permit(:start, :days, :view, :mine, :team_id, :alt).to_h.symbolize_keys.merge(view: view_name)
+      params.permit(:start, :days, :view, :mine, :team_id).to_h.symbolize_keys.merge(view: view_name)
     end
 
     def render_day
@@ -46,7 +46,7 @@ module CalendarDayRendering
 
     def day_locals
       calendar = build_day_calendar
-      locals = { date: @date, calendar: calendar, alternate: params[:alt] == "1", highlight: false }
+      locals = { date: @date, calendar: calendar, highlight: false }
       locals[:usage] = calendar.slot_usages[@date] if view_name == "surgery"
       locals
     end

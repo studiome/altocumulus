@@ -295,12 +295,63 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
     assert_operator widths[0], :<=, widths[1]
   end
 
-  test "a plain cell is white on a non-alt day" do
+  test "the canvas is the page colour when the table is wider than the page" do
+    page.driver.browser.manage.window.resize_to(1400, 1000)
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    assert_selector "table.oc-ledger td.ledger-day", minimum: 1
+
+    page.execute_script("document.querySelector('.oc-ledger thead th:last-child').style.minWidth = '1500px'")
+    page.execute_script("window.scrollTo(document.documentElement.scrollWidth, 0)")
+
+    colours = page.evaluate_script("[getComputedStyle(document.documentElement).backgroundColor, getComputedStyle(document.body).backgroundColor]")
+    assert_equal colours[1], colours[0], "the canvas must match the page colour"
+  end
+
+  test "the page spans a table wider than the main column, keeping navbar, header and tabs in view at the far right" do
+    page.driver.browser.manage.window.resize_to(1400, 1000)
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    assert_selector "table.oc-ledger td.ledger-day", minimum: 1
+
+    page.execute_script("document.querySelector('.oc-ledger thead th:last-child').style.minWidth = '1500px'")
+    page.execute_script("window.scrollTo(document.documentElement.scrollWidth, 0)")
+
+    geometry = page.evaluate_script(<<~JS)
+      (() => {
+        const left = (selector) => document.querySelector(selector).getBoundingClientRect().left;
+        return {
+          body: document.body.getBoundingClientRect().right,
+          table: document.querySelector("table.oc-ledger").getBoundingClientRect().right,
+          navbar: left(".app-navbar"), header: left(".app-page-header"), tabs: left("[role=tablist]")
+        };
+      })()
+    JS
+    assert_operator geometry["body"], :>=, geometry["table"], "the body reaches the table's right edge"
+    assert_in_delta 0, geometry["navbar"], 1
+    assert_operator geometry["header"], :>=, 0
+    assert_operator geometry["tabs"], :>=, 0
+  end
+
+  test "data cells are white on every day of every tab, with no zebra" do
+    hospitalizations(:two).update_columns(purpose: "examination", scheduled_procedure_date: Date.new(2026, 3, 2), scheduled_admission_date: Date.new(2026, 3, 1), admission_date: nil, discharge_date: nil)
+    [ [ "surgery", "tr.oc-surgery:not(.ledger-row-urgent):not(.ledger-row-offslot)" ], [ "examination", "tr.oc-exam" ] ].each do |view, row|
+      visit operations_calendar_path(start: "2026-03-01", days: 14, view: view)
+      colours = page.evaluate_script(<<~JS)
+        (() => {
+          const tds = [...document.querySelectorAll("tbody.oc-day #{row} td:not(.ledger-day)")];
+          return [tds.length, [...new Set(tds.map((td) => getComputedStyle(td).backgroundColor))]];
+        })()
+      JS
+      assert_operator colours[0], :>, 0, "#{view} has data cells"
+      assert_equal [ "rgb(255, 255, 255)" ], colours[1], "#{view} data cells are all white"
+    end
+  end
+
+  test "a plain cell is white on a day" do
     visit operations_calendar_path(start: "2026-03-01", days: 7)
 
     color = page.evaluate_script(<<~JS)
       (() => {
-        const td = document.querySelector("tbody.oc-day:not(.oc-day-alt):not(.oc-day-highlight) tr.oc-surgery:not(.ledger-row-urgent):not(.ledger-row-offslot) td.ledger-patient");
+        const td = document.querySelector("tbody.oc-day:not(.oc-day-highlight) tr.oc-surgery:not(.ledger-row-urgent):not(.ledger-row-offslot) td.ledger-patient");
         return td && getComputedStyle(td).backgroundColor;
       })()
     JS

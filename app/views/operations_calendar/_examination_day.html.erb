@@ -4,10 +4,10 @@
 <% hospitalizations = calendar.hospitalizations_for(date) %>
 <% columns = calendar.columns.size + 1 %>
 <% frozen_keys = LedgerColumn.frozen_keys(calendar.columns) %>
-<% note_context = day_note_context(calendar, view: "examination", alternate: alternate) %>
+<% note_context = day_note_context(calendar, view: "examination") %>
 <% new_examination_path = new_reservation_path(purpose: "examination", scheduled_procedure_date: date) %>
 <% context = calendar.ledger_context %>
-<tbody id="day-<%= date.iso8601 %>" class="oc-day group <%= "oc-day-alt" if alternate %> <%= "oc-day-highlight" if highlight %>"<% if highlight %> data-controller="calendar-highlight"<% end %>>
+<tbody id="day-<%= date.iso8601 %>" class="oc-day group <%= "oc-day-highlight" if highlight %>"<% if highlight %> data-controller="calendar-highlight"<% end %>>
   <%= render "operations_calendar/day_band", date: date, usage_holiday: calendar.holiday_for(date), columns: columns, context: note_context %>
 
   <% day_cell = capture do %>

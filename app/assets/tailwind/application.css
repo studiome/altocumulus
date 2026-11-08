@@ -296,6 +296,14 @@ html {
      canvas). Header, tabs, legend and the table's panel draw no box, border or
      shadow of their own; only the ledger's cells carry colour. */
   @media screen {
+    /* The ledger can be wider than .app-main's max width, so it overflows the
+       body; the area past the body's right edge shows the canvas (html), which
+       daisyUI paints with --root-bg (base-100, white). Point it at the page
+       colour so the whole page is one background. */
+    :root:has(body.oc-page) {
+      --root-bg: var(--color-base-200);
+    }
+
     body.oc-page {
       --oc-gutter: 1.25rem;
       min-width: fit-content;
@@ -313,10 +321,16 @@ html {
       }
     }
 
+    /* min-width: fit-content wins over the max width when the ledger is
+       wider than it, so the main column (and with it the body) spans the whole
+       table. Otherwise the body stops short and the sticky navbar, header and
+       tabs, which can only stick inside the body, scroll away at the far
+       right. */
     body.oc-page .app-main {
       margin-left: 0;
       margin-right: auto;
       padding-inline: var(--oc-gutter);
+      min-width: fit-content;
     }
 
     body.oc-page .app-navbar {
@@ -406,10 +420,6 @@ html {
     }
   }
 
-  .oc-ledger tbody.oc-day-alt td {
-    background-color: color-mix(in oklab, var(--color-base-200) 60%, var(--color-base-100));
-  }
-
   /* The day just saved, briefly emphasized after a redirect from the surgery
      form (see calendar_highlight_controller.js, which drops the class so the
      colour fades out). Neutral accent so it reads in light and dark. */
@@ -418,7 +428,7 @@ html {
   }
 
   /* Plain cells are white: the table's panel is transparent on the calendar
-     page. Declared before the tints below (day cell, zebra, highlight, bands,
+     page. Declared before the tints below (day cell, highlight, bands,
      urgent rows), which all have a higher specificity and so keep winning. */
   .oc-ledger tbody td {
     background-color: var(--color-base-100);
