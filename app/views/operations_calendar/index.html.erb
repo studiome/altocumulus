@@ -1,4 +1,6 @@
 <% content_for :title, t(".title") %>
+<% content_for :body_class, "oc-page" %>
+<% content_for :body_controller, "viewport-width" %>
 <% range_params = { start: @calendar.start_date.iso8601, days: @calendar.days }.merge(@filter.to_params) %>
 
 <div class="app-page">
@@ -58,30 +60,31 @@
       </ul>
     <% end %>
 
-    <div class="app-panel overflow-hidden print:overflow-visible print:break-inside-auto">
-      <div class="overflow-x-auto">
-        <%# One ledger table for the whole range: each day is its own <tbody>
-            (see _day / _examination_day), so the day cell can span that day's rows. %>
-        <table class="app-ledger oc-ledger">
-          <thead>
-            <tr>
-              <th><%= @view == "surgery" ? t("surgeries.labels.surgery_date") : t(".date_header") %></th>
-              <% @calendar.columns.each do |column| %>
-                <th <%= tag.attributes(ledger_header_attributes(column)) %>><%= ledger_header(column) %></th>
-              <% end %>
-            </tr>
-          </thead>
-          <% @calendar.dates.each_with_index do |date, index| %>
-            <% if @view == "surgery" %>
-              <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
-            <% elsif @view == "admission" %>
-              <%= render "admission_day", date: date, calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
-            <% else %>
-              <%= render "examination_day", date: date, calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
+    <%# No overflow here or below: a wider-than-screen table must scroll with the
+        page's own scrollbar (and keep the day column sticky against the
+        viewport). w-max lets the panel grow with the table. %>
+    <div class="app-panel w-max min-w-full print:w-auto print:break-inside-auto">
+      <%# One ledger table for the whole range: each day is its own <tbody>
+          (see _day / _examination_day), so the day cell can span that day's rows. %>
+      <table class="app-ledger oc-ledger">
+        <thead>
+          <tr>
+            <th><%= @view == "surgery" ? t("surgeries.labels.surgery_date") : t(".date_header") %></th>
+            <% @calendar.columns.each do |column| %>
+              <th <%= tag.attributes(ledger_header_attributes(column)) %>><%= ledger_header(column) %></th>
             <% end %>
+          </tr>
+        </thead>
+        <% @calendar.dates.each_with_index do |date, index| %>
+          <% if @view == "surgery" %>
+            <%= render "day", date: date, usage: @calendar.slot_usages[date], calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
+          <% elsif @view == "admission" %>
+            <%= render "admission_day", date: date, calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
+          <% else %>
+            <%= render "examination_day", date: date, calendar: @calendar, alternate: index.odd?, highlight: date == @highlight %>
           <% end %>
-        </table>
-      </div>
+        <% end %>
+      </table>
     </div>
   </div>
 </div>

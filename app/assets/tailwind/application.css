@@ -249,16 +249,59 @@ html {
      share a specificity, so order decides. */
   /* Every column keeps its own narrowest width (--ledger-col-min, from
      LedgerColumn#min_width). The table is wider than a small screen then, and
-     the .overflow-x-auto wrapper scrolls it sideways instead of squeezing team
-     names and patient names into a character per line. The day column stays in
-     view while scrolling; none of this applies on paper, where the table fits
-     the page. */
+     the page itself scrolls sideways (no ancestor may be a scroll container,
+     or the sticky day column would stick to that box instead of the viewport)
+     instead of squeezing team names and patient names into a character per
+     line. The day column stays in view while scrolling; none of this applies
+     on paper, where the table fits the page. */
   .oc-ledger thead th {
     min-width: var(--ledger-col-min, 0);
   }
 
   .oc-ledger .ledger-patient {
     word-break: keep-all;
+  }
+
+  /* Page-level sideways scroll (screen only): the body grows to the table, so
+     the navbar background (a clipped shadow) reaches the far edge, and the
+     navbar, page header, tabs and legend stay one viewport wide at the left
+     while only the ledger moves. min() falls back to the container width when
+     nothing overflows. --oc-viewport-width (viewport_width_controller.js)
+     is the visible width without a classic scrollbar; 100vw is only its
+     fallback. --oc-gutter mirrors .app-main's horizontal padding. */
+  @media screen {
+    body.oc-page {
+      --oc-gutter: 0.75rem;
+      min-width: fit-content;
+    }
+
+    @media (min-width: 40rem) {
+      body.oc-page {
+        --oc-gutter: 1rem;
+      }
+    }
+
+    @media (min-width: 64rem) {
+      body.oc-page {
+        --oc-gutter: 1.5rem;
+      }
+    }
+
+    body.oc-page .app-navbar {
+      position: sticky;
+      left: 0;
+      width: var(--oc-viewport-width, 100vw);
+      box-shadow: 0 0 0 100vmax var(--app-bar-bg);
+      clip-path: inset(0 -100vmax);
+    }
+
+    body.oc-page .app-page-header,
+    body.oc-page [role="tablist"],
+    body.oc-page .oc-legend {
+      position: sticky;
+      left: var(--oc-gutter);
+      width: min(calc(var(--oc-viewport-width, 100vw) - 2 * var(--oc-gutter)), 100%);
+    }
   }
 
   @media screen {

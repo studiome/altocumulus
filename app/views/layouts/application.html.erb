@@ -23,7 +23,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="app-shell flex flex-col">
+  <body class="app-shell flex flex-col <%= yield :body_class %>"<%= yield(:body_controller).presence&.then { |name| raw(%( data-controller="#{h(name)}")) } %>>
     <header class="app-navbar print:hidden">
       <div class="flex-1 flex items-center gap-1">
         <%# Mobile-only menu: everything flattened into one dropdown so the

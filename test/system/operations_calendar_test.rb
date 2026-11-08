@@ -153,4 +153,66 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
       page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", media: "")
     end
   end
+
+  test "a narrow window scrolls the ledger with the page, not an inner box" do
+    page.driver.browser.manage.window.resize_to(800, 1000)
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    assert_selector "table.oc-ledger td.ledger-day", minimum: 1
+
+    clipping = page.evaluate_script(<<~JS)
+      (function () {
+        var found = [];
+        for (var el = document.querySelector('table.oc-ledger').parentElement; el; el = el.parentElement) {
+          var x = getComputedStyle(el).overflowX;
+          if (x !== "visible") found.push(el.tagName + "." + el.className + ":" + x);
+        }
+        return found;
+      })()
+    JS
+    assert_empty clipping, "ancestors of the ledger must not be scroll containers"
+
+    assert page.evaluate_script("document.scrollingElement.scrollWidth > document.scrollingElement.clientWidth"),
+           "the page itself should scroll horizontally"
+
+    page.execute_script("window.scrollTo(200, 0)")
+    assert_operator page.evaluate_script("window.scrollX"), :>, 0
+    left = page.evaluate_script("document.querySelector('td.ledger-day').getBoundingClientRect().left")
+    assert_in_delta 0, left, 1, "the day column should stay stuck to the viewport's left edge"
+
+    inner = page.evaluate_script("document.documentElement.clientWidth")
+    assert_operator page.evaluate_script("document.scrollingElement.scrollWidth"), :>, inner
+    assert_pinned_parts_in_view
+  end
+
+  test "pinned parts stay inside the visible width when the page has a classic scrollbar" do
+    page.driver.browser.manage.window.resize_to(800, 1000)
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    assert_selector "table.oc-ledger td.ledger-day", minimum: 1
+    assert_operator page.evaluate_script("window.innerWidth - document.documentElement.clientWidth"), :>, 0, "the system test browser should use classic scrollbars"
+
+    assert_pinned_parts_in_view
+  end
+
+  private
+
+  # At a middle and at the maximum scroll position (where a pinned box that is
+  # as wide as 100vw is pushed left by the scrollbar width, and at a middle one
+  # runs under the scrollbar), the navbar, header, tabs and legend must lie
+  # inside the visible width: left >= 0 (the cards keep their gutter) and
+  # right <= clientWidth.
+  def assert_pinned_parts_in_view
+    visible = page.evaluate_script("document.documentElement.clientWidth")
+    maximum = page.evaluate_script("document.scrollingElement.scrollWidth") - visible
+    assert_operator maximum, :>, 100, "the page should scroll sideways"
+
+    [ 100, maximum ].each do |x|
+      page.execute_script("window.scrollTo(#{x}, 0)")
+      assert_equal x, page.evaluate_script("Math.round(window.scrollX)")
+      [ ".app-navbar", ".app-page-header", "[role=tablist]", ".oc-legend" ].each do |selector|
+        left, right = page.evaluate_script("(function(){var r=document.querySelector('#{selector}').getBoundingClientRect();return [r.left,r.right]})()")
+        assert_operator left, :>=, -0.5, "#{selector} is cut off on the left at scrollX=#{x}"
+        assert_operator right, :<=, visible + 0.5, "#{selector} runs under the scrollbar at scrollX=#{x}"
+      end
+    end
+  end
 end

@@ -7,6 +7,10 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1400,1400")
+    # Classic (always visible, space-taking) scrollbars like Windows, instead of
+    # headless Chrome's overlay ones: layout bugs that hide under a scrollbar
+    # only show up with them.
+    options.add_argument("--disable-features=OverlayScrollbar")
   end
 
   # System tests drive a real (headless) browser, so signing in has to go
