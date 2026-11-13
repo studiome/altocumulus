@@ -1428,6 +1428,7 @@ ja:
       success_notice: "サインインしました。"
       invalid_credentials_alert_email: "メールアドレスまたはパスワードが正しくありません。"
       invalid_credentials_alert_username: "ユーザー名またはパスワードが正しくありません。"
+      rate_limited_alert: "サインインの試行回数が多すぎます。数分待ってからもう一度お試しください。"
     destroy:
       success_notice: "サインアウトしました。"
 

@@ -62,6 +62,19 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "other@example.com", @admin.reload.login_id
   end
 
+  test "the session that changed its own password stays signed in, others are signed out" do
+    other = open_session
+    other.post login_url, params: { session: { login_id: @admin.login_id, password: "password" } }
+
+    patch account_url, params: { user: { name: @admin.name, login_id: @admin.login_id, current_password: "password", password: "newpassword", password_confirmation: "newpassword" } }
+    assert_redirected_to account_url
+
+    get account_url
+    assert_response :success
+    other.get account_url
+    assert_equal 302, other.response.status
+  end
+
   test "account page offers the language choice with the current language marked" do
     get account_url
     assert_select "main form[action=?]", locale_path(locale: "ja")

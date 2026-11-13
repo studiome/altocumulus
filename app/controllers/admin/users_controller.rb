@@ -36,6 +36,7 @@ module Admin
       temporary_password = SecureRandom.alphanumeric(12)
 
       if @user.update(password: temporary_password, password_confirmation: temporary_password)
+        refresh_password_fingerprint(@user)
         redirect_to admin_users_path, notice: t(".success_notice", password: temporary_password)
       else
         redirect_to admin_users_path, alert: @user.errors.full_messages.to_sentence

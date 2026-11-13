@@ -182,4 +182,73 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
       assert_equal "Invalid username or password.", flash[:alert]
     end
   end
+
+  # --- hardening ----------------------------------------------------------
+
+  test "rate limits sign-in attempts per IP" do
+    original = SessionsController.login_rate_limit_store
+    SessionsController.login_rate_limit_store = ActiveSupport::Cache::MemoryStore.new
+    begin
+      10.times do
+        post login_url, params: { session: { login_id: "nobody@example.com", password: "password" } }
+        assert_response :unprocessable_entity
+      end
+
+      post login_url, params: { session: { login_id: users(:admin).login_id, password: "password" } }
+      assert_response :too_many_requests
+      assert_select "form[action=?]", login_path
+      assert_nil session[:user_id]
+      assert flash[:alert].present?
+    ensure
+      SessionsController.login_rate_limit_store = original
+    end
+  end
+
+  test "sign-in attempts are not limited with the default null cache" do
+    12.times do
+      post login_url, params: { session: { login_id: "nobody@example.com", password: "password" } }
+      assert_response :unprocessable_entity
+    end
+  end
+
+  test "signing in starts a fresh session but keeps the language chosen before" do
+    patch locale_path(locale: "en")
+    session_id_before = request.session.id.to_s
+
+    sign_in_as(users(:admin))
+
+    assert_redirected_to root_url
+    assert_equal "en", session[:locale]
+    assert_equal users(:admin).id, session[:user_id]
+    assert_not_equal session_id_before, request.session.id.to_s
+  end
+
+  test "malformed sign-in params are an ordinary failed sign-in" do
+    [
+      { session: "x" },
+      { session: { login_id: { a: "b" }, password: "password" } },
+      { session: { login_id: [ "a" ], password: [ "b" ] } },
+      { session: { login_id: users(:admin).login_id, password: { a: "b" } } },
+      { session: { login_id: users(:admin).login_id } },
+      {}
+    ].each do |params|
+      post login_url, params: params
+      assert_response :unprocessable_entity, params.inspect
+      assert_nil session[:user_id]
+    end
+  end
+
+  test "an existing session stops working once the user's password changes" do
+    member = users(:member)
+    other = open_session
+    other.post login_url, params: { session: { login_id: member.login_id, password: "password" } }
+    other.get patients_url
+    assert_equal 200, other.response.status
+
+    member.update!(password: "newpassword1", password_confirmation: "newpassword1")
+
+    other.get patients_url
+    assert_equal 302, other.response.status
+    assert_equal login_url, other.response.location
+  end
 end

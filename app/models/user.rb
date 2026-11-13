@@ -154,6 +154,17 @@ class User < ApplicationRecord
     name
   end
 
+  # Short value stored in the session at sign-in and compared on every
+  # request, so a password change signs out every other session without a
+  # migration. Derived from the bcrypt salt (which changes with each new
+  # password), never the digest itself.
+  def session_fingerprint
+    salt = BCrypt::Password.new(password_digest).salt
+    Digest::SHA256.hexdigest(salt)[0, 24]
+  rescue BCrypt::Errors::InvalidHash
+    nil
+  end
+
   private
 
   def set_default_role

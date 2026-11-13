@@ -3,6 +3,24 @@ class SessionsController < ApplicationController
   # Both the form and the re-render after a failed sign-in show the notices.
   before_action :load_announcements, only: %i[ new create ]
 
+  # Per-IP throttle on sign-in attempts. The store is swappable so a test can
+  # exercise the limit (the test environment's cache is a null store).
+  class << self
+    attr_writer :login_rate_limit_store
+
+    def login_rate_limit_store
+      @login_rate_limit_store || Rails.cache
+    end
+  end
+
+  LOGIN_RATE_LIMIT_STORE = Object.new.tap do |store|
+    def store.increment(*args, **options)
+      SessionsController.login_rate_limit_store.increment(*args, **options)
+    end
+  end
+
+  rate_limit to: 10, within: 3.minutes, only: :create, store: LOGIN_RATE_LIMIT_STORE, with: :login_rate_limited
+
   def new
   end
 
@@ -19,7 +37,13 @@ class SessionsController < ApplicationController
     )
 
     if user
+      # A fresh session on sign-in (against session fixation); only the
+      # pre-login language choice is carried over.
+      locale = session[:locale]
+      reset_session
+      session[:locale] = locale if locale
       session[:user_id] = user.id
+      session[:password_fingerprint] = user.session_fingerprint
       session[:last_seen_at] = Time.current.to_i
       record_access_log(user: user, event: "login")
       redirect_to root_path, notice: t(".success_notice")
@@ -49,7 +73,21 @@ class SessionsController < ApplicationController
     @announcements = Announcement.published.recent_first
   end
 
+  def login_rate_limited
+    load_announcements
+    flash.now[:alert] = t("sessions.create.rate_limited_alert")
+    render :new, status: :too_many_requests
+  end
+
+  # Only plain strings are credentials; a malformed shape (string, hash or
+  # array where a field is expected) is just a failed sign-in, not a 500.
   def session_params
-    params.fetch(:session, {})
+    raw = params[:session]
+    return { login_id: "", password: "" } unless raw.is_a?(ActionController::Parameters)
+
+    {
+      login_id: raw[:login_id].is_a?(String) ? raw[:login_id] : "",
+      password: raw[:password].is_a?(String) ? raw[:password] : ""
+    }
   end
 end

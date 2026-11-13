@@ -12,6 +12,7 @@ class AccountsController < ApplicationController
     end
 
     if @user.update(account_params)
+      refresh_password_fingerprint(@user)
       redirect_to account_path, notice: t(".success_notice")
     else
       render :show, status: :unprocessable_entity

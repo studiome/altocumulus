@@ -44,7 +44,15 @@ class ApplicationController < ActionController::Base
   def current_user
     return @current_user if defined?(@current_user)
 
-    @current_user = session[:user_id] && User.active.find_by(id: session[:user_id])
+    user = session[:user_id] && User.active.find_by(id: session[:user_id])
+    # A password change invalidates every session signed in before it.
+    user = nil if user && !ActiveSupport::SecurityUtils.secure_compare(session[:password_fingerprint].to_s, user.session_fingerprint.to_s)
+    @current_user = user
+  end
+
+  # The session that itself changed the password keeps working.
+  def refresh_password_fingerprint(user)
+    session[:password_fingerprint] = user.session_fingerprint if user.id == session[:user_id]
   end
 
   def admin?

@@ -89,4 +89,11 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     get admin_users_url
     assert_response :success
   end
+
+  test "an admin resetting their own password stays signed in" do
+    patch reset_password_admin_user_url(users(:admin))
+    assert_redirected_to admin_users_url
+    get admin_users_url
+    assert_response :success
+  end
 end

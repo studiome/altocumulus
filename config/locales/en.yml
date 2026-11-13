@@ -1487,6 +1487,7 @@ en:
       success_notice: "Signed in successfully."
       invalid_credentials_alert_email: "Invalid email or password."
       invalid_credentials_alert_username: "Invalid username or password."
+      rate_limited_alert: "Too many sign-in attempts. Please wait a few minutes and try again."
     destroy:
       success_notice: "Signed out."
 
