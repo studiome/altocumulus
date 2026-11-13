@@ -446,6 +446,7 @@ ja:
               must_all_belong_to_selected_patient: "はすべて選択した患者のものにしてください"
             hospitalization:
               must_belong_to_selected_patient: "は選択した患者の入院にしてください"
+              must_be_active: "は削除済みの入院にはできません"
             surgery_procedure_selections:
               must_include_at_least_one_procedure: "を1件以上入力してください"
               too_many_procedure_selections: "は5件以下にしてください"

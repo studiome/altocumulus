@@ -77,16 +77,18 @@
             <span class="text-lg font-medium"><%= @surgery.performing_department.name %></span>
           </div>
         <% end %>
-        <% if @surgery.hospitalization %>
+        <%# A deleted hospitalization is only visible to admins (members get a 404 on it). %>
+        <% visible_hospitalization = @surgery.hospitalization if @surgery.hospitalization && (!@surgery.hospitalization.deleted? || admin?) %>
+        <% if visible_hospitalization %>
           <div>
             <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("surgeries.labels.hospitalization") %></span>
-            <span class="text-lg font-medium"><%= link_to @surgery.hospitalization.period_display, @surgery.hospitalization, class: "link link-primary" %></span>
+            <span class="text-lg font-medium"><%= link_to visible_hospitalization.period_display, visible_hospitalization, class: "link link-primary" %></span>
           </div>
         <% end %>
-        <% if @surgery.hospitalization&.clinical_comment.present? %>
+        <% if visible_hospitalization&.clinical_comment.present? %>
           <div>
             <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= t("hospitalizations.labels.clinical_comment") %></span>
-            <span class="text-lg font-medium whitespace-pre-line"><%= @surgery.hospitalization.clinical_comment %></span>
+            <span class="text-lg font-medium whitespace-pre-line"><%= visible_hospitalization.clinical_comment %></span>
           </div>
         <% end %>
         <%= render "shared/team_display", record: @surgery %>

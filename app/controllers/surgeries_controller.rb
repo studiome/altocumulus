@@ -158,7 +158,8 @@ class SurgeriesController < ApplicationController
 
       hospitalization = @surgery.hospitalization
       comment = submitted[:hospitalization_clinical_comment]
-      return true if hospitalization.nil? || comment.to_s == hospitalization.clinical_comment.to_s
+      return true if hospitalization.nil? || hospitalization.deleted?
+      return true if comment.to_s == hospitalization.clinical_comment.to_s
       return true if hospitalization.update(clinical_comment: comment)
 
       hospitalization.errors.full_messages.each { |message| @surgery.errors.add(:base, message) }

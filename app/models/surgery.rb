@@ -42,6 +42,7 @@ class Surgery < ApplicationRecord
   validates :backup_intervention, inclusion: { in: BACKUP_INTERVENTION_KEYS }, allow_blank: true
   validate :patient_diagnoses_must_belong_to_patient
   validate :hospitalization_must_belong_to_patient
+  validate :hospitalization_must_be_active, if: -> { new_record? || will_save_change_to_hospitalization_id? }
   validate :must_have_at_least_one_procedure_selection
   validate :no_more_than_five_procedure_selections
   validate :no_duplicate_procedure_selections
@@ -303,6 +304,12 @@ class Surgery < ApplicationRecord
     return if hospitalization.patient_id == patient_id
 
     errors.add(:hospitalization, :must_belong_to_selected_patient)
+  end
+
+  def hospitalization_must_be_active
+    return if hospitalization.nil? || !hospitalization.deleted?
+
+    errors.add(:hospitalization, :must_be_active)
   end
 
   def patient_diagnoses_must_belong_to_patient

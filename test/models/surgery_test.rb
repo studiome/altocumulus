@@ -667,4 +667,24 @@ class SurgerySiteConfigTest < ActiveSupport::TestCase
     patients(:one).update!(hospital_id: "A%00")
     assert_equal [ patients(:one).id ], Surgery.filtered(keyword: "A%00").map(&:patient_id).uniq
   end
+  test "cannot be linked to a deleted hospitalization" do
+    hosp = hospitalizations(:one)
+    hosp.discard!
+    surgery = surgeries(:one)
+    surgery.hospitalization = hosp
+
+    assert_not surgery.valid?
+    assert surgery.errors.of_kind?(:hospitalization, :must_be_active)
+    assert_not Surgery.new(patient: patients(:one), hospitalization: hosp, surgery_date: "2026-05-01", anesthesia_method: "General",
+                           surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ]).valid?
+  end
+
+  test "an existing surgery whose hospitalization was deleted afterwards still saves" do
+    hosp = hospitalizations(:one)
+    surgery = surgeries(:one)
+    surgery.update_columns(hospitalization_id: hosp.id)
+    hosp.discard!
+
+    assert surgery.reload.update(duration_hours: 2.5), surgery.errors.full_messages.to_sentence
+  end
 end

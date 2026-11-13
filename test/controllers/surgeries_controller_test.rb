@@ -923,4 +923,50 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
         a["href"][%r{\A/surgeries/(\d+)\z}, 1]&.to_i
       end.uniq
     end
+  def link_deleted_hospitalization(comment: "secret note")
+    hosp = hospitalizations(:one)
+    hosp.update!(clinical_comment: comment)
+    @surgery.update_columns(hospitalization_id: hosp.id)
+    hosp.discard!
+    hosp
+  end
+
+  test "show hides a deleted hospitalization's link and comment from non-admins" do
+    hosp = link_deleted_hospitalization
+    sign_out
+    sign_in_as(users(:member))
+
+    get surgery_url(@surgery)
+
+    assert_response :success
+    assert_select "a[href=?]", hospitalization_path(hosp), false
+    assert_no_match(/secret note/, response.body)
+  end
+
+  test "show still links a deleted hospitalization for admins" do
+    hosp = link_deleted_hospitalization
+
+    get surgery_url(@surgery)
+
+    assert_select "a[href=?]", hospitalization_path(hosp)
+  end
+
+  test "edit has no clinical comment field for a deleted hospitalization" do
+    link_deleted_hospitalization
+
+    get edit_surgery_url(@surgery)
+
+    assert_response :success
+    assert_select "textarea[name='surgery[hospitalization_clinical_comment]']", false
+  end
+
+  test "update never writes the clinical comment of a deleted hospitalization and still saves" do
+    hosp = link_deleted_hospitalization(comment: "before")
+
+    patch surgery_url(@surgery), params: { surgery: { duration_hours: 3.0, hospitalization_clinical_comment: "after" } }
+
+    assert_response :redirect
+    assert_equal "before", hosp.reload.clinical_comment
+    assert_in_delta 3.0, @surgery.reload.duration_hours
+  end
 end

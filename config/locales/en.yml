@@ -309,6 +309,7 @@ en:
               must_all_belong_to_selected_patient: "must all belong to the selected patient"
             hospitalization:
               must_belong_to_selected_patient: "must belong to the selected patient"
+              must_be_active: "must not be a deleted hospitalization"
             surgery_procedure_selections:
               must_include_at_least_one_procedure: "must include at least one procedure"
               too_many_procedure_selections: "must be five or fewer"
