@@ -123,13 +123,28 @@ class UserImport
     end
 
     def parse_table
-      contents = file.read.to_s.dup.force_encoding(Encoding::UTF_8)
-                     .encode("utf-8", invalid: :replace, undef: :replace)
+      contents = decoded_contents
+      return nil if contents.nil?
+
       # Excel on a Japanese system writes a byte order mark, which would
       # otherwise end up inside the first header's name.
       contents = contents.delete_prefix("\uFEFF")
       CSV.parse(contents, headers: true, header_converters: ->(header) { header.to_s.strip.downcase })
     rescue CSV::MalformedCSVError
+      nil
+    end
+
+    # UTF-8 when the bytes are valid UTF-8, else Windows-31J (Shift_JIS, what
+    # Excel's "CSV" saves in Japanese Windows); nil when neither fits, so
+    # mojibake is never registered.
+    def decoded_contents
+      bytes = file.read.to_s.b
+      utf8 = bytes.dup.force_encoding(Encoding::UTF_8)
+      return utf8 if utf8.valid_encoding?
+
+      sjis = bytes.dup.force_encoding(Encoding::Windows_31J)
+      sjis.valid_encoding? ? sjis.encode(Encoding::UTF_8) : nil
+    rescue EncodingError
       nil
     end
 end

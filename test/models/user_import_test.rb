@@ -161,6 +161,31 @@ class UserImportTest < ActiveSupport::TestCase
     assert_equal 0, importer.run.rows.size
   end
 
+  test "reads a Shift_JIS (Windows-31J) file and keeps the Japanese name" do
+    csv = "login_id,password,name\r\nsjis@example.com,supersecret,山田太郎\r\n".encode("Windows-31J")
+    result = import(csv)
+
+    assert_equal 1, result.created_count
+    assert_equal "山田太郎", User.find_by!(login_id: "sjis@example.com").name
+  end
+
+  test "reads UTF-8 with and without a byte order mark" do
+    import("\uFEFFlogin_id,password,name\nbom@example.com,supersecret,山田太郎\n")
+    import("login_id,password,name\nplain@example.com,supersecret,鈴木花子\n")
+
+    assert_equal "山田太郎", User.find_by!(login_id: "bom@example.com").name
+    assert_equal "鈴木花子", User.find_by!(login_id: "plain@example.com").name
+  end
+
+  test "refuses a file that is neither valid UTF-8 nor Windows-31J" do
+    csv = "login_id,password,name\nbad@example.com,supersecret,".b + "\xFF\xFF\x81".b + "\n".b
+    importer = UserImport.new(file: uploaded(csv))
+
+    assert_not importer.valid?
+    assert importer.errors.of_kind?(:file, :unparsable)
+    assert_nil User.find_by(login_id: "bad@example.com")
+  end
+
   private
 
     def import(csv)
