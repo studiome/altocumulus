@@ -149,6 +149,7 @@ Runtime behavior is tuned with environment variables (`config/application.rb`, `
 | `ADMISSION_WARNING_THRESHOLD` | Admissions per day above which the operations calendar flags congestion | `5` |
 | `APP_TITLE` | Application title used before an administrator sets one on `/admin/settings`. Useful for branding a fresh deploy without signing in first | `Altocumulus` |
 | `SITE_CONFIG_PATH` | Path of the site configuration YAML (see [Site configuration](#site-configuration)). In production, mount the file with a Kamal volume | `config/site.yml` |
+| `FORCE_SSL` | Set to `1` (or `true`) when the app is served over HTTPS behind a TLS-terminating proxy: assumes SSL, redirects http to https, sends HSTS and marks cookies secure (the `/up` health check is exempt). Leave unset for plain-HTTP intranet use | *(unset: off)* |
 | `BOOTSTRAP_ADMIN_LOGIN_ID` | Login id (email or username, depending on `ACCOUNT_IDENTIFIER`) of the first administrator | *(unset)* |
 | `BOOTSTRAP_ADMIN_PASSWORD` | Password of the first administrator | *(unset)* |
 
@@ -780,9 +781,10 @@ once `registry.server` stops matching `localhost`. So in the common case where t
 build from and the servers you deploy to are different machines, `localhost:5555` works untouched;
 switching to a real registry (ghcr.io, Docker Hub, a self-hosted one, ...) is only needed if you
 actually want the image kept in a shared registry. If you're using a custom domain with Let's
-Encrypt, uncomment the `proxy:` block -- and also uncomment `config.assume_ssl` and
-`config.force_ssl` in `config/environments/production.rb` (lines 28 and 31), since enabling only
-one of the two causes a redirect loop, as the `deploy.yml` comment notes.
+Encrypt, uncomment the `proxy:` block -- and also set `FORCE_SSL: 1` under `env.clear` in
+`config/deploy.yml` (it switches `config.assume_ssl` and `config.force_ssl` in
+`config/environments/production.rb` on together; enabling only one of the two causes a redirect
+loop).
 
 **Add the bootstrap admin variables to `env:`.** `db/seeds.rb` reads these from the container's
 ENV, but Kamal only forwards variables listed under `env:` in `config/deploy.yml`. They aren't

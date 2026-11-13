@@ -1,4 +1,8 @@
 class SurgerySchedulesController < ApplicationController
+  # The PDF is not HTML, and a policy header on it (object-src 'none') stops
+  # browsers' built-in PDF viewers from showing it inline.
+  content_security_policy false, only: :pdf
+
   def index
     @week_start = week_start
     @dates = (@week_start..(@week_start + 6.days)).to_a

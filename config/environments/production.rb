@@ -24,14 +24,17 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # config.assume_ssl = true
-
-  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
-
-  # Skip http-to-https redirect for the default health check endpoint.
-  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+  # HTTPS is opt-in: set FORCE_SSL=1 once the app sits behind a TLS-terminating
+  # proxy (e.g. Kamal's proxy with a Let's Encrypt host). It assumes SSL from
+  # the proxy, redirects http to https, sends Strict-Transport-Security and
+  # marks cookies secure. The health check (/up, also under a relative URL
+  # root) is excluded from the redirect. Left unset, the plain-HTTP intranet
+  # deployment keeps working as before.
+  if ActiveModel::Type::Boolean.new.cast(ENV["FORCE_SSL"])
+    config.assume_ssl = true
+    config.force_ssl = true
+    config.ssl_options = { redirect: { exclude: ->(request) { request.path.end_with?("/up") } } }
+  end
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]
