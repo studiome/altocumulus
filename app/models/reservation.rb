@@ -163,6 +163,7 @@ class Reservation
       if surgery_applicable?
         surgery.hospitalization = hospitalization
         surgery.patient = hospitalization.patient
+        drop_previous_patients_links if patient_changed_on_surgery?
         surgery.save!
         sync_patient_diagnoses
       end
@@ -276,7 +277,7 @@ class Reservation
       prepare_records
 
       hospitalization.valid?
-      surgery.valid? if surgery_applicable?
+      without_previous_patients_links { surgery.valid? } if surgery_applicable?
 
       merge_record_errors(hospitalization)
       merge_record_errors(surgery) if surgery_applicable?
@@ -297,6 +298,34 @@ class Reservation
       hospitalization.scheduled_surgery_date = surgery.surgery_date
       follow_hospitalization_team
       surgery.performing_department = nil unless surgery.surgery_location&.asks_performing_department?
+    end
+
+    # Editing can move the reservation to another patient. The surgery's links
+    # to the previous patient's diagnoses can then no longer stand (a surgery
+    # may only link its own patient's diagnoses); they are dropped on save and
+    # rebuilt from the form's diagnosis rows by sync_patient_diagnoses.
+    def patient_changed_on_surgery?
+      surgery.persisted? && surgery.patient_id_changed?
+    end
+
+    # Validation must not write, so the stale links are only hidden from the
+    # surgery's in-memory association while it is validated.
+    def without_previous_patients_links
+      return yield unless patient_changed_on_surgery?
+
+      association = surgery.association(:patient_diagnoses)
+      stale = association.target
+      association.target = []
+      association.loaded!
+      yield
+    ensure
+      association.target = stale if stale
+    end
+
+    def drop_previous_patients_links
+      surgery.surgery_diagnosis_links.destroy_all
+      surgery.surgery_diagnosis_links.reset
+      surgery.patient_diagnoses.reset
     end
 
     # A new surgery starts on the hospitalization's team (the model does the

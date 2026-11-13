@@ -250,6 +250,31 @@ class ReservationTest < ActiveSupport::TestCase
     assert_equal [ "left" ], loaded.surgery.reload.patient_diagnoses.map(&:laterality)
   end
 
+  test "changing the patient of an edited surgery reservation relinks the surgery to the new patient's diagnoses" do
+    reservation = build
+    reservation.save!
+    old_links = reservation.surgery.reload.patient_diagnoses.to_a
+    assert_predicate old_links, :any?
+    other = Patient.create!(hospital_id: "H901", name: "Someone Else", date_of_birth: "1971-03-03")
+
+    loaded = Reservation.for_hospitalization(Hospitalization.find(reservation.hospitalization.id))
+    attrs = {
+      hospitalization: { patient_id: other.id },
+      diagnoses: loaded.diagnosis_rows.each_with_index.to_h { |row, i| [ i.to_s, { id: row.id, diagnosis_id: row.diagnosis_id, laterality: row.laterality } ] },
+      procedures: loaded.procedure_rows.each_with_index.to_h { |row, i| [ i.to_s, { id: row.id, surgery_procedure_id: row.surgery_procedure_id, laterality: row.laterality } ] }
+    }
+
+    assert loaded.update(attrs), loaded.errors.full_messages.to_sentence
+
+    surgery = loaded.surgery.reload
+    assert_equal other.id, surgery.patient_id
+    assert_equal other.id, loaded.hospitalization.reload.patient_id
+    assert_predicate surgery.patient_diagnoses, :any?
+    assert(surgery.patient_diagnoses.all? { |pd| pd.patient_id == other.id })
+    assert_equal old_links.map { |pd| [ pd.diagnosis_id, pd.laterality ] }.sort, surgery.patient_diagnoses.map { |pd| [ pd.diagnosis_id, pd.laterality ] }.sort
+    assert_equal old_links.map(&:id).sort, @patient.patient_diagnoses.pluck(:id).sort, "the old patient keeps their own diagnoses"
+  end
+
   test "switching an edited reservation away from surgery is refused while its surgery exists" do
     reservation = build
     reservation.save!
