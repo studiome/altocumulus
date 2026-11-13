@@ -979,4 +979,58 @@ class HospitalizationSiteConfigTest < ActiveSupport::TestCase
     assert hospitalization.update(planned_days: 3)
     assert_equal stamps, surgeries.map { |s| s.reload.updated_at }
   end
+  # ---- overlap rule: a reservation only covers its planned period ----
+
+  def overlap_candidate(patient, **attrs)
+    Hospitalization.new({ patient: patient, reason: "Plan", purpose: "other",
+                          hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:pneumonia).id } ] }.merge(attrs))
+  end
+
+  test "a far-future reservation does not block a later booking" do
+    patient = Patient.create!(hospital_id: "HOV1", name: "Overlap", date_of_birth: "1980-01-01")
+    overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 10)).save!
+
+    assert overlap_candidate(patient, scheduled_admission_date: Date.new(2028, 1, 10)).valid?
+    assert overlap_candidate(patient, scheduled_admission_date: Date.new(2026, 12, 1)).valid?
+  end
+
+  test "a reservation's planned days still block a booking inside them" do
+    patient = Patient.create!(hospital_id: "HOV1", name: "Overlap", date_of_birth: "1980-01-01")
+    overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 10), planned_days: 5).save!
+
+    blocked = overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 14))
+    assert_not blocked.valid?
+    assert_includes blocked.errors[:scheduled_admission_date], "overlaps another hospitalization for this patient"
+    assert overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 15)).valid?
+    # and the other direction: the new reservation's own planned days run into the existing one
+    assert_not overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 6), planned_days: 5).valid?
+    assert overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 6), planned_days: 4).valid?
+  end
+
+  test "an admitted patient without a discharge date still blocks later bookings" do
+    patient = Patient.create!(hospital_id: "HOV1", name: "Overlap", date_of_birth: "1980-01-01")
+    overlap_candidate(patient, admission_date: Date.new(2027, 1, 10)).save!
+
+    assert_not overlap_candidate(patient, scheduled_admission_date: Date.new(2028, 1, 10)).valid?
+  end
+
+  test "a reservation extends to its scheduled surgery or procedure date" do
+    patient = Patient.create!(hospital_id: "HOV1", name: "Overlap", date_of_birth: "1980-01-01")
+    overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 10), planned_days: 2,
+                               scheduled_surgery_date: Date.new(2027, 1, 20)).save!
+    overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 3, 1), scheduled_procedure_date: Date.new(2027, 3, 8)).save!
+
+    assert_not overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 20)).valid?
+    assert overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 21)).valid?
+    assert_not overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 3, 8)).valid?
+    assert overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 3, 9)).valid?
+  end
+
+  test "a one-day reservation without other dates covers only its own day" do
+    patient = Patient.create!(hospital_id: "HOV1", name: "Overlap", date_of_birth: "1980-01-01")
+    overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 10)).save!
+
+    assert_not overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 10)).valid?
+    assert overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 11)).valid?
+  end
 end

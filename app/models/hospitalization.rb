@@ -498,6 +498,32 @@ class Hospitalization < ApplicationRecord
                                  laterality: patient_diagnosis.laterality, diagnosed_on: patient_diagnosis.diagnosed_on)
     end
 
+    # Last day a stay-in-the-making covers: the discharge date; open-ended
+    # (nil) once actually admitted; for a reservation only, the latest of its
+    # planned stay, surgery date and procedure date (its own day at least).
+    def overlap_period_end
+      return discharge_date if discharge_date.present?
+      return nil if admission_date.present?
+
+      planned_end = scheduled_admission_date + (planned_days - 1) if scheduled_admission_date && planned_days
+      [ scheduled_admission_date, planned_end, scheduled_surgery_date, scheduled_procedure_date ].compact.max
+    end
+
+    # The same period end, as SQL over the stored rows. MAX(a, b, ...) is NULL
+    # when any argument is NULL, hence the COALESCEs back to the start day.
+    OVERLAP_PERIOD_END_SQL = <<~SQL.squish.freeze
+      CASE
+        WHEN discharge_date IS NOT NULL THEN discharge_date
+        WHEN admission_date IS NOT NULL THEN NULL
+        ELSE MAX(
+          scheduled_admission_date,
+          COALESCE(date(scheduled_admission_date, '+' || (planned_days - 1) || ' days'), scheduled_admission_date),
+          COALESCE(scheduled_surgery_date, scheduled_admission_date),
+          COALESCE(scheduled_procedure_date, scheduled_admission_date)
+        )
+      END
+    SQL
+
     def no_overlapping_hospitalization_period
       return if patient_id.blank? || effective_admission_date.blank?
       return if deleted?
@@ -505,8 +531,9 @@ class Hospitalization < ApplicationRecord
       scope = Hospitalization.active.where(patient_id: patient_id)
       scope = scope.where.not(id: id) if persisted?
       conflict = scope.where(
-        "(:end_date IS NULL OR COALESCE(admission_date, scheduled_admission_date) <= :end_date) AND (discharge_date IS NULL OR discharge_date >= :start_date)",
-        start_date: effective_admission_date, end_date: discharge_date
+        "(:end_date IS NULL OR COALESCE(admission_date, scheduled_admission_date) <= :end_date) AND " \
+        "((#{OVERLAP_PERIOD_END_SQL}) IS NULL OR (#{OVERLAP_PERIOD_END_SQL}) >= :start_date)",
+        start_date: effective_admission_date, end_date: overlap_period_end
       ).exists?
 
       errors.add(effective_admission_date_field, :overlaps_another_hospitalization) if conflict
