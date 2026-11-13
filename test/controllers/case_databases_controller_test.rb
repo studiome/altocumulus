@@ -34,6 +34,22 @@ class CaseDatabasesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Hospital ID/, @response.body)
   end
 
+  test "csv download is logged as an export for any signed-in user" do
+    sign_out
+    sign_in_as(users(:member))
+
+    assert_difference("AccessLog.where(event: 'export').count", 1) do
+      get case_database_url(@case_database, format: :csv)
+    end
+    assert_equal users(:member), AccessLog.where(event: "export").last.user
+  end
+
+  test "html show is not logged as an export" do
+    assert_no_difference("AccessLog.where(event: 'export').count") do
+      get case_database_url(@case_database)
+    end
+  end
+
   test "data manager can get the new form" do
     sign_out
     sign_in_as(users(:data_manager))

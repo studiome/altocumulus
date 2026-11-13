@@ -58,4 +58,19 @@ class CaseDatabaseTest < ActiveSupport::TestCase
     assert_equal "Hospital ID,Name,Notes,Ejection Fraction,Outcome", lines[0]
     assert_equal "#{entry.patient.hospital_id},#{entry.patient.name},Doing well,,", lines[1]
   end
+
+  test "to_csv neutralises spreadsheet formulas in names, values and labels" do
+    field = case_database_fields(:notes)
+    field.update!(label: "@label")
+    patient = Patient.create!(hospital_id: "H777", name: "=HYPERLINK(\"http://x\")", date_of_birth: "1980-01-01")
+    entry = @case_database.entries.create!(patient: patient)
+    entry.assign_field_values(field.id.to_s => "+1+1")
+    entry.save!
+
+    rows = CSV.parse(@case_database.to_csv.delete_prefix(CaseDatabase::UTF8_BOM))
+    assert_includes rows.first, "'@label"
+    row = rows.find { |r| r.first == "H777" }
+    assert_equal "'=HYPERLINK(\"http://x\")", row[1]
+    assert_includes row, "'+1+1"
+  end
 end

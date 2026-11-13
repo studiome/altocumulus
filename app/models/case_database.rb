@@ -25,9 +25,9 @@ class CaseDatabase < ApplicationRecord
     ordered_entries = entries.includes(:patient).joins(:patient).order("patients.hospital_id")
 
     UTF8_BOM + CSV.generate do |csv|
-      csv << [ I18n.t("patients.labels.hospital_id"), Patient.human_attribute_name(:name), *ordered_fields.map(&:label) ]
+      csv << CsvFormulaGuard.neutralize_row([ I18n.t("patients.labels.hospital_id"), Patient.human_attribute_name(:name), *ordered_fields.map(&:label) ])
       ordered_entries.each do |entry|
-        csv << [ entry.patient.hospital_id, entry.patient.name, *ordered_fields.map { |field| entry.value_for(field) } ]
+        csv << CsvFormulaGuard.neutralize_row([ entry.patient.hospital_id, entry.patient.name, *ordered_fields.map { |field| entry.value_for(field) } ])
       end
     end
   end

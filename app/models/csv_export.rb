@@ -6,13 +6,11 @@ require "csv"
 # patient ID's leading zeros when it opens the file by double click (import
 # the column as text to keep them).
 #
-# A text cell that starts with = + - @ (or a tab / CR) is prefixed with a
-# single quote so a spreadsheet cannot run it as a formula (CSV injection);
-# numbers and dates are untouched.
+# Text cells are run through CsvFormulaGuard (CSV injection); numbers and
+# dates are untouched.
 class CsvExport
   BOM = "﻿".freeze
   ROW_SEPARATOR = "\r\n".freeze
-  FORMULA_PREFIXES = [ "=", "+", "-", "@", "\t", "\r" ].freeze
 
   def initialize(definition, records)
     @definition = definition
@@ -22,8 +20,8 @@ class CsvExport
 
   def to_csv
     csv = CSV.generate(row_sep: ROW_SEPARATOR, force_quotes: true) do |out|
-      out << @fields.map { |field| neutralize(field.header) }
-      @records.each { |record| out << @fields.map { |field| neutralize(field.value(record)) } }
+      out << @fields.map { |field| CsvFormulaGuard.neutralize(field.header) }
+      @records.each { |record| out << @fields.map { |field| CsvFormulaGuard.neutralize(field.value(record)) } }
     end
     BOM + csv
   end
@@ -34,12 +32,4 @@ class CsvExport
     parts = [ definition.key, "all" ] if from.nil? && to.nil?
     "#{parts.compact.map { |part| part.to_s.gsub(/[^A-Za-z0-9_-]/, "") }.join('_')}.csv"
   end
-
-  private
-
-    def neutralize(value)
-      return value unless value.is_a?(String) && value.start_with?(*FORMULA_PREFIXES)
-
-      "'#{value}"
-    end
 end

@@ -190,6 +190,17 @@ class AuditEventsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/audit_log_/, response.headers["Content-Disposition"])
   end
 
+  test "csv export neutralises spreadsheet formulas" do
+    AuditEvent.create!(auditable_type: "Patient", auditable_id: 1, action: "update", record_label: "=cmd|'/C calc'!A0",
+                       change_data: {}, user_id: users(:admin).id, ip_address: "127.0.0.1")
+
+    get audit_events_url(format: :csv)
+
+    rows = CSV.parse(response.body.delete_prefix("\xEF\xBB\xBF"))
+    assert(rows.any? { |row| row.include?("'=cmd|'/C calc'!A0") })
+    assert(rows.none? { |row| row.include?("=cmd|'/C calc'!A0") })
+  end
+
   test "csv export has localized header row" do
     get audit_events_url(format: :csv)
 

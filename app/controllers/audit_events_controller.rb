@@ -46,7 +46,7 @@ class AuditEventsController < ApplicationController
 
     def audit_events_csv(scope)
       CSV.generate(+UTF8_BOM) do |csv|
-        csv << [
+        csv << CsvFormulaGuard.neutralize_row([
           t("audit_events.labels.time"),
           t("audit_events.labels.record_type"),
           t("audit_events.labels.record_id"),
@@ -55,14 +55,14 @@ class AuditEventsController < ApplicationController
           t("audit_events.labels.operator"),
           t("audit_events.labels.ip_address"),
           t("audit_events.index.changes_header")
-        ]
+        ])
 
         # find_each batches rather than loading an unbounded log into memory.
         # It orders by primary key, so `order: :desc` (not the scope's
         # recent_first) is what keeps the export newest-first -- the two agree
         # here because audit rows are only ever appended.
         scope.find_each(order: :desc) do |audit_event|
-          csv << [
+          csv << CsvFormulaGuard.neutralize_row([
             l(audit_event.created_at, format: :timestamp),
             audit_event.auditable_type_label,
             audit_event.auditable_id,
@@ -71,7 +71,7 @@ class AuditEventsController < ApplicationController
             audit_event.user&.name || t("common.none"),
             audit_event.ip_address || t("common.none"),
             audit_change_summary(audit_event)
-          ]
+          ])
         end
       end
     end

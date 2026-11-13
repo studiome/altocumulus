@@ -12,6 +12,7 @@ class CaseDatabasesController < ApplicationController
     respond_to do |format|
       format.html
       format.csv do
+        record_access_log(user: current_user, event: "export")
         send_data @case_database.to_csv,
                   type: "text/csv; charset=utf-8",
                   filename: "case_database_#{@case_database.id}_#{Date.current.strftime('%Y%m%d')}.csv"
