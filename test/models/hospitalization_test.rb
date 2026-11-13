@@ -891,6 +891,21 @@ class HospitalizationSiteConfigTest < ActiveSupport::TestCase
     end
   end
 
+  test "a required boolean field accepts false and only fails on nil" do
+    with_site_config({ "required_fields" => { "hospitalization" => %w[emergency_admission] } }) do
+      hospitalization = hospitalizations(:one)
+
+      hospitalization.emergency_admission = false
+      assert hospitalization.valid?, hospitalization.errors.full_messages.to_sentence
+      hospitalization.emergency_admission = true
+      assert hospitalization.valid?
+
+      hospitalization.emergency_admission = nil
+      assert_not hospitalization.valid?
+      assert_includes hospitalization.errors[:emergency_admission], I18n.t("errors.messages.blank")
+    end
+  end
+
   test "the error message is localized" do
     with_site_config(CONFIG) do
       I18n.with_locale(:ja) do
