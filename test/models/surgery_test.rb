@@ -656,4 +656,15 @@ class SurgerySiteConfigTest < ActiveSupport::TestCase
       assert surgery.valid?
     end
   end
+
+  test "filtered keyword treats underscore and percent in the hospital id literally" do
+    patients(:one).update!(hospital_id: "A_100")
+    patients(:two).update!(hospital_id: "AX100")
+
+    found = Surgery.filtered(keyword: "A_100").map(&:patient_id).uniq
+    assert_equal [ patients(:one).id ], found
+    assert_empty Surgery.filtered(keyword: "A%00").to_a
+    patients(:one).update!(hospital_id: "A%00")
+    assert_equal [ patients(:one).id ], Surgery.filtered(keyword: "A%00").map(&:patient_id).uniq
+  end
 end

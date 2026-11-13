@@ -6,6 +6,17 @@ class PatientTest < ActiveSupport::TestCase
     assert patient.valid?
   end
 
+  test "filtered treats underscore, percent and backslash literally" do
+    under = Patient.create!(hospital_id: "A_100", name: "Under Score", date_of_birth: "1980-01-01")
+    Patient.create!(hospital_id: "AX100", name: "Ax Hundred", date_of_birth: "1980-01-01")
+    pct = Patient.create!(hospital_id: "P50", name: "Half 50% Off", date_of_birth: "1980-01-01")
+    back = Patient.create!(hospital_id: "B\\1", name: "Back Slash", date_of_birth: "1980-01-01")
+
+    assert_equal [ under ], Patient.filtered(keyword: "A_100").to_a
+    assert_equal [ pct ], Patient.filtered(keyword: "50%").to_a
+    assert_equal [ back ], Patient.filtered(keyword: "B\\1").to_a
+  end
+
   test "destroy should destroy associated surgeries" do
     patient = patients(:one)
     Surgery.create!(

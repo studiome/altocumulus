@@ -29,8 +29,7 @@ class Patient < ApplicationRecord
   def self.filtered(keyword: nil)
     scope = all
     if keyword.present?
-      pattern = "%#{sanitize_sql_like(keyword)}%"
-      scope = scope.where("name LIKE :pattern OR hospital_id LIKE :pattern", pattern: pattern)
+      scope = scope.where(like_condition("name", "hospital_id"), pattern: like_pattern(keyword))
     end
     scope
   end

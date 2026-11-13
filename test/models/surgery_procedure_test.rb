@@ -1,6 +1,14 @@
 require "test_helper"
 
 class SurgeryProcedureTest < ActiveSupport::TestCase
+  test "filtered treats wildcard characters literally" do
+    literal = SurgeryProcedure.create!(name: "Repair_A 50% type")
+    SurgeryProcedure.create!(name: "RepairXA 500 type")
+
+    assert_equal [ literal ], SurgeryProcedure.filtered(keyword: "Repair_A").to_a
+    assert_equal [ literal ], SurgeryProcedure.filtered(keyword: "50%").to_a
+  end
+
   test "should be valid" do
     surgery_procedure = SurgeryProcedure.new(name: "Hernia repair")
 

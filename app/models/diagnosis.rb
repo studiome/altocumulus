@@ -9,7 +9,7 @@ class Diagnosis < ApplicationRecord
   def self.filtered(keyword: nil)
     return all if keyword.blank?
 
-    where("name LIKE ?", "%#{sanitize_sql_like(keyword)}%")
+    where(like_condition("name"), pattern: like_pattern(keyword))
   end
 
   def to_s

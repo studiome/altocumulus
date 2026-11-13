@@ -1,6 +1,14 @@
 require "test_helper"
 
 class DiagnosisTest < ActiveSupport::TestCase
+  test "filtered treats wildcard characters literally" do
+    literal = Diagnosis.create!(name: "Type_2 50% case")
+    Diagnosis.create!(name: "TypeX2 500 case")
+
+    assert_equal [ literal ], Diagnosis.filtered(keyword: "Type_2").to_a
+    assert_equal [ literal ], Diagnosis.filtered(keyword: "50%").to_a
+  end
+
   test "should be valid" do
     diagnosis = Diagnosis.new(name: "Gastritis")
 
