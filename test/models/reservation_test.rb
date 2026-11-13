@@ -275,6 +275,34 @@ class ReservationTest < ActiveSupport::TestCase
     assert_equal old_links.map(&:id).sort, @patient.patient_diagnoses.pluck(:id).sort, "the old patient keeps their own diagnoses"
   end
 
+  test "changing the patient of a reservation moves every surgery of the hospitalization" do
+    reservation = build
+    reservation.save!
+    hospitalization = reservation.hospitalization
+    later = Surgery.create!(patient: @patient, hospitalization: hospitalization, surgery_date: "2026-11-20",
+                            anesthesia_method: "Spinal",
+                            surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ])
+    later.patient_diagnoses << reservation.surgery.patient_diagnoses.first
+    other = Patient.create!(hospital_id: "H902", name: "Mover", date_of_birth: "1971-03-03")
+
+    loaded = Reservation.for_hospitalization(Hospitalization.find(hospitalization.id))
+    attrs = {
+      hospitalization: { patient_id: other.id },
+      diagnoses: loaded.diagnosis_rows.each_with_index.to_h { |row, i| [ i.to_s, { id: row.id, diagnosis_id: row.diagnosis_id, laterality: row.laterality } ] },
+      procedures: loaded.procedure_rows.each_with_index.to_h { |row, i| [ i.to_s, { id: row.id, surgery_procedure_id: row.surgery_procedure_id, laterality: row.laterality } ] }
+    }
+    assert loaded.update(attrs), loaded.errors.full_messages.to_sentence
+
+    [ loaded.surgery.id, later.id ].each do |id|
+      surgery = Surgery.find(id)
+      assert_equal other.id, surgery.patient_id
+      assert_predicate surgery, :valid?, surgery.errors.full_messages.to_sentence
+      assert_predicate surgery.patient_diagnoses, :any?
+      assert(surgery.patient_diagnoses.all? { |pd| pd.patient_id == other.id })
+    end
+    assert_equal 1, other.patient_diagnoses.where(diagnosis_id: diagnoses(:appendicitis).id, laterality: "right").count
+  end
+
   test "switching an edited reservation away from surgery is refused while its surgery exists" do
     reservation = build
     reservation.save!

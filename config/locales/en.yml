@@ -251,6 +251,7 @@ en:
         not_a_valid_date: "is not a valid date"
         requires_discharge_date: "can only be set together with a discharge date"
         overlaps_another_hospitalization: "overlaps another hospitalization for this patient"
+        surgeries_cannot_move: "cannot be changed because a surgery of this hospitalization could not be moved to the new patient"
 
       models:
         holiday:

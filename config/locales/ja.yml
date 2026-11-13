@@ -388,6 +388,7 @@ ja:
         not_a_valid_date: "は正しい日付ではありません"
         requires_discharge_date: "は退院日と併せて設定してください"
         overlaps_another_hospitalization: "が同じ患者の他の入院期間と重複しています"
+        surgeries_cannot_move: "を変更できません（この入院の手術を新しい患者へ移せませんでした）"
 
       models:
         holiday:

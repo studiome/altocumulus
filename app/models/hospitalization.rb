@@ -82,6 +82,9 @@ class Hospitalization < ApplicationRecord
   # changes -- never on an ordinary field edit, or it would silently drift
   # away from being a point-in-time record.
   before_save :capture_patient_snapshot, if: -> { new_record? || patient_id_changed? }
+  # Surgeries belong to the hospitalization's patient, so they follow it to a
+  # new one in the same transaction (a failure rolls the whole save back).
+  after_save :move_surgeries_to_new_patient, if: -> { saved_change_to_patient_id? && !previously_new_record? }
 
   before_validation :clear_source_department_without_transfer
   # A chosen doctor supersedes the historical free text.
@@ -463,6 +466,36 @@ class Hospitalization < ApplicationRecord
     # one during the reservation stage.
     def effective_admission_date_field
       admission_date.present? ? :admission_date : :scheduled_admission_date
+    end
+
+    # Moves every linked surgery to the new patient. Its links to the previous
+    # patient's diagnoses are replaced by the new patient's record for the same
+    # diagnosis and laterality (reused, else created with the old date); the
+    # previous patient's records themselves are never touched. Surgeries are
+    # saved normally, so validations and the audit trail apply.
+    def move_surgeries_to_new_patient
+      surgeries.reload.each do |surgery|
+        surgery.hospitalization = self
+        surgery.patient_id = patient_id
+        surgery.patient_diagnoses = surgery.patient_diagnoses.map { |pd| patient_diagnosis_for_new_patient(pd) }.uniq
+        next if surgery.save
+
+        errors.add(:patient_id, :surgeries_cannot_move)
+        raise ActiveRecord::RecordInvalid.new(self)
+      end
+    rescue ActiveRecord::RecordInvalid => e
+      raise if e.record.equal?(self)
+
+      errors.add(:patient_id, :surgeries_cannot_move)
+      raise ActiveRecord::RecordInvalid.new(self)
+    end
+
+    def patient_diagnosis_for_new_patient(patient_diagnosis)
+      return patient_diagnosis if patient_diagnosis.patient_id == patient_id
+
+      PatientDiagnosis.find_by(patient_id: patient_id, diagnosis_id: patient_diagnosis.diagnosis_id, laterality: patient_diagnosis.laterality) ||
+        PatientDiagnosis.create!(patient_id: patient_id, diagnosis_id: patient_diagnosis.diagnosis_id,
+                                 laterality: patient_diagnosis.laterality, diagnosed_on: patient_diagnosis.diagnosed_on)
     end
 
     def no_overlapping_hospitalization_period

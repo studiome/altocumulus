@@ -871,4 +871,34 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     get hospitalization_url(@hospitalization, format: :json)
     assert_response :success
   end
+  test "changing the patient on the edit form moves the surgeries" do
+    patient = Patient.create!(hospital_id: "HMV1", name: "Old Owner", date_of_birth: "1960-01-01")
+    other = Patient.create!(hospital_id: "HMV2", name: "New Owner", date_of_birth: "1961-01-01")
+    hospitalization = Hospitalization.create!(
+      patient: patient, scheduled_admission_date: Date.new(2026, 11, 9), purpose: "surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:appendicitis).id } ]
+    )
+    pd = PatientDiagnosis.create!(patient: patient, diagnosis: diagnoses(:appendicitis), diagnosed_on: Date.new(2026, 1, 5))
+    surgeries = [ "2026-11-10", "2026-11-20" ].map do |date|
+      Surgery.create!(patient: patient, hospitalization: hospitalization, surgery_date: date, anesthesia_method: "General",
+                      patient_diagnoses: [ pd ],
+                      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ])
+    end
+
+    patch hospitalization_url(hospitalization), params: { hospitalization: { patient_id: other.id } }
+    assert_redirected_to hospitalization_url(hospitalization)
+    surgeries.each do |surgery|
+      surgery.reload
+      assert_equal other.id, surgery.patient_id
+      assert_predicate surgery, :valid?
+      assert(surgery.patient_diagnoses.all? { |d| d.patient_id == other.id })
+    end
+
+    surgeries.last.update_columns(anesthesia_method: nil)
+    third = Patient.create!(hospital_id: "HMV3", name: "Third", date_of_birth: "1962-01-01")
+    patch hospitalization_url(hospitalization), params: { hospitalization: { patient_id: third.id } }
+    assert_response :unprocessable_entity
+    assert_select "#error_explanation, .alert-error, .text-error", /./
+    assert_equal other.id, hospitalization.reload.patient_id
+  end
 end

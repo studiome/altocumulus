@@ -163,7 +163,7 @@ class Reservation
       if surgery_applicable?
         surgery.hospitalization = hospitalization
         surgery.patient = hospitalization.patient
-        drop_previous_patients_links if patient_changed_on_surgery?
+        refresh_links_after_patient_move
         surgery.save!
         sync_patient_diagnoses
       end
@@ -302,8 +302,8 @@ class Reservation
 
     # Editing can move the reservation to another patient. The surgery's links
     # to the previous patient's diagnoses can then no longer stand (a surgery
-    # may only link its own patient's diagnoses); they are dropped on save and
-    # rebuilt from the form's diagnosis rows by sync_patient_diagnoses.
+    # may only link its own patient's diagnoses); Hospitalization moves them on
+    # save, and sync_patient_diagnoses rebuilds them from the form's rows.
     def patient_changed_on_surgery?
       surgery.persisted? && surgery.patient_id_changed?
     end
@@ -322,8 +322,11 @@ class Reservation
       association.target = stale if stale
     end
 
-    def drop_previous_patients_links
-      surgery.surgery_diagnosis_links.destroy_all
+    # The hospitalization's save has already moved the stored surgery (and its
+    # links) to the new patient; forget the stale in-memory links.
+    def refresh_links_after_patient_move
+      return unless patient_changed_on_surgery?
+
       surgery.surgery_diagnosis_links.reset
       surgery.patient_diagnoses.reset
     end

@@ -912,4 +912,71 @@ class HospitalizationSiteConfigTest < ActiveSupport::TestCase
     patients(:one).update!(hospital_id: "A%00")
     assert_equal [ patients(:one).id ], Hospitalization.filtered(keyword: "A%00").map(&:patient_id).uniq
   end
+  # ---- changing the patient moves the surgeries ----
+
+  def hospitalization_with_two_surgeries
+    patient = Patient.create!(hospital_id: "HMV1", name: "Old Owner", date_of_birth: "1960-01-01")
+    pd = PatientDiagnosis.create!(patient: patient, diagnosis: diagnoses(:appendicitis), laterality: "right", diagnosed_on: Date.new(2026, 1, 5))
+    hospitalization = Hospitalization.create!(
+      patient: patient, scheduled_admission_date: Date.new(2026, 11, 9), purpose: "surgery",
+      hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:appendicitis).id } ]
+    )
+    surgeries = [ "2026-11-10", "2026-11-20" ].map do |date|
+      Surgery.create!(patient: patient, hospitalization: hospitalization, surgery_date: date, anesthesia_method: "General",
+                      patient_diagnoses: [ pd ],
+                      surgery_procedure_selections_attributes: [ { surgery_procedure_id: surgery_procedures(:appendectomy).id } ])
+    end
+    [ hospitalization, surgeries, pd ]
+  end
+
+  test "changing the patient moves every linked surgery and relinks diagnoses" do
+    hospitalization, surgeries, old_pd = hospitalization_with_two_surgeries
+    other = Patient.create!(hospital_id: "HMV2", name: "New Owner", date_of_birth: "1961-01-01")
+
+    assert hospitalization.update(patient: other), hospitalization.errors.full_messages.to_sentence
+    surgeries.each do |surgery|
+      surgery.reload
+      assert_equal other.id, surgery.patient_id
+      assert_predicate surgery, :valid?
+      assert_equal 1, surgery.patient_diagnoses.size
+      new_pd = surgery.patient_diagnoses.first
+      assert_equal other.id, new_pd.patient_id
+      assert_equal [ old_pd.diagnosis_id, old_pd.laterality, old_pd.diagnosed_on ], [ new_pd.diagnosis_id, new_pd.laterality, new_pd.diagnosed_on ]
+    end
+    assert_equal 1, other.patient_diagnoses.count, "one shared patient diagnosis, no duplicates"
+    assert PatientDiagnosis.exists?(old_pd.id), "the old patient keeps their diagnosis"
+  end
+
+  test "changing the patient reuses the new patient's existing diagnosis" do
+    hospitalization, surgeries, = hospitalization_with_two_surgeries
+    other = Patient.create!(hospital_id: "HMV2", name: "New Owner", date_of_birth: "1961-01-01")
+    existing = PatientDiagnosis.create!(patient: other, diagnosis: diagnoses(:appendicitis), laterality: "right", diagnosed_on: Date.new(2020, 1, 1))
+
+    assert_no_difference "PatientDiagnosis.count" do
+      assert hospitalization.update(patient: other)
+    end
+    surgeries.each { |s| assert_equal [ existing ], s.reload.patient_diagnoses.to_a }
+  end
+
+  test "a surgery that cannot move fails the whole save and rolls back" do
+    hospitalization, surgeries, = hospitalization_with_two_surgeries
+    other = Patient.create!(hospital_id: "HMV2", name: "New Owner", date_of_birth: "1961-01-01")
+    surgeries.last.update_columns(anesthesia_method: nil)
+
+    assert_no_difference "PatientDiagnosis.count" do
+      assert_not hospitalization.update(patient: other)
+    end
+    assert_predicate hospitalization.errors[:patient_id], :any?
+    assert_equal surgeries.first.patient_id, surgeries.first.reload.patient_id
+    assert_not_equal other.id, hospitalization.reload.patient_id
+    assert(surgeries.all? { |s| s.reload.patient_id != other.id })
+  end
+
+  test "updating a hospitalization without changing the patient leaves its surgeries alone" do
+    hospitalization, surgeries, = hospitalization_with_two_surgeries
+    stamps = surgeries.map { |s| s.reload.updated_at }
+
+    assert hospitalization.update(planned_days: 3)
+    assert_equal stamps, surgeries.map { |s| s.reload.updated_at }
+  end
 end
