@@ -2,7 +2,10 @@
 <html data-app-theme="<%= app_theme %>">
   <head>
     <title><%= content_for(:title) || app_title %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%# shrink-to-fit=no: iOS Safari otherwise shrinks a page with wider-than-screen
+        content (the operations calendar's ledger) until all of it fits, which
+        makes it unreadably small; with it the ledger scrolls sideways instead. %>
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="<%= app_title %>">
     <meta name="mobile-web-app-capable" content="yes">
