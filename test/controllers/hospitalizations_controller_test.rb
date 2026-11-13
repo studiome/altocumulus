@@ -781,4 +781,61 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
         a["href"][%r{\A/hospitalizations/(\d+)\z}, 1]&.to_i
       end.uniq
     end
+
+  # --- discard / restore / confirm with a record that no longer validates ---
+
+  def stricter_site_config(&block)
+    with_site_config({ "required_fields" => { "hospitalization" => %w[ward] } }, &block)
+  end
+
+  test "discarding always succeeds, even when the record no longer validates, and is audited" do
+    @hospitalization.update_columns(ward: nil)
+
+    stricter_site_config do
+      assert_not @hospitalization.reload.valid?
+      assert_difference("AuditEvent.where(auditable_type: 'Hospitalization', auditable_id: @hospitalization.id).count", 1) do
+        delete hospitalization_url(@hospitalization)
+      end
+    end
+
+    assert_redirected_to hospitalizations_url
+    assert @hospitalization.reload.deleted?
+    assert_includes AuditEvent.where(auditable_id: @hospitalization.id).order(:id).last.change_data.keys, "deleted_at"
+  end
+
+  test "a general user discarding resets the admin status like any other update" do
+    @hospitalization.update!(admin_status: "confirmed")
+    sign_out
+    sign_in_as(users(:member))
+
+    delete hospitalization_url(@hospitalization)
+
+    assert @hospitalization.reload.deleted?
+    assert_equal "unconfirmed", @hospitalization.admin_status
+  end
+
+  test "restoring a record that fails validation redirects back with the errors" do
+    @hospitalization.update_columns(ward: nil)
+    @hospitalization.discard!
+
+    stricter_site_config do
+      patch restore_hospitalization_url(@hospitalization)
+    end
+
+    assert_redirected_to hospitalization_url(@hospitalization)
+    assert_match(/Ward/i, flash[:alert])
+    assert @hospitalization.reload.deleted?
+  end
+
+  test "confirming a record that fails validation redirects back with the errors" do
+    @hospitalization.update_columns(ward: nil)
+
+    stricter_site_config do
+      patch confirm_hospitalization_url(@hospitalization)
+    end
+
+    assert_redirected_to hospitalization_url(@hospitalization)
+    assert_match(/Ward/i, flash[:alert])
+    assert_not_equal "confirmed", @hospitalization.reload.admin_status
+  end
 end

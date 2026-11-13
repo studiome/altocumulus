@@ -79,13 +79,19 @@ class HospitalizationsController < ApplicationController
   end
 
   def confirm
-    @hospitalization.update!(admin_status: "confirmed")
-    redirect_to @hospitalization, notice: t(".success_notice")
+    if @hospitalization.update(admin_status: "confirmed")
+      redirect_to @hospitalization, notice: t(".success_notice")
+    else
+      redirect_to @hospitalization, alert: t(".failure_alert", errors: @hospitalization.errors.full_messages.to_sentence)
+    end
   end
 
   def restore
-    @hospitalization.restore!
-    redirect_to @hospitalization, notice: t(".success_notice")
+    if @hospitalization.restore
+      redirect_to @hospitalization, notice: t(".success_notice")
+    else
+      redirect_to @hospitalization, alert: t(".failure_alert", errors: @hospitalization.errors.full_messages.to_sentence)
+    end
   end
 
   def deleted

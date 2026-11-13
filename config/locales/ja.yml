@@ -1051,8 +1051,10 @@ ja:
       success_notice: "入院記録を削除しました。"
     confirm:
       success_notice: "入院を確認済みにしました。"
+      failure_alert: "確認済みにできませんでした: %{errors}"
     restore:
       success_notice: "入院記録を復元しました。"
+      failure_alert: "復元できませんでした: %{errors}"
     copy:
       success_notice: "入院記録をコピーしました。残りの項目を入力してください。"
       failure_alert: "コピーできませんでした: %{errors}"

@@ -1032,8 +1032,10 @@ en:
       success_notice: "Hospitalization was successfully deleted."
     confirm:
       success_notice: "Hospitalization was confirmed."
+      failure_alert: "Could not confirm: %{errors}"
     restore:
       success_notice: "Hospitalization was restored."
+      failure_alert: "Could not restore: %{errors}"
     copy:
       success_notice: "Hospitalization was copied. Fill in the remaining details."
       failure_alert: "Could not copy: %{errors}"

@@ -266,8 +266,18 @@ class Hospitalization < ApplicationRecord
   end
 
   # Logical delete only, so a restore puts everything back exactly as it was.
+  # Skips validations on purpose: a record that no longer passes (e.g. a
+  # required field added to the site config later) must still be deletable.
+  # Callbacks still run, so the audit trail and the non-admin status reset
+  # behave as for any other update.
   def discard!
-    update!(deleted_at: Time.current)
+    self.deleted_at = Time.current
+    save!(validate: false)
+  end
+
+  # Returns false (errors set) when the record no longer validates.
+  def restore
+    update(deleted_at: nil)
   end
 
   def restore!
