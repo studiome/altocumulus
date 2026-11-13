@@ -152,4 +152,24 @@ class PatientsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to patients_url
   end
+
+  test "a general user cannot destroy a patient and sees no delete buttons" do
+    sign_out
+    sign_in_as(users(:member))
+
+    assert_no_difference("Patient.count") do
+      delete patient_url(@patient)
+    end
+    assert_redirected_to root_url
+
+    get patients_url
+    assert_select "td form input[name=_method][value=delete]", count: 0
+    get patient_url(@patient)
+    assert_select "form[action=?] input[name=_method][value=delete]", patient_path(@patient), count: 0
+  end
+
+  test "an admin sees the delete buttons" do
+    get patient_url(@patient)
+    assert_select "form[action=?] input[name=_method][value=delete]", patient_path(@patient)
+  end
 end

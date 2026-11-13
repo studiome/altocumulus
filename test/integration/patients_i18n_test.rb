@@ -87,6 +87,7 @@ class PatientsI18nTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_match "患者を更新しました。", response.body
 
+    sign_in_fresh(users(:japanese_admin))
     delete patient_url(@patient)
     follow_redirect!
     assert_match "患者を削除しました。", response.body

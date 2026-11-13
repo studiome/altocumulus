@@ -48,7 +48,9 @@
                   <%= link_to t("patients.labels.add_diagnosis_button"), new_patient_patient_diagnosis_path(patient), class: "btn btn-ghost btn-xs text-accent" %>
                   <%= link_to t("common.view"), patient, class: "btn btn-ghost btn-xs text-primary" %>
                   <%= link_to t("common.edit"), edit_patient_path(patient), class: "btn btn-ghost btn-xs text-secondary" %>
-                  <%= button_to t("common.delete"), patient, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+                  <% if admin? %>
+                    <%= button_to t("common.delete"), patient, method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: t("common.confirm_delete") } %>
+                  <% end %>
                 </td>
               </tr>
             <% end %>

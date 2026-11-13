@@ -5,6 +5,9 @@ class PatientsController < ApplicationController
   # forms), where `turbo_frame_request?` alone would be too broad.
   PICKER_FRAME = "patient_picker_frame".freeze
 
+  # Deleting a patient cascades to surgeries and hospitalizations (bypassing
+  # the hospitalization soft delete), so it is an admin operation.
+  before_action :require_admin, only: :destroy
   before_action :set_patient, only: %i[ show edit update destroy ]
   helper_method :picker_frame_request?
 
