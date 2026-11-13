@@ -799,8 +799,11 @@ class ElectiveSlotUsageTest < ActiveSupport::TestCase
 
     def count_queries
       count = 0
-      counter = ->(*) { count += 1 }
-      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
+      # Schema lookups only happen the first time a table is used, so counting
+      # them makes the result depend on which test ran before this one.
+      counter = ->(_n, _s, _f, _i, payload) { count += 1 unless payload[:cached] || payload[:name] == "SCHEMA" }
+      ActiveRecord::Base.lease_connection.materialize_transactions
+      ActiveRecord::Base.uncached { ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield } }
       count
     end
 end
