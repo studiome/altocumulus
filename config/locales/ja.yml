@@ -1409,7 +1409,7 @@ ja:
     show:
       title: "アカウント"
       change_password_divider: "パスワードの変更"
-      password_helper: "現在のパスワードのままにする場合は、これらの項目を空欄にしてください。"
+      password_helper: "パスワードを変更しない場合は、新しいパスワードの項目を空欄にしてください。ログインIDまたはパスワードの変更には現在のパスワードが必要です。"
       current_password_label: "現在のパスワード"
       new_password_label: "新しいパスワード"
       confirm_new_password_label: "新しいパスワード(確認)"

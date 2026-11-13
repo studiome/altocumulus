@@ -54,7 +54,10 @@ class User < ApplicationRecord
   validates :name, presence: true
   validates :roles, presence: true
   validates :locale, inclusion: { in: LOCALES }
-  validates :password, length: { minimum: 8 }, if: -> { password.present? }
+  # `has_secure_password` ignores an empty string but stores any other one,
+  # so the rules apply whenever a password is being set (non-nil).
+  validates :password, length: { minimum: 8 }, unless: -> { password.nil? }
+  validate :password_must_not_be_blank_text, unless: -> { password.nil? }
   validate :roles_must_be_known
   validate :cannot_deactivate_or_demote_last_admin, on: :update
 
@@ -159,6 +162,10 @@ class User < ApplicationRecord
     return if user_roles.any?
 
     self.roles = %w[user]
+  end
+
+  def password_must_not_be_blank_text
+    errors.add(:password, :blank) if password.strip.empty?
   end
 
   def roles_must_be_known

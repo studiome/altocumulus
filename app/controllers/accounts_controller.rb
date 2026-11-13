@@ -6,8 +6,8 @@ class AccountsController < ApplicationController
   def update
     @user = current_user
 
-    if password_change_requested?
-      return render_password_change_error(:password_confirmation, :blank) if new_password_confirmation.blank?
+    if password_change_requested? || login_id_change_requested?
+      return render_password_change_error(:password_confirmation, :blank) if password_change_requested? && new_password_confirmation.to_s.empty?
       return render_password_change_error(:current_password, :incorrect) unless @user.authenticate(current_password_param)
     end
 
@@ -20,8 +20,16 @@ class AccountsController < ApplicationController
 
   private
 
+  # Anything non-empty counts, whitespace included: `present?` here once let
+  # a blank-looking password skip the current-password check.
   def password_change_requested?
-    new_password.present? || new_password_confirmation.present?
+    !new_password.to_s.empty? || !new_password_confirmation.to_s.empty?
+  end
+
+  def login_id_change_requested?
+    return false unless params.dig(:user, :login_id)
+
+    User.normalize_value_for(:login_id, params.dig(:user, :login_id).to_s) != @user.login_id
   end
 
   def new_password

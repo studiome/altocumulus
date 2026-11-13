@@ -34,6 +34,34 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     assert @admin.reload.authenticate("newpassword")
   end
 
+  test "whitespace-only password is not a way around the current password check" do
+    patch account_url, params: { user: { name: @admin.name, login_id: @admin.login_id, password: " " * 8, password_confirmation: " " * 8 } }
+    assert_response :unprocessable_entity
+    assert @admin.reload.authenticate("password")
+  end
+
+  test "whitespace-only password is rejected even with the current password" do
+    patch account_url, params: { user: { name: @admin.name, login_id: @admin.login_id, current_password: "password", password: " " * 8, password_confirmation: " " * 8 } }
+    assert_response :unprocessable_entity
+    assert @admin.reload.authenticate("password")
+  end
+
+  test "changing login id requires the current password" do
+    patch account_url, params: { user: { name: @admin.name, login_id: "other@example.com" } }
+    assert_response :unprocessable_entity
+    assert_equal users(:admin).login_id, @admin.reload.login_id
+
+    patch account_url, params: { user: { name: @admin.name, login_id: "other@example.com", current_password: "wrong" } }
+    assert_response :unprocessable_entity
+    assert_equal users(:admin).login_id, @admin.reload.login_id
+  end
+
+  test "changing login id with the current password works" do
+    patch account_url, params: { user: { name: @admin.name, login_id: "other@example.com", current_password: "password" } }
+    assert_redirected_to account_url
+    assert_equal "other@example.com", @admin.reload.login_id
+  end
+
   test "account page offers the language choice with the current language marked" do
     get account_url
     assert_select "main form[action=?]", locale_path(locale: "ja")

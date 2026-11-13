@@ -1467,7 +1467,7 @@ en:
     show:
       title: "My Account"
       change_password_divider: "Change Password"
-      password_helper: "Leave these blank to keep your current password."
+      password_helper: "Leave these blank to keep your current password. Changing your sign-in ID or password requires your current password."
       current_password_label: "Current Password"
       new_password_label: "New Password"
       confirm_new_password_label: "Confirm New Password"

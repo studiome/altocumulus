@@ -241,4 +241,18 @@ class UserTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test "rejects a whitespace-only password" do
+    user = users(:member)
+    user.password = " " * 8
+    assert_not user.valid?
+    assert user.errors.of_kind?(:password, :blank)
+  end
+
+  test "applies the minimum length to any password being set" do
+    user = users(:member)
+    user.password = "short"
+    assert_not user.valid?
+    assert user.errors.of_kind?(:password, :too_short)
+  end
 end
