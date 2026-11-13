@@ -110,4 +110,39 @@ class LedgerSidewaysScrollTest < ApplicationSystemTestCase
     assert_in_delta 0, nav["left"], 1
     assert_in_delta nav["inner"], nav["width"], 1
   end
+
+  # iOS Safari zooms a wider-than-screen page out: the visible (visual)
+  # viewport is then wider than the layout viewport the page was laid out for.
+  # The fixed navbar has to span what is visible, not the layout width.
+  test "the navbar spans the visible width when the browser has zoomed the page out" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    widen_ledger
+    layout_width = page.evaluate_script("document.documentElement.clientWidth")
+    zoomed_out_width = layout_width + 900
+
+    page.execute_script(<<~JS, zoomed_out_width)
+      var listeners = [];
+      Object.defineProperty(window, "visualViewport", { configurable: true, value: {
+        width: arguments[0], scale: 0.6,
+        addEventListener: function (_type, fn) { listeners.push(fn); }, removeEventListener: function () {}
+      } });
+      window.dispatchEvent(new Event("resize"));
+    JS
+
+    assert_in_delta zoomed_out_width, navbar_rect["width"], 1
+  end
+
+  test "the navbar stays the layout width when the page is zoomed in" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    layout_width = page.evaluate_script("document.documentElement.clientWidth")
+
+    page.execute_script(<<~JS, layout_width / 2)
+      Object.defineProperty(window, "visualViewport", { configurable: true, value: {
+        width: arguments[0], scale: 2, addEventListener: function () {}, removeEventListener: function () {}
+      } });
+      window.dispatchEvent(new Event("resize"));
+    JS
+
+    assert_in_delta layout_width, navbar_rect["width"], 1
+  end
 end
