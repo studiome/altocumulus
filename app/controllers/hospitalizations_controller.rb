@@ -5,9 +5,9 @@ class HospitalizationsController < ApplicationController
   RECENT_AUDIT_EVENTS_LIMIT = 10
   DEFAULT_LOOKBACK_DAYS = 7
 
+  before_action :require_admin, only: %i[ confirm restore copy deleted ]
   before_action :set_hospitalization, only: %i[ show edit update destroy confirm restore copy ]
   before_action :set_form_collections, only: %i[ new edit create update ]
-  before_action :require_admin, only: %i[ confirm restore copy deleted ]
 
   def index
     @diagnoses = Diagnosis.alphabetical
@@ -114,7 +114,9 @@ class HospitalizationsController < ApplicationController
   private
 
     def set_hospitalization
-      @hospitalization = Hospitalization.find(params.expect(:id))
+      # Discarded records are only for admins (deleted list, restore).
+      scope = admin? ? Hospitalization : Hospitalization.active
+      @hospitalization = scope.find(params.expect(:id))
     end
 
     # One query for every date the page shows, so rendering the weekday

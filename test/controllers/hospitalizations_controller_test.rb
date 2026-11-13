@@ -838,4 +838,37 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Ward/i, flash[:alert])
     assert_not_equal "confirmed", @hospitalization.reload.admin_status
   end
+
+  # --- discarded records are hidden from non-admins ---
+
+  test "a general user gets 404 for a discarded hospitalization" do
+    @hospitalization.discard!
+    sign_out
+    sign_in_as(users(:member))
+
+    get hospitalization_url(@hospitalization)
+    assert_response :not_found
+    get hospitalization_url(@hospitalization, format: :json)
+    assert_response :not_found
+    get edit_hospitalization_url(@hospitalization)
+    assert_response :not_found
+    patch hospitalization_url(@hospitalization), params: { hospitalization: { infection: "MRSA" } }
+    assert_response :not_found
+    patch hospitalization_url(@hospitalization, format: :json), params: { hospitalization: { infection: "MRSA" } }
+    assert_response :not_found
+    delete hospitalization_url(@hospitalization)
+    assert_response :not_found
+    delete hospitalization_url(@hospitalization, format: :json)
+    assert_response :not_found
+    assert_nil @hospitalization.reload.infection
+  end
+
+  test "an admin can still open a discarded hospitalization" do
+    @hospitalization.discard!
+
+    get hospitalization_url(@hospitalization)
+    assert_response :success
+    get hospitalization_url(@hospitalization, format: :json)
+    assert_response :success
+  end
 end
