@@ -63,6 +63,7 @@ class LedgerColumnTest < ActiveSupport::TestCase
     assert_equal :surgery, LedgerColumn.subject_for(:weekly_pdf)
     assert_equal :hospitalization, LedgerColumn.subject_for(:examination_calendar)
     assert_equal :hospitalization, LedgerColumn.subject_for(:admission_calendar)
+    assert_equal :hospitalization, LedgerColumn.subject_for(:chemotherapy_calendar)
     assert_equal %i[patient age_sex purpose diagnosis_procedure_name category admission_dates referral_adl clinical_comment status],
                  LedgerColumn.for_ledger(:admission_calendar).map(&:key)
 
@@ -420,6 +421,19 @@ class LedgerColumnTest < ActiveSupport::TestCase
 
     hospitalization.procedure_name = "Port flush"
     assert_equal [ "Port flush" ], texts(cell(:hospitalization, :diagnosis_procedure_name, hospitalization).lower)
+  end
+
+  test "the combined cell leaves the protocol out when the ledger has its own protocol column" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.assign_attributes(purpose: "chemotherapy", chemotherapy_protocol: chemotherapy_protocols(:protocol_a), procedure_name: "Port flush")
+    with_column = LedgerColumn::Context.new(ledger_keys: %i[patient diagnosis_procedure_name protocol])
+    assert_equal [ "Port flush" ], texts(cell(:hospitalization, :diagnosis_procedure_name, hospitalization, with_column).lower)
+
+    hospitalization.procedure_name = nil
+    assert_equal [ "-" ], texts(cell(:hospitalization, :diagnosis_procedure_name, hospitalization, with_column).lower)
+
+    without_column = LedgerColumn::Context.new(ledger_keys: %i[patient diagnosis_procedure_name])
+    assert_equal [ "Protocol A" ], texts(cell(:hospitalization, :diagnosis_procedure_name, hospitalization, without_column).lower)
   end
 
   test "hospitalization protocol column shows the protocol name or a dash" do

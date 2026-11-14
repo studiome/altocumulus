@@ -309,6 +309,16 @@ class SiteConfigTest < ActiveSupport::TestCase
                  config.ledger_column_keys(:examination_calendar)
     assert_equal %i[patient age_sex purpose diagnosis_procedure_name category admission_dates referral_adl clinical_comment status],
                  config.ledger_column_keys(:admission_calendar)
+    assert_equal %i[patient age_sex diagnosis_procedure_name protocol purpose admission_dates reservation referral_adl status clinical_comment],
+                 config.ledger_column_keys(:chemotherapy_calendar)
+  end
+
+  test "ledger_columns.chemotherapy_calendar is validated like the other hospitalization ledgers" do
+    config = SiteConfig.from_hash("ledger_columns" => { "chemotherapy_calendar" => %w[patient protocol] })
+    assert_equal %i[patient protocol], config.ledger_column_keys(:chemotherapy_calendar)
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "chemotherapy_calendar" => %w[patient nope] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "chemotherapy_calendar" => %w[patient time_slot] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "chemotherapy_calendar" => %w[patient team] }) }
   end
 
   test "ledger_columns sets the order per ledger and leaves the others at their default" do

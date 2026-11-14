@@ -19,10 +19,10 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
     get operations_calendar_url, params: RANGE
     assert_select "[role=tablist].tabs.tabs-box.tabs-lg.mb-4.print\\:hidden"
     assert_select "[role=tablist][data-controller=tabs]"
-    assert_select "a[role=tab].tab.font-semibold", count: 3
+    assert_select "a[role=tab].tab.font-semibold", count: 4
     assert_select "a[role=tab][aria-selected=true].bg-primary.text-primary-content", count: 1
     assert_select "a[role=tab][aria-selected=false].bg-primary", false
-    assert_select "a[role=tab][aria-selected=false].hover\\:bg-base-300", count: 2
+    assert_select "a[role=tab][aria-selected=false].hover\\:bg-base-300", count: 3
   end
 
   test "an unknown view falls back to surgery" do
@@ -39,7 +39,7 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
       assert_select "input[type=checkbox][name=mine][checked]"
       assert_select "select[name=team_id] option[selected]", text: "Blue Team"
     end
-    assert_select "a[role=tab][href*='mine=1']", count: 3
+    assert_select "a[role=tab][href*='mine=1']", count: 4
   end
 
   test "the team select only exists with the teams feature" do
@@ -183,12 +183,82 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
     assert_equal few, many
   end
 
+  # --- chemotherapy tab ---------------------------------------------------------
+
+  def make_chemotherapy(hospitalization, date, purpose: "chemotherapy")
+    hospitalization.update_columns(purpose: purpose, scheduled_procedure_date: date, scheduled_admission_date: date, admission_date: nil, discharge_date: nil)
+  end
+
+  test "the chemotherapy tab is third, between examination and admissions, and keeps the range" do
+    get operations_calendar_url, params: RANGE.merge(view: "chemotherapy")
+    assert_response :success
+    assert_equal [ "Surgery", "Examination admission", "Chemotherapy", "Admissions" ], css_select("a[role=tab]").map { |tab| tab.text.strip }
+    assert_select "a[role=tab][aria-selected=true]", text: "Chemotherapy"
+    assert_select "a[role=tab][href=?]", operations_calendar_path(start: "2026-03-01", days: 7, view: "chemotherapy")
+    assert_select ".oc-legend", false
+  end
+
+  test "the chemotherapy tab lists only its purposes, with the protocol, and the examination tab no longer does" do
+    make_chemotherapy(hospitalizations(:two), Date.new(2026, 5, 12))
+    make_chemotherapy(hospitalizations(:one), Date.new(2026, 5, 12), purpose: "chemoradiotherapy")
+    make_chemotherapy(hospitalizations(:three), Date.new(2026, 5, 12), purpose: "examination")
+    hospitalizations(:two).update_columns(chemotherapy_protocol_id: chemotherapy_protocols(:protocol_b).id)
+
+    get operations_calendar_url, params: { start: "2026-05-11", days: 3, view: "chemotherapy" }
+    assert_select "tbody#day-2026-05-12 tr.oc-exam", 2
+    assert_select "tbody#day-2026-05-12 tr.oc-exam", text: /Protocol B/
+    assert_select "tbody#day-2026-05-12 a[href=?]", new_reservation_path(purpose: "chemotherapy", scheduled_procedure_date: "2026-05-12"),
+                  text: I18n.t("reservations.links.new_reservation")
+    assert_select "tbody#day-2026-05-11 tr.oc-empty", text: /No chemotherapy admissions/
+    assert_select "th", text: "Protocol"
+
+    get operations_calendar_url, params: { start: "2026-05-11", days: 3, view: "examination" }
+    assert_select "tbody#day-2026-05-12 tr.oc-exam", 1
+    assert_select "tbody#day-2026-05-12 tr.oc-exam", text: /Protocol B/, count: 0
+  end
+
+  test "the protocol name appears once on the chemotherapy tab, and in the combined cell where the ledger has no protocol column" do
+    make_chemotherapy(hospitalizations(:two), Date.new(2026, 5, 12))
+    hospitalizations(:two).update_columns(chemotherapy_protocol_id: chemotherapy_protocols(:protocol_b).id)
+    get operations_calendar_url, params: { start: "2026-05-12", days: 1, view: "chemotherapy" }
+    assert_equal 1, response.body.scan("Protocol B").size
+
+    get operations_calendar_url, params: { start: "2026-05-12", days: 1, view: "admission" }
+    assert_equal 1, response.body.scan("Protocol B").size
+  end
+
+  test "the chemotherapy tab honours the mine filter, an invalid range and a non-admin viewer" do
+    make_chemotherapy(hospitalizations(:two), Date.new(2026, 5, 12))
+    make_chemotherapy(hospitalizations(:one), Date.new(2026, 5, 12))
+    hospitalizations(:two).update_columns(reservation_doctor_id: users(:member).id)
+    sign_out
+    sign_in_as(users(:member))
+    get operations_calendar_url, params: { start: "2026-05-12", days: 1, view: "chemotherapy", mine: "1" }
+    assert_response :success
+    assert_select "tbody#day-2026-05-12 tr.oc-exam", 1
+
+    get operations_calendar_url, params: { view: "chemotherapy", days: "999" }
+    assert_redirected_to operations_calendar_path
+  end
+
+  test "the chemotherapy tab query count does not grow with rows" do
+    make_chemotherapy(hospitalizations(:two), Date.new(2026, 5, 12))
+    hospitalizations(:two).update_columns(chemotherapy_protocol_id: chemotherapy_protocols(:protocol_a).id)
+    few = request_query_count { get operations_calendar_url, params: { start: "2026-05-11", days: 5, view: "chemotherapy" } }
+    make_chemotherapy(hospitalizations(:one), Date.new(2026, 5, 13))
+    make_chemotherapy(hospitalizations(:three), Date.new(2026, 5, 13), purpose: "chemoradiotherapy")
+    make_chemotherapy(hospitalizations(:four), Date.new(2026, 5, 14))
+    hospitalizations(:one).update_columns(chemotherapy_protocol_id: chemotherapy_protocols(:protocol_b).id)
+    many = request_query_count { get operations_calendar_url, params: { start: "2026-05-11", days: 5, view: "chemotherapy" } }
+    assert_equal few, many
+  end
+
   # --- admission tab -----------------------------------------------------------
 
-  test "the admission tab is the third tab and keeps the range" do
+  test "the admission tab is the fourth tab and keeps the range" do
     get operations_calendar_url, params: RANGE
-    assert_select "a[role=tab]", 3
-    assert_select "a[role=tab]:nth-of-type(3)", text: "Admissions"
+    assert_select "a[role=tab]", 4
+    assert_select "a[role=tab]:nth-of-type(4)", text: "Admissions"
     assert_select "a[role=tab][href=?]", operations_calendar_path(start: "2026-03-01", days: 7, view: "admission")
   end
 

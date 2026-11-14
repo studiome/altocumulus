@@ -1507,6 +1507,7 @@ ja:
       tabs_label: "カレンダーの表示"
       tab_surgery: "手術"
       tab_examination: "検査入院"
+      tab_chemotherapy: "化学療法"
       tab_admission: "入院"
       date_header: "日付"
       team_label: "チーム"
@@ -1537,6 +1538,7 @@ ja:
       edit_special_slots_for: "%{date} の特殊枠を変更"
     examination_day:
       no_examinations: "予定なし"
+      no_chemotherapy: "予定なし"
     admission_day:
       no_admissions: "入院予定なし"
     labels:
@@ -1866,6 +1868,7 @@ ja:
       target_label: "対象"
       target_hospitalizations: "すべての入院（入院日で絞り込み）"
       target_examination: "検査入院（予定処置日で絞り込み）"
+      target_chemotherapy: "化学療法（予定処置日で絞り込み）"
       target_admission: "全目的の入院（入院日で絞り込み・入院タブ）"
       from: "開始日"
       to: "終了日"

@@ -52,9 +52,15 @@ class LedgerColumn
   # What a builder may need beyond the record: the referral lookup for
   # surgeries not linked to a hospitalization, and a callable returning the
   # link target of a record (nil/absent = no link, as in the PDF).
-  Context = Data.define(:referral_lookup, :href) do
-    def initialize(referral_lookup: nil, href: nil)
+  # `ledger_keys` are the keys of the columns the ledger being rendered shows
+  # (nil when unknown), so a cell can leave out what a sibling column shows.
+  Context = Data.define(:referral_lookup, :href, :ledger_keys) do
+    def initialize(referral_lookup: nil, href: nil, ledger_keys: nil)
       super
+    end
+
+    def column?(key)
+      Array(ledger_keys).include?(key)
     end
 
     def href_for(record)
@@ -76,6 +82,10 @@ class LedgerColumn
     examination_calendar: {
       subject: :hospitalization,
       default: %i[patient age_sex diagnosis_procedure_name purpose admission_dates reservation referral_adl status clinical_comment]
+    },
+    chemotherapy_calendar: {
+      subject: :hospitalization,
+      default: %i[patient age_sex diagnosis_procedure_name protocol purpose admission_dates reservation referral_adl status clinical_comment]
     },
     admission_calendar: {
       subject: :hospitalization,

@@ -38,6 +38,12 @@ class ExaminationCalendarTest < ActiveSupport::TestCase
     assert_equal [], calendar.dates.flat_map { |date| calendar.hospitalizations_for(date) } - [ @one ]
   end
 
+  test "chemotherapy and chemoradiotherapy admissions are on their own tab, not here" do
+    hospitalizations(:three).update_columns(purpose: "chemotherapy", scheduled_procedure_date: @day)
+    hospitalizations(:four).update_columns(purpose: "chemoradiotherapy", scheduled_procedure_date: @day)
+    assert_equal [ @one, @two ], calendar.hospitalizations_for(@day)
+  end
+
   test "uses a procedure date over the admission date for grouping" do
     @two.update_columns(scheduled_procedure_date: @day + 2)
     assert_equal [ @two ], calendar.hospitalizations_for(@day + 2)

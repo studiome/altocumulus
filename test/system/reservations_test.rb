@@ -155,6 +155,36 @@ class ReservationsTest < ApplicationSystemTestCase
     assert_nil Hospitalization.order(:id).last.chemotherapy_protocol_id
   end
 
+  test "booking from the chemotherapy tab's day link creates a chemotherapy admission listed on that tab" do
+    day = Date.current + 9
+    visit operations_calendar_path(start: day.iso8601, days: 1, view: "chemotherapy")
+    within("tbody#day-#{day.iso8601}") { click_on "Reserve" }
+
+    assert_current_path(/\/reservations\/new/)
+    assert_equal "chemotherapy", find("#reservation_hospitalization_purpose").value
+    assert_field "Scheduled procedure date", with: day.iso8601
+    select "Protocol A", from: "Protocol"
+    choose_patient "H002 - Jane Smith"
+    choose_diagnosis "Pneumonia"
+    set_date "reservation_hospitalization_scheduled_admission_date", day
+
+    assert_difference "Hospitalization.count", 1 do
+      click_on "Register Reservation"
+      assert_text "Reservation was successfully registered."
+    end
+    created = Hospitalization.order(:id).last
+    assert_equal "chemotherapy", created.purpose
+    assert_equal "Protocol A", created.chemotherapy_protocol.name
+
+    visit operations_calendar_path(start: day.iso8601, days: 1, view: "chemotherapy")
+    within("tbody#day-#{day.iso8601}") do
+      assert_text "Jane Smith"
+      assert_text "Protocol A"
+    end
+    visit operations_calendar_path(start: day.iso8601, days: 1, view: "examination")
+    within("tbody#day-#{day.iso8601}") { assert_no_text "Jane Smith" }
+  end
+
   test "errors show next to the fields and in a summary" do
     visit new_reservation_path(purpose: "surgery")
 

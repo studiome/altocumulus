@@ -4,7 +4,11 @@
 #   surgery           the operations calendar's surgery tab: surgeries dated
 #                     in start/days, under the mine / team_id filter
 #   examination       its examination tab: the non-surgery admissions listed
-#                     there, same range and filter
+#                     there (not chemotherapy / chemoradiotherapy), same range
+#                     and filter
+#   chemotherapy      its chemotherapy tab: the chemotherapy and
+#                     chemoradiotherapy admissions listed there, same range
+#                     and filter
 #   admission         its admission tab: every active admission by effective
 #                     admission date (AdmissionLedgerCalendar), same range and filter
 #   hospitalizations  the hospitalization list: Hospitalization.filtered with
@@ -18,8 +22,8 @@
 # OperationsCalendar::InvalidRangeError.
 # `from` / `to` in the Result are the covered dates as the file name shows them (nil = open).
 class ExportSource
-  VIEWS = %w[surgery examination admission hospitalizations].freeze
-  SUBJECTS = { "surgery" => :surgery, "examination" => :hospitalization, "admission" => :hospitalization, "hospitalizations" => :hospitalization }.freeze
+  VIEWS = %w[surgery examination chemotherapy admission hospitalizations].freeze
+  SUBJECTS = { "surgery" => :surgery, "examination" => :hospitalization, "chemotherapy" => :hospitalization, "admission" => :hospitalization, "hospitalizations" => :hospitalization }.freeze
   HOSPITALIZATION_FILTERS = %i[keyword diagnosis_id status admitted_from admitted_to].freeze
   MAX_DAYS = 366
 
@@ -36,7 +40,8 @@ class ExportSource
     includes = definition.includes
     case view
     when "surgery" then surgeries(params, user, includes)
-    when "examination" then examinations(params, user, includes)
+    when "examination" then examinations(ExaminationCalendar, params, user, includes)
+    when "chemotherapy" then examinations(ChemotherapyCalendar, params, user, includes)
     when "admission" then admissions(params, user, includes)
     else hospitalizations(params, includes)
     end
@@ -52,10 +57,12 @@ class ExportSource
     Result.new(records: records, from: dates.first, to: dates.last)
   end
 
-  def self.examinations(params, user, includes)
+  # The rows of an examination-style tab (ExaminationCalendar or its subclass
+  # ChemotherapyCalendar).
+  def self.examinations(calendar_class, params, user, includes)
     dates = dates_for(params)
-    scope = ExaminationCalendar.scope_for(dates, filter: CalendarFilter.from_params(params, user: user))
-    records = ExaminationCalendar.order_scope(scope.includes(*includes)).to_a
+    scope = calendar_class.scope_for(dates, filter: CalendarFilter.from_params(params, user: user))
+    records = calendar_class.order_scope(scope.includes(*includes)).to_a
     Result.new(records: records, from: dates.first, to: dates.last)
   end
 

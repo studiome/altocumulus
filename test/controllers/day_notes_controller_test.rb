@@ -102,6 +102,13 @@ class DayNotesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "No examination admissions"
   end
 
+  test "update can replace the chemotherapy tbody" do
+    patch day_note_url(DATE), params: CONTEXT.merge(view: "chemotherapy", holiday: { holiday: "0", note: "Meeting" }), headers: TURBO
+    assert_includes response.body, "oc-empty"
+    assert_includes response.body, "No chemotherapy admissions"
+    assert_includes response.body, "view=chemotherapy"
+  end
+
   test "update can replace the admission tbody" do
     patch day_note_url(DATE), params: CONTEXT.merge(view: "admission", holiday: { holiday: "0", note: "Meeting" }), headers: TURBO
     assert_includes response.body, "oc-empty"

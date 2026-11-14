@@ -1593,6 +1593,7 @@ en:
       tabs_label: "Calendar view"
       tab_surgery: "Surgery"
       tab_examination: "Examination admission"
+      tab_chemotherapy: "Chemotherapy"
       tab_admission: "Admissions"
       date_header: "Date"
       team_label: "Team"
@@ -1623,6 +1624,7 @@ en:
       edit_special_slots_for: "Edit the special slots for %{date}"
     examination_day:
       no_examinations: "No examination admissions scheduled"
+      no_chemotherapy: "No chemotherapy admissions scheduled"
     admission_day:
       no_admissions: "No admissions scheduled"
     labels:
@@ -1959,6 +1961,7 @@ en:
       target_label: "Records"
       target_hospitalizations: "All admissions, by admission date"
       target_examination: "Examination admissions, by scheduled procedure date"
+      target_chemotherapy: "Chemotherapy admissions, by scheduled procedure date"
       target_admission: "Admissions of every purpose, by admission date (admission tab)"
       from: "From"
       to: "To"

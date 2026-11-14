@@ -70,8 +70,8 @@ patient: {}
 masters: {}
 
 # ledger_columns: which columns each ledger table shows, and in what order.
-# Applies to the operations calendar, the weekly PDF and the examination
-# calendar. The day/date cell of the calendar and PDF is always the first
+# Applies to the operations calendar, the weekly PDF and the examination,
+# chemotherapy and admission calendars. The day/date cell of the calendar and PDF is always the first
 # column and is not listed. Omit a ledger (or the whole key) to get its
 # built-in default, shown below. Unknown ledgers or columns, a column of the
 # wrong kind, duplicates and an empty list make the boot fail. Each column has
@@ -97,23 +97,28 @@ masters: {}
 #   status               reservation status / admin status
 #   clinical_comment     clinical comment (of the linked hospitalization), wrapped
 # Columns of the hospitalization ledgers (examination_calendar, the examination
-# tab, and admission_calendar, the admission tab listing every purpose by
-# admission date):
+# tab: non-surgery admissions except chemotherapy and chemoradiotherapy;
+# chemotherapy_calendar, the chemotherapy tab: chemotherapy and
+# chemoradiotherapy admissions only; admission_calendar, the admission tab
+# listing every purpose by admission date):
 #   admission_dates, patient, age_sex, team (needs features.teams),
 #   reservation, referral_adl, status, clinical_comment (as above) and
 #   diagnosis_procedure_name   diagnoses / procedure name
 #   purpose                    purpose / scheduled procedure or surgery date
 #   category                   emergency admission / transfer
-#   protocol                   chemotherapy protocol (not in any default; the
-#                              combined diagnosis_procedure_name cell already
-#                              shows the protocol name after the procedure
-#                              name, so a ledger listing both shows it twice)
+#   protocol                   chemotherapy protocol (in the chemotherapy
+#                              ledger's default only). The combined
+#                              diagnosis_procedure_name cell shows the protocol
+#                              name after the procedure name, unless the same
+#                              ledger lists protocol too: then only protocol
+#                              shows it.
 # The PDF is monochrome: badges print as plain text. Its column widths come
 # from the columns themselves and shrink proportionally to fit the page.
 ledger_columns:
   operations_calendar: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl, clinical_comment]
   weekly_pdf: [time_slot, patient, diagnosis_procedure, operator_assistant, duration_anesthesia, category, referral_adl]
   examination_calendar: [patient, age_sex, diagnosis_procedure_name, purpose, admission_dates, reservation, referral_adl, status, clinical_comment]
+  chemotherapy_calendar: [patient, age_sex, diagnosis_procedure_name, protocol, purpose, admission_dates, reservation, referral_adl, status, clinical_comment]
   admission_calendar: [patient, age_sex, purpose, diagnosis_procedure_name, category, admission_dates, referral_adl, clinical_comment, status]
 
 # weekly_pdf: the look of the weekly surgery schedule PDF (surgery schedule
@@ -132,8 +137,10 @@ weekly_pdf:
 # exports: named CSV exports (CSV出力), offered to admins and data managers
 # only, as a "CSV出力" menu on the operations calendar (surgery tab: exports
 # with subject surgery; examination tab: subject hospitalization, the
-# non-surgery admissions listed there; admission tab: subject hospitalization,
-# every admission by admission date) and on the hospitalization list (all
+# non-surgery admissions listed there, without chemotherapy and
+# chemoradiotherapy; chemotherapy tab: subject hospitalization, those two
+# purposes; admission tab: subject hospitalization, every admission by
+# admission date) and on the hospitalization list (all
 # admissions of its current filter). The file covers the screen's date range
 # and active filters (mine, team) and is named <name>_<start>_<end>.csv. It is
 # UTF-8 with a byte order mark, CRLF line endings, one header row and every

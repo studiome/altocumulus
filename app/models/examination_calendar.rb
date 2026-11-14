@@ -1,6 +1,9 @@
 # Backs the examination-admission tab of the operations calendar: active
-# hospitalizations whose purpose is not surgery, laid out by day over the same
-# kind of date range as OperationsCalendar. A hospitalization sits on its
+# hospitalizations whose purpose is neither surgery nor one that has its own
+# tab (Hospitalization::PROTOCOL_PURPOSE_KEYS, see ChemotherapyCalendar),
+# laid out by day over the same kind of date range as OperationsCalendar.
+# ChemotherapyCalendar subclasses this and only changes which purposes, which
+# ledger, and the names the shared day partial asks for. A hospitalization sits on its
 # scheduled procedure date, or its effective admission date when it has none;
 # within a day they run in admission date then id order.
 #
@@ -22,24 +25,51 @@ class ExaminationCalendar
     @return_start = return_start
     @return_days = return_days
     @dates = (start_date..(start_date + days - 1)).to_a
-    @columns = LedgerColumn.for_ledger(:examination_calendar)
+    @columns = LedgerColumn.for_ledger(self.class.ledger)
     @admission_counts = Hospitalization.admission_counts_on(@dates)
     @holidays = Holiday.by_date(@dates)
     @admission_thresholds = AdmissionThreshold.for_dates(@dates, holidays: @holidays)
     @by_date = load_rows.group_by { |hospitalization| row_date(hospitalization) }
   end
 
+  # The ledger (site config ledger_columns key) the tab's columns come from.
+  def self.ledger
+    :examination_calendar
+  end
+
+  # Narrows active hospitalizations to the purposes the tab lists.
+  def self.purpose_scope(scope)
+    scope.where.not(purpose: [ "surgery", *Hospitalization::PROTOCOL_PURPOSE_KEYS ])
+  end
+
   # The hospitalizations the tab lists for `dates` (before any preloading or
-  # ordering): active, not for surgery, sitting on one of the dates, narrowed
-  # by the filter. Shared with the CSV export, which must list the same rows.
+  # ordering): active, of the tab's purposes, sitting on one of the dates,
+  # narrowed by the filter. Shared with the CSV export, which must list the
+  # same rows.
   def self.scope_for(dates, filter: CalendarFilter.none)
     date_sql = Arel.sql("COALESCE(hospitalizations.scheduled_procedure_date, hospitalizations.admission_date, hospitalizations.scheduled_admission_date)")
-    scope = Hospitalization.active.where.not(purpose: "surgery").where(date_sql.in(dates))
+    scope = purpose_scope(Hospitalization.active).where(date_sql.in(dates))
     filter.apply_to_hospitalizations(scope)
   end
 
   def self.order_scope(scope)
     scope.order(Arel.sql("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date)"), :id)
+  end
+
+  # The tab's view name (the `view` param), and the purpose its "+入約" link
+  # starts the reservation form with.
+  def view_key
+    "examination"
+  end
+
+  def new_reservation_purpose
+    "examination"
+  end
+
+  # The key (under operations_calendar.examination_day) of the text of a day
+  # without rows.
+  def empty_message_key
+    "no_examinations"
   end
 
   def hospitalizations_for(date)
@@ -72,7 +102,7 @@ class ExaminationCalendar
   # The patient column links to the reservation form (these are active
   # hospitalizations, which is what it edits).
   def ledger_context
-    LedgerColumn::Context.new(href: ->(hospitalization) { Rails.application.routes.url_helpers.edit_reservation_path(hospitalization) })
+    LedgerColumn::Context.new(ledger_keys: columns.map(&:key), href: ->(hospitalization) { Rails.application.routes.url_helpers.edit_reservation_path(hospitalization) })
   end
 
   private

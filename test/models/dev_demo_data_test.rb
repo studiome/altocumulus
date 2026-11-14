@@ -59,6 +59,18 @@ class DevDemoDataTest < ActiveSupport::TestCase
     assert Hospitalization.where.not(purpose: "chemotherapy").where.not(chemotherapy_protocol_id: nil).none?
   end
 
+  test "demo chemotherapy admissions show on the chemotherapy tab and not on the examination tab" do
+    today = Date.new(2026, 10, 19)
+    DevDemoData.run(environment: "development", today: today)
+    dates = (today..(today + 120)).to_a
+    chemo = ChemotherapyCalendar.scope_for(dates).to_a
+    exam = ExaminationCalendar.scope_for(dates).to_a
+    assert chemo.any?
+    assert chemo.all? { |hospitalization| Hospitalization::PROTOCOL_PURPOSE_KEYS.include?(hospitalization.purpose) }
+    assert exam.any?
+    assert_empty chemo & exam
+  end
+
   test "is idempotent" do
     DevDemoData.run(environment: "development", today: Date.new(2026, 10, 19))
     before = counts

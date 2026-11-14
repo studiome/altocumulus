@@ -74,7 +74,7 @@ class AdmissionLedgerCalendar
 
   # The patient column links to the reservation form.
   def ledger_context
-    LedgerColumn::Context.new(href: ->(hospitalization) { Rails.application.routes.url_helpers.edit_reservation_path(hospitalization) })
+    LedgerColumn::Context.new(ledger_keys: columns.map(&:key), href: ->(hospitalization) { Rails.application.routes.url_helpers.edit_reservation_path(hospitalization) })
   end
 
   private

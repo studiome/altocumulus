@@ -21,6 +21,28 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
     assert_text "No examination admissions scheduled", minimum: 1
   end
 
+  test "the chemotherapy tab shows a chemotherapy admission with its protocol and the examination tab does not" do
+    hospitalizations(:two).update_columns(purpose: "chemotherapy", scheduled_procedure_date: Date.new(2026, 3, 5),
+                                          scheduled_admission_date: Date.new(2026, 3, 5), admission_date: nil, discharge_date: nil,
+                                          chemotherapy_protocol_id: chemotherapy_protocols(:protocol_b).id)
+    visit operations_calendar_path(start: "2026-03-01", days: 7, view: "examination")
+    within("tbody#day-2026-03-05") { assert_no_text "Jane Smith" }
+
+    click_on "Chemotherapy"
+    assert_selector "[role=tab][aria-selected=true]", text: "Chemotherapy"
+    assert_current_path(/view=chemotherapy/)
+    assert_current_path(/start=2026-03-01/)
+    assert_no_selector ".oc-legend"
+    within("tbody#day-2026-03-05") do
+      assert_text "Jane Smith"
+      assert_text "Protocol B"
+    end
+    assert_text "No chemotherapy admissions scheduled", minimum: 1
+
+    click_on "Admissions"
+    within("tbody#day-2026-03-05") { assert_text "Jane Smith" }
+  end
+
   test "arrow keys move focus between tabs without navigating" do
     visit operations_calendar_path(start: "2026-03-01", days: 7)
     page.execute_script("document.getElementById('oc-tab-surgery').focus()")

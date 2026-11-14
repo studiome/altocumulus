@@ -38,7 +38,7 @@ module CalendarDayRendering
 
     def day_partial
       case view_name
-      when "examination" then "operations_calendar/examination_day"
+      when "examination", "chemotherapy" then "operations_calendar/examination_day"
       when "admission" then "operations_calendar/admission_day"
       else "operations_calendar/day"
       end
@@ -63,6 +63,7 @@ module CalendarDayRendering
                   return_start: start, return_days: days }
       case view_name
       when "examination" then ExaminationCalendar.new(**options)
+      when "chemotherapy" then ChemotherapyCalendar.new(**options)
       when "admission" then AdmissionLedgerCalendar.new(**options)
       else OperationsCalendar.new(**options)
       end

@@ -125,6 +125,30 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, rows.size - 1
   end
 
+  test "the chemotherapy view exports what the tab shows and the examination view no longer includes those purposes" do
+    hospitalizations(:one).update_columns(purpose: "chemotherapy", scheduled_procedure_date: Date.new(2026, 3, 2), scheduled_admission_date: Date.new(2026, 3, 2), admission_date: nil)
+    hospitalizations(:two).update_columns(purpose: "chemoradiotherapy", scheduled_procedure_date: nil, scheduled_admission_date: Date.new(2026, 3, 2), admission_date: nil)
+    hospitalizations(:three).update_columns(purpose: "examination", scheduled_procedure_date: Date.new(2026, 3, 2), admission_date: nil)
+
+    get export_url(:admission_list), params: RANGE.merge(view: "chemotherapy")
+    assert_response :success
+    table = rows
+    assert_equal %w[H001 H002], table.drop(1).map { |row| row[table.first.index("Patient ID")] }.sort
+
+    get export_url(:admission_list), params: RANGE.merge(view: "examination")
+    assert_equal [ hospitalizations(:three).patient.hospital_id ], rows.then { |t| t.drop(1).map { |row| row[t.first.index("Patient ID")] } }
+
+    get export_url(:surgery_list), params: RANGE.merge(view: "chemotherapy")
+    assert_response :not_found
+  end
+
+  test "the chemotherapy view accepts a from / to range from the download page" do
+    hospitalizations(:one).update_columns(purpose: "chemotherapy", scheduled_procedure_date: Date.new(2026, 3, 2), scheduled_admission_date: Date.new(2026, 3, 2), admission_date: nil)
+    get export_url(:admission_list), params: { view: "chemotherapy", from: "2026-03-01", to: "2026-03-31" }
+    assert_response :success
+    assert_equal 1, rows.size - 1
+  end
+
   test "the hospitalization list export applies the list's filters" do
     get export_url(:admission_list), params: { view: "hospitalizations", keyword: "Jane" }
     table = rows
@@ -222,7 +246,7 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
         assert_select "input[name=to][value='2026-03-31']"
         assert_select "select[name=team_id]", false
       end
-      assert_select "section#export-admission_list select[name=view] option", count: 3
+      assert_select "section#export-admission_list select[name=view] option", count: 4
     end
   end
 

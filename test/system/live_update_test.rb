@@ -22,6 +22,23 @@ class LiveUpdateSystemTest < ApplicationSystemTestCase
     assert page.evaluate_script("window.__stays"), "the page must not have reloaded"
   end
 
+  test "an open chemotherapy tab picks up a chemotherapy admission changed elsewhere" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7, view: "chemotherapy")
+    wait_for_live_connection
+    page.execute_script("window.__stays = true")
+    within("tbody#day-#{DAY.iso8601}") { assert_no_text "Jane Smith" }
+
+    hospitalizations(:two).update!(purpose: "chemotherapy", scheduled_procedure_date: DAY, scheduled_admission_date: DAY,
+                                   admission_date: nil, discharge_date: nil, outcome: nil, discharge_destination: nil,
+                                   chemotherapy_protocol: chemotherapy_protocols(:protocol_a))
+
+    within("tbody#day-#{DAY.iso8601}") do
+      assert_text "Jane Smith", wait: 10
+      assert_text "Protocol A"
+    end
+    assert page.evaluate_script("window.__stays"), "the page must not have reloaded"
+  end
+
   test "a day with an open note editor is not replaced until the editor closes" do
     visit operations_calendar_path(start: "2026-03-01", days: 7)
     wait_for_live_connection

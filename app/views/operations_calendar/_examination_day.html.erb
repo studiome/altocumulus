@@ -1,11 +1,13 @@
 <%# One day of the examination-admission tab, as its own <tbody> (see _day).
     Rows are hospitalizations that are not surgeries, on their scheduled
-    procedure date or admission date. %>
+    procedure date or admission date. The chemotherapy tab renders this too
+    (ChemotherapyCalendar): the calendar names its view, the purpose the
+    "+入約" link starts with and its empty-day text. %>
 <% hospitalizations = calendar.hospitalizations_for(date) %>
 <% columns = calendar.columns.size + 1 %>
 <% frozen_keys = LedgerColumn.frozen_keys(calendar.columns) %>
-<% note_context = day_note_context(calendar, view: "examination") %>
-<% new_examination_path = new_reservation_path(purpose: "examination", scheduled_procedure_date: date) %>
+<% note_context = day_note_context(calendar, view: calendar.view_key) %>
+<% new_examination_path = new_reservation_path(purpose: calendar.new_reservation_purpose, scheduled_procedure_date: date) %>
 <% context = calendar.ledger_context %>
 <tbody id="day-<%= date.iso8601 %>" class="oc-day group <%= "oc-day-highlight" if highlight %>"<% if highlight %> data-controller="calendar-highlight"<% end %>>
   <%= render "operations_calendar/day_band", date: date, usage_holiday: calendar.holiday_for(date), columns: columns, context: note_context %>
@@ -28,7 +30,7 @@
   <% if hospitalizations.empty? %>
     <tr class="oc-empty">
       <%= day_cell %>
-      <td colspan="<%= columns - 1 %>" class="text-base-content/50 italic"><%= t(".no_examinations") %></td>
+      <td colspan="<%= columns - 1 %>" class="text-base-content/50 italic"><%= t(".#{calendar.empty_message_key}") %></td>
     </tr>
   <% else %>
     <% hospitalizations.each_with_index do |hospitalization, row| %>

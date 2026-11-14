@@ -102,6 +102,7 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
 
     assert_select "[role=tablist] a[role=tab]", text: "手術"
     assert_select "[role=tablist] a[role=tab]", text: "検査入院"
+    assert_select "[role=tablist] a[role=tab]", text: "化学療法"
     assert_select "label", text: /自分が関与する症例のみ/
     assert_select ".oc-legend li", text: /緊急手術/
     assert_select ".oc-legend li", text: /通常の枠時間を使わない/
@@ -111,6 +112,11 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     get operations_calendar_url, params: WINDOW.merge(view: "examination")
     assert_select "th", text: "日付"
     assert_select "tr.oc-empty td", text: "予定なし", minimum: 1
+
+    get operations_calendar_url, params: WINDOW.merge(view: "chemotherapy")
+    assert_select "th", text: "プロトコル"
+    assert_select "tr.oc-empty td", text: "予定なし", minimum: 1
+    assert_no_match(/[Tt]ranslation missing/, response.body)
 
     get edit_day_note_url("2026-03-04", WINDOW)
     assert_select "label", text: "列数"
