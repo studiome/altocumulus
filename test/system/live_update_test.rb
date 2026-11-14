@@ -41,4 +41,32 @@ class LiveUpdateSystemTest < ApplicationSystemTestCase
     within("turbo-frame#day-note-#{DAY.iso8601}") { click_on "Cancel" }
     within("tbody#day-#{DAY.iso8601}") { assert_text "Jane Smith", wait: 10 }
   end
+
+  test "a reservation form's slot summary, admission count and side calendar follow other users' changes" do
+    visit new_reservation_path(purpose: "surgery")
+    wait_for_live_connection
+    set_date "reservation_surgery_surgery_date", Date.new(2026, 3, 3)
+    assert_selector "turbo-frame#reservation_slot_summary", text: "2 / 3 slots"
+    set_date "reservation_hospitalization_scheduled_admission_date", Date.new(2026, 3, 1)
+    assert_selector "turbo-frame#reservation_admission_count", text: /Admissions already scheduled that day: \d+/
+    before = find("turbo-frame#reservation_admission_count").text[/that day: (\d+)/, 1].to_i
+    assert_selector "turbo-frame#reservation_admission_calendar h3", text: "3/2026"
+
+    surgeries(:six).update!(slot_number: 3)
+    assert_selector "turbo-frame#reservation_slot_summary", text: "3 / 3 slots"
+
+    hospitalizations(:four).update!(scheduled_admission_date: Date.new(2026, 3, 1), planned_days: 2)
+    assert_selector "turbo-frame#reservation_admission_count", text: "that day: #{before + 1}"
+    assert_selector "turbo-frame#reservation_admission_calendar h3", text: "3/2026"
+    assert_field "Surgery Date", with: "2026-03-03"
+  end
+
+  def set_date(field_id, date)
+    page.execute_script(<<~JS)
+      const input = document.querySelector("##{field_id}")
+      input.value = "#{date.iso8601}"
+      input.dispatchEvent(new Event("input", { bubbles: true }))
+      input.dispatchEvent(new Event("change", { bubbles: true }))
+    JS
+  end
 end

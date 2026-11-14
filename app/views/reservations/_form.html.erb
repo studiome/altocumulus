@@ -9,6 +9,7 @@
 <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] items-start"
      data-controller="reservation-form purpose-fields"
      data-purpose-fields-disable-hidden-value="true"
+     data-action="live-update@window->reservation-form#liveUpdate"
      data-reservation-form-patient-card-url-value="<%= patient_card_reservations_path %>"
      data-reservation-form-admission-count-url-value="<%= admission_count_reservations_path %>"
      data-reservation-form-admission-calendar-url-value="<%= admission_calendar_reservations_path %>"

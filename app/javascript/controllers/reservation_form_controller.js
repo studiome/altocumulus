@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { markLive } from "live_update"
 
 // The live parts of the reservation form. Each one is a small turbo-frame
 // that is re-fetched from the server when the input it depends on changes:
@@ -114,9 +115,51 @@ export default class extends Controller {
     return this.hasAdmissionDateTarget ? this.admissionDateTarget.value : ""
   }
 
-  load(frame, path, params) {
+  // Another user changed something (see live_update.js): reload the live
+  // parts that show a date in the signal. Only the frames are touched, never
+  // the user's inputs, and the side calendar stays on the month the user
+  // navigated to.
+  liveUpdate(event) {
+    const { dates = [], all = false } = event.detail || {}
+    const named = (date) => Boolean(date) && (all || dates.includes(date))
+
+    if (this.hasSlotFrameTarget && this.hasSurgeryDateTarget && named(this.surgeryDateTarget.value)) {
+      this.load(this.slotFrameTarget, this.slotSummaryUrlValue, { date: this.surgeryDateTarget.value }, { live: true })
+    }
+
+    if (!this.hasAdmissionDateTarget) return
+
+    const admissionDate = this.admissionDateTarget.value
+    if (this.hasAdmissionCountFrameTarget && named(admissionDate)) {
+      this.load(this.admissionCountFrameTarget, this.admissionCountUrlValue, { date: admissionDate }, { live: true })
+    }
+
+    if (this.hasCalendarFrameTarget) {
+      const month = this.shownMonth()
+      if (all || (month && dates.some((date) => date.slice(0, 7) === month))) {
+        this.load(this.calendarFrameTarget, this.admissionCalendarUrlValue, { month, selected: admissionDate }, { live: true })
+      }
+    }
+  }
+
+  // The month the side calendar shows: the one in its current src (the user
+  // may have paged to another), else the admission date's.
+  shownMonth() {
+    const fromSrc = this.hasCalendarFrameTarget && this.calendarFrameTarget.src
+      ? new URL(this.calendarFrameTarget.src).searchParams.get("month")
+      : null
+    return fromSrc || (this.hasAdmissionDateTarget ? this.admissionDateTarget.value.slice(0, 7) : "")
+  }
+
+  // Assigning the src a frame already has does not reload it, so an equal src
+  // reloads explicitly. `live` marks the request as made by a live update.
+  load(frame, path, params, { live = false } = {}) {
     const url = new URL(path, window.location.origin)
     Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value))
-    frame.src = url.toString()
+    const target = url.toString()
+    if (live) markLive(target)
+
+    if (frame.src === target) frame.reload()
+    else frame.src = target
   }
 }
