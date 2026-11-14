@@ -14,6 +14,9 @@ class Hospitalization < ApplicationRecord
     requested waiting date_fixed surgery_date_fixed admitted admitted_other_dept on_hold discharged
   ].freeze
   PURPOSE_KEYS = %w[surgery examination chemotherapy chemoradiotherapy other].freeze
+  # Purposes that record a treatment protocol (ChemotherapyProtocol); for any
+  # other purpose the protocol is cleared.
+  PROTOCOL_PURPOSE_KEYS = %w[chemotherapy chemoradiotherapy].freeze
   ADMIN_STATUS_KEYS = %w[unconfirmed confirmed].freeze
   # Whether the patient was already in hospital under another department:
   # transferred in to this one, or operated on without ever being transferred.
@@ -40,6 +43,9 @@ class Hospitalization < ApplicationRecord
   # The department a transferred patient came from; required exactly when
   # transfer_status is not "none" (see clear_source_department_without_transfer).
   belongs_to :source_department, class_name: "Department", optional: true
+  # The treatment protocol (regimen); only for PROTOCOL_PURPOSE_KEYS, cleared
+  # otherwise (see clear_protocol_without_protocol_purpose).
+  belongs_to :chemotherapy_protocol, optional: true
   # Users: the doctor the reservation is for, and whoever entered the record
   # (set from Current.user on create, never from params).
   belongs_to :reservation_doctor, class_name: "User", optional: true
@@ -93,6 +99,7 @@ class Hospitalization < ApplicationRecord
   after_save :move_surgeries_to_new_patient, if: -> { saved_change_to_patient_id? && !previously_new_record? }
 
   before_validation :clear_source_department_without_transfer
+  before_validation :clear_protocol_without_protocol_purpose
   # A chosen doctor supersedes the historical free text.
   before_validation :drop_legacy_reservation_doctor_name, if: -> { reservation_doctor_id.present? }
   # Always the signed-in user (nil for console/seeds), so a rebooked copy
@@ -256,6 +263,11 @@ class Hospitalization < ApplicationRecord
     scheduled_surgery_date || scheduled_procedure_date || effective_admission_date
   end
 
+  # Whether this hospitalization's purpose records a treatment protocol.
+  def uses_chemotherapy_protocol?
+    PROTOCOL_PURPOSE_KEYS.include?(purpose)
+  end
+
   def transferred?
     transfer_status.present? && transfer_status != "none"
   end
@@ -383,6 +395,10 @@ class Hospitalization < ApplicationRecord
 
     def clear_source_department_without_transfer
       self.source_department = nil unless transferred?
+    end
+
+    def clear_protocol_without_protocol_purpose
+      self.chemotherapy_protocol = nil unless uses_chemotherapy_protocol?
     end
 
     def drop_legacy_reservation_doctor_name

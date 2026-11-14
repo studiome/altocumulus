@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_14_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_15_000100) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -103,6 +103,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_000100) do
     t.index ["name"], name: "index_case_databases_on_name", unique: true
   end
 
+  create_table "chemotherapy_protocols", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "position", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_chemotherapy_protocols_on_name", unique: true
+  end
+
   create_table "departments", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -189,6 +198,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_000100) do
     t.integer "team_id"
     t.boolean "team_undecided", default: false, null: false
     t.string "infection"
+    t.integer "chemotherapy_protocol_id"
+    t.index ["chemotherapy_protocol_id"], name: "index_hospitalizations_on_chemotherapy_protocol_id"
     t.index ["created_by_id"], name: "index_hospitalizations_on_created_by_id"
     t.index ["deleted_at"], name: "index_hospitalizations_on_deleted_at"
     t.index ["discharge_date"], name: "index_hospitalizations_on_discharge_date"
@@ -387,6 +398,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_000100) do
   add_foreign_key "case_database_fields", "case_databases"
   add_foreign_key "hospitalization_diagnoses", "diagnoses"
   add_foreign_key "hospitalization_diagnoses", "hospitalizations"
+  add_foreign_key "hospitalizations", "chemotherapy_protocols"
   add_foreign_key "hospitalizations", "departments", column: "source_department_id"
   add_foreign_key "hospitalizations", "patients"
   add_foreign_key "hospitalizations", "teams"

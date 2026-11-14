@@ -33,6 +33,7 @@ class MasterNavigationLayoutTest < ActionDispatch::IntegrationTest
     assert masters_menu.at_css("li > a[href='#{departments_path}']")
     assert masters_menu.at_css("li > a[href='#{surgery_locations_path}']")
     assert masters_menu.at_css("li > a[href='#{surgical_devices_path}']")
+    assert masters_menu.at_css("li > a[href='#{chemotherapy_protocols_path}']")
   end
 
   test "navigation layer is above page content" do

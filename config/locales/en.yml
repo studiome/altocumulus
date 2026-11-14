@@ -137,6 +137,7 @@ en:
     departments: "Departments"
     surgery_locations: "Surgery Locations"
     surgical_devices: "Surgical Devices"
+    chemotherapy_protocols: "Chemotherapy Protocols"
     teams: "Teams"
     admin: "Admin"
     users: "Users"
@@ -231,12 +232,17 @@ en:
       surgical_device:
         one: "Surgical Device"
         other: "Surgical Devices"
+      chemotherapy_protocol:
+        one: "Chemotherapy Protocol"
+        other: "Chemotherapy Protocols"
       team:
         one: "Team"
         other: "Teams"
     # Only where Rails' humanize default reads badly (e.g. "Slot duration
     # minutes"); ja.yml defines every attribute.
     attributes:
+      hospitalization:
+        chemotherapy_protocol_id: "Protocol"
       holiday:
         slot_count: "Slot count"
         slot_duration_minutes: "Slot duration (min)"
@@ -667,7 +673,7 @@ en:
       name_label: "Procedure Name"
       name_placeholder: "e.g. Laparoscopic cholecystectomy"
 
-  # Shared by the Department / SurgeryLocation / SurgicalDevice screens
+  # Shared by the Department / SurgeryLocation / SurgicalDevice / ChemotherapyProtocol screens
   # (MasterRecordsController); the record's own name comes in as %{record}.
   master_records:
     index:

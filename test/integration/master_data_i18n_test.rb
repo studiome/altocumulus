@@ -209,7 +209,8 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
     {
       departments_url => [ "診療科", "新規診療科", "Departments", "New Department" ],
       surgery_locations_url => [ "実施場所", "新規実施場所", "Surgery Locations", "New Surgery Location" ],
-      surgical_devices_url => [ "手術支援機器", "新規手術支援機器", "Surgical Devices", "New Surgical Device" ]
+      surgical_devices_url => [ "手術支援機器", "新規手術支援機器", "Surgical Devices", "New Surgical Device" ],
+      chemotherapy_protocols_url => [ "化学療法プロトコル", "新規化学療法プロトコル", "Chemotherapy Protocols", "New Chemotherapy Protocol" ]
     }.each do |url, (ja_title, ja_new, en_title, en_new)|
       get_as users(:japanese_admin), url
       assert_select "h1", text: ja_title
@@ -253,5 +254,6 @@ class MasterDataI18nTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", departments_path, text: "診療科"
     assert_select "a[href=?]", surgery_locations_path, text: "実施場所"
     assert_select "a[href=?]", surgical_devices_path, text: "手術支援機器"
+    assert_select "a[href=?]", chemotherapy_protocols_path, text: "化学療法プロトコル"
   end
 end

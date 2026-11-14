@@ -1,0 +1,14 @@
+protocol_a:
+  name: "Protocol A"
+  position: 1
+  active: true
+
+protocol_b:
+  name: "Protocol B"
+  position: 2
+  active: true
+
+retired_protocol:
+  name: "Retired Protocol"
+  position: 3
+  active: false

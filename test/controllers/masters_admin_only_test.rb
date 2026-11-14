@@ -30,6 +30,7 @@ class MastersAdminOnlyTest < ActionDispatch::IntegrationTest
     "departments" => { create: -> { [ departments_url, { department: { name: "X" } } ] }, record: -> { departments(:gynecology) }, model: Department },
     "surgery_locations" => { create: -> { [ surgery_locations_url, { surgery_location: { name: "X" } } ] }, record: -> { SurgeryLocation.first }, model: SurgeryLocation },
     "surgical_devices" => { create: -> { [ surgical_devices_url, { surgical_device: { name: "X" } } ] }, record: -> { SurgicalDevice.first }, model: SurgicalDevice },
+    "chemotherapy_protocols" => { create: -> { [ chemotherapy_protocols_url, { chemotherapy_protocol: { name: "X" } } ] }, record: -> { chemotherapy_protocols(:protocol_a) }, model: ChemotherapyProtocol },
     "teams" => { create: -> { [ teams_url, { team: { name: "X", color: "blue" } } ] }, record: -> { teams(:blue) }, model: Team }
   }.freeze
 
@@ -65,7 +66,7 @@ class MastersAdminOnlyTest < ActionDispatch::IntegrationTest
     end
   end
 
-  %w[holidays elective_slot_rules departments surgery_locations surgical_devices teams].each do |label|
+  %w[holidays elective_slot_rules departments surgery_locations surgical_devices chemotherapy_protocols teams].each do |label|
     test "#{label}: non-admin cannot new or create" do
       get public_send("new_#{label.singularize}_url")
       assert_forbidden

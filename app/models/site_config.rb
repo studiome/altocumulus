@@ -32,7 +32,7 @@ class SiteConfig
 
   # Keys of the masters section: the names a deployment wants present in the
   # admin-editable master tables (see SiteMasterSeeder, `site:seed_masters`).
-  MASTER_KEYS = %w[departments surgery_locations surgical_devices teams].freeze
+  MASTER_KEYS = %w[departments surgery_locations surgical_devices teams chemotherapy_protocols].freeze
 
   # Masters whose entries may be a mapping ({name: ..., <option>: ...}) instead
   # of a plain name, with the options each accepts.

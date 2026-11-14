@@ -9,7 +9,8 @@ class SiteMasterSeeder
     "departments" => "Department",
     "surgery_locations" => "SurgeryLocation",
     "surgical_devices" => "SurgicalDevice",
-    "teams" => "Team"
+    "teams" => "Team",
+    "chemotherapy_protocols" => "ChemotherapyProtocol"
   }.freeze
 
   # Returns how many rows were created per master key.

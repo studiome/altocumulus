@@ -67,6 +67,7 @@
             <li><%= link_to t("nav.departments"), departments_path %></li>
             <li><%= link_to t("nav.surgery_locations"), surgery_locations_path %></li>
             <li><%= link_to t("nav.surgical_devices"), surgical_devices_path %></li>
+            <li><%= link_to t("nav.chemotherapy_protocols"), chemotherapy_protocols_path %></li>
             <% if SiteConfig.current.teams_enabled? %>
               <li><%= link_to t("nav.teams"), teams_path %></li>
             <% end %>
@@ -122,6 +123,7 @@
               <li><%= link_to t("nav.departments"), departments_path %></li>
               <li><%= link_to t("nav.surgery_locations"), surgery_locations_path %></li>
               <li><%= link_to t("nav.surgical_devices"), surgical_devices_path %></li>
+              <li><%= link_to t("nav.chemotherapy_protocols"), chemotherapy_protocols_path %></li>
               <% if SiteConfig.current.teams_enabled? %>
                 <li><%= link_to t("nav.teams"), teams_path %></li>
               <% end %>

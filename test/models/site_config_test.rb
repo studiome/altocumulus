@@ -154,6 +154,16 @@ class SiteConfigTest < ActiveSupport::TestCase
     assert_empty SiteConfig.from_hash("masters" => { "departments" => nil }).master_names(:departments)
   end
 
+  test "masters.chemotherapy_protocols is a list of names and the field may be required per purpose" do
+    config = SiteConfig.from_hash(
+      "masters" => { "chemotherapy_protocols" => [ " Regimen 1 ", "Regimen 2", "Regimen 1" ] },
+      "required_fields" => { "hospitalization_by_purpose" => { "chemotherapy" => %w[chemotherapy_protocol_id] } }
+    )
+    assert_equal [ "Regimen 1", "Regimen 2" ], config.master_names(:chemotherapy_protocols)
+    assert_equal %i[chemotherapy_protocol_id], config.required_fields_for_purpose(:chemotherapy)
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "chemotherapy_protocols" => [ { "name" => "x" } ] }) }
+  end
+
   test "hospitalization_by_purpose loads per-purpose field lists" do
     config = SiteConfig.from_hash("required_fields" => {
       "hospitalization_by_purpose" => { "examination" => %w[procedure_name scheduled_procedure_date], "other" => nil }

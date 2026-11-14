@@ -6,7 +6,8 @@ class SiteMasterSeederTest < ActiveSupport::TestCase
     "masters" => {
       "departments" => [ "Seed Dept A", "Gynecology", "Seed Dept B" ],
       "surgery_locations" => [ "Seed Room" ],
-      "surgical_devices" => [ "Seed Device" ]
+      "surgical_devices" => [ "Seed Device" ],
+      "chemotherapy_protocols" => [ "Seed Protocol", "Protocol A" ]
     }
   }.freeze
 
@@ -22,7 +23,9 @@ class SiteMasterSeederTest < ActiveSupport::TestCase
     assert a.active?
     assert SurgeryLocation.exists?(name: "Seed Room")
     assert SurgicalDevice.exists?(name: "Seed Device")
-    assert_equal({ "departments" => 2, "surgery_locations" => 1, "surgical_devices" => 1, "teams" => 0 }, result)
+    assert ChemotherapyProtocol.exists?(name: "Seed Protocol")
+    assert_equal 1, ChemotherapyProtocol.where(name: "Protocol A").count
+    assert_equal({ "departments" => 2, "surgery_locations" => 1, "surgical_devices" => 1, "teams" => 0, "chemotherapy_protocols" => 1 }, result)
   end
 
   test "is idempotent and never renames, reorders or reactivates existing rows" do
@@ -32,7 +35,7 @@ class SiteMasterSeederTest < ActiveSupport::TestCase
 
     SiteMasterSeeder.call(config)
     assert_no_difference -> { Department.count } do
-      assert_equal({ "departments" => 0, "surgery_locations" => 0, "surgical_devices" => 0, "teams" => 0 }, SiteMasterSeeder.call(config))
+      assert_equal({ "departments" => 0, "surgery_locations" => 0, "surgical_devices" => 0, "teams" => 0, "chemotherapy_protocols" => 0 }, SiteMasterSeeder.call(config))
     end
 
     assert_equal before, existing.reload.attributes

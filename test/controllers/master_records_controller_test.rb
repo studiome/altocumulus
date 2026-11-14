@@ -1,12 +1,14 @@
 require "test_helper"
 
-# Department / SurgeryLocation / SurgicalDevice share one generic CRUD
-# (MasterRecordsController), so one table drives the same tests for all three.
+# Department / SurgeryLocation / SurgicalDevice / ChemotherapyProtocol share one
+# generic CRUD (MasterRecordsController), so one table drives the same tests.
 class MasterRecordsControllerTest < ActionDispatch::IntegrationTest
   MASTERS = {
     Department => { path: :departments, singular: :department, active: :gynecology, inactive: :closed_department, referenced_by: :department_id },
     SurgeryLocation => { path: :surgery_locations, singular: :surgery_location, active: :cath_lab, inactive: :closed_room, referenced_by: :surgery_location_id },
-    SurgicalDevice => { path: :surgical_devices, singular: :surgical_device, active: :robot_a, inactive: :retired_robot, referenced_by: :surgical_device_id }
+    SurgicalDevice => { path: :surgical_devices, singular: :surgical_device, active: :robot_a, inactive: :retired_robot, referenced_by: :surgical_device_id },
+    ChemotherapyProtocol => { path: :chemotherapy_protocols, singular: :chemotherapy_protocol, active: :protocol_a, inactive: :retired_protocol,
+                              referenced_by: :chemotherapy_protocol_id, owner: -> { hospitalizations(:one) } }
   }.freeze
 
   MASTERS.each do |klass, cfg|
@@ -78,7 +80,7 @@ class MasterRecordsControllerTest < ActionDispatch::IntegrationTest
 
     test "#{label}: a record in use is not destroyed and the reason is shown" do
       record = send(fixtures_name, cfg[:active])
-      surgeries(:one).update_columns(cfg[:referenced_by] => record.id)
+      instance_exec(&cfg.fetch(:owner, -> { surgeries(:one) })).update_columns(cfg[:referenced_by] => record.id)
 
       assert_no_difference("#{klass}.count") do
         delete public_send("#{cfg[:singular]}_url", record)
