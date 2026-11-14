@@ -4,7 +4,7 @@ class LedgerColumnTest < ActiveSupport::TestCase
   SURGERY_KEYS = %i[time_slot admission_dates patient age_sex diagnosis_procedure operator_assistant
                     duration_anesthesia team category reservation referral_adl status clinical_comment].freeze
   HOSPITALIZATION_KEYS = %i[admission_dates patient age_sex diagnosis_procedure_name purpose team category
-                            reservation referral_adl status clinical_comment].freeze
+                            reservation referral_adl status clinical_comment protocol].freeze
 
   setup do
     @context = LedgerColumn::Context.new
@@ -402,6 +402,47 @@ class LedgerColumnTest < ActiveSupport::TestCase
     cell = cell(:hospitalization, :diagnosis_procedure_name, hospitalization)
     assert_equal [ hospitalization.diagnosis_names_display ], texts(cell.upper)
     assert_equal [ "Upper endoscopy" ], texts(cell.lower)
+  end
+
+  test "hospitalization diagnosis_procedure_name adds the protocol after the procedure name" do
+    hospitalization = hospitalizations(:one)
+    protocol = chemotherapy_protocols(:protocol_a)
+    hospitalization.assign_attributes(purpose: "chemotherapy", chemotherapy_protocol: protocol)
+
+    hospitalization.procedure_name = "Port flush"
+    assert_equal [ "Port flush", protocol.name ], texts(cell(:hospitalization, :diagnosis_procedure_name, hospitalization).lower)
+
+    hospitalization.procedure_name = nil
+    assert_equal [ protocol.name ], texts(cell(:hospitalization, :diagnosis_procedure_name, hospitalization).lower)
+
+    hospitalization.chemotherapy_protocol = nil
+    assert_equal [ "-" ], texts(cell(:hospitalization, :diagnosis_procedure_name, hospitalization).lower)
+
+    hospitalization.procedure_name = "Port flush"
+    assert_equal [ "Port flush" ], texts(cell(:hospitalization, :diagnosis_procedure_name, hospitalization).lower)
+  end
+
+  test "hospitalization protocol column shows the protocol name or a dash" do
+    hospitalization = hospitalizations(:one)
+    assert_equal [ "-" ], texts(cell(:hospitalization, :protocol, hospitalization).upper)
+    hospitalization.assign_attributes(purpose: "chemotherapy", chemotherapy_protocol: chemotherapy_protocols(:protocol_b))
+    assert_equal [ "Protocol B" ], texts(cell(:hospitalization, :protocol, hospitalization).upper)
+    assert_equal [], cell(:hospitalization, :protocol, hospitalization).lower
+    assert_equal "Protocol", LedgerColumn.find(:hospitalization, :protocol).header_upper
+    assert_nil LedgerColumn.find(:hospitalization, :protocol).header_lower
+    assert_not LedgerColumn.find(:hospitalization, :protocol).flex?
+  end
+
+  test "protocol is not in the default examination or admission columns but can be configured" do
+    assert_not_includes LedgerColumn.default_keys(:examination_calendar), :protocol
+    assert_not_includes LedgerColumn.default_keys(:admission_calendar), :protocol
+    config = { "ledger_columns" => { "examination_calendar" => %w[patient protocol], "admission_calendar" => %w[patient protocol] } }
+    with_site_config(config) do
+      assert_equal %i[patient protocol], LedgerColumn.for_ledger(:examination_calendar).map(&:key)
+      assert_equal %i[patient protocol], LedgerColumn.for_ledger(:admission_calendar).map(&:key)
+    end
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "examination_calendar" => %w[patient nope] }) }
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("ledger_columns" => { "operations_calendar" => %w[patient protocol] }) }
   end
 
   test "hospitalization purpose shows the purpose over the scheduled procedure date" do

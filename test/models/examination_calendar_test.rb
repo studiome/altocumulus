@@ -67,6 +67,18 @@ class ExaminationCalendarTest < ActiveSupport::TestCase
     assert_equal few, many
   end
 
+  test "the query count with the protocol column and protocols set does not depend on the number of rows" do
+    config = { "ledger_columns" => { "examination_calendar" => %w[patient diagnosis_procedure_name protocol] } }
+    with_site_config(config) do
+      @one.update_columns(chemotherapy_protocol_id: chemotherapy_protocols(:protocol_a).id)
+      few = count_queries { render(calendar) }
+      hospitalizations(:three).update_columns(purpose: "examination", scheduled_procedure_date: @day + 1, chemotherapy_protocol_id: chemotherapy_protocols(:protocol_b).id)
+      hospitalizations(:four).update_columns(purpose: "examination", scheduled_procedure_date: @day + 2, chemotherapy_protocol_id: chemotherapy_protocols(:protocol_a).id)
+      many = count_queries { render(calendar) }
+      assert_equal few, many
+    end
+  end
+
   test "the warning compares the day with its own threshold" do
     monday = Date.new(2026, 5, 11)
     @one.update_columns(scheduled_admission_date: monday)

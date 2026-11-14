@@ -14,9 +14,14 @@ module LedgerColumns
           column(:age_sex, 46, min: 36, includes: [ :patient ]) { |hospitalization, _|
             age_sex_cell(hospitalization.patient, hospitalization.effective_admission_date)
           },
-          column(:diagnosis_procedure_name, 170, min: 150, flex: 2, includes: [ { hospitalization_diagnoses: :diagnosis } ]) { |hospitalization, _|
+          column(:diagnosis_procedure_name, 170, min: 150, flex: 2, includes: [ { hospitalization_diagnoses: :diagnosis }, :chemotherapy_protocol ]) { |hospitalization, _|
+            # The procedure name, then the protocol; a dash only when neither is set.
+            names = [ hospitalization.procedure_name.presence, hospitalization.chemotherapy_protocol&.name ].compact
             cell(segment(hospitalization.diagnosis_names_display, :secondary),
-                 segment(hospitalization.procedure_name.presence || dash, :primary))
+                 (names.presence || [ dash ]).map { |name| segment(name, :primary) })
+          },
+          column(:protocol, 90, min: 70, includes: [ :chemotherapy_protocol ]) { |hospitalization, _|
+            cell(segment(hospitalization.chemotherapy_protocol&.name.presence || dash, :primary))
           },
           column(:purpose, 80, min: 60) { |hospitalization, _|
             date = hospitalization.scheduled_procedure_date || hospitalization.scheduled_surgery_date
