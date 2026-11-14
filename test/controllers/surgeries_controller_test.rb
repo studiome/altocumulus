@@ -968,5 +968,18 @@ class SurgeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
     assert_equal "before", hosp.reload.clinical_comment
     assert_in_delta 3.0, @surgery.reload.duration_hours
+    assert_equal I18n.t("surgeries.clinical_comment_not_saved"), flash[:alert]
+    follow_redirect!
+    assert_select ".alert-error", text: /#{Regexp.escape(I18n.t("surgeries.clinical_comment_not_saved"))}/
+    assert_select ".alert-success"
+  end
+
+  test "update does not warn about a deleted hospitalization's comment when the comment was not changed" do
+    link_deleted_hospitalization(comment: "before")
+
+    patch surgery_url(@surgery), params: { surgery: { duration_hours: 3.0, hospitalization_clinical_comment: "before" } }
+
+    assert_response :redirect
+    assert_nil flash[:alert]
   end
 end

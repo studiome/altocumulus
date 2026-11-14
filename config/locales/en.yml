@@ -1126,6 +1126,7 @@ en:
   #     existing `default`/`long` formats, plus a new `date.formats.weekday`
   #     for the schedule board's per-day column header).
   surgeries:
+    clinical_comment_not_saved: "The clinical comment was not saved because the hospitalization has been deleted."
     index:
       title: "Surgeries"
       new_button: "New Surgery"

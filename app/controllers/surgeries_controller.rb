@@ -104,6 +104,7 @@ class SurgeriesController < ApplicationController
     # the notice links on to its detail page. An undated one has no day to
     # show, so it goes straight to its detail page.
     def redirect_after_save(notice, **options)
+      flash[:alert] = t("surgeries.clinical_comment_not_saved") if @clinical_comment_skipped
       return redirect_to(@surgery, notice: notice, **options) if @surgery.surgery_date.blank?
 
       flash[:notice_link] = { "path" => surgery_path(@surgery), "label" => t("common.view_details") }
@@ -158,12 +159,19 @@ class SurgeriesController < ApplicationController
 
       hospitalization = @surgery.hospitalization
       comment = submitted[:hospitalization_clinical_comment]
-      return true if hospitalization.nil? || hospitalization.deleted?
+      return true if hospitalization.nil?
       return true if comment.to_s == hospitalization.clinical_comment.to_s
+      return skip_comment_of_deleted_hospitalization if hospitalization.deleted?
       return true if hospitalization.update(clinical_comment: comment)
 
       hospitalization.errors.full_messages.each { |message| @surgery.errors.add(:base, message) }
       false
+    end
+
+    # A form opened before the hospitalization was deleted still offers the
+    # textarea; the surgery saves, and the user is told the comment did not.
+    def skip_comment_of_deleted_hospitalization
+      @clinical_comment_skipped = true
     end
 
     # Prefill params are untrusted: anything that is not a parsable date

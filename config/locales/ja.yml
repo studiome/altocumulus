@@ -1116,6 +1116,7 @@ ja:
   # Stage 3 group 3b (Surgeries / Surgery Schedule board). See en.yml for
   # the design notes.
   surgeries:
+    clinical_comment_not_saved: "入院が削除されているため、臨床コメントは保存されませんでした。"
     index:
       title: "手術"
       new_button: "新規手術"
