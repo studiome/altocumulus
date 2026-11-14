@@ -157,14 +157,15 @@ weekly_pdf:
 #   and, from the surgery's hospitalization: scheduled_admission_date
 #   admission_date discharge_date emergency_admission transfer_status
 #   source_department referred_from adl infection reservation_doctor created_by
-#   submitted_on reservation_status purpose clinical_comment
+#   submitted_on reservation_status purpose clinical_comment protocol
+#   (protocol: the chemotherapy protocol's name, blank when none)
 # Fields of subject hospitalization:
 #   hospital_id patient_name patient_kana age (on the admission date) sex
 #   diagnoses scheduled_admission_date admission_date discharge_date
 #   emergency_admission transfer_status source_department referred_from adl infection
 #   reservation_doctor created_by submitted_on reservation_status purpose
 #   clinical_comment scheduled_procedure_date procedure_name planned_days
-#   scheduled_surgery_date attending_doctor ward team team_members
+#   scheduled_surgery_date attending_doctor ward team team_members protocol
 # team and team_members need features.teams: true, otherwise the boot fails.
 # The built-in defaults (what is used while `exports` is omitted):
 #   surgery_list:   {subject: surgery, fields: every surgery field}

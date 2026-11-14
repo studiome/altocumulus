@@ -162,6 +162,7 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
   def add_surgery_case(index)
     patient = Patient.create!(hospital_id: "Q#{index}", name: "Extra #{index}", date_of_birth: Date.new(1970, 1, 1))
     hospitalization = Hospitalization.create!(patient: patient, scheduled_admission_date: Date.new(2026, 3, 1), reservation_doctor: users(:member),
+                                              purpose: "chemotherapy", chemotherapy_protocol: chemotherapy_protocols(index.even? ? :protocol_a : :protocol_b),
                                               created_by: users(:admin), team: teams(:blue), source_department: departments(:gynecology),
                                               transfer_status: "transferred_in",
                                               hospitalization_diagnoses: [ HospitalizationDiagnosis.new(diagnosis: diagnoses(:pneumonia)) ])
@@ -180,6 +181,19 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
       many = count_queries { get export_url(:surgery_list), params: RANGE.merge(view: "surgery") }
       assert_equal few, many
       assert_equal 7 + 6, rows.size - 1
+    end
+  end
+
+  test "an export configured with protocol writes the protocol name" do
+    hospitalizations(:one).update_columns(purpose: "chemotherapy", scheduled_admission_date: Date.new(2026, 3, 2), admission_date: nil,
+                                          chemotherapy_protocol_id: chemotherapy_protocols(:protocol_b).id)
+    config = { "exports" => { "chemo_list" => { "subject" => "hospitalization", "fields" => %w[hospital_id protocol] } } }
+    with_site_config(config) do
+      get export_url(:chemo_list), params: RANGE.merge(view: "admission")
+      assert_response :success
+      table = rows
+      assert_equal [ "Patient ID", "Protocol" ], table.first
+      assert_includes table, [ "H001", "Protocol B" ]
     end
   end
 

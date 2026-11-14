@@ -164,6 +164,16 @@ class SiteConfigTest < ActiveSupport::TestCase
     assert_raises(SiteConfig::Error) { SiteConfig.from_hash("masters" => { "chemotherapy_protocols" => [ { "name" => "x" } ] }) }
   end
 
+  test "exports accept the protocol field on both subjects and still reject unknown fields" do
+    config = SiteConfig.from_hash("exports" => {
+      "a" => { "subject" => "hospitalization", "fields" => %w[hospital_id protocol] },
+      "b" => { "subject" => "surgery", "fields" => %w[hospital_id protocol] }
+    })
+    assert_equal %i[hospital_id protocol], config.export_definition(:a).fields
+    assert_equal %i[hospital_id protocol], config.export_definition(:b).fields
+    assert_raises(SiteConfig::Error) { SiteConfig.from_hash("exports" => { "a" => { "subject" => "hospitalization", "fields" => %w[protocols] } }) }
+  end
+
   test "hospitalization_by_purpose loads per-purpose field lists" do
     config = SiteConfig.from_hash("required_fields" => {
       "hospitalization_by_purpose" => { "examination" => %w[procedure_name scheduled_procedure_date], "other" => nil }

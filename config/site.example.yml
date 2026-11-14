@@ -87,7 +87,7 @@ exports:
     fields: [surgery_date, weekday, start_time, slot_category, hospital_id, patient_name, diagnoses, procedures, operator, team, location]
   admission_list:
     subject: hospitalization
-    fields: [scheduled_admission_date, admission_date, hospital_id, patient_name, age, sex, diagnoses, purpose, referred_from, adl, reservation_doctor, team, reservation_status]
+    fields: [scheduled_admission_date, admission_date, hospital_id, patient_name, age, sex, diagnoses, purpose, protocol, referred_from, adl, reservation_doctor, team, reservation_status]
 
 reservation_defaults:
   admission_days_before_surgery: 1

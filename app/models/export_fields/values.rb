@@ -62,7 +62,8 @@ module ExportFields
         submitted_on: ->(h) { iso(h&.submitted_on) },
         reservation_status: ->(h) { h && Hospitalization.reservation_status_options[h.reservation_status] },
         purpose: ->(h) { h && Hospitalization.purpose_options[h.purpose] },
-        clinical_comment: ->(h) { h&.clinical_comment }
+        clinical_comment: ->(h) { h&.clinical_comment },
+        protocol: ->(h) { h&.chemotherapy_protocol&.name }
       }
     end
 
@@ -70,7 +71,8 @@ module ExportFields
     HOSPITALIZATION_VALUE_INCLUDES = {
       source_department: [ :source_department ],
       reservation_doctor: [ :reservation_doctor ],
-      created_by: [ :created_by ]
+      created_by: [ :created_by ],
+      protocol: [ :chemotherapy_protocol ]
     }.freeze
   end
 end

@@ -1854,6 +1854,7 @@ ja:
       scheduled_surgery_date: "手術予定日"
       attending_doctor: "主治医"
       ward: "病棟"
+      protocol: "プロトコル"
   exports:
     index:
       title: "データダウンロード"

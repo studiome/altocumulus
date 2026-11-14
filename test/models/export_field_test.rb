@@ -6,12 +6,12 @@ class ExportFieldTest < ActiveSupport::TestCase
                     assistant team team_members location performing_department partner_department backup_intervention
                     scheduled_admission_date admission_date discharge_date emergency_admission transfer_status
                     source_department referred_from adl infection reservation_doctor created_by submitted_on reservation_status
-                    purpose clinical_comment].freeze
+                    purpose clinical_comment protocol].freeze
   HOSPITALIZATION_KEYS = %i[hospital_id patient_name patient_kana age sex diagnoses scheduled_admission_date admission_date
                             discharge_date emergency_admission transfer_status source_department referred_from adl infection
                             reservation_doctor created_by submitted_on reservation_status purpose clinical_comment
                             scheduled_procedure_date procedure_name planned_days scheduled_surgery_date attending_doctor
-                            ward team team_members].freeze
+                            ward team team_members protocol].freeze
 
   def value(subject, key, record)
     ExportField.find(subject, key).value(record)
@@ -90,7 +90,7 @@ class ExportFieldTest < ActiveSupport::TestCase
   test "hospitalization-side fields are nil for a surgery without a hospitalization" do
     surgery = surgeries(:one)
     %i[scheduled_admission_date admission_date discharge_date emergency_admission transfer_status source_department
-       referred_from adl infection reservation_doctor created_by submitted_on reservation_status purpose clinical_comment].each do |key|
+       referred_from adl infection reservation_doctor created_by submitted_on reservation_status purpose clinical_comment protocol].each do |key|
       assert_nil value(:surgery, key, surgery), key.to_s
     end
   end
@@ -120,6 +120,19 @@ class ExportFieldTest < ActiveSupport::TestCase
     assert_equal "Yes", value(:surgery, :emergency_admission, surgery)
     assert_equal "Note", value(:surgery, :clinical_comment, surgery)
     assert_equal "Surgery", value(:surgery, :purpose, surgery)
+  end
+
+  test "protocol is the chemotherapy protocol name, blank when none, on both subjects" do
+    hospitalization = hospitalizations(:one)
+    assert_nil value(:hospitalization, :protocol, hospitalization)
+
+    hospitalization.update_columns(purpose: "chemotherapy", chemotherapy_protocol_id: chemotherapy_protocols(:protocol_a).id)
+    assert_equal "Protocol A", value(:hospitalization, :protocol, hospitalization.reload)
+
+    surgery = linked_surgery
+    assert_equal "Protocol A", value(:surgery, :protocol, surgery)
+    surgery.hospitalization.update_columns(deleted_at: Time.current)
+    assert_nil value(:surgery, :protocol, surgery.reload)
   end
 
   test "a discarded hospitalization is ignored" do
