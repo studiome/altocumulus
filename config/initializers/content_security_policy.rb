@@ -17,6 +17,12 @@ Rails.application.configure do
     policy.base_uri        :self
     policy.form_action     :self
     policy.frame_ancestors :none
+    # The live update socket is same-host only. 'self' alone covers ws(s) in
+    # current browsers but not in Safari, so the origin is named explicitly.
+    # The lambdas run in the controller, or in the request itself when the
+    # policy is built outside a controller (routing errors).
+    same_host = ->(scheme) { -> { "#{scheme}://#{(respond_to?(:request) ? request : self).host_with_port}" } }
+    policy.connect_src     :self, same_host.("ws"), same_host.("wss")
   end
 
   # One nonce per session (not per request): Turbo compares the tracked

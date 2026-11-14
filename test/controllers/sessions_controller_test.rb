@@ -251,4 +251,22 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 302, other.response.status
     assert_equal login_url, other.response.location
   end
+
+  test "signing out disconnects the user's live update sockets" do
+    sign_in_as(users(:admin))
+    disconnected = []
+    remote = Object.new
+    remote.define_singleton_method(:disconnect) { disconnected << :done }
+    admin = users(:admin)
+    connections = ActionCable.server.remote_connections
+    connections.define_singleton_method(:where) { |**conditions| conditions[:current_user] == admin ? remote : raise("unexpected #{conditions}") }
+
+    begin
+      delete logout_url
+    ensure
+      connections.singleton_class.send(:remove_method, :where)
+    end
+
+    assert_equal [ :done ], disconnected
+  end
 end

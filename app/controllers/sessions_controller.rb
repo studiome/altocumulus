@@ -62,7 +62,10 @@ class SessionsController < ApplicationController
   end
 
   def destroy
-    record_access_log(user: current_user, event: "logout") if current_user
+    if current_user
+      record_access_log(user: current_user, event: "logout")
+      ActionCable.server.remote_connections.where(current_user: current_user).disconnect
+    end
     reset_session
     redirect_to login_path, notice: t(".success_notice")
   end

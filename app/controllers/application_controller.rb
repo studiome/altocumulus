@@ -44,10 +44,7 @@ class ApplicationController < ActionController::Base
   def current_user
     return @current_user if defined?(@current_user)
 
-    user = session[:user_id] && User.active.find_by(id: session[:user_id])
-    # A password change invalidates every session signed in before it.
-    user = nil if user && !ActiveSupport::SecurityUtils.secure_compare(session[:password_fingerprint].to_s, user.session_fingerprint.to_s)
-    @current_user = user
+    @current_user = SessionUser.find(session)
   end
 
   # The session that itself changed the password keeps working.
@@ -111,17 +108,23 @@ class ApplicationController < ActionController::Base
   def enforce_session_idle_timeout
     return unless session[:user_id]
 
-    last_seen_at = session[:last_seen_at]
-    if last_seen_at.present? && Time.zone.at(last_seen_at) < Rails.application.config.x.session_idle_timeout.ago
+    if SessionUser.idle?(session)
       expire_idle_session
       return
     end
 
-    session[:last_seen_at] = Time.current.to_i
+    # Requests the browser makes by itself for live updates (X-Live-Update)
+    # must not count as activity, or an unattended screen would never time out.
+    session[:last_seen_at] = Time.current.to_i unless live_update_request?
+  end
+
+  def live_update_request?
+    request.headers["X-Live-Update"].present?
   end
 
   def expire_idle_session
     timed_out_user = User.find_by(id: session[:user_id])
+    ActionCable.server.remote_connections.where(current_user: timed_out_user).disconnect if timed_out_user
     reset_session
     record_access_log(user: timed_out_user, event: "timeout")
   end

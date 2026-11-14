@@ -15,6 +15,12 @@
 
     <%= yield :head %>
 
+    <%# Live updates: the socket lives at <script name>/cable (also under a
+        subpath deployment, where action_cable_meta_tag would say /cable). %>
+    <% if current_user %>
+      <meta name="action-cable-url" content="<%= request.script_name %>/cable">
+    <% end %>
+
     <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
     <%# tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
 
@@ -142,6 +148,9 @@
         <% end %>
       </div>
     </header>
+
+    <%# Signals only (see LiveUpdate): no data travels over this stream. %>
+    <%= turbo_stream_from LiveUpdate::STREAM if current_user %>
 
     <%= render "shared/flash" %>
 
