@@ -1,4 +1,5 @@
 class PatientDiagnosis < ApplicationRecord
+  include LiveUpdatable
   include AuditsAssociatedChanges
   include Lateralizable
 
@@ -32,4 +33,14 @@ class PatientDiagnosis < ApplicationRecord
   def to_s
     display_name
   end
+
+  def live_update_dates
+    surgeries.pluck(:surgery_date)
+  end
+
+  def live_update_records
+    live_update_values(:patient_id).map { |pid| live_update_key("Patient", pid) } +
+      surgeries.pluck(:id).map { |sid| live_update_key("Surgery", sid) }
+  end
+
 end

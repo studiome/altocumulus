@@ -1,5 +1,6 @@
 class Hospitalization < ApplicationRecord
   include Auditable
+  include LiveUpdatable
   include ConfigurableRequiredFields
   include TeamAssignable
 
@@ -365,6 +366,17 @@ class Hospitalization < ApplicationRecord
       active_hospitalization_diagnoses.map { |hd| { diagnosis_id: hd.diagnosis_id } }
     copy.save
     copy
+  end
+
+
+  def live_update_dates
+    live_update_values(*LiveUpdatable::HOSPITALIZATION_DATE_COLUMNS) + surgeries.pluck(:surgery_date)
+  end
+
+  def live_update_records
+    [ live_update_key("Hospitalization", id) ] +
+      live_update_values(:patient_id).map { |pid| live_update_key("Patient", pid) } +
+      surgeries.pluck(:id).map { |sid| live_update_key("Surgery", sid) }
   end
 
   private

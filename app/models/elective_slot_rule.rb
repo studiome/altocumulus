@@ -1,4 +1,5 @@
 class ElectiveSlotRule < ApplicationRecord
+  include LiveUpdatable
   validates :day_of_week, presence: true, uniqueness: true, inclusion: { in: 0..6 }
   validates :slot_count, presence: true, numericality: { greater_than: 0 }
   validates :slot_duration_minutes, presence: true, numericality: { only_integer: true, greater_than: 0 }
@@ -82,4 +83,9 @@ class ElectiveSlotRule < ApplicationRecord
       decimal = value.is_a?(BigDecimal) ? value : BigDecimal(value.to_s)
       decimal.round(1).to_s("F").sub(/\.0\z/, "")
     end
+
+  def live_update_all?
+    true
+  end
+
 end

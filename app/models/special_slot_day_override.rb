@@ -5,6 +5,7 @@
 # A closed Holiday still has no lanes, whatever is stored here (as for regular
 # slots, see ElectiveSlotUsage). Not audited, like the Holiday/day-note edits.
 class SpecialSlotDayOverride < ApplicationRecord
+  include LiveUpdatable
   belongs_to :resource, polymorphic: true
 
   validates :resource_type, inclusion: { in: SpecialSlotRule::RESOURCE_TYPES }
@@ -12,4 +13,9 @@ class SpecialSlotDayOverride < ApplicationRecord
   validates :slot_count, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   scope :open, -> { where("slot_count > 0") }
+
+  def live_update_dates
+    live_update_values(:date)
+  end
+
 end

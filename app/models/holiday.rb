@@ -12,6 +12,7 @@
 # replaces the weekday's for that date (see AdmissionThreshold); a comment-only
 # row with nothing but that value is valid.
 class Holiday < ApplicationRecord
+  include LiveUpdatable
   validates :date, presence: true, uniqueness: true
   validates :name, presence: true, if: :holiday?
   validate :must_have_name_or_note_when_not_a_holiday
@@ -85,4 +86,9 @@ class Holiday < ApplicationRecord
 
       errors.add(:base, :must_have_name_or_note)
     end
+
+  def live_update_dates
+    live_update_values(:date)
+  end
+
 end

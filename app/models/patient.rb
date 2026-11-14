@@ -1,5 +1,6 @@
 class Patient < ApplicationRecord
   include Auditable
+  include LiveUpdatable
 
   # Only the valid DB keys live here -- labels come from
   # config/locales/*.yml (models.patient.sex_options).
@@ -17,6 +18,15 @@ class Patient < ApplicationRecord
   validates :sex, inclusion: { in: SEX_KEYS }, allow_blank: true
 
   scope :ordered, -> { order(:hospital_id) }
+
+
+  def live_update_dates
+    surgeries.pluck(:surgery_date) + hospitalizations.pluck(*LiveUpdatable::HOSPITALIZATION_DATE_COLUMNS).flatten
+  end
+
+  def live_update_records
+    [ live_update_key("Patient", id) ]
+  end
 
   def self.sex_options
     SEX_KEYS.index_with { |key| I18n.t("models.patient.sex_options.#{key}") }

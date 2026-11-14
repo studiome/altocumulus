@@ -4,6 +4,7 @@
 # ElectiveSlotUsage::SpecialSlot), used on top of their regular slot. Zero (or
 # no row) means no lane that weekday.
 class SpecialSlotRule < ApplicationRecord
+  include LiveUpdatable
   RESOURCE_TYPES = %w[SurgeryLocation SurgicalDevice].freeze
 
   belongs_to :resource, polymorphic: true
@@ -13,4 +14,9 @@ class SpecialSlotRule < ApplicationRecord
   validates :slot_count, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   scope :open, -> { where("slot_count > 0") }
+
+  def live_update_all?
+    true
+  end
+
 end

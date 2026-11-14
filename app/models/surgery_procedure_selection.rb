@@ -1,4 +1,5 @@
 class SurgeryProcedureSelection < ApplicationRecord
+  include LiveUpdatable
   include AuditsAssociatedChanges
   include Lateralizable
 
@@ -21,4 +22,13 @@ class SurgeryProcedureSelection < ApplicationRecord
     prefix = Lateralizable.laterality_options[laterality] || ""
     prefix.present? ? "#{prefix} #{name}" : name
   end
+
+  def live_update_dates
+    surgery&.live_update_dates || []
+  end
+
+  def live_update_records
+    surgery&.live_update_records || []
+  end
+
 end

@@ -5,6 +5,7 @@
 # and never blocks saving. Kept apart from ElectiveSlotRule on purpose: a
 # weekday without surgery slots still needs a threshold.
 class AdmissionThresholdRule < ApplicationRecord
+  include LiveUpdatable
   validates :day_of_week, presence: true, uniqueness: true, inclusion: { in: 0..6 }
   validates :threshold, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
@@ -44,4 +45,9 @@ class AdmissionThresholdRule < ApplicationRecord
   def self.default_threshold
     Rails.application.config.x.admission_warning_threshold
   end
+
+  def live_update_all?
+    true
+  end
+
 end

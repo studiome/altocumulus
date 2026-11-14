@@ -1,6 +1,7 @@
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
+require_relative "support/live_update_test_helper"
 
 # Lets a test temporarily switch the server's account_identifier mode
 # (email/username) without depending on ENV or process restart. Always
@@ -36,6 +37,7 @@ module ActiveSupport
     # Add more helper methods to be used by all tests here...
     include AccountIdentifierTestHelper
     include SiteConfigTestHelper
+    include LiveUpdateTestHelper
   end
 end
 

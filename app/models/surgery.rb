@@ -1,5 +1,6 @@
 class Surgery < ApplicationRecord
   include Auditable
+  include LiveUpdatable
   include ConfigurableRequiredFields
   include TeamAssignable
 
@@ -275,6 +276,19 @@ class Surgery < ApplicationRecord
     return nil if duration_hours.blank?
 
     (duration_hours * 60).round
+  end
+
+
+  def live_update_dates
+    hospitalization_ids = live_update_values(:hospitalization_id)
+    live_update_values(:surgery_date) +
+      live_update_hospitalization_dates(hospitalization_ids, columns: %i[ admission_date scheduled_admission_date scheduled_procedure_date scheduled_surgery_date ])
+  end
+
+  def live_update_records
+    [ live_update_key("Surgery", id) ] +
+      live_update_values(:patient_id).map { |pid| live_update_key("Patient", pid) } +
+      live_update_values(:hospitalization_id).map { |hid| live_update_key("Hospitalization", hid) }
   end
 
   private
