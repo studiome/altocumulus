@@ -159,13 +159,15 @@ class Reservation
     return false unless valid?
 
     ActiveRecord::Base.transaction do
+      # The surgery is saved once below, with the new patient and the links
+      # the form decides; the hospitalization must not move it as well.
+      hospitalization.surgeries_saved_by_caller = [ surgery&.id ].compact
       hospitalization.save!
       if surgery_applicable?
         surgery.hospitalization = hospitalization
         surgery.patient = hospitalization.patient
-        refresh_links_after_patient_move
-        surgery.save!
         sync_patient_diagnoses
+        surgery.save!
       end
     end
     true
@@ -302,8 +304,9 @@ class Reservation
 
     # Editing can move the reservation to another patient. The surgery's links
     # to the previous patient's diagnoses can then no longer stand (a surgery
-    # may only link its own patient's diagnoses); Hospitalization moves them on
-    # save, and sync_patient_diagnoses rebuilds them from the form's rows.
+    # may only link its own patient's diagnoses); sync_patient_diagnoses
+    # rebuilds them on save from the form's rows (and moves the ones the form
+    # does not manage).
     def patient_changed_on_surgery?
       surgery.persisted? && surgery.patient_id_changed?
     end
@@ -320,15 +323,6 @@ class Reservation
       yield
     ensure
       association.target = stale if stale
-    end
-
-    # The hospitalization's save has already moved the stored surgery (and its
-    # links) to the new patient; forget the stale in-memory links.
-    def refresh_links_after_patient_move
-      return unless patient_changed_on_surgery?
-
-      surgery.surgery_diagnosis_links.reset
-      surgery.patient_diagnoses.reset
     end
 
     # A new surgery starts on the hospitalization's team (the model does the
@@ -381,20 +375,27 @@ class Reservation
 
     # Links the surgery to the patient's diagnoses for the form's diagnosis
     # rows. Links to diagnoses that were never part of the reservation (added
-    # on the surgery's own screen) are left alone.
+    # on the surgery's own screen) are kept; when the patient changed they
+    # follow to the new patient, like Hospitalization does for other surgeries.
     def sync_patient_diagnoses
       rows = diagnosis_rows.reject(&:destroyed_in_form?).select { |row| row.diagnosis_id.present? }
       desired = rows.map { |row| patient_diagnosis_for(row) }
       managed_ids = rows.map { |row| row.diagnosis_id.to_i } | @original_diagnosis_ids
       kept = surgery.patient_diagnoses.reject { |pd| managed_ids.include?(pd.diagnosis_id) }
+      kept = kept.map { |pd| followed_to_patient(pd) }
       surgery.patient_diagnoses = (kept + desired).uniq
     end
 
+    def followed_to_patient(patient_diagnosis)
+      return patient_diagnosis if patient_diagnosis.patient_id == hospitalization.patient_id
+
+      PatientDiagnosis.reuse_or_create_for(patient_id: hospitalization.patient_id, diagnosis_id: patient_diagnosis.diagnosis_id,
+                                           laterality: patient_diagnosis.laterality, diagnosed_on: patient_diagnosis.diagnosed_on)
+    end
+
     def patient_diagnosis_for(row)
-      patient = hospitalization.patient
-      existing = patient.patient_diagnoses.find_by(diagnosis_id: row.diagnosis_id, laterality: row.laterality)
-      existing || PatientDiagnosis.create!(
-        patient: patient, diagnosis_id: row.diagnosis_id, laterality: row.laterality,
+      PatientDiagnosis.reuse_or_create_for(
+        patient_id: hospitalization.patient_id, diagnosis_id: row.diagnosis_id, laterality: row.laterality,
         diagnosed_on: hospitalization.submitted_on || Date.current
       )
     end

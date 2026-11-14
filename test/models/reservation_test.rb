@@ -303,6 +303,82 @@ class ReservationTest < ActiveSupport::TestCase
     assert_equal 1, other.patient_diagnoses.where(diagnosis_id: diagnoses(:appendicitis).id, laterality: "right").count
   end
 
+  def edit_attrs_for(loaded, hospitalization: {}, drop: [], surgery: {})
+    {
+      hospitalization: hospitalization,
+      surgery: surgery,
+      diagnoses: loaded.diagnosis_rows.each_with_index.to_h do |row, i|
+        [ i.to_s, { id: row.id, diagnosis_id: row.diagnosis_id, laterality: row.laterality,
+                    _destroy: drop.include?(row.diagnosis_id) ? "1" : "0" } ]
+      end,
+      procedures: loaded.procedure_rows.each_with_index.to_h { |row, i| [ i.to_s, { id: row.id, surgery_procedure_id: row.surgery_procedure_id, laterality: row.laterality } ] }
+    }
+  end
+
+  def two_diagnosis_reservation
+    two = { "1" => { diagnosis_id: diagnoses(:appendicitis).id, laterality: "right" },
+            "2" => { diagnosis_id: diagnoses(:hypertension).id, laterality: "none" } }
+    reservation = build(diagnoses: two)
+    reservation.save!
+    reservation
+  end
+
+  test "changing the patient and removing a diagnosis does not create it on the new patient" do
+    reservation = two_diagnosis_reservation
+    other = Patient.create!(hospital_id: "H903", name: "Mover Two", date_of_birth: "1971-03-03")
+    loaded = Reservation.for_hospitalization(Hospitalization.find(reservation.hospitalization.id))
+
+    assert loaded.update(edit_attrs_for(loaded, hospitalization: { patient_id: other.id }, drop: [ diagnoses(:hypertension).id ])),
+           loaded.errors.full_messages.to_sentence
+
+    assert_equal [ diagnoses(:appendicitis).id ], other.patient_diagnoses.pluck(:diagnosis_id)
+    assert_equal [ diagnoses(:appendicitis).id ], loaded.surgery.reload.patient_diagnoses.map(&:diagnosis_id)
+    assert_equal 2, @patient.patient_diagnoses.count, "the old patient keeps their own diagnoses"
+  end
+
+  test "changing the patient writes one surgery audit event carrying the patient change" do
+    reservation = two_diagnosis_reservation
+    other = Patient.create!(hospital_id: "H904", name: "Mover Three", date_of_birth: "1971-03-03")
+    loaded = Reservation.for_hospitalization(Hospitalization.find(reservation.hospitalization.id))
+    surgery_id = loaded.surgery.id
+
+    assert loaded.update(edit_attrs_for(loaded, hospitalization: { patient_id: other.id }))
+
+    moved = AuditEvent.where(auditable_type: "Surgery", auditable_id: surgery_id, action: "update").select do |event|
+      event.change_data.to_s.include?("patient_id")
+    end
+    assert_equal 1, moved.size
+  end
+
+  test "changing the patient saves when the stored surgery lacks a field the form now fills" do
+    reservation = two_diagnosis_reservation
+    other = Patient.create!(hospital_id: "H905", name: "Mover Four", date_of_birth: "1971-03-03")
+    loaded = Reservation.for_hospitalization(Hospitalization.find(reservation.hospitalization.id))
+
+    with_site_config("required_fields" => { "surgery" => %w[operator_name] }) do
+      assert loaded.update(edit_attrs_for(loaded, hospitalization: { patient_id: other.id }, surgery: { operator_name: "Dr. Fill" })),
+             loaded.errors.full_messages.to_sentence
+    end
+    assert_equal other.id, loaded.surgery.reload.patient_id
+    assert_equal "Dr. Fill", loaded.surgery.operator_name
+  end
+
+  test "changing the patient moves the links the form does not manage to the new patient" do
+    reservation = two_diagnosis_reservation
+    extra = PatientDiagnosis.create!(patient: @patient, diagnosis: diagnoses(:asthma), laterality: "left", diagnosed_on: Date.new(2020, 1, 1))
+    reservation.surgery.patient_diagnoses << extra
+    other = Patient.create!(hospital_id: "H906", name: "Mover Five", date_of_birth: "1971-03-03")
+    loaded = Reservation.for_hospitalization(Hospitalization.find(reservation.hospitalization.id))
+
+    assert loaded.update(edit_attrs_for(loaded, hospitalization: { patient_id: other.id })), loaded.errors.full_messages.to_sentence
+
+    moved = other.patient_diagnoses.find_by!(diagnosis_id: diagnoses(:asthma).id, laterality: "left")
+    assert_equal Date.new(2020, 1, 1), moved.diagnosed_on
+    assert_includes loaded.surgery.reload.patient_diagnoses, moved
+    assert(loaded.surgery.patient_diagnoses.all? { |pd| pd.patient_id == other.id })
+    assert_equal 1, other.patient_diagnoses.where(diagnosis_id: diagnoses(:asthma).id).count
+  end
+
   test "switching an edited reservation away from surgery is refused while its surgery exists" do
     reservation = build
     reservation.save!

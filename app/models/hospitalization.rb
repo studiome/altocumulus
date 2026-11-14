@@ -30,6 +30,11 @@ class Hospitalization < ApplicationRecord
   WAITING_RESERVATION_STATUSES = %w[requested waiting on_hold].freeze
   RECENTLY_UPDATED_WITHIN = 2.days
 
+  # Ids of surgeries the caller saves itself right after this record (the
+  # reservation form does); a patient change does not move those. Not
+  # persisted, never a param.
+  attr_accessor :surgeries_saved_by_caller
+
   belongs_to :patient
   # The department a transferred patient came from; required exactly when
   # transfer_status is not "none" (see clear_source_department_without_transfer).
@@ -474,7 +479,10 @@ class Hospitalization < ApplicationRecord
     # previous patient's records themselves are never touched. Surgeries are
     # saved normally, so validations and the audit trail apply.
     def move_surgeries_to_new_patient
+      saved_by_caller = Array(surgeries_saved_by_caller)
       surgeries.reload.each do |surgery|
+        next if saved_by_caller.include?(surgery.id)
+
         surgery.hospitalization = self
         surgery.patient_id = patient_id
         surgery.patient_diagnoses = surgery.patient_diagnoses.map { |pd| patient_diagnosis_for_new_patient(pd) }.uniq
@@ -493,9 +501,8 @@ class Hospitalization < ApplicationRecord
     def patient_diagnosis_for_new_patient(patient_diagnosis)
       return patient_diagnosis if patient_diagnosis.patient_id == patient_id
 
-      PatientDiagnosis.find_by(patient_id: patient_id, diagnosis_id: patient_diagnosis.diagnosis_id, laterality: patient_diagnosis.laterality) ||
-        PatientDiagnosis.create!(patient_id: patient_id, diagnosis_id: patient_diagnosis.diagnosis_id,
-                                 laterality: patient_diagnosis.laterality, diagnosed_on: patient_diagnosis.diagnosed_on)
+      PatientDiagnosis.reuse_or_create_for(patient_id: patient_id, diagnosis_id: patient_diagnosis.diagnosis_id,
+                                           laterality: patient_diagnosis.laterality, diagnosed_on: patient_diagnosis.diagnosed_on)
     end
 
     # Last day a stay-in-the-making covers: the discharge date; open-ended
