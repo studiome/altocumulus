@@ -216,7 +216,7 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
       get export_url(:chemo_list), params: RANGE.merge(view: "admission")
       assert_response :success
       table = rows
-      assert_equal [ "Patient ID", "Protocol" ], table.first
+      assert_equal [ "Patient ID", "Chemotherapy protocol" ], table.first
       assert_includes table, [ "H001", "Protocol B" ]
     end
   end

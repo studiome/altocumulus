@@ -210,7 +210,8 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
     assert_select "tbody#day-2026-05-12 a[href=?]", new_reservation_path(purpose: "chemotherapy", scheduled_procedure_date: "2026-05-12"),
                   text: I18n.t("reservations.links.new_reservation")
     assert_select "tbody#day-2026-05-11 tr.oc-empty", text: /No chemotherapy admissions/
-    assert_select "th", text: "Protocol"
+    assert_select "th span", text: "Chemotherapy"
+    assert_select "th span", text: "protocol"
 
     get operations_calendar_url, params: { start: "2026-05-11", days: 3, view: "examination" }
     assert_select "tbody#day-2026-05-12 tr.oc-exam", 1

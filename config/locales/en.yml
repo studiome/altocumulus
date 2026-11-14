@@ -242,7 +242,7 @@ en:
     # minutes"); ja.yml defines every attribute.
     attributes:
       hospitalization:
-        chemotherapy_protocol_id: "Protocol"
+        chemotherapy_protocol_id: "Chemotherapy protocol"
       holiday:
         slot_count: "Slot count"
         slot_duration_minutes: "Slot duration (min)"
@@ -1796,7 +1796,8 @@ en:
         upper: "Diagnosis"
         lower: "Procedure Name"
       protocol:
-        upper: "Protocol"
+        upper: "Chemotherapy"
+        lower: "protocol"
       operator_assistant:
         upper: "Operator"
         lower: "Assistant"
@@ -1949,7 +1950,7 @@ en:
       scheduled_surgery_date: "Scheduled Surgery Date"
       attending_doctor: "Attending Doctor"
       ward: "Ward"
-      protocol: "Protocol"
+      protocol: "Chemotherapy protocol"
   exports:
     index:
       title: "Data download"

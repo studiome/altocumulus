@@ -22,7 +22,7 @@ module LedgerColumns
             cell(segment(hospitalization.diagnosis_names_display, :secondary),
                  (names.presence || [ dash ]).map { |name| segment(name, :primary) })
           },
-          column(:protocol, 90, min: 70, includes: [ :chemotherapy_protocol ]) { |hospitalization, _|
+          column(:protocol, 100, min: 80, includes: [ :chemotherapy_protocol ]) { |hospitalization, _|
             cell(segment(hospitalization.chemotherapy_protocol&.name.presence || dash, :primary))
           },
           column(:purpose, 80, min: 60) { |hospitalization, _|

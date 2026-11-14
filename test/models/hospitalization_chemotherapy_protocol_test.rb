@@ -63,4 +63,9 @@ class HospitalizationChemotherapyProtocolTest < ActiveSupport::TestCase
     assert copy.persisted?, copy.errors.full_messages.to_sentence
     assert_equal @protocol, copy.chemotherapy_protocol
   end
+
+  test "the field is labelled chemotherapy protocol in both languages" do
+    assert_equal "Chemotherapy protocol", I18n.with_locale(:en) { Hospitalization.human_attribute_name(:chemotherapy_protocol_id) }
+    assert_equal "化学療法プロトコル", I18n.with_locale(:ja) { Hospitalization.human_attribute_name(:chemotherapy_protocol_id) }
+  end
 end

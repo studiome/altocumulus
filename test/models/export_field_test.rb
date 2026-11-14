@@ -35,6 +35,11 @@ class ExportFieldTest < ActiveSupport::TestCase
     assert_raises(KeyError) { ExportField.find(:hospitalization, :surgery_date) }
   end
 
+  test "the protocol column is headed chemotherapy protocol in both languages" do
+    assert_equal "Chemotherapy protocol", I18n.with_locale(:en) { ExportField.find(:hospitalization, :protocol).header }
+    assert_equal "化学療法プロトコル", I18n.with_locale(:ja) { ExportField.find(:hospitalization, :protocol).header }
+  end
+
   test "every field has a header in English and Japanese" do
     %i[en ja].each do |locale|
       I18n.with_locale(locale) do

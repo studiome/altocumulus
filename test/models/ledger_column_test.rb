@@ -442,8 +442,12 @@ class LedgerColumnTest < ActiveSupport::TestCase
     hospitalization.assign_attributes(purpose: "chemotherapy", chemotherapy_protocol: chemotherapy_protocols(:protocol_b))
     assert_equal [ "Protocol B" ], texts(cell(:hospitalization, :protocol, hospitalization).upper)
     assert_equal [], cell(:hospitalization, :protocol, hospitalization).lower
-    assert_equal "Protocol", LedgerColumn.find(:hospitalization, :protocol).header_upper
-    assert_nil LedgerColumn.find(:hospitalization, :protocol).header_lower
+    assert_equal "Chemotherapy", LedgerColumn.find(:hospitalization, :protocol).header_upper
+    assert_equal "protocol", LedgerColumn.find(:hospitalization, :protocol).header_lower
+    I18n.with_locale(:ja) do
+      assert_equal "化学療法", LedgerColumn.find(:hospitalization, :protocol).header_upper
+      assert_equal "プロトコル", LedgerColumn.find(:hospitalization, :protocol).header_lower
+    end
     assert_not LedgerColumn.find(:hospitalization, :protocol).flex?
   end
 

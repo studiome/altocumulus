@@ -114,7 +114,8 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     assert_select "tr.oc-empty td", text: "予定なし", minimum: 1
 
     get operations_calendar_url, params: WINDOW.merge(view: "chemotherapy")
-    assert_select "th", text: "プロトコル"
+    assert_select "th span", text: "化学療法"
+    assert_select "th span", text: "プロトコル"
     assert_select "tr.oc-empty td", text: "予定なし", minimum: 1
     assert_no_match(/[Tt]ranslation missing/, response.body)
 

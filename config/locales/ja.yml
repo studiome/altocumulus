@@ -302,7 +302,7 @@ ja:
         scheduled_admission_date: "入院予定日"
         scheduled_procedure_date: "検査処置予定日"
         scheduled_surgery_date: "手術予定日"
-        chemotherapy_protocol_id: "プロトコル"
+        chemotherapy_protocol_id: "化学療法プロトコル"
         source_department_id: "転科元診療科"
         submitted_on: "提出日"
         team_id: "担当チーム"
@@ -1707,7 +1707,8 @@ ja:
         upper: "診断名"
         lower: "検査・処置名"
       protocol:
-        upper: "プロトコル"
+        upper: "化学療法"
+        lower: "プロトコル"
       operator_assistant:
         upper: "術者"
         lower: "助手"
@@ -1856,7 +1857,7 @@ ja:
       scheduled_surgery_date: "手術予定日"
       attending_doctor: "主治医"
       ward: "病棟"
-      protocol: "プロトコル"
+      protocol: "化学療法プロトコル"
   exports:
     index:
       title: "データダウンロード"
