@@ -717,6 +717,25 @@ ja:
       name_label: "診断名"
       name_placeholder: "例: 急性虫垂炎"
 
+  chemotherapy_protocols:
+    picker:
+      title: "化学療法プロトコルを選択"
+      description: "プロトコルマスタを名称で検索してください。"
+      keyword_label: "キーワード"
+      keyword_placeholder: "プロトコル名"
+      empty_filtered: "該当するプロトコルが見つかりません。"
+      empty_no_filter: "プロトコルがまだ登録されていません。"
+      choose_button: "選択"
+      unselected: "プロトコルが選択されていません"
+      new_link: "新規プロトコルを登録"
+      new_title: "新規プロトコルを登録"
+      new_description: "このフォームを離れずにプロトコルマスタへ追加できます。"
+      back_to_search: "検索に戻る"
+      name_placeholder: "例: FOLFOX"
+      submit: "プロトコルを登録"
+      created_notice: "プロトコルを登録しました。"
+      added_helper_text: "登録したプロトコルを選択しました。"
+
   surgery_procedures:
     index:
       title: "術式"

@@ -1,0 +1,39 @@
+<%# locals: record %>
+<%= turbo_frame_tag "chemotherapy_protocol_picker_frame", data: { action: "turbo:frame-load->picker-modal#open" } do %>
+  <div class="p-6">
+    <div class="flex items-start justify-between gap-4 mb-6">
+      <div>
+        <h2 class="text-2xl font-bold"><%= t("chemotherapy_protocols.picker.new_title") %></h2>
+        <p class="text-sm text-base-content/60"><%= t("chemotherapy_protocols.picker.new_description") %></p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-action="picker-modal#close"><%= t("common.close") %></button>
+    </div>
+
+    <div class="mb-4">
+      <%= link_to t("chemotherapy_protocols.picker.back_to_search"), picker_chemotherapy_protocols_path, class: "app-inline-link text-sm", data: { turbo_frame: "chemotherapy_protocol_picker_frame" } %>
+    </div>
+
+    <%# Only the name: the protocol starts active at the next position (the
+        full master form with position and active is for admins). %>
+    <%= form_with(model: record, url: chemotherapy_protocols_path, class: "app-form") do |form| %>
+      <% if record.errors.any? %>
+        <div role="alert" class="alert alert-error mb-6">
+          <ul class="list-disc ml-6">
+            <% record.errors.each do |error| %>
+              <li><%= error.full_message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="app-field">
+        <%= form.label :name, class: "app-field-label" %>
+        <%= form.text_field :name, class: "input w-full focus:input-primary", placeholder: t("chemotherapy_protocols.picker.name_placeholder") %>
+      </div>
+
+      <div class="pt-4">
+        <%= form.submit t("chemotherapy_protocols.picker.submit"), class: "btn btn-primary w-full" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

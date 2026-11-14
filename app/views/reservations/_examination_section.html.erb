@@ -20,11 +20,20 @@
         <%= reservation_field_error(reservation, "hospitalization.procedure_name") %>
       </div>
       <%# Only chemotherapy-type purposes use a protocol; purpose-fields shows it and disables it while hidden. %>
-      <div class="app-field md:col-span-2 <%= "hidden" unless hospitalization.uses_chemotherapy_protocol? %>"
+      <div class="md:col-span-2 <%= "hidden" unless hospitalization.uses_chemotherapy_protocol? %>"
            data-purpose-fields-target="protocolSection" data-protocol-purposes="<%= protocol_purposes_attribute %>">
-        <%= hospitalization_label hf, :chemotherapy_protocol_id %>
-        <%= hf.collection_select :chemotherapy_protocol_id, ChemotherapyProtocol.choices_for(hospitalization.chemotherapy_protocol_id), :id, :name,
-              { include_blank: true }, { class: "select w-full focus:select-primary" }.merge(reservation_aria(reservation, "hospitalization.chemotherapy_protocol_id")) %>
+        <%= render "shared/picker_field",
+              form: hf,
+              attribute: :chemotherapy_protocol_id,
+              label_html: hospitalization_label(hf, :chemotherapy_protocol_id),
+              selected_label: hospitalization.chemotherapy_protocol&.name,
+              placeholder: t("chemotherapy_protocols.picker.unselected"),
+              picker_path: picker_chemotherapy_protocols_path,
+              picker_frame: "chemotherapy_protocol_picker_frame",
+              choose_label: t("chemotherapy_protocols.picker.choose_button"),
+              clear_label: t("common.clear"),
+              input_options: reservation_aria(reservation, "hospitalization.chemotherapy_protocol_id"),
+              event_name: "protocol:picked" %>
         <%= reservation_field_error(reservation, "hospitalization.chemotherapy_protocol_id") %>
       </div>
     </div>

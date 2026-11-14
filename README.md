@@ -44,7 +44,7 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Patient ledger | `/patients` | Patient master data, with keyword search by name or hospital ID and pagination |
 | Patient diagnoses | `/patients/:id/patient_diagnoses` | Per-patient diagnosis history referencing the diagnosis master, holding the diagnosis date and laterality |
 | Surgery records | `/surgeries` | Surgery date (may be "undecided"), procedures (up to 5), anesthesia method, duration, elective/emergency type, slot category (regular / joint / backup / off-slot), operator/assistant/operation order, location / device / partner and performing department. Linked to patient diagnoses and, optionally, to the hospitalization it belongs to. Searchable by operator |
-| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / chemoradiotherapy / other, the last requiring a reason), emergency admission, transfer status, reservation doctor, referral source, ADL / infections, treatment protocol (chemotherapy / chemoradiotherapy only, chosen from the Chemotherapy Protocols master), clinical comment (also editable from the surgery form), administrator confirmation, soft delete/restore, and rebooking (copy). The list's "New Hospitalization" button opens the reservation form |
+| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / chemoradiotherapy / other, the last requiring a reason), emergency admission, transfer status, reservation doctor, referral source, ADL / infections, chemotherapy protocol (chemotherapy / chemoradiotherapy only, chosen in a picker modal from the Chemotherapy Protocols master, where a new one can be registered in place), clinical comment (also editable from the surgery form), administrator confirmation, soft delete/restore, and rebooking (copy). The list's "New Hospitalization" button opens the reservation form |
 | Reservation form (入約) | `/reservations/new`, `/reservations/:hospitalization_id/edit` | One screen that creates or edits a hospitalization and, for the purpose surgery, its surgery together (see [Reservation form](#reservation-form)). The calendar's booking flow and the hospitalization list's "New Hospitalization" button go through it; the separate hospitalization and surgery forms remain for administration and detail edits |
 | Surgery slot schedule | `/surgery_schedule` | Weekly calendar showing the surgeries and used time per slot, warning about slot overruns, unassigned surgeries, and holidays. The same week can be printed as a landscape A4 PDF (`/surgery_schedule/pdf?start_date=YYYY-MM-DD`, any start date) in black and white, with operator/assistant, referral source, and a heading per day (date, closed-day name / note, slot count when overridden, slot usage in minutes, case count, special slot usage); emergency rows are shaded and rows outside the regular slot time lightly shaded (legend under the title) |
 | Data download (admin / data manager only) | `/exports` | CSV exports defined in the site config, with a date range (and team) per export (see [CSV export](#csv-export)) |
@@ -66,8 +66,8 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 days / day notes / slot overrides), elective slot rules, departments, surgery locations, surgical
 devices, teams and team terms can be viewed by every signed-in user, but creating, editing and deleting
 them (and the "new" buttons) require the `admin` role; others are redirected with a "not authorized"
-notice. The one exception is data entry: any signed-in user may register a *new* diagnosis or surgery
-procedure from inside a picker modal (a turbo-frame request) while booking a hospitalization or surgery.
+notice. The one exception is data entry: any signed-in user may register a *new* diagnosis, surgery
+procedure or chemotherapy protocol from inside a picker modal (a turbo-frame request) while booking a hospitalization or surgery.
 
 **Reservation form.** The calendar books through one form object (`Reservation`) that saves a
 hospitalization and, for the purpose "surgery", its surgery in a single transaction, with live
@@ -655,13 +655,15 @@ error.
 
 ### Picker modals
 
-Patients, diagnosis names, procedures, and a surgery's related patient diagnoses are all chosen in a
+Patients, diagnosis names, procedures, chemotherapy protocols, and a surgery's related patient diagnoses are all chosen in a
 modal holding a lazily loaded turbo-frame -- searchable and paginated -- rather than in a `<select>`.
 The field itself is a hidden input plus a read-only display that the picked record fills in.
 
-A new diagnosis name or procedure can also be created from inside that same modal, without leaving
+A new diagnosis name, procedure or chemotherapy protocol can also be created from inside that same modal, without leaving
 the form being filled in: on success the picker frame is replaced by a confirmation that immediately
-selects the newly created record on the row that opened the modal.
+selects the newly created record on the row that opened the modal. The chemotherapy protocol field is
+optional and has a Clear button; a protocol that was deactivated after it was chosen stays shown and saved
+until cleared, but is not offered by the picker.
 
 ### Bulk user registration from CSV
 

@@ -1,0 +1,5 @@
+<% if turbo_frame_request? %>
+  <%= render "chemotherapy_protocols/picker_form_frame", record: @record %>
+<% else %>
+  <%= render template: "master_records/new" %>
+<% end %>

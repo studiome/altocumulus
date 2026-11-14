@@ -904,11 +904,16 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
 
   # ---- chemotherapy protocol ----
 
-  test "the standalone form offers the protocol select, hidden unless the purpose uses one" do
+  test "the standalone form offers the protocol picker, hidden unless the purpose uses one" do
     get edit_hospitalization_url(@hospitalization)
-    assert_select "div[data-purpose-fields-target=protocolSection].hidden select[name='hospitalization[chemotherapy_protocol_id]']" do
-      assert_select "option[value='#{chemotherapy_protocols(:protocol_a).id}']"
+    assert_select "div[data-purpose-fields-target=protocolSection].hidden" do
+      assert_select "input[type=hidden][name='hospitalization[chemotherapy_protocol_id]']"
+      assert_select "a[href=?]", picker_chemotherapy_protocols_path, text: "Select Protocol"
+      assert_select "button[data-action='picker-field#clear']", text: "Clear"
+      assert_select "label", text: "Chemotherapy protocol"
+      assert_select "select", false
     end
+    assert_select "dialog#chemotherapy_protocol_picker_modal turbo-frame#chemotherapy_protocol_picker_frame"
 
     @hospitalization.update!(purpose: "chemotherapy")
     get edit_hospitalization_url(@hospitalization)
@@ -921,7 +926,7 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal protocol, @hospitalization.reload.chemotherapy_protocol
 
     get hospitalization_url(@hospitalization)
-    assert_select "span", text: "Protocol"
+    assert_select "span", text: "Chemotherapy protocol"
     assert_select "span", text: protocol.name
 
     get hospitalization_url(@hospitalization, format: :json)
@@ -932,7 +937,7 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
 
   test "show has no protocol line for other purposes" do
     get hospitalization_url(@hospitalization)
-    assert_select "span", text: "Protocol", count: 0
+    assert_select "span", text: "Chemotherapy protocol", count: 0
     get hospitalization_url(@hospitalization, format: :json)
     assert_nil JSON.parse(response.body)["chemotherapy_protocol"]
   end

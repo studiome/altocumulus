@@ -121,4 +121,27 @@ class HospitalizationsTest < ApplicationSystemTestCase
     def diagnosis_rows
       all("[data-hospitalization-diagnosis-fields-target='item']")
     end
+
+  test "the protocol picker on the hospitalization form chooses, registers and clears" do
+    visit new_hospitalization_path
+    assert_no_link "Select Protocol"
+    select "Chemotherapy", from: "Purpose"
+
+    choose_protocol "Protocol A"
+    assert_selector "[data-picker-field-target=display]", text: "Protocol A"
+    assert_equal chemotherapy_protocols(:protocol_a).id.to_s, find("#hospitalization_chemotherapy_protocol_id", visible: :all).value
+
+    open_protocol_picker
+    within("turbo-frame#chemotherapy_protocol_picker_frame") do
+      click_on "Register New Protocol"
+      fill_in "Name", with: "Form made"
+      click_on "Register Protocol"
+    end
+    assert_no_selector "dialog#chemotherapy_protocol_picker_modal[open]"
+    assert_selector "[data-picker-field-target=display]", text: "Form made"
+
+    click_on "Clear"
+    assert_selector "[data-picker-field-target=display]", text: "No protocol selected"
+    assert_equal "", find("#hospitalization_chemotherapy_protocol_id", visible: :all).value
+  end
 end

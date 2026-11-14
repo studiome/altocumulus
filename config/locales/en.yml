@@ -633,6 +633,25 @@ en:
       name_label: "Diagnosis Name"
       name_placeholder: "e.g. Acute appendicitis"
 
+  chemotherapy_protocols:
+    picker:
+      title: "Select Chemotherapy Protocol"
+      description: "Search the protocol master by name."
+      keyword_label: "Keyword"
+      keyword_placeholder: "Protocol name"
+      empty_filtered: "No matching protocols found."
+      empty_no_filter: "No protocols have been registered yet."
+      choose_button: "Select Protocol"
+      unselected: "No protocol selected"
+      new_link: "Register New Protocol"
+      new_title: "Register New Protocol"
+      new_description: "Add a protocol to the master without leaving this form."
+      back_to_search: "Back to search"
+      name_placeholder: "e.g. FOLFOX"
+      submit: "Register Protocol"
+      created_notice: "Protocol was successfully registered."
+      added_helper_text: "The new protocol has been selected."
+
   surgery_procedures:
     index:
       title: "Surgery Procedures"

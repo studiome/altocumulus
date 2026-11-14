@@ -109,21 +109,24 @@ class ReservationsTest < ApplicationSystemTestCase
     assert_text "Colonoscopy"
   end
 
-  test "the protocol select follows the purpose, is not submitted when hidden, and the choice shows on the calendar" do
+  test "the protocol field follows the purpose, is not submitted when hidden, and the choice shows on the calendar" do
     visit new_reservation_path(purpose: "examination")
-    assert_no_select "Protocol"
+    assert_no_button "Select Protocol"
+    assert_no_link "Select Protocol"
 
     select "Chemotherapy", from: "Purpose"
-    assert_select "Protocol", options: [ "", "Protocol A", "Protocol B" ]
-    select "Protocol B", from: "Protocol"
+    assert_link "Select Protocol"
+    assert_selector "label", text: "Chemotherapy protocol"
+    choose_protocol "Protocol B"
+    assert_selector "[data-picker-field-target=display]", text: "Protocol B"
 
     select "Examination / Procedure", from: "Purpose"
-    assert_no_select "Protocol"
+    assert_no_link "Select Protocol"
     assert find("#reservation_hospitalization_chemotherapy_protocol_id", visible: :all).disabled?
 
     select "Chemoradiotherapy", from: "Purpose"
-    assert_select "Protocol", selected: "Protocol B"
-    assert_not find("#reservation_hospitalization_chemotherapy_protocol_id").disabled?
+    assert_selector "[data-picker-field-target=display]", text: "Protocol B"
+    assert_not find("#reservation_hospitalization_chemotherapy_protocol_id", visible: :all).disabled?
 
     choose_patient "H002 - Jane Smith"
     set_date "reservation_hospitalization_scheduled_admission_date", @admission
@@ -140,11 +143,90 @@ class ReservationsTest < ApplicationSystemTestCase
       assert_text "Jane Smith"
       assert_text "Protocol B"
     end
+    visit operations_calendar_path(view: "chemotherapy", start: @admission.iso8601, days: 1)
+    within("tbody#day-#{@admission.iso8601}") do
+      assert_text "Jane Smith"
+      assert_text "Protocol B"
+    end
+  end
+
+  test "the protocol picker offers only active protocols and filters by keyword" do
+    visit new_reservation_path(purpose: "chemotherapy")
+    open_protocol_picker
+    within("turbo-frame#chemotherapy_protocol_picker_frame") do
+      assert_button "Protocol A"
+      assert_button "Protocol B"
+      assert_no_button "Retired Protocol"
+      fill_in "Keyword", with: "Protocol B"
+      click_on "Search"
+      assert_button "Protocol B"
+      assert_no_button "Protocol A"
+    end
+  end
+
+  test "a non-admin registers a new protocol from inside the modal and it lands in the field and is saved" do
+    # The suite signs in as the admin; take that role away so every request of
+    # this session is a plain user's.
+    users(:admin).update!(roles: [ "user" ])
+    visit new_reservation_path(purpose: "chemotherapy")
+
+    open_protocol_picker
+    within("turbo-frame#chemotherapy_protocol_picker_frame") do
+      click_on "Register New Protocol"
+      fill_in "Name", with: "Brand New Regimen"
+      assert_difference "ChemotherapyProtocol.count", 1 do
+        click_on "Register Protocol"
+        assert_no_selector "input[name='chemotherapy_protocol[name]']", wait: 5
+      end
+    end
+    assert_no_selector "dialog#chemotherapy_protocol_picker_modal[open]"
+    assert_selector "[data-picker-field-target=display]", text: "Brand New Regimen"
+    created = ChemotherapyProtocol.find_by!(name: "Brand New Regimen")
+    assert created.active?
+    assert_equal created.id.to_s, find("#reservation_hospitalization_chemotherapy_protocol_id", visible: :all).value
+
+    choose_patient "H002 - Jane Smith"
+    set_date "reservation_hospitalization_scheduled_admission_date", @admission
+    choose_diagnosis "Pneumonia"
+    click_on "Register Reservation"
+    assert_text "Reservation was successfully registered."
+    assert_equal created, Hospitalization.order(:id).last.chemotherapy_protocol
+  end
+
+  test "a duplicate protocol name shows its error inside the modal" do
+    visit new_reservation_path(purpose: "chemotherapy")
+    open_protocol_picker
+    within("turbo-frame#chemotherapy_protocol_picker_frame") do
+      click_on "Register New Protocol"
+      fill_in "Name", with: "Protocol A"
+      click_on "Register Protocol"
+      assert_selector ".alert-error", text: /taken/i
+    end
+    assert_selector "dialog#chemotherapy_protocol_picker_modal[open]"
+  end
+
+  test "clearing the protocol field saves it empty, and an inactive protocol stays until cleared" do
+    hospitalization = hospitalizations(:one)
+    hospitalization.update_columns(purpose: "chemotherapy", chemotherapy_protocol_id: chemotherapy_protocols(:retired_protocol).id)
+
+    visit edit_reservation_path(hospitalization)
+    assert_selector "[data-picker-field-target=display]", text: "Retired Protocol"
+    click_on "Save Reservation"
+    assert_text "Reservation was successfully updated."
+    assert_equal chemotherapy_protocols(:retired_protocol).id, hospitalization.reload.chemotherapy_protocol_id
+
+    visit edit_reservation_path(hospitalization)
+    click_on "Clear"
+    assert_selector "[data-picker-field-target=display]", text: "No protocol selected"
+    assert_equal "", find("#reservation_hospitalization_chemotherapy_protocol_id", visible: :all).value
+    click_on "Save Reservation"
+    assert_text "Reservation was successfully updated."
+    assert_nil hospitalization.reload.chemotherapy_protocol_id
   end
 
   test "switching away from a protocol purpose submits no protocol" do
     visit new_reservation_path(purpose: "chemotherapy")
-    select "Protocol A", from: "Protocol"
+    choose_protocol "Protocol A"
     select "Examination / Procedure", from: "Purpose"
 
     choose_patient "H002 - Jane Smith"
@@ -163,7 +245,7 @@ class ReservationsTest < ApplicationSystemTestCase
     assert_current_path(/\/reservations\/new/)
     assert_equal "chemotherapy", find("#reservation_hospitalization_purpose").value
     assert_field "Scheduled procedure date", with: day.iso8601
-    select "Protocol A", from: "Protocol"
+    choose_protocol "Protocol A"
     choose_patient "H002 - Jane Smith"
     choose_diagnosis "Pneumonia"
     set_date "reservation_hospitalization_scheduled_admission_date", day

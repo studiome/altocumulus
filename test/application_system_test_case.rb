@@ -85,6 +85,23 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
                        dialog: "surgery_procedure_picker_modal", result: name, keyword: keyword, scope: scope
   end
 
+  # The protocol field sits low on the form, near the bottom edge of the window;
+  # jump it to the middle first so the click lands on the button.
+  def open_protocol_picker
+    link = find_link("Select Protocol")
+    page.execute_script("arguments[0].scrollIntoView({ block: 'center', behavior: 'instant' })", link)
+    link.click
+  end
+
+  def choose_protocol(name, keyword: nil)
+    open_protocol_picker
+    within("turbo-frame#chemotherapy_protocol_picker_frame") do
+      fill_in "Keyword", with: keyword if keyword
+      click_on name
+    end
+    assert_no_selector "dialog#chemotherapy_protocol_picker_modal[open]"
+  end
+
   # Changing the patient re-renders the surgery form's diagnosis section (and
   # with it the picker link, which carries the patient id), so tests must let
   # that turbo-frame land before opening the picker.

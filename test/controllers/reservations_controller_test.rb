@@ -443,17 +443,20 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
     params
   end
 
-  test "new renders the protocol select with the active protocols and a blank choice, hidden for other purposes" do
+  test "new renders the protocol picker field, hidden for other purposes, with one modal outside the form" do
     get new_reservation_url, params: { purpose: "examination" }
-    assert_select "div[data-purpose-fields-target=protocolSection].hidden select[name='reservation[hospitalization][chemotherapy_protocol_id]']" do
-      assert_select "option[value='']"
-      assert_select "option[value='#{chemotherapy_protocols(:protocol_a).id}']"
-      assert_select "option[value='#{chemotherapy_protocols(:retired_protocol).id}']", false
+    assert_select "div[data-purpose-fields-target=protocolSection].hidden" do
+      assert_select "input[type=hidden][name='reservation[hospitalization][chemotherapy_protocol_id]']"
+      assert_select "a[href=?]", picker_chemotherapy_protocols_path, text: "Select Protocol"
+      assert_select "button[data-action='picker-field#clear']", text: "Clear"
+      assert_select "select", false
     end
+    assert_select "dialog#chemotherapy_protocol_picker_modal", 1
+    assert_select "form dialog#chemotherapy_protocol_picker_modal", false
 
     get new_reservation_url, params: { purpose: "chemoradiotherapy" }
     assert_select "div[data-purpose-fields-target=protocolSection].hidden", false
-    assert_select "div[data-purpose-fields-target=protocolSection] label", text: "Protocol"
+    assert_select "div[data-purpose-fields-target=protocolSection] label", text: "Chemotherapy protocol"
   end
 
   test "create saves the protocol for a chemotherapy admission" do
@@ -475,7 +478,8 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
       post reservations_url, params: params
     end
     assert_response :unprocessable_entity
-    assert_select "select[name='reservation[hospitalization][chemotherapy_protocol_id]'] option[selected][value='#{chemotherapy_protocols(:protocol_a).id}']"
+    assert_select "input[type=hidden][name='reservation[hospitalization][chemotherapy_protocol_id]'][value='#{chemotherapy_protocols(:protocol_a).id}']"
+    assert_select "[data-picker-field-target=display]", text: "Protocol A"
   end
 
   test "required protocol error shows next to the field and the label is marked" do
@@ -487,7 +491,7 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
       post reservations_url, params: chemo_params(protocol: nil)
       assert_response :unprocessable_entity
       assert_select "#reservation-error-hospitalization-chemotherapy_protocol_id, [id='reservation-error-hospitalization-chemotherapy-protocol-id']", text: /can't be blank/
-      assert_select "select[name='reservation[hospitalization][chemotherapy_protocol_id]'][aria-invalid=true]"
+      assert_select "input[name='reservation[hospitalization][chemotherapy_protocol_id]'][aria-invalid=true]"
     end
   end
 
@@ -499,7 +503,8 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal chemotherapy_protocols(:retired_protocol), hospitalization.reload.chemotherapy_protocol
 
     get edit_reservation_url(hospitalization)
-    assert_select "select[name='reservation[hospitalization][chemotherapy_protocol_id]'] option[selected][value='#{chemotherapy_protocols(:retired_protocol).id}']"
+    assert_select "input[type=hidden][name='reservation[hospitalization][chemotherapy_protocol_id]'][value='#{chemotherapy_protocols(:retired_protocol).id}']"
+    assert_select "[data-picker-field-target=display]", text: "Retired Protocol"
 
     patch reservation_url(hospitalization), params: { reservation: { hospitalization: { chemotherapy_protocol_id: "" } } }
     assert_nil hospitalization.reload.chemotherapy_protocol
