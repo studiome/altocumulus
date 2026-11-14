@@ -53,6 +53,8 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Audit log | `/audit_events` | Records and displays create/update/delete of patients, surgeries, hospitalizations, and case databases with the operator, IP address, and before/after values |
 | Master data | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` `/departments` `/surgery_locations` `/surgical_devices` `/teams` | Diagnosis names, procedures, per-weekday slot rules (fractional slot counts supported), holidays / per-day comments and slot overrides, departments, surgery locations and surgical devices (the latter two with weekly special slot lane counts), and teams with their terms and members (`/teams` only with `features.teams`) |
 | Case databases | `/case_databases` | Named patient registries with custom fields (text / number / select) defined by a data manager. Any signed-in user can add patients, enter values, and export the registry as CSV; only a data manager can create, edit, or delete a database, its fields, or a patient entry |
+| Live updates | calendar (all three tabs), reservation form, `/patients/:id`, `/hospitalizations/:id`, `/surgeries/:id`, and the `/patients`, `/surgeries`, `/hospitalizations` and `/hospitalizations/deleted` lists | Open screens follow other users' changes without a reload: a calendar day is replaced when its data changes, the reservation form's slot summary / admission count / side calendar reload, and the detail pages and the four lists refresh (see [Live updates](#live-updates)) |
+| Concurrent edit warning | the edit forms of reservations, hospitalizations, surgeries and patients | A save made on top of another user's newer change is refused with a warning naming who changed the record and when, offering "Load the latest" or "Save anyway"; while the form is open a notice appears as soon as another user updates the record (see [Concurrent edit warning](#concurrent-edit-warning)) |
 | Account settings | `/account` | Change your own name, login id, and password, and switch the display language |
 | User management (admin only) | `/admin/users` | Create, edit, and deactivate users and reset passwords. The last active admin can be neither deactivated nor demoted |
 | Bulk user registration (admin only) | `/admin/user_import/new` | Register users from a CSV of login ids and passwords. Existing login ids are skipped, and every line is reported back as registered / skipped / failed |
@@ -262,6 +264,10 @@ Rake tasks (`lib/tasks/`):
 ### Testing
 
 Development follows Red/Green TDD. Tests are Minitest + fixtures.
+
+In development the cable adapter is `async` (one server process, so broadcasts reach browsers
+only from the process that serves them); in tests it is the `test` adapter, which also delivers
+in-process, so a system test that changes a record in the test body reaches the headless browser.
 
 ```bash
 bin/rails test          # model, controller, and integration tests (no system tests)
@@ -521,6 +527,13 @@ as `/login` opt out via `skip_before_action`), and `require_admin` gates the adm
 and hospitalization confirm/restore/rebook). `require_data_manager` additionally gates creating,
 editing, and deleting case databases and their fields, and removing a patient entry.
 
+The live update socket (`/cable`, see [Live updates](#live-updates)) accepts only a signed-in session
+that is not idle and whose password fingerprint matches (the same rule as for ordinary requests); signing
+out or an idle expiry disconnects that user's sockets. Requests the browser makes by itself for live
+updates carry `X-Live-Update: 1` and do not count as activity, so an unattended screen still times out
+and its next automatic refresh lands on the sign-in page. The Content Security Policy allows
+`connect-src` to the app's own origin and its `ws://` / `wss://` equivalent for this socket.
+
 The session stores the time of last access; going longer than `config.x.session_idle_timeout`
 (10 minutes by default, configurable via `SESSION_IDLE_TIMEOUT_MINUTES`) without activity expires
 the session and records a `timeout` event in `AccessLog`. Successful and failed logins and logouts
@@ -530,6 +543,44 @@ BCrypt comparison so the two cannot be told apart by response time either.
 
 `User` also validates that **the last active administrator cannot be deactivated or demoted**,
 preventing the system from ending up with no administrator.
+
+### Live updates
+
+Open screens update when another user changes data. The design is signal-only: the server never
+broadcasts rendered HTML or patient data, because what a screen shows depends on the viewer
+(administrator-only parts, the `mine` / team filters). After a record is committed it broadcasts a tiny
+signal over one global stream (`LiveUpdate`): the affected dates (ISO) and the `Model:id` keys of the
+changed records, never names or any other patient data. Each browser then re-fetches what it shows with
+its own session: a calendar day is fetched from `/calendar_days/:date` and swapped in (without
+morphing, so the frozen columns keep their measured offsets), the reservation form reloads its live
+frames for the dates named, and the detail pages and lists refresh the current URL with a Turbo morph
+(filters, sort and page stay as the URL has them). A day with an open note / special slot editor, a
+focused form field, or an open dialog is not replaced; the refresh waits and retries, and values typed
+into a list's filter but not submitted are kept. Bursts of signals cause one refresh, and a list
+refreshes at most about every 2 seconds. A tab that was hidden for 30 seconds or more refreshes
+everything when it becomes visible again.
+
+Deliberately not live: the search page, the dashboard, the master screens, the audit log, and a change
+to a master's name (for example renaming a `Diagnosis`), which shows up on the next load. A failed
+broadcast is only logged; it never breaks a save. The signal needs a WebSocket (see
+[Deployment](#deployment)); without one the app works as before, just without automatic refresh.
+
+### Concurrent edit warning
+
+When two people edit the same record, the second save does not silently overwrite the first. The
+"version" of a record is the highest audit event id of the record (and of its join rows such as
+diagnoses and procedure selections), so no column or migration is involved; a save that changes
+nothing writes no audit event and does not count. Each edit form (reservation, hospitalization,
+surgery, patient) carries the version it was rendered with. If the record has changed since, the save
+is refused, the form is shown again with what the user typed and a warning that names who changed the
+record and when, with "Load the latest" (reloads the edit page, discarding the input) and "Save
+anyway" (saves over the other change). Because the fresh version is put on the re-rendered form, a
+further change in between warns again. While a form is open, a notice with the same "Load the latest"
+link appears when another user updates the record (the reservation form watches its hospitalization
+and surgery, not the patient); it never touches the input or reloads by itself.
+
+This is a warning that can be overridden, not a lock. Known gap: the surgery form's version covers the
+surgery only, not the hospitalization whose clinical comment that form can also edit.
 
 ### Hospitalization reservation lifecycle
 
@@ -740,6 +791,15 @@ This configuration assumes a single web server: `SOLID_QUEUE_IN_PUMA` runs the S
 supervisor inside the same Puma process, and `config/deploy.yml` bind-mounts SQLite's storage
 directory from a specific host path (`/srv/altocumulus/storage`) rather than a shared volume.
 
+### WebSocket for live updates
+
+[Live updates](#live-updates) use Action Cable at `/cable` (`<prefix>/cable` under a subpath).
+Any front proxy (IIS ARR, nginx, Caddy, ...) must pass WebSocket upgrades (the `Upgrade` and
+`Connection` headers) to that path and keep the original `Host` header, because Action Cable checks the
+request origin against the host. Without a working WebSocket the app keeps working as before, only
+without automatic refresh. Production uses Solid Cable with the `cable` SQLite database (messages are
+kept for one day; the database is regenerable and not backed up, see [Database backup](#database-backup)).
+
 ### Serving under a subpath
 
 To serve the app under a URL prefix such as `http://host/newsystem/`, set the environment variable
@@ -751,6 +811,8 @@ included). Unset, the app is served at `/` as usual. Notes:
 - The health check moves to `/newsystem/up`. Set `proxy.healthcheck.path: /newsystem/up` in
   `config/deploy.yml`, otherwise kamal-proxy's default `/up` check fails and the deploy is rolled back.
 - Paths outside the prefix (including `/up`) return 404.
+- Live updates use the WebSocket endpoint `/newsystem/cable`; the proxy must pass WebSocket upgrades
+  there too (see [WebSocket for live updates](#websocket-for-live-updates)).
 - Session cookies keep the path `/`, so do not run another Rails app on the same host name that uses
   the same cookie name.
 
@@ -982,7 +1044,8 @@ docker run -d --name altocumulus -p 80:80 \
 ```
 
 There's no SSL termination here, so put nginx/Caddy in front in production and enable
-`assume_ssl` / `force_ssl` accordingly.
+`assume_ssl` / `force_ssl` accordingly. That proxy must also pass WebSocket upgrades for `/cable` (see
+[WebSocket for live updates](#websocket-for-live-updates)).
 
 ### Database backup
 

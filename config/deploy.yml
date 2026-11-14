@@ -73,6 +73,8 @@ env:
 
     # Serve the app under a URL subpath (e.g. http://host/newsystem/). The front proxy must pass
     # the prefix through unchanged; also set proxy.healthcheck.path above to /newsystem/up.
+    # Live updates use a WebSocket at <prefix>/cable (/cable without a prefix): the front proxy must
+    # also pass WebSocket upgrades (Upgrade / Connection headers) there and keep the Host header.
     # RAILS_RELATIVE_URL_ROOT: /newsystem
 
     # Log everything from Rails
