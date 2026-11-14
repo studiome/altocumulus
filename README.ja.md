@@ -43,14 +43,14 @@ Node のビルドパイプラインも外部の DB サーバーも必要あり�
 | 患者台帳 | `/patients` | 患者基本情報の管理。氏名・患者 ID でのキーワード検索、ページネーション対応 |
 | 患者診断 | `/patients/:id/patient_diagnoses` | 診断マスタを参照した患者ごとの診断履歴。診断日と左右区分（laterality）を保持 |
 | 手術記録 | `/surgeries` | 手術日（「未定」も選択可）・術式（最大 5 件）・麻酔法・所要時間・予定/緊急区分・術者/助手/手術順。枠区分（通常枠・同時手術・待機・枠外）、手術場所・機器・相手診療科/実施診療科。患者診断のほか、所属する入院にも（任意で）紐付け。術者で検索可能 |
-| 入院記録 | `/hospitalizations` | 予約段階（予定入院日・予定手術日）から実入院（実績入院日）・退院までのライフサイクル、入院目的（手術/検査・処置/化学療法/化学放射線療法/その他。その他は理由必須）、緊急入院、転入状況、予約医、紹介元、ADL/感染症、臨床コメント（手術フォームからも編集可）、管理者確認、論理削除/復元、再予約（コピー）に対応。一覧の「新規入院」ボタンは入約フォームを開きます |
+| 入院記録 | `/hospitalizations` | 予約段階（予定入院日・予定手術日）から実入院（実績入院日）・退院までのライフサイクル、入院目的（手術/検査・処置/化学療法/化学放射線療法/その他。その他は理由必須）、緊急入院、転入状況、予約医、紹介元、ADL/感染症、治療プロトコル（化学療法・化学放射線療法のみ。化学療法プロトコルマスタから選択）、臨床コメント（手術フォームからも編集可）、管理者確認、論理削除/復元、再予約（コピー）に対応。一覧の「新規入院」ボタンは入約フォームを開きます |
 | 入約フォーム | `/reservations/new`、`/reservations/:hospitalization_id/edit` | 入院と、目的が手術の場合はその手術を 1 画面でまとめて登録・編集（[入約フォーム](#入約フォーム)参照）。カレンダーからの予約と入院一覧の「新規入院」ボタンはこのフォームを通ります。入院・手術それぞれの個別フォームは、管理や詳細編集用に残してあります |
 | 手術枠スケジュール | `/surgery_schedule` | 週表示のカレンダー。枠ごとの手術一覧と使用時間、枠の時間超過・未割当手術・祝日を警告表示。同じ週を横向き A4 の白黒 PDF として印刷可能（`/surgery_schedule/pdf?start_date=YYYY-MM-DD`、開始日は任意）。術者/助手・紹介元、日ごとの見出し（日付、休日名/メモ、枠数を上書きした場合の枠数、枠の使用時間（分）、症例数、特殊枠の使用状況）を掲載。緊急手術の行は網掛け、通常枠の時間外の行は薄い網掛けで表示（タイトル下に凡例） |
 | データダウンロード（管理者/データ管理者のみ） | `/exports` | サイト設定で定義した CSV の出力。出力ごとに期間（とチーム）を指定（[CSV 出力](#csv-出力)参照） |
 | ダッシュボード | `/dashboard` | 年次で絞り込める統計（患者数・在院患者数・月別件数・平均在院日数・術式ランキング） |
 | 横断検索 | `/search` | キーワード 1 つで患者・入院・手術を横断的に検索。結果は 入院 / 手術 / 患者 のタブに分かれ（`?tab=`、各タブに件数。指定がなければ該当のある最初のタブを開く）、最大 20 行の表と全件一覧へのリンクで表示 |
 | 監査ログ | `/audit_events` | 患者・手術・入院・症例データベースの作成/更新/削除を、操作者・IP アドレス・変更前後の値つきで記録・閲覧 |
-| マスタ管理 | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` `/departments` `/surgery_locations` `/surgical_devices` `/teams` | 診断名・術式・曜日別の手術枠ルール（枠数は小数対応）・休日/日別コメントと枠数の上書き・診療科・手術場所と手術機器（後の 2 つは曜日別の特殊枠の列数つき）・チームとその任期/メンバー（`/teams` は `features.teams` が有効なときのみ） |
+| マスタ管理 | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` `/departments` `/surgery_locations` `/surgical_devices` `/chemotherapy_protocols` `/teams` | 診断名・術式・曜日別の手術枠ルール（枠数は小数対応）・休日/日別コメントと枠数の上書き・診療科・手術場所と手術機器（後の 2 つは曜日別の特殊枠の列数つき）・化学療法プロトコル・チームとその任期/メンバー（`/teams` は `features.teams` が有効なときのみ） |
 | 症例データベース | `/case_databases` | データ管理者が定義した独自項目（テキスト/数値/選択）を持つ、名前付きの患者レジストリ。ログイン済みなら誰でも患者の追加・値の入力・CSV 出力ができ、データベース・項目・患者エントリの作成/編集/削除はデータ管理者のみ |
 | アカウント設定 | `/account` | 自分の氏名・ログインID・パスワードの変更、表示言語の切り替え |
 | 利用者管理（管理者専用） | `/admin/users` | 利用者の作成・編集・無効化、パスワード初期化。最後の有効な管理者は無効化・降格できない |
@@ -175,11 +175,12 @@ volume でマウントします。`config/deploy.yml` のコメント付きの�
   赤いアスタリスクも同じ一覧に従います（`Model.required_attribute?`）。
 - `required_fields.hospitalization_by_purpose`: 同様ですが、特定の入院目的（`surgery`、`examination`、
   `chemotherapy`、`chemoradiotherapy`、`other`）の入院にだけ適用します。例:
-  `examination: [scheduled_procedure_date, procedure_name]`。アスタリスクはフォームで選んだ目的に追従します
+  `examination: [scheduled_procedure_date, procedure_name]` や `chemotherapy: [chemotherapy_protocol_id]`（プロトコルは列挙しない限り任意）。アスタリスクはフォームで選んだ目的に追従します
   （`Hospitalization.required_attribute?(attr, record)` または `(attr, purpose: ...)`）。予約医は旧来の
   `reservation_doctor` 文字列ではなく、ユーザー参照の `reservation_doctor_id` を指定します。
 - `patient.hospital_id_format` / `patient.hospital_id_format_hint`: 患者の患者 ID が設定・変更されるときに
   一致すべき正規表現と、エラーメッセージに使う人間向けの説明。省略すると制限なしです。
+- `masters.chemotherapy_protocols`: 化学療法・化学放射線療法の入院で選ぶプロトコル（レジメン）名の一覧。他のマスタと同じ追加のみの方式で投入されます（プロトコル名はアプリに埋め込みません）。
 - `masters.departments` / `masters.surgery_locations` / `masters.surgical_devices`: マスタテーブルに存在させたい
   名前の一覧（病院の診療科、ハイブリッド手術室やカテ室などの部屋、支援機器など）。アプリには病院固有の
   語彙を一切埋め込まず、語彙は管理者が編集できるマスタ（マスタメニュー）にあり、このキーはその初期投入だけを
@@ -243,7 +244,7 @@ Rake タスク（`lib/tasks/`）:
 
 | タスク | 用途 |
 | --- | --- |
-| `bin/rails site:seed_masters` | サイト設定の `masters` に書かれた診療科・手術場所・手術機器・チームを作成します。追加のみで冪等。既存の行の名前変更・並べ替え・削除はしません。`db/seeds.rb` からも実行されます |
+| `bin/rails site:seed_masters` | サイト設定の `masters` に書かれた診療科・手術場所・手術機器・化学療法プロトコル・チームを作成します。追加のみで冪等。既存の行の名前変更・並べ替え・削除はしません。`db/seeds.rb` からも実行されます |
 | `bin/rails dev:demo_data` | 開発環境専用。画面確認用の架空のデモデータを冪等に作成します。`REFRESH=1` を付けると、デモ症例の臨床内容をその場で書き換えます（[開発用デモデータ](#開発用デモデータ)参照） |
 | `bin/rails surgeries:move_special_off_slot_to_regular` | 特殊枠のリソース（ハイブリッド室・カテ室・ロボットなど）を使う予定手術のうち枠外で入力されたものを、枠未割当の通常枠へ移します。既定はドライランで候補を表示するだけ、`APPLY=1` で実際に移行します（`DRY_RUN=1` が常に優先）。冪等 |
 
@@ -278,6 +279,7 @@ erDiagram
     SurgeryProcedure ||--o{ SurgeryProcedureSelection : "参照"
     Department       |o--o{ Surgery                 : "相手/実施診療科"
     Department       |o--o{ Hospitalization         : "転入元診療科"
+    ChemotherapyProtocol |o--o{ Hospitalization     : "プロトコル"
     SurgeryLocation  |o--o{ Surgery                 : "場所"
     SurgicalDevice   |o--o{ Surgery                 : "機器"
     SurgeryLocation  ||--o{ SpecialSlotRule         : "曜日別の列数"
@@ -338,6 +340,7 @@ erDiagram
         datetime deleted_at "論理削除"
         string patient_name_snapshot "予約時点の患者スナップショット"
         string infection "感染症（ADL の隣の自由記述）"
+        int    chemotherapy_protocol_id "化学療法・化学放射線療法のみ"
         text   clinical_comment "カレンダーの台帳に表示"
         boolean team_undecided
     }
@@ -377,14 +380,14 @@ erDiagram
 `AdminNote`（管理者メモ）、`AppSetting`（アプリ設定）、`AccessLog`（ログイン/ログアウト/タイムアウト/
 認証失敗/CSV 出力の記録）があります。
 `UserRole` は利用者が持つロールを 1 行ずつ保持するため（`user` / `data_manager` / `admin`）、複数の
-ロールを同時に持てます。`Department`・`SurgeryLocation`・`SurgicalDevice`・`Team` は、`MasterRecord` concern
+ロールを同時に持てます。`Department`・`SurgeryLocation`・`SurgicalDevice`・`ChemotherapyProtocol`・`Team` は、`MasterRecord` concern
 （名前の一意性、`position` による並び順、`active` フラグ）を共有する、管理者が編集できるマスタテーブルです。
 `CaseDatabase` / `CaseDatabaseField` / `CaseDatabaseEntry` は症例データベース
 を支え、エントリの値は項目 ID をキーとする JSON ハッシュとして保存されます。
 
 主な制約:
 
-- `Diagnosis` / `SurgeryProcedure` および他のマスタ（`Department`・`SurgeryLocation`・`SurgicalDevice`・`Team`）は
+- `Diagnosis` / `SurgeryProcedure` および他のマスタ（`Department`・`SurgeryLocation`・`SurgicalDevice`・`ChemotherapyProtocol`・`Team`）は
   `restrict_with_error`。使用中のマスタは削除できません。無効化したマスタは、それを既に使っているレコードでは
   引き続き選択できます。
 - `Surgery` は術式を **1〜5 件**、重複なしで持ちます。紐付ける患者診断はその手術の患者のものに限られます。

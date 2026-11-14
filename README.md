@@ -44,14 +44,14 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Patient ledger | `/patients` | Patient master data, with keyword search by name or hospital ID and pagination |
 | Patient diagnoses | `/patients/:id/patient_diagnoses` | Per-patient diagnosis history referencing the diagnosis master, holding the diagnosis date and laterality |
 | Surgery records | `/surgeries` | Surgery date (may be "undecided"), procedures (up to 5), anesthesia method, duration, elective/emergency type, slot category (regular / joint / backup / off-slot), operator/assistant/operation order, location / device / partner and performing department. Linked to patient diagnoses and, optionally, to the hospitalization it belongs to. Searchable by operator |
-| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / chemoradiotherapy / other, the last requiring a reason), emergency admission, transfer status, reservation doctor, referral source, ADL / infections, clinical comment (also editable from the surgery form), administrator confirmation, soft delete/restore, and rebooking (copy). The list's "New Hospitalization" button opens the reservation form |
+| Hospitalization records | `/hospitalizations` | Lifecycle from reservation (scheduled admission and surgery dates) through actual admission and discharge, admission purpose (surgery / examination / chemotherapy / chemoradiotherapy / other, the last requiring a reason), emergency admission, transfer status, reservation doctor, referral source, ADL / infections, treatment protocol (chemotherapy / chemoradiotherapy only, chosen from the Chemotherapy Protocols master), clinical comment (also editable from the surgery form), administrator confirmation, soft delete/restore, and rebooking (copy). The list's "New Hospitalization" button opens the reservation form |
 | Reservation form (入約) | `/reservations/new`, `/reservations/:hospitalization_id/edit` | One screen that creates or edits a hospitalization and, for the purpose surgery, its surgery together (see [Reservation form](#reservation-form)). The calendar's booking flow and the hospitalization list's "New Hospitalization" button go through it; the separate hospitalization and surgery forms remain for administration and detail edits |
 | Surgery slot schedule | `/surgery_schedule` | Weekly calendar showing the surgeries and used time per slot, warning about slot overruns, unassigned surgeries, and holidays. The same week can be printed as a landscape A4 PDF (`/surgery_schedule/pdf?start_date=YYYY-MM-DD`, any start date) in black and white, with operator/assistant, referral source, and a heading per day (date, closed-day name / note, slot count when overridden, slot usage in minutes, case count, special slot usage); emergency rows are shaded and rows outside the regular slot time lightly shaded (legend under the title) |
 | Data download (admin / data manager only) | `/exports` | CSV exports defined in the site config, with a date range (and team) per export (see [CSV export](#csv-export)) |
 | Dashboard | `/dashboard` | Statistics filterable by year (patient counts, inpatients, monthly counts, average length of stay, procedure ranking) |
 | Cross-entity search | `/search` | Search patients, hospitalizations, and surgeries with a single keyword; results are split into 入院 / 手術 / 患者 tabs (`?tab=`, each with its match count; without one, the first tab with matches opens) and listed as tables of up to 20 rows with a link to the full list |
 | Audit log | `/audit_events` | Records and displays create/update/delete of patients, surgeries, hospitalizations, and case databases with the operator, IP address, and before/after values |
-| Master data | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` `/departments` `/surgery_locations` `/surgical_devices` `/teams` | Diagnosis names, procedures, per-weekday slot rules (fractional slot counts supported), holidays / per-day comments and slot overrides, departments, surgery locations and surgical devices (the latter two with weekly special slot lane counts), and teams with their terms and members (`/teams` only with `features.teams`) |
+| Master data | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` `/departments` `/surgery_locations` `/surgical_devices` `/chemotherapy_protocols` `/teams` | Diagnosis names, procedures, per-weekday slot rules (fractional slot counts supported), holidays / per-day comments and slot overrides, departments, surgery locations and surgical devices (the latter two with weekly special slot lane counts), chemotherapy protocols, and teams with their terms and members (`/teams` only with `features.teams`) |
 | Case databases | `/case_databases` | Named patient registries with custom fields (text / number / select) defined by a data manager. Any signed-in user can add patients, enter values, and export the registry as CSV; only a data manager can create, edit, or delete a database, its fields, or a patient entry |
 | Live updates | calendar (all three tabs), reservation form, `/patients/:id`, `/hospitalizations/:id`, `/surgeries/:id`, and the `/patients`, `/surgeries`, `/hospitalizations` and `/hospitalizations/deleted` lists | Open screens follow other users' changes without a reload: a calendar day is replaced when its data changes, the reservation form's slot summary / admission count / side calendar reload, and the detail pages and the four lists refresh (see [Live updates](#live-updates)) |
 | Concurrent edit warning | the edit forms of reservations, hospitalizations, surgeries and patients | A save made on top of another user's newer change is refused with a warning naming who changed the record and when, offering "Load the latest" or "Save anyway"; while the form is open a notice appears as soon as another user updates the record (see [Concurrent edit warning](#concurrent-edit-warning)) |
@@ -182,7 +182,7 @@ Keys:
   in before saving. The red asterisk on the form follows the same list (`Model.required_attribute?`).
 - `required_fields.hospitalization_by_purpose`: the same, but only for hospitalizations of one purpose
   (`surgery`, `examination`, `chemotherapy`, `chemoradiotherapy`, `other`), e.g.
-  `examination: [scheduled_procedure_date, procedure_name]`. The asterisk follows the purpose chosen
+  `examination: [scheduled_procedure_date, procedure_name]` or `chemotherapy: [chemotherapy_protocol_id]` (the protocol is optional unless listed). The asterisk follows the purpose chosen
   in the form (`Hospitalization.required_attribute?(attr, record)` or `(attr, purpose: ...)`).
   The reservation doctor is the user reference `reservation_doctor_id` (not the old `reservation_doctor` string).
 - `patient.hospital_id_format` / `patient.hospital_id_format_hint`: a regular expression the patient's
@@ -200,6 +200,7 @@ Keys:
   cases may be performed by another department (the reservation form then asks for the performing department; set only on newly created
   rows, and editable on the Surgery Locations master screen). Special slot lane counts are not part of
   this file; they are edited on the master screens.
+- `masters.chemotherapy_protocols`: protocol names (regimens) for chemotherapy / chemoradiotherapy admissions, seeded the same additive way (no protocol name is hardcoded in the app).
 - `masters.teams`: team names (or `{name: ..., color: blue}`, color one of blue/red/green/orange/purple/
   teal/gray), seeded the same additive way as the other masters. Terms and members are entered in
   the app, not in this file.
@@ -210,8 +211,8 @@ Keys:
   `diagnosis_procedure`, `operator_assistant`, `duration_anesthesia`, `team` (needs `features.teams`),
   `category`, `reservation`, `referral_adl`, `status`, `clinical_comment` (the linked hospitalization's);
   the examination and admission ledgers use `admission_dates`, `patient`, `age_sex`,
-  `diagnosis_procedure_name`, `purpose`, `team`, `category`, `reservation`, `referral_adl`, `status`,
-  `clinical_comment`. Omit a ledger for its built-in default. Unknown or duplicate columns, an empty
+  `diagnosis_procedure_name` (its lower line also shows the chemotherapy protocol name), `purpose`, `team`, `category`, `reservation`, `referral_adl`, `status`,
+  `clinical_comment` and `protocol` (the protocol name alone; in no default). Omit a ledger for its built-in default. Unknown or duplicate columns, an empty
   list, or `team` without `features.teams` stop the boot. See `config/site.yml` for the column meanings.
 - `weekly_pdf`: `font_size` (6-10, default 8) and `title` (replaces the translated PDF title; keep
   site-specific wording here, not in code). Columns have a preferred and a minimum width in the registry:
@@ -223,7 +224,7 @@ Keys:
   `<name>: {subject: surgery|hospitalization, fields: [...], label: optional}`; fields come from the export
   field registry (`ExportField`, `app/models/export_field.rb` and `app/models/export_fields/`), which yields
   one plain value per column (unlike the stacked ledger cells). Omit the key for the built-in `surgery_list`
-  and `admission_list` (every field of the subject); `exports: {}` switches exports off. Unknown
+  and `admission_list` (every field of the subject, including `protocol`, the chemotherapy protocol's name); `exports: {}` switches exports off. Unknown
   subjects/fields, duplicates, an empty list, a bad name or `team`/`team_members` without `features.teams`
   stop the boot. See `config/site.yml` for every field and `config/site.example.yml` for an `ncd_list`.
 - `reservation_defaults`: what a *new* reservation form starts with (never applied on edit, on a re-rendered
@@ -257,7 +258,7 @@ Rake tasks (`lib/tasks/`):
 
 | Task | Purpose |
 | --- | --- |
-| `bin/rails site:seed_masters` | Creates the departments, surgery locations, surgical devices and teams listed under `masters` in the site config. Additive and idempotent: it never renames, reorders or deletes existing rows. Also run from `db/seeds.rb` |
+| `bin/rails site:seed_masters` | Creates the departments, surgery locations, surgical devices, chemotherapy protocols and teams listed under `masters` in the site config. Additive and idempotent: it never renames, reorders or deletes existing rows. Also run from `db/seeds.rb` |
 | `bin/rails dev:demo_data` | Development only. Fills the database with fictional, idempotently created demo data for UI review. `REFRESH=1` also rewrites the clinical content of the demo cases in place (see [Development demo data](#development-demo-data)) |
 | `bin/rails surgeries:move_special_off_slot_to_regular` | Moves elective off-slot surgeries that use a special slot resource (hybrid room, cath lab, robot...) to the regular slots, slot unassigned. A dry run that only lists the candidates by default; `APPLY=1` performs the move (`DRY_RUN=1` always wins). Idempotent |
 
@@ -297,6 +298,7 @@ erDiagram
     SurgeryProcedure ||--o{ SurgeryProcedureSelection : "reference"
     Department       |o--o{ Surgery                 : "partner / performing"
     Department       |o--o{ Hospitalization         : "source department"
+    ChemotherapyProtocol |o--o{ Hospitalization     : "protocol"
     SurgeryLocation  |o--o{ Surgery                 : "where"
     SurgicalDevice   |o--o{ Surgery                 : "device"
     SurgeryLocation  ||--o{ SpecialSlotRule         : "weekly lanes"
@@ -357,6 +359,7 @@ erDiagram
         datetime deleted_at "soft delete"
         string patient_name_snapshot "patient snapshot at reservation time"
         string infection "free text next to ADL"
+        int    chemotherapy_protocol_id "chemotherapy / chemoradiotherapy only"
         text   clinical_comment "shown in the calendar ledgers"
         boolean team_undecided
     }
@@ -396,7 +399,7 @@ per slot; the count may be fractional), `Holiday` (holidays and per-day comments
 day-level slot override), `Announcement`, `AdminNote`, `AppSetting`, and `AccessLog`
 (login/logout/timeout/failed authentication/export).
 `UserRole` holds one row per role a user has (`user` / `data_manager` / `admin`), so a user can hold
-several at once. `Department`, `SurgeryLocation`, `SurgicalDevice` and `Team` are admin-editable
+several at once. `Department`, `SurgeryLocation`, `SurgicalDevice`, `ChemotherapyProtocol` and `Team` are admin-editable
 master tables sharing the `MasterRecord` concern (unique name, `position` ordering, `active` flag).
 `CaseDatabase` / `CaseDatabaseField` / `CaseDatabaseEntry` back the case databases;
 an entry stores its values as a JSON hash keyed by field id.
@@ -404,7 +407,7 @@ an entry stores its values as a JSON hash keyed by field id.
 Key constraints:
 
 - `Diagnosis` / `SurgeryProcedure` and the other masters (`Department`, `SurgeryLocation`,
-  `SurgicalDevice`, `Team`) use `restrict_with_error`: master records in use cannot be deleted. An
+  `SurgicalDevice`, `ChemotherapyProtocol`, `Team`) use `restrict_with_error`: master records in use cannot be deleted. An
   inactive master stays selectable on the records that already use it.
 - A `Surgery` holds **1–5 procedures** with no duplicates. Linked patient diagnoses must belong
   to that surgery's patient. `surgery_date` may be "undecided", in which case it is stored as `null`.
