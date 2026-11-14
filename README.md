@@ -146,7 +146,7 @@ Runtime behavior is tuned with environment variables (`config/application.rb`, `
 | --- | --- | --- |
 | `ACCOUNT_IDENTIFIER` | Whether an account logs in with an `email` address or a `username`. **Decide this when first setting up the server and do not change it afterward** -- switching modes later makes existing login ids fail the new format validation. | `email` |
 | `SESSION_IDLE_TIMEOUT_MINUTES` | Session idle timeout, in minutes | `10` |
-| `ADMISSION_WARNING_THRESHOLD` | Admissions per day above which the operations calendar flags congestion | `5` |
+| `ADMISSION_WARNING_THRESHOLD` | Default admissions per day above which the calendars flag congestion; used for a weekday without an admission guideline (Masters > Admission Guidelines) and a date without its own value | `5` |
 | `APP_TITLE` | Application title used before an administrator sets one on `/admin/settings`. Useful for branding a fresh deploy without signing in first | `Altocumulus` |
 | `SITE_CONFIG_PATH` | Path of the site configuration YAML (see [Site configuration](#site-configuration)). In production, mount the file with a Kamal volume | `config/site.yml` |
 | `FORCE_SSL` | Set to `1` (or `true`) when the app is served over HTTPS behind a TLS-terminating proxy: assumes SSL, redirects http to https, sends HSTS and marks cookies secure (the `/up` health check is exempt). Leave unset for plain-HTTP intranet use | *(unset: off)* |
