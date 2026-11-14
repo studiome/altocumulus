@@ -83,6 +83,9 @@ Rails.application.routes.draw do
   get "surgery_schedule/pdf" => "surgery_schedules#pdf", as: :surgery_schedule_pdf
   # The inline day-note editor of the operations calendar (admin only): `:date`
   # is the day's ISO date and the record is that day's Holiday row.
+  # One day's tbody for any signed-in user, re-fetched by the live calendar
+  # (see LiveUpdate) with the viewer's own filters.
+  resources :calendar_days, only: :show, param: :date
   resources :day_notes, only: %i[ show edit update destroy ], param: :date
   # The inline special-slot (特殊枠) lane editor for one day, admin only: its
   # rows are SpecialSlotDayOverride per resource for that ISO date.
