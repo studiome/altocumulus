@@ -109,6 +109,52 @@ class ReservationsTest < ApplicationSystemTestCase
     assert_text "Colonoscopy"
   end
 
+  test "the protocol select follows the purpose, is not submitted when hidden, and the choice shows on the calendar" do
+    visit new_reservation_path(purpose: "examination")
+    assert_no_select "Protocol"
+
+    select "Chemotherapy", from: "Purpose"
+    assert_select "Protocol", options: [ "", "Protocol A", "Protocol B" ]
+    select "Protocol B", from: "Protocol"
+
+    select "Examination / Procedure", from: "Purpose"
+    assert_no_select "Protocol"
+    assert find("#reservation_hospitalization_chemotherapy_protocol_id", visible: :all).disabled?
+
+    select "Chemoradiotherapy", from: "Purpose"
+    assert_select "Protocol", selected: "Protocol B"
+    assert_not find("#reservation_hospitalization_chemotherapy_protocol_id").disabled?
+
+    choose_patient "H002 - Jane Smith"
+    set_date "reservation_hospitalization_scheduled_admission_date", @admission
+    choose_diagnosis "Pneumonia"
+
+    assert_difference "Hospitalization.count", 1 do
+      click_on "Register Reservation"
+      assert_text "Reservation was successfully registered."
+    end
+    assert_equal "Protocol B", Hospitalization.order(:id).last.chemotherapy_protocol.name
+
+    visit operations_calendar_path(view: "admission", start: @admission.iso8601, days: 1)
+    within("tbody#day-#{@admission.iso8601}") do
+      assert_text "Jane Smith"
+      assert_text "Protocol B"
+    end
+  end
+
+  test "switching away from a protocol purpose submits no protocol" do
+    visit new_reservation_path(purpose: "chemotherapy")
+    select "Protocol A", from: "Protocol"
+    select "Examination / Procedure", from: "Purpose"
+
+    choose_patient "H002 - Jane Smith"
+    set_date "reservation_hospitalization_scheduled_admission_date", @admission
+    choose_diagnosis "Pneumonia"
+    click_on "Register Reservation"
+    assert_text "Reservation was successfully registered."
+    assert_nil Hospitalization.order(:id).last.chemotherapy_protocol_id
+  end
+
   test "errors show next to the fields and in a summary" do
     visit new_reservation_path(purpose: "surgery")
 

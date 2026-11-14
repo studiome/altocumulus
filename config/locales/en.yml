@@ -1793,6 +1793,8 @@ en:
       diagnosis_procedure_name:
         upper: "Diagnosis"
         lower: "Procedure Name"
+      protocol:
+        upper: "Protocol"
       operator_assistant:
         upper: "Operator"
         lower: "Assistant"

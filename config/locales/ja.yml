@@ -1704,6 +1704,8 @@ ja:
       diagnosis_procedure_name:
         upper: "診断名"
         lower: "検査・処置名"
+      protocol:
+        upper: "プロトコル"
       operator_assistant:
         upper: "術者"
         lower: "助手"

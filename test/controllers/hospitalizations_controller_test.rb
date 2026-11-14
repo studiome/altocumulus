@@ -901,4 +901,39 @@ class HospitalizationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#error_explanation, .alert-error, .text-error", /./
     assert_equal other.id, hospitalization.reload.patient_id
   end
+
+  # ---- chemotherapy protocol ----
+
+  test "the standalone form offers the protocol select, hidden unless the purpose uses one" do
+    get edit_hospitalization_url(@hospitalization)
+    assert_select "div[data-purpose-fields-target=protocolSection].hidden select[name='hospitalization[chemotherapy_protocol_id]']" do
+      assert_select "option[value='#{chemotherapy_protocols(:protocol_a).id}']"
+    end
+
+    @hospitalization.update!(purpose: "chemotherapy")
+    get edit_hospitalization_url(@hospitalization)
+    assert_select "div[data-purpose-fields-target=protocolSection].hidden", false
+  end
+
+  test "update saves the protocol and show and JSON display it" do
+    protocol = chemotherapy_protocols(:protocol_a)
+    patch hospitalization_url(@hospitalization), params: { hospitalization: { purpose: "chemotherapy", chemotherapy_protocol_id: protocol.id } }
+    assert_equal protocol, @hospitalization.reload.chemotherapy_protocol
+
+    get hospitalization_url(@hospitalization)
+    assert_select "span", text: "Protocol"
+    assert_select "span", text: protocol.name
+
+    get hospitalization_url(@hospitalization, format: :json)
+    json = JSON.parse(response.body)
+    assert_equal protocol.id, json["chemotherapy_protocol_id"]
+    assert_equal protocol.name, json["chemotherapy_protocol"]
+  end
+
+  test "show has no protocol line for other purposes" do
+    get hospitalization_url(@hospitalization)
+    assert_select "span", text: "Protocol", count: 0
+    get hospitalization_url(@hospitalization, format: :json)
+    assert_nil JSON.parse(response.body)["chemotherapy_protocol"]
+  end
 end

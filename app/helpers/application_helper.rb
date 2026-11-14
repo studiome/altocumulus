@@ -50,6 +50,12 @@ module ApplicationHelper
     purposes.join(" ").presence
   end
 
+  # Space-separated purposes that record a chemotherapy protocol, for the
+  # purpose-fields Stimulus controller (data-protocol-purposes).
+  def protocol_purposes_attribute
+    Hospitalization::PROTOCOL_PURPOSE_KEYS.join(" ")
+  end
+
   # The installation's own name (see AppSetting). Memoized because the layout
   # asks for it more than once per request.
   def app_title

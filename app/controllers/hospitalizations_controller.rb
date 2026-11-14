@@ -14,7 +14,7 @@ class HospitalizationsController < ApplicationController
   def index
     @diagnoses = Diagnosis.alphabetical
     @default_range = default_range?
-    scope = Hospitalization.includes(:patient, hospitalization_diagnoses: :diagnosis)
+    scope = Hospitalization.includes(:patient, :chemotherapy_protocol, hospitalization_diagnoses: :diagnosis)
                             .filtered(**index_filters)
                             .order(Arel.sql("COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date) ASC"), created_at: :asc)
     @pagination = Pagination.new(scope, page: params[:page])
@@ -177,7 +177,7 @@ class HospitalizationsController < ApplicationController
       params.expect(hospitalization: [
         *team_params,
         :patient_id, :admission_date, :scheduled_admission_date, :scheduled_surgery_date, :reservation_status, :purpose,
-        :planned_days, :reason, :room_preference, :ward, :referred_from, :adl, :infection,
+        :planned_days, :reason, :room_preference, :ward, :referred_from, :adl, :infection, :chemotherapy_protocol_id,
         :reservation_doctor_id, :attending_doctor, :submitted_on, :clinical_comment,
         :emergency_admission, :transfer_status, :source_department_id, :scheduled_procedure_date, :procedure_name,
         :discharge_date, :outcome, :discharge_destination,

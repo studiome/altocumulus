@@ -19,6 +19,14 @@
         <%= hf.text_field :procedure_name, { class: "input w-full focus:input-primary" }.merge(reservation_aria(reservation, "hospitalization.procedure_name")) %>
         <%= reservation_field_error(reservation, "hospitalization.procedure_name") %>
       </div>
+      <%# Only chemotherapy-type purposes use a protocol; purpose-fields shows it and disables it while hidden. %>
+      <div class="app-field md:col-span-2 <%= "hidden" unless hospitalization.uses_chemotherapy_protocol? %>"
+           data-purpose-fields-target="protocolSection" data-protocol-purposes="<%= protocol_purposes_attribute %>">
+        <%= hospitalization_label hf, :chemotherapy_protocol_id %>
+        <%= hf.collection_select :chemotherapy_protocol_id, ChemotherapyProtocol.choices_for(hospitalization.chemotherapy_protocol_id), :id, :name,
+              { include_blank: true }, { class: "select w-full focus:select-primary" }.merge(reservation_aria(reservation, "hospitalization.chemotherapy_protocol_id")) %>
+        <%= reservation_field_error(reservation, "hospitalization.chemotherapy_protocol_id") %>
+      </div>
     </div>
   </div>
 </section>

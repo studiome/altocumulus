@@ -8,7 +8,7 @@ import { Controller } from "@hotwired/stimulus"
 // inputs of the surgery / procedure sections are disabled while hidden, so a
 // section that does not apply to the purpose is not submitted at all.
 export default class extends Controller {
-  static targets = [ "select", "otherSection", "surgerySection", "procedureSection", "requiredLabel" ]
+  static targets = [ "select", "otherSection", "surgerySection", "procedureSection", "protocolSection", "requiredLabel" ]
   static values = { disableHidden: Boolean }
 
   connect() {
@@ -26,6 +26,13 @@ export default class extends Controller {
     }
     if (this.hasProcedureSectionTarget) {
       this.setVisible(this.procedureSectionTarget, purpose !== "surgery")
+    }
+    // The protocol select only applies to the purposes it lists in
+    // data-protocol-purposes. Handled after the procedure section, which
+    // re-enables every control inside it.
+    if (this.hasProtocolSectionTarget) {
+      const purposes = (this.protocolSectionTarget.dataset.protocolPurposes || "").split(" ")
+      this.setVisible(this.protocolSectionTarget, purposes.includes(purpose))
     }
     // A label whose field the site requires only for some purposes carries
     // those purposes in data-required-purposes.

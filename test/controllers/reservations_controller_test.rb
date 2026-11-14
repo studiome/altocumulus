@@ -433,4 +433,75 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "input[name='reservation[hospitalization][scheduled_procedure_date]'][value]", false
   end
+
+  # ---- chemotherapy protocol ----
+
+  def chemo_params(purpose: "chemotherapy", protocol: chemotherapy_protocols(:protocol_a))
+    params = valid_params(reservation: { hospitalization: { purpose: purpose, chemotherapy_protocol_id: protocol&.id.to_s } })
+    params[:reservation].delete(:surgery)
+    params[:reservation].delete(:procedures)
+    params
+  end
+
+  test "new renders the protocol select with the active protocols and a blank choice, hidden for other purposes" do
+    get new_reservation_url, params: { purpose: "examination" }
+    assert_select "div[data-purpose-fields-target=protocolSection].hidden select[name='reservation[hospitalization][chemotherapy_protocol_id]']" do
+      assert_select "option[value='']"
+      assert_select "option[value='#{chemotherapy_protocols(:protocol_a).id}']"
+      assert_select "option[value='#{chemotherapy_protocols(:retired_protocol).id}']", false
+    end
+
+    get new_reservation_url, params: { purpose: "chemoradiotherapy" }
+    assert_select "div[data-purpose-fields-target=protocolSection].hidden", false
+    assert_select "div[data-purpose-fields-target=protocolSection] label", text: "Protocol"
+  end
+
+  test "create saves the protocol for a chemotherapy admission" do
+    assert_difference "Hospitalization.count", 1 do
+      post reservations_url, params: chemo_params
+    end
+    assert_equal chemotherapy_protocols(:protocol_a), Hospitalization.order(:id).last.chemotherapy_protocol
+  end
+
+  test "create drops the protocol for another purpose" do
+    post reservations_url, params: chemo_params(purpose: "examination")
+    assert_nil Hospitalization.order(:id).last.chemotherapy_protocol
+  end
+
+  test "create failure re-renders with the protocol still chosen" do
+    params = chemo_params
+    params[:reservation][:hospitalization][:scheduled_admission_date] = ""
+    assert_no_difference "Hospitalization.count" do
+      post reservations_url, params: params
+    end
+    assert_response :unprocessable_entity
+    assert_select "select[name='reservation[hospitalization][chemotherapy_protocol_id]'] option[selected][value='#{chemotherapy_protocols(:protocol_a).id}']"
+  end
+
+  test "required protocol error shows next to the field and the label is marked" do
+    config = { "required_fields" => { "hospitalization_by_purpose" => { "chemotherapy" => [ "chemotherapy_protocol_id" ] } } }
+    with_site_config(config) do
+      get new_reservation_url, params: { purpose: "chemotherapy" }
+      assert_select "label[for='reservation_hospitalization_chemotherapy_protocol_id'][data-required-purposes='chemotherapy'].app-field-label-required"
+
+      post reservations_url, params: chemo_params(protocol: nil)
+      assert_response :unprocessable_entity
+      assert_select "#reservation-error-hospitalization-chemotherapy_protocol_id, [id='reservation-error-hospitalization-chemotherapy-protocol-id']", text: /can't be blank/
+      assert_select "select[name='reservation[hospitalization][chemotherapy_protocol_id]'][aria-invalid=true]"
+    end
+  end
+
+  test "update changes and clears the protocol, and edit keeps an inactive one selectable" do
+    post reservations_url, params: chemo_params
+    hospitalization = Hospitalization.order(:id).last
+
+    patch reservation_url(hospitalization), params: { reservation: { hospitalization: { chemotherapy_protocol_id: chemotherapy_protocols(:retired_protocol).id } } }
+    assert_equal chemotherapy_protocols(:retired_protocol), hospitalization.reload.chemotherapy_protocol
+
+    get edit_reservation_url(hospitalization)
+    assert_select "select[name='reservation[hospitalization][chemotherapy_protocol_id]'] option[selected][value='#{chemotherapy_protocols(:retired_protocol).id}']"
+
+    patch reservation_url(hospitalization), params: { reservation: { hospitalization: { chemotherapy_protocol_id: "" } } }
+    assert_nil hospitalization.reload.chemotherapy_protocol
+  end
 end

@@ -107,6 +107,15 @@
       <%= form.text_field :procedure_name, class: "input w-full focus:input-primary" %>
     </div>
 
+    <div class="app-field <%= "hidden" unless hospitalization.uses_chemotherapy_protocol? %>"
+         data-purpose-fields-target="protocolSection" data-protocol-purposes="<%= protocol_purposes_attribute %>">
+      <%= form.label :chemotherapy_protocol_id, Hospitalization.human_attribute_name(:chemotherapy_protocol_id),
+            class: required_label_class(Hospitalization, :chemotherapy_protocol_id, record: hospitalization),
+            data: { required_purposes: required_purposes_for(:chemotherapy_protocol_id), purpose_fields_target: "requiredLabel" } %>
+      <%= form.collection_select :chemotherapy_protocol_id, ChemotherapyProtocol.choices_for(hospitalization.chemotherapy_protocol_id), :id, :name,
+            { include_blank: true }, class: "select w-full focus:select-primary" %>
+    </div>
+
     <div class="app-field">
       <%= form.label :admission_date, t("hospitalizations.labels.admission_date_actual"), class: "app-field-label" %>
       <%= form.date_field :admission_date, class: "input w-full focus:input-primary" %>

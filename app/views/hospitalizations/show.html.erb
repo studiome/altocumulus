@@ -112,6 +112,12 @@
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:procedure_name) %></span>
           <span class="text-lg font-medium"><%= @hospitalization.procedure_name.presence || t("common.none") %></span>
         </div>
+        <% if @hospitalization.uses_chemotherapy_protocol? %>
+          <div>
+            <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:chemotherapy_protocol_id) %></span>
+            <span class="text-lg font-medium"><%= @hospitalization.chemotherapy_protocol&.name.presence || t("common.none") %></span>
+          </div>
+        <% end %>
         <div>
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Hospitalization.human_attribute_name(:created_by_id) %></span>
           <span class="text-lg font-medium"><%= @hospitalization.created_by&.name || t("common.none") %></span>
