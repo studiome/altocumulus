@@ -508,6 +508,8 @@ class Hospitalization < ApplicationRecord
     # Last day a stay-in-the-making covers: the discharge date; open-ended
     # (nil) once actually admitted; for a reservation only, the latest of its
     # planned stay, surgery date and procedure date (its own day at least).
+    # Keep in step with OVERLAP_PERIOD_END_SQL below; the pair test in
+    # test/models/hospitalization_test.rb checks that they agree.
     def overlap_period_end
       return discharge_date if discharge_date.present?
       return nil if admission_date.present?
@@ -518,6 +520,8 @@ class Hospitalization < ApplicationRecord
 
     # The same period end, as SQL over the stored rows. MAX(a, b, ...) is NULL
     # when any argument is NULL, hence the COALESCEs back to the start day.
+    # Keep in step with #overlap_period_end above (checked by the pair test in
+    # test/models/hospitalization_test.rb).
     OVERLAP_PERIOD_END_SQL = <<~SQL.squish.freeze
       CASE
         WHEN discharge_date IS NOT NULL THEN discharge_date
@@ -531,6 +535,9 @@ class Hospitalization < ApplicationRecord
       END
     SQL
 
+    # Stands in for "no end" so the stored period end is evaluated once.
+    OPEN_ENDED_DATE = "9999-12-31".freeze
+
     def no_overlapping_hospitalization_period
       return if patient_id.blank? || effective_admission_date.blank?
       return if deleted?
@@ -539,8 +546,8 @@ class Hospitalization < ApplicationRecord
       scope = scope.where.not(id: id) if persisted?
       conflict = scope.where(
         "(:end_date IS NULL OR COALESCE(admission_date, scheduled_admission_date) <= :end_date) AND " \
-        "((#{OVERLAP_PERIOD_END_SQL}) IS NULL OR (#{OVERLAP_PERIOD_END_SQL}) >= :start_date)",
-        start_date: effective_admission_date, end_date: overlap_period_end
+        "COALESCE((#{OVERLAP_PERIOD_END_SQL}), :open_end) >= :start_date",
+        start_date: effective_admission_date, end_date: overlap_period_end, open_end: OPEN_ENDED_DATE
       ).exists?
 
       errors.add(effective_admission_date_field, :overlaps_another_hospitalization) if conflict

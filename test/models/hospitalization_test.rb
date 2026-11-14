@@ -1033,4 +1033,37 @@ class HospitalizationSiteConfigTest < ActiveSupport::TestCase
     assert_not overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 10)).valid?
     assert overlap_candidate(patient, scheduled_admission_date: Date.new(2027, 1, 11)).valid?
   end
+
+  # The Ruby period end (for the record being validated) and the SQL one (for
+  # stored rows) must agree: every pair conflicts the same way whichever of the
+  # two is the stored one.
+  OVERLAP_SPECS = {
+    "discharged stay" => { admission_date: Date.new(2027, 1, 10), discharge_date: Date.new(2027, 1, 14), outcome: "recovered" },
+    "admitted, no discharge" => { admission_date: Date.new(2027, 1, 12) },
+    "reservation with planned days" => { scheduled_admission_date: Date.new(2027, 1, 8), planned_days: 4 },
+    "reservation with a later surgery date" => { scheduled_admission_date: Date.new(2027, 1, 11), scheduled_surgery_date: Date.new(2027, 1, 16) },
+    "reservation with a later procedure date" => { scheduled_admission_date: Date.new(2027, 1, 13), scheduled_procedure_date: Date.new(2027, 1, 18) },
+    "reservation with planned days and a later surgery" => { scheduled_admission_date: Date.new(2027, 1, 9), planned_days: 2, scheduled_surgery_date: Date.new(2027, 1, 20) },
+    "plain reservation" => { scheduled_admission_date: Date.new(2027, 1, 15) },
+    "plain reservation far later" => { scheduled_admission_date: Date.new(2027, 2, 15) }
+  }.freeze
+
+  test "the Ruby and SQL overlap period ends agree for every pair in both directions" do
+    OVERLAP_SPECS.each do |name_a, attrs_a|
+      OVERLAP_SPECS.each do |name_b, attrs_b|
+        a_then_b = conflict_after_saving(attrs_a, attrs_b, "HSA")
+        b_then_a = conflict_after_saving(attrs_b, attrs_a, "HSB")
+        assert_equal a_then_b, b_then_a, "#{name_a} vs #{name_b}: #{a_then_b} when saved first, #{b_then_a} when saved second"
+      end
+    end
+  end
+
+  def conflict_after_saving(stored_attrs, candidate_attrs, prefix)
+    @overlap_seq = (@overlap_seq || 0) + 1
+    patient = Patient.create!(hospital_id: "#{prefix}#{@overlap_seq}", name: "Pair #{@overlap_seq}", date_of_birth: "1980-01-01")
+    overlap_candidate(patient, **stored_attrs).save!(validate: false)
+    candidate = overlap_candidate(patient, **candidate_attrs)
+    candidate.valid?
+    candidate.errors.any? { |error| error.type == :overlaps_another_hospitalization }
+  end
 end
