@@ -1,6 +1,6 @@
 <% content_for :title, t(".title") %>
 
-<div class="max-w-2xl mx-auto w-full">
+<div class="max-w-2xl mx-auto w-full" <%= live_page_attributes(records: [ LiveUpdate.key(@surgery), "Patient:#{@surgery.patient_id}", (@surgery.hospitalization_id && "Hospitalization:#{@surgery.hospitalization_id}") ]) %>>
 
   <div class="mb-3 flex items-center gap-3">
     <%= link_to calendar_back_path(@surgery.surgery_date), class: "btn btn-circle btn-ghost" do %>

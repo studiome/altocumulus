@@ -1,6 +1,6 @@
 <% content_for :title, t(".title") %>
 
-<div class="max-w-2xl mx-auto w-full">
+<div class="max-w-2xl mx-auto w-full" <%= live_page_attributes(records: [ LiveUpdate.key(@hospitalization), "Patient:#{@hospitalization.patient_id}" ]) %>>
 
   <div class="mb-3 flex items-center gap-3">
     <%= link_to hospitalizations_path, class: "btn btn-circle btn-ghost print:hidden" do %>

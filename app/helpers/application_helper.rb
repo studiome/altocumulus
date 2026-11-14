@@ -77,4 +77,17 @@ module ApplicationHelper
 
     tag.span(l(date, format: :with_weekday), class: css_class)
   end
+
+  # Makes a page refresh itself when another user changes what it shows (see
+  # LiveUpdate and the live-page controller): a show page names its records
+  # ("Patient:3"), a list page the record types its rows show ("Surgery").
+  # Also asks Turbo for a morph refresh that keeps the scroll position.
+  # Use as `<div <%= live_page_attributes(types: %w[Patient]) %>>`.
+  def live_page_attributes(types: [], records: [])
+    turbo_refreshes_with(method: :morph, scroll: :preserve)
+    data = { controller: "live-page", action: "live-update@window->live-page#received" }
+    data[:live_page_types_value] = Array(types).join(" ") if types.present?
+    data[:live_page_records_value] = Array(records).compact.join(" ") if records.present?
+    tag.attributes(data: data)
+  end
 end

@@ -1,6 +1,6 @@
 <% content_for :title, t(".title") %>
 
-<div class="app-page">
+<div class="app-page" <%= live_page_attributes(types: %w[Hospitalization Patient]) %>>
 
   <section class="app-page-header">
     <div class="app-page-header-body">
