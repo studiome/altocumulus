@@ -87,5 +87,4 @@ class ElectiveSlotRule < ApplicationRecord
   def live_update_all?
     true
   end
-
 end

@@ -17,5 +17,4 @@ class SpecialSlotDayOverride < ApplicationRecord
   def live_update_dates
     live_update_values(:date)
   end
-
 end

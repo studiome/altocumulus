@@ -49,5 +49,4 @@ class AdmissionThresholdRule < ApplicationRecord
   def live_update_all?
     true
   end
-
 end

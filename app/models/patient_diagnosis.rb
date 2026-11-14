@@ -42,5 +42,4 @@ class PatientDiagnosis < ApplicationRecord
     live_update_values(:patient_id).map { |pid| live_update_key("Patient", pid) } +
       surgeries.pluck(:id).map { |sid| live_update_key("Surgery", sid) }
   end
-
 end

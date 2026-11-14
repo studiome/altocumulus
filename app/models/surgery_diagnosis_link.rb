@@ -16,5 +16,4 @@ class SurgeryDiagnosisLink < ApplicationRecord
   def live_update_records
     surgery&.live_update_records || []
   end
-
 end

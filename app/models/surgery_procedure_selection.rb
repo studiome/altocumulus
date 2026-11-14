@@ -30,5 +30,4 @@ class SurgeryProcedureSelection < ApplicationRecord
   def live_update_records
     surgery&.live_update_records || []
   end
-
 end

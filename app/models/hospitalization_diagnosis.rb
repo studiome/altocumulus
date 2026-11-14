@@ -16,5 +16,4 @@ class HospitalizationDiagnosis < ApplicationRecord
   def live_update_records
     hospitalization&.live_update_records || []
   end
-
 end
