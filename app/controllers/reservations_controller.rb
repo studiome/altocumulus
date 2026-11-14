@@ -62,7 +62,7 @@ class ReservationsController < ApplicationController
   def admission_count
     @date = Reservation.parse_date(params[:date])
     @count = AdmissionCalendar.count_on(@date) if @date
-    @threshold = Rails.application.config.x.admission_warning_threshold
+    @threshold = AdmissionThreshold.for_dates([ @date ]).threshold_for(@date) if @date
   end
 
   # GET /reservations/slot_summary?date=2026-11-10

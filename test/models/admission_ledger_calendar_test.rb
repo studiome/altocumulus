@@ -79,6 +79,31 @@ class AdmissionLedgerCalendarTest < ActiveSupport::TestCase
     assert_equal few, many
   end
 
+  test "the warning compares the day with its own threshold" do
+    monday = Date.new(2026, 5, 11)
+    [ hospitalizations(:three), hospitalizations(:four) ].each { |h| h.update_columns(purpose: "other", scheduled_admission_date: monday + 1, admission_date: nil) }
+    AdmissionThresholdRule.create!(day_of_week: monday.wday, threshold: 1)
+    board = calendar
+
+    assert_equal 1, board.admission_threshold_for(monday)
+    assert board.admission_warning?(monday)
+    assert_not board.admission_warning?(monday + 1), "the next weekday uses the default"
+    assert_equal Rails.application.config.x.admission_warning_threshold, board.admission_threshold_for(monday + 1)
+    assert_not board.admission_threshold_overridden?(monday)
+  end
+
+  test "a per-date override wins and is marked" do
+    monday = Date.new(2026, 5, 11)
+    [ hospitalizations(:three), hospitalizations(:four) ].each { |h| h.update_columns(purpose: "other", scheduled_admission_date: monday + 1, admission_date: nil) }
+    AdmissionThresholdRule.create!(day_of_week: monday.wday, threshold: 1)
+    Holiday.create!(date: monday, holiday: false, admission_threshold: 10)
+    board = calendar
+
+    assert_equal 10, board.admission_threshold_for(monday)
+    assert board.admission_threshold_overridden?(monday)
+    assert_not board.admission_warning?(monday)
+  end
+
   private
 
     def with_threshold(value)

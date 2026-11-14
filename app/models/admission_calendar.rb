@@ -1,13 +1,13 @@
 # A month grid of scheduled admission counts for the reservation form's side
 # panel: how many non-deleted hospitalizations fall on each day (by effective
 # admission date, the actual one if present, otherwise the scheduled one), and
-# which days are over the configured warning threshold. The whole visible grid
+# which days are over that day's warning threshold (see AdmissionThreshold). The whole visible grid
 # (the month plus the neighbouring days that fill its first and last week) is
 # counted in one query.
 class AdmissionCalendar
   EFFECTIVE_DATE = "COALESCE(hospitalizations.admission_date, hospitalizations.scheduled_admission_date)".freeze
 
-  attr_reader :month, :threshold
+  attr_reader :month
 
   # "2026-11" or any ISO date inside the month; anything else is this month.
   def self.parse_month(value)
@@ -22,9 +22,8 @@ class AdmissionCalendar
     Hospitalization.active.where("#{EFFECTIVE_DATE} = ?", date).count
   end
 
-  def initialize(month:, threshold: Rails.application.config.x.admission_warning_threshold)
+  def initialize(month:)
     @month = month.beginning_of_month
-    @threshold = threshold
   end
 
   # Sunday-first weeks covering the month.
@@ -36,8 +35,12 @@ class AdmissionCalendar
     counts[date] || 0
   end
 
+  def threshold_for(date)
+    thresholds.threshold_for(date)
+  end
+
   def over_threshold?(date)
-    count_for(date) > threshold
+    count_for(date) > threshold_for(date)
   end
 
   def in_month?(date)
@@ -53,6 +56,10 @@ class AdmissionCalendar
   end
 
   private
+
+    def thresholds
+      @thresholds ||= AdmissionThreshold.for_dates(grid_dates)
+    end
 
     def grid_dates
       first = month.beginning_of_week(:sunday)

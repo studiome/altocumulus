@@ -24,7 +24,7 @@ class OperationsCalendar
   end
 
   attr_reader :start_date, :days, :dates, :slot_usages, :admission_counts,
-              :admission_warning_threshold, :columns, :filter, :return_start, :return_days
+              :columns, :filter, :return_start, :return_days
 
   # Parses the raw (and possibly invalid or crafted) request params into a
   # valid range before building the calendar, so a bad `start` or `days`
@@ -51,11 +51,11 @@ class OperationsCalendar
     @return_start = return_start
     @return_days = return_days
     @dates = (start_date..(start_date + days - 1)).to_a
-    @admission_warning_threshold = Rails.application.config.x.admission_warning_threshold
 
     @columns = LedgerColumn.for_ledger(:operations_calendar)
     @slot_usages = ElectiveSlotUsage.for_dates(@dates, includes: LedgerColumn.includes_for(@columns))
     @admission_counts = Hospitalization.admission_counts_on(@dates)
+    @admission_thresholds = AdmissionThreshold.for_dates(@dates, holidays: @slot_usages.transform_values(&:holiday).compact)
     @shown_surgery_ids = filter.surgery_ids(@dates)
     @referral_lookup = build_referral_lookup
   end
@@ -85,8 +85,18 @@ class OperationsCalendar
     admission_counts[date] || 0
   end
 
+  # The day's admissions-per-day warning threshold (see AdmissionThreshold) and
+  # whether a per-date Holiday value is what applies.
+  def admission_threshold_for(date)
+    @admission_thresholds.threshold_for(date)
+  end
+
+  def admission_threshold_overridden?(date)
+    @admission_thresholds.overridden?(date)
+  end
+
   def admission_warning?(date)
-    admission_count_for(date) > admission_warning_threshold
+    admission_count_for(date) > admission_threshold_for(date)
   end
 
   private

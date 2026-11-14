@@ -30,7 +30,7 @@
         <%= reservation_field_error(reservation, "hospitalization.scheduled_admission_date", "hospitalization.admission_date") %>
         <%= render "admission_count", date: hospitalization.scheduled_admission_date,
               count: (AdmissionCalendar.count_on(hospitalization.scheduled_admission_date) if hospitalization.scheduled_admission_date),
-              threshold: Rails.application.config.x.admission_warning_threshold %>
+              threshold: (AdmissionThreshold.for_dates([ hospitalization.scheduled_admission_date ]).threshold_for(hospitalization.scheduled_admission_date) if hospitalization.scheduled_admission_date) %>
       </div>
 
       <div class="app-field">

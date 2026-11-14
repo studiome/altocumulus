@@ -1837,7 +1837,7 @@ en:
       next_month: "Next month"
       month_title: "%{month}/%{year}"
       day_title: "%{date}: %{count} admissions"
-      legend: "Numbers are scheduled admissions per day; highlighted days exceed %{threshold}."
+      legend: "Numbers are scheduled admissions per day; highlighted days are over that day's admission guideline."
     side_panel:
       label: "Reservation guide"
       calendar_heading: "Scheduled admissions"

@@ -201,7 +201,7 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
     assert_select "tbody#day-2026-05-12 td.ledger-patient a.ledger-primary[href=?]", edit_reservation_path(hospitalizations(:one))
     assert_select "tbody#day-2026-05-12 td.ledger-day" do
       assert_select "a[href=?]", new_reservation_path(scheduled_admission_date: "2026-05-12"), text: I18n.t("reservations.links.new_reservation")
-      assert_select "*", text: /Admissions:\s*2 \/ #{Rails.application.config.x.admission_warning_threshold}/
+      assert_select "*", text: /Admissions:\s*2 \/ #{Rails.application.config.x.admission_warning_threshold}\z/
       assert_select ".badge-warning", false
     end
     assert_select "tbody#day-2026-05-11 tr.oc-empty", text: /No admissions scheduled/
@@ -219,6 +219,23 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
     ensure
       Rails.application.config.x.admission_warning_threshold = original
     end
+  end
+
+  test "the admission tab shows the day's own threshold and marks a per-date override" do
+    hospitalizations(:one).update_columns(scheduled_admission_date: Date.new(2026, 5, 12), admission_date: nil)
+    hospitalizations(:two).update_columns(scheduled_admission_date: Date.new(2026, 5, 12), admission_date: nil)
+    AdmissionThresholdRule.create!(day_of_week: Date.new(2026, 5, 12).wday, threshold: 1)
+    AdmissionThresholdRule.create!(day_of_week: Date.new(2026, 5, 13).wday, threshold: 3)
+    Holiday.create!(date: Date.new(2026, 5, 13), holiday: false, admission_threshold: 7)
+
+    get operations_calendar_url, params: { start: "2026-05-12", days: 2, view: "admission" }
+
+    assert_select "tbody#day-2026-05-12 td.ledger-day" do
+      assert_select "*", text: /Admissions:\s*2 \/ 1\s*\z/
+      assert_select ".badge-warning"
+    end
+    assert_select "tbody#day-2026-05-13 td.ledger-day", text: /0 \/ 7 \(changed\)/
+    assert_select "tbody#day-2026-05-12 td.ledger-day", text: /\(changed\)/, count: 0
   end
 
   test "an invalid range on the admission tab redirects" do

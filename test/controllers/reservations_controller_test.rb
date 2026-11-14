@@ -307,6 +307,48 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".badge-warning"
   end
 
+  test "admission_count compares the day with its weekday threshold and shows it" do
+    date = Date.new(2026, 11, 9)
+    2.times do |i|
+      patient = Patient.create!(hospital_id: "WT#{i}", name: "W#{i}", date_of_birth: "1980-01-01")
+      Hospitalization.create!(patient: patient, scheduled_admission_date: date, purpose: "examination",
+                              hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:appendicitis).id } ])
+    end
+    AdmissionThresholdRule.create!(day_of_week: date.wday, threshold: 1)
+
+    get admission_count_reservations_url(date: date.iso8601)
+    assert_select "turbo-frame#reservation_admission_count", text: /2.*warning above 1/
+    assert_select ".badge-warning"
+
+    get admission_count_reservations_url(date: (date + 1).iso8601)
+    assert_select ".badge-warning", count: 0
+  end
+
+  test "admission_count uses a per-date override" do
+    date = Date.new(2026, 11, 9)
+    AdmissionThresholdRule.create!(day_of_week: date.wday, threshold: 1)
+    Holiday.create!(date: date, holiday: false, admission_threshold: 8)
+
+    get admission_count_reservations_url(date: date.iso8601)
+
+    assert_select "turbo-frame#reservation_admission_count", text: /0.*warning above 8/
+  end
+
+  test "admission_calendar highlights days over their own threshold and no longer prints one number" do
+    date = Date.new(2026, 11, 9)
+    2.times do |i|
+      patient = Patient.create!(hospital_id: "MG#{i}", name: "G#{i}", date_of_birth: "1980-01-01")
+      Hospitalization.create!(patient: patient, scheduled_admission_date: date, purpose: "examination",
+                              hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:appendicitis).id } ])
+    end
+    AdmissionThresholdRule.create!(day_of_week: date.wday, threshold: 1)
+
+    get admission_calendar_reservations_url(month: "2026-11")
+
+    assert_select "[data-testid=admission-calendar] .bg-warning\\/30", count: 1
+    assert_no_match(/exceed \d/, response.body)
+  end
+
   test "admission_calendar renders the month with counts, the selected day and navigation" do
     Hospitalization.create!(patient: @patient, scheduled_admission_date: "2026-11-09", purpose: "examination",
                             hospitalization_diagnoses_attributes: [ { diagnosis_id: diagnoses(:appendicitis).id } ])

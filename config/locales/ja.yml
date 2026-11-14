@@ -1744,7 +1744,7 @@ ja:
       next_month: "次の月"
       month_title: "%{year}年%{month}月"
       day_title: "%{date}: 入院予定 %{count}件"
-      legend: "数字は日ごとの入院予定数です。%{threshold}件を超える日は色付きで表示します。"
+      legend: "数字は日ごとの入院予定数です。その日の入院数の目安を超える日は色付きで表示します。"
     side_panel:
       label: "入約の案内"
       calendar_heading: "入院予定数"

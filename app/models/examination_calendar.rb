@@ -8,7 +8,7 @@
 # queries (one for the rows with what the configured columns read, one for the
 # admission counts, plus the filter's own), however many days or rows there are.
 class ExaminationCalendar
-  attr_reader :start_date, :days, :dates, :columns, :filter, :return_start, :return_days, :admission_warning_threshold
+  attr_reader :start_date, :days, :dates, :columns, :filter, :return_start, :return_days
 
   def self.build(start: nil, days: nil, filter: CalendarFilter.none)
     start_date, days = OperationsCalendar.parse_range(start: start, days: days)
@@ -22,10 +22,10 @@ class ExaminationCalendar
     @return_start = return_start
     @return_days = return_days
     @dates = (start_date..(start_date + days - 1)).to_a
-    @admission_warning_threshold = Rails.application.config.x.admission_warning_threshold
     @columns = LedgerColumn.for_ledger(:examination_calendar)
     @admission_counts = Hospitalization.admission_counts_on(@dates)
     @holidays = Holiday.by_date(@dates)
+    @admission_thresholds = AdmissionThreshold.for_dates(@dates, holidays: @holidays)
     @by_date = load_rows.group_by { |hospitalization| row_date(hospitalization) }
   end
 
@@ -55,8 +55,18 @@ class ExaminationCalendar
     @admission_counts[date] || 0
   end
 
+  # The day's admissions-per-day warning threshold (see AdmissionThreshold) and
+  # whether a per-date Holiday value is what applies.
+  def admission_threshold_for(date)
+    @admission_thresholds.threshold_for(date)
+  end
+
+  def admission_threshold_overridden?(date)
+    @admission_thresholds.overridden?(date)
+  end
+
   def admission_warning?(date)
-    admission_count_for(date) > admission_warning_threshold
+    admission_count_for(date) > admission_threshold_for(date)
   end
 
   # The patient column links to the reservation form (these are active

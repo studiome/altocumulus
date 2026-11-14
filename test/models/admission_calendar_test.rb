@@ -17,7 +17,9 @@ class AdmissionCalendarTest < ActiveSupport::TestCase
     deleted = reserve(@patients[2], scheduled: "2026-11-10")
     deleted.discard!
 
-    calendar = AdmissionCalendar.new(month: Date.new(2026, 11, 1), threshold: 1)
+    AdmissionThresholdRule.create!(day_of_week: Date.new(2026, 11, 10).wday, threshold: 1)
+    AdmissionThresholdRule.create!(day_of_week: Date.new(2026, 11, 11).wday, threshold: 1)
+    calendar = AdmissionCalendar.new(month: Date.new(2026, 11, 1))
 
     assert_equal 2, calendar.count_for(Date.new(2026, 11, 10))
     assert_equal 0, calendar.count_for(Date.new(2026, 11, 11))
@@ -57,8 +59,28 @@ class AdmissionCalendarTest < ActiveSupport::TestCase
     assert_queries_count(1) { AdmissionCalendar.new(month: Date.new(2026, 11, 1)).count_for(Date.new(2026, 11, 10)) }
   end
 
-  test "the threshold defaults to the configured admission warning threshold" do
-    assert_equal Rails.application.config.x.admission_warning_threshold, AdmissionCalendar.new(month: Date.current).threshold
+  test "each day is compared with its own threshold" do
+    monday = Date.new(2026, 11, 9)
+    tuesday = Date.new(2026, 11, 10)
+    3.times { |i| reserve(@patients[i], scheduled: monday.iso8601) }
+    3.times { |i| reserve(@patients[i], scheduled: tuesday.iso8601) }
+    AdmissionThresholdRule.create!(day_of_week: monday.wday, threshold: 2)
+
+    calendar = AdmissionCalendar.new(month: Date.new(2026, 11, 1))
+
+    assert calendar.over_threshold?(monday)
+    assert_not calendar.over_threshold?(tuesday), "Tuesday falls back to the default"
+    assert_equal 2, calendar.threshold_for(monday)
+    assert_equal Rails.application.config.x.admission_warning_threshold, calendar.threshold_for(tuesday)
+  end
+
+  test "a date override beats the weekday rule" do
+    monday = Date.new(2026, 11, 9)
+    reserve(@patients[0], scheduled: monday.iso8601)
+    AdmissionThresholdRule.create!(day_of_week: monday.wday, threshold: 5)
+    Holiday.create!(date: monday, holiday: false, admission_threshold: 0)
+
+    assert AdmissionCalendar.new(month: Date.new(2026, 11, 1)).over_threshold?(monday)
   end
 
   test "parse reads a month or a date string and falls back to the current month" do
