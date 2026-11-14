@@ -58,13 +58,7 @@ module ConfigurableRequiredFields
         # "Team undecided" is an answer to the team question, unlike a blank.
         next if attribute == :team_id && try(:team_undecided?)
 
-        errors.add(attribute, :blank) if missing_value?(attribute)
+        errors.add(attribute, :blank) if public_send(attribute).blank?
       end
-    end
-
-    # For a boolean column false is an answer; only nil is missing.
-    def missing_value?(attribute)
-      value = public_send(attribute)
-      self.class.type_for_attribute(attribute.to_s).type == :boolean ? value.nil? : value.blank?
     end
 end

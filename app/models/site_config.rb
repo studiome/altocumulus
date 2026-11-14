@@ -340,11 +340,16 @@ class SiteConfig
     def validate_field_names!(label, model, fields)
       return if self.class.pending_migrations?
 
-      attribute_names = REQUIRED_FIELD_MODELS.fetch(model).constantize.attribute_names
-      unknown = fields - attribute_names
-      return if unknown.empty?
+      klass = REQUIRED_FIELD_MODELS.fetch(model).constantize
+      unknown = fields - klass.attribute_names
+      raise Error, "#{source}: #{label} has unknown field(s) #{unknown.join(', ')}" if unknown.any?
 
-      raise Error, "#{source}: #{label} has unknown field(s) #{unknown.join(', ')}"
+      # A yes/no column always has an answer (a checkbox submits 0 or 1), so
+      # requiring it could never fail while the form still marked it required.
+      booleans = fields.select { |field| klass.type_for_attribute(field).type == :boolean }
+      return if booleans.empty?
+
+      raise Error, "#{source}: #{label} lists boolean field(s) #{booleans.join(', ')}; boolean fields cannot be required"
     rescue ActiveRecord::ActiveRecordError
       nil
     end

@@ -164,6 +164,17 @@ class SiteConfigTest < ActiveSupport::TestCase
     assert_empty config.required_fields(:hospitalization)
   end
 
+  test "boolean fields cannot be required" do
+    error = assert_raises(SiteConfig::Error) { SiteConfig.from_hash("required_fields" => { "hospitalization" => %w[emergency_admission] }) }
+    assert_match "emergency_admission", error.message
+    assert_match "boolean", error.message
+    error = assert_raises(SiteConfig::Error) do
+      SiteConfig.from_hash("required_fields" => { "hospitalization_by_purpose" => { "examination" => %w[procedure_name team_undecided] } })
+    end
+    assert_match "team_undecided", error.message
+    assert_equal %i[procedure_name], SiteConfig.from_hash("required_fields" => { "hospitalization" => %w[procedure_name] }).required_fields(:hospitalization)
+  end
+
   test "hospitalization_by_purpose rejects unknown purposes, unknown fields and bad shapes" do
     error = assert_raises(SiteConfig::Error) do
       SiteConfig.from_hash("required_fields" => { "hospitalization_by_purpose" => { "nap" => [ "reason" ] } })
