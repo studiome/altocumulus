@@ -19,7 +19,7 @@
 <div class="max-w-md mx-auto w-full">
   <div class="app-panel">
     <div class="app-panel-body">
-      <%= form_with url: login_path, method: :post, scope: :session, local: true, class: "app-form" do |form| %>
+      <%= form_with url: login_path, method: :post, scope: :session, local: true, class: "app-form", data: { controller: "sign-in-form" } do |form| %>
         <% if flash[:alert].present? %>
           <div role="alert" class="alert alert-error mb-6">
             <span><%= flash[:alert] %></span>
@@ -28,12 +28,15 @@
 
         <div class="app-field">
           <%= form.label :login_id, User.human_attribute_name(:login_id), class: "app-field-label" %>
-          <%= login_id_field(form, class: "input w-full focus:input-primary", autofocus: true, autocomplete: "username") %>
+          <%= login_id_field(form, class: "input w-full focus:input-primary", autofocus: true, autocomplete: "username",
+                                          autocapitalize: "off", autocorrect: "off", spellcheck: false,
+                                          data: { sign_in_form_target: "loginId", action: "keydown->sign-in-form#keydown" }) %>
         </div>
 
         <div class="app-field">
           <%= form.label :password, User.human_attribute_name(:password), class: "app-field-label" %>
-          <%= form.password_field :password, class: "input w-full focus:input-primary", autocomplete: "current-password" %>
+          <%= form.password_field :password, class: "input w-full focus:input-primary", autocomplete: "current-password",
+                                                   data: { sign_in_form_target: "password" } %>
         </div>
 
         <div class="pt-4">
