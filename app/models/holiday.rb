@@ -7,6 +7,10 @@
 # (列数): slot_count replaces the rule's count, and slot_duration_minutes, when
 # given, its duration (required when the weekday has no rule to inherit it
 # from). A closed day never carries an override.
+#
+# Either kind of day may also carry an admission_threshold (入院数の目安) that
+# replaces the weekday's for that date (see AdmissionThreshold); a comment-only
+# row with nothing but that value is valid.
 class Holiday < ApplicationRecord
   validates :date, presence: true, uniqueness: true
   validates :name, presence: true, if: :holiday?
@@ -14,6 +18,7 @@ class Holiday < ApplicationRecord
   validates :slot_count, numericality: { greater_than: 0 }, allow_nil: true
   validates :slot_duration_minutes, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :slot_override_only_on_open_days
+  validates :admission_threshold, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
   scope :ordered, -> { order(:date) }
   scope :between, ->(from, to) { where(date: from..to) }
@@ -76,7 +81,7 @@ class Holiday < ApplicationRecord
 
     def must_have_name_or_note_when_not_a_holiday
       return if holiday?
-      return if name.present? || note.present?
+      return if name.present? || note.present? || admission_threshold.present?
 
       errors.add(:base, :must_have_name_or_note)
     end

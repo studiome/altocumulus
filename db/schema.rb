@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_08_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_14_000100) do
   create_table "access_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event", null: false
@@ -29,6 +29,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_000100) do
     t.datetime "updated_at", null: false
     t.integer "user_id"
     t.index ["user_id"], name: "index_admin_notes_on_user_id"
+  end
+
+  create_table "admission_threshold_rules", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "day_of_week", null: false
+    t.integer "threshold", null: false
+    t.datetime "updated_at", null: false
+    t.index ["day_of_week"], name: "index_admission_threshold_rules_on_day_of_week", unique: true
+    t.check_constraint "day_of_week BETWEEN 0 AND 6", name: "admission_threshold_rules_day_of_week_range"
+    t.check_constraint "threshold >= 0", name: "admission_threshold_rules_threshold_non_negative"
   end
 
   create_table "announcements", force: :cascade do |t|
@@ -119,6 +129,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_000100) do
   end
 
   create_table "holidays", force: :cascade do |t|
+    t.integer "admission_threshold"
     t.datetime "created_at", null: false
     t.date "date", null: false
     t.boolean "holiday", default: true, null: false
@@ -128,6 +139,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_000100) do
     t.decimal "slot_count", precision: 4, scale: 1
     t.integer "slot_duration_minutes"
     t.index ["date"], name: "index_holidays_on_date", unique: true
+    t.check_constraint "admission_threshold IS NULL OR admission_threshold >= 0", name: "holidays_admission_threshold_non_negative"
   end
 
   create_table "hospitalization_diagnoses", force: :cascade do |t|

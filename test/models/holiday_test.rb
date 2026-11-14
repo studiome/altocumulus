@@ -90,3 +90,22 @@ class HolidayTest < ActiveSupport::TestCase
     assert_equal "2026-05-05 Short-staffed today", holiday.to_s
   end
 end
+
+class HolidayAdmissionThresholdTest < ActiveSupport::TestCase
+  test "a comment-only row carrying only an admission threshold is valid" do
+    assert Holiday.new(date: Date.new(2026, 5, 5), holiday: false, admission_threshold: 3).valid?
+  end
+
+  test "an admission threshold is allowed on a closed day" do
+    assert Holiday.new(date: Date.new(2026, 5, 5), holiday: true, name: "Closed", admission_threshold: 0).valid?
+  end
+
+  test "an empty comment-only row is still invalid" do
+    assert_not Holiday.new(date: Date.new(2026, 5, 5), holiday: false).valid?
+  end
+
+  test "a negative or fractional admission threshold is invalid" do
+    assert_not Holiday.new(date: Date.new(2026, 5, 5), holiday: false, admission_threshold: -1).valid?
+    assert_not Holiday.new(date: Date.new(2026, 5, 5), holiday: false, admission_threshold: 1.5).valid?
+  end
+end
