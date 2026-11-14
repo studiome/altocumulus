@@ -132,6 +132,7 @@ en:
     diagnoses: "Diagnoses"
     procedures: "Procedures"
     slot_rules: "Slot Rules"
+    admission_thresholds: "Admission Guidelines"
     holidays: "Holidays"
     departments: "Departments"
     surgery_locations: "Surgery Locations"
@@ -239,6 +240,10 @@ en:
       holiday:
         slot_count: "Slot count"
         slot_duration_minutes: "Slot duration (min)"
+        admission_threshold: "Admission guideline"
+      admission_threshold_rule:
+        day_of_week: "Weekday"
+        threshold: "Admission guideline"
     errors:
       format: "%{attribute} %{message}"
       messages:
@@ -776,10 +781,32 @@ en:
       slot_duration_label: "Minutes per slot (optional)"
       slot_duration_placeholder: "e.g. 240"
       slot_duration_helper: "Overrides the weekday's slot length for this date. Leave blank to keep it; required when the weekday has no slot rule."
+      admission_threshold_label: "Admission guideline (optional)"
+      admission_threshold_placeholder: "e.g. 3"
+      admission_threshold_helper: "Admissions per day above which this date is flagged, instead of the weekday's setting (a warning only). Whole number, 0 or more; leave blank to use the weekday setting. Available for closed days too."
     # Shared across index and show (see the design note above `common:`).
     status_badge:
       closed: "Closed"
       note_only: "Note only"
+
+  admission_threshold_rules:
+    show:
+      title: "Admission Guidelines"
+      description: "Admissions per day above which the calendars warn (a warning only; saving is never blocked). A weekday without a setting uses the default of %{threshold}. A single date can be changed in its day note or in Holidays."
+      day_header: "Day"
+      threshold_header: "Guideline (admissions per day)"
+      source_header: "Setting"
+      weekday_setting: "Weekday setting"
+      default_badge: "Default"
+    edit:
+      title: "Edit Admission Guidelines"
+      help: "Enter the admissions per day above which a warning is shown, as a whole number (0 or more). Leave a weekday blank to use the default."
+      default_placeholder: "Default: %{threshold}"
+      default_hint: "If left blank: %{threshold}"
+      errors_heading: "Some values could not be saved. Nothing was changed."
+      save: "Save"
+    update:
+      success_notice: "Admission guidelines were successfully updated."
 
   elective_slot_rules:
     index:
@@ -1590,6 +1617,9 @@ en:
   day_notes:
     form:
       closed_label: "Closed day"
+      admission_threshold_label: "Admission guideline"
+      admission_threshold_placeholder: "Weekday"
+      admission_threshold_hint: "Blank = weekday setting"
       name_label: "Name"
       note_label: "Note"
       slot_count_label: "Slots"

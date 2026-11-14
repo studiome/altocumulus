@@ -47,6 +47,12 @@
             <span class="text-lg font-medium"><%= @holiday.slot_duration_minutes ? t(".minutes_value", minutes: @holiday.slot_duration_minutes) : t(".weekday_duration") %></span>
           </div>
         <% end %>
+        <% if @holiday.admission_threshold.present? %>
+          <div>
+            <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Holiday.human_attribute_name(:admission_threshold) %></span>
+            <span class="text-lg font-medium"><%= @holiday.admission_threshold %></span>
+          </div>
+        <% end %>
         <div class="sm:col-span-2">
           <span class="text-xs font-bold uppercase text-base-content/40 block mb-1"><%= Holiday.human_attribute_name(:note) %></span>
           <span class="text-lg font-medium whitespace-pre-line"><%= @holiday.note.presence || t("common.none") %></span>

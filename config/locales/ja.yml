@@ -87,6 +87,7 @@ ja:
     diagnoses: "診断名"
     procedures: "術式"
     slot_rules: "手術枠ルール"
+    admission_thresholds: "入院数の目安"
     holidays: "休日"
     departments: "診療科"
     surgery_locations: "実施場所"
@@ -258,7 +259,11 @@ ja:
       special_slot_day_override:
         date: "日付"
         slot_count: "列数"
+      admission_threshold_rule:
+        day_of_week: "曜日"
+        threshold: "入院数の目安"
       holiday:
+        admission_threshold: "入院数の目安"
         date: "日付"
         holiday: "休日"
         name: "名称"
@@ -855,9 +860,31 @@ ja:
       slot_duration_label: "1枠の時間（分）(任意)"
       slot_duration_placeholder: "例: 240"
       slot_duration_helper: "この日に限り、曜日ごとの1枠の時間を上書きします。空欄の場合は曜日のルールのままです。曜日に手術枠ルールがない場合は必須です。"
+      admission_threshold_label: "入院数の目安（任意）"
+      admission_threshold_placeholder: "例: 3"
+      admission_threshold_helper: "この日に限り、曜日の設定の代わりに、これを超えると警告する1日の入院数です（警告のみ）。0以上の整数。空欄なら曜日の設定を使います。休診日にも設定できます。"
     status_badge:
       closed: "休診"
       note_only: "メモのみ"
+
+  admission_threshold_rules:
+    show:
+      title: "入院数の目安"
+      description: "1日の入院数がこの数を超えると、カレンダー等で警告を表示します(警告のみで、保存は妨げません)。設定のない曜日は既定値の%{threshold}件を使います。特定の日だけ変えるには、日付のメモまたは休日マスタで設定します。"
+      day_header: "曜日"
+      threshold_header: "入院数の目安(1日あたり)"
+      source_header: "設定"
+      weekday_setting: "曜日の設定"
+      default_badge: "既定値"
+    edit:
+      title: "入院数の目安を編集"
+      help: "警告を出す1日あたりの入院数を、0以上の整数で入力します。空欄の曜日は既定値を使います。"
+      default_placeholder: "既定値: %{threshold}"
+      default_hint: "未設定なら %{threshold}"
+      errors_heading: "保存できない値があります。何も変更されていません。"
+      save: "保存"
+    update:
+      success_notice: "入院数の目安を更新しました。"
 
   elective_slot_rules:
     index:
@@ -1503,6 +1530,9 @@ ja:
   day_notes:
     form:
       closed_label: "休診日"
+      admission_threshold_label: "入院数の目安"
+      admission_threshold_placeholder: "曜日の設定"
+      admission_threshold_hint: "空欄なら曜日の設定"
       name_label: "名称"
       note_label: "備考"
       slot_count_label: "列数"

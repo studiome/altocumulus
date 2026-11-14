@@ -70,6 +70,7 @@ Rails.application.routes.draw do
     resources :entries, controller: "case_database_entries", only: %i[ new create edit update destroy ]
   end
   resources :elective_slot_rules
+  resource :admission_threshold_rules, only: %i[show edit update]
   resources :holidays
   resources :departments, :surgery_locations, :surgical_devices, except: :show
   resources :teams, except: :show do

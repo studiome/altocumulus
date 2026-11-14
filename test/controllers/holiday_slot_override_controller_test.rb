@@ -67,4 +67,28 @@ class HolidaySlotOverrideControllerTest < ActionDispatch::IntegrationTest
     get surgery_url(surgery)
     assert_select "span.badge", text: /1.*2/
   end
+
+  test "the form offers the admission threshold field with a hint" do
+    get new_holiday_url
+    assert_select "input[type=number][name='holiday[admission_threshold]'][min='0'][step='1']"
+  end
+
+  test "create stores an admission threshold on a closed day and an override-only note day" do
+    post holidays_url, params: { holiday: { date: DAY, holiday: "1", name: "Closed", admission_threshold: "0" } }
+    assert_equal 0, Holiday.find_by!(date: DAY).admission_threshold
+
+    post holidays_url, params: { holiday: { date: "2026-03-18", holiday: "0", admission_threshold: "3" } }
+    assert_equal 3, Holiday.find_by!(date: "2026-03-18").admission_threshold
+  end
+
+  test "show and index display the admission threshold" do
+    holiday = Holiday.create!(date: DAY, holiday: false, note: "n", admission_threshold: 7)
+
+    get holiday_url(holiday)
+    assert_select "span", text: "7"
+    assert_select "body", text: /Admission guideline/
+
+    get holidays_url
+    assert_select "td", text: "7"
+  end
 end

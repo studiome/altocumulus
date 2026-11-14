@@ -19,6 +19,7 @@ class DayNotesControllerTest < ActionDispatch::IntegrationTest
       assert_select "textarea[name='holiday[note]']"
       assert_select "input[name='holiday[slot_count]']"
       assert_select "input[name='holiday[slot_duration_minutes]']"
+      assert_select "input[type=number][name='holiday[admission_threshold]'][min='0'][step='1']"
       assert_select "input[type=hidden][name=start][value=?]", "2026-03-01"
       assert_select "a[href=?]", day_note_path(DATE, CONTEXT)
     end
@@ -56,6 +57,27 @@ class DayNotesControllerTest < ActionDispatch::IntegrationTest
     holiday = Holiday.find_by!(date: DATE)
     assert_equal 2, holiday.slot_count
     assert_not holiday.holiday?.nil?
+  end
+
+  test "update saves an admission threshold alone and the re-rendered admission tab shows it" do
+    assert_difference "Holiday.count", 1 do
+      patch day_note_url(DATE), params: CONTEXT.merge(view: "admission", holiday: { holiday: "0", admission_threshold: "9" }), headers: TURBO
+    end
+    assert_response :success
+    assert_equal 9, Holiday.find_by!(date: DATE).admission_threshold
+    assert_select "template tbody#day-#{DATE} td.ledger-day", text: /0 \/ 9 \(changed\)/
+  end
+
+  test "a blank admission threshold clears the override" do
+    Holiday.create!(date: DATE, holiday: false, note: "Keep", admission_threshold: 4)
+    patch day_note_url(DATE), params: CONTEXT.merge(view: "admission", holiday: { holiday: "0", note: "Keep", admission_threshold: "" }), headers: TURBO
+    assert_nil Holiday.find_by!(date: DATE).admission_threshold
+  end
+
+  test "an invalid admission threshold re-renders the form" do
+    patch day_note_url(DATE), params: CONTEXT.merge(holiday: { holiday: "0", note: "x", admission_threshold: "-2" }), headers: frame_headers
+    assert_response :unprocessable_entity
+    assert_select "turbo-frame#day-note-#{DATE} .alert-error"
   end
 
   test "update changes an existing holiday and can close the day" do

@@ -1,0 +1,36 @@
+<% content_for :title, t(".title") %>
+
+<div class="max-w-2xl mx-auto w-full">
+  <div class="mb-3 flex items-center gap-3">
+    <%= link_to admission_threshold_rules_path, class: "btn btn-circle btn-ghost", aria: { label: t("common.back") } do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+    <% end %>
+    <h1 class="app-page-title"><%= t(".title") %></h1>
+  </div>
+
+  <%= form_with url: admission_threshold_rules_path, method: :patch, class: "app-form" do %>
+    <% if @errors.any? %>
+      <div role="alert" class="alert alert-error mb-6"><%= t(".errors_heading") %></div>
+    <% end %>
+
+    <p class="app-helper mb-4"><%= t(".help", threshold: AdmissionThresholdRule.default_threshold) %></p>
+
+    <% AdmissionThresholdRule::WEEKDAY_ORDER.each do |day| %>
+      <div class="app-field" data-weekday="<%= day %>">
+        <%= label_tag "admission_threshold_rules_#{day}", t("date.day_names")[day], class: "app-field-label" %>
+        <%= number_field_tag "admission_threshold_rules[#{day}]", @entries[day], id: "admission_threshold_rules_#{day}",
+              class: "input w-full focus:input-primary", min: 0, step: 1,
+              placeholder: t(".default_placeholder", threshold: AdmissionThresholdRule.default_threshold),
+              aria: { invalid: @errors.key?(day) ? "true" : nil, describedby: "admission_threshold_rules_#{day}_hint" } %>
+        <p id="admission_threshold_rules_<%= day %>_hint" class="app-helper"><%= t(".default_hint", threshold: AdmissionThresholdRule.default_threshold) %></p>
+        <% Array(@errors[day]).each do |message| %>
+          <p class="text-error text-sm" role="alert"><%= message %></p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="pt-4">
+      <%= submit_tag t(".save"), class: "btn btn-primary w-full" %>
+    </div>
+  <% end %>
+</div>

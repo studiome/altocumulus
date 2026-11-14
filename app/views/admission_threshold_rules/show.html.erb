@@ -1,0 +1,42 @@
+<% content_for :title, t(".title") %>
+
+<div class="w-full">
+  <div class="flex justify-between items-center mb-3">
+    <div>
+      <h1 class="app-page-title"><%= t(".title") %></h1>
+      <p class="text-base-content/60"><%= t(".description", threshold: AdmissionThresholdRule.default_threshold) %></p>
+    </div>
+    <% if admin? %>
+      <%= link_to t("common.edit"), edit_admission_threshold_rules_path, class: "btn btn-secondary" %>
+    <% end %>
+  </div>
+
+  <div class="app-panel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th><%= t(".day_header") %></th>
+            <th><%= t(".threshold_header") %></th>
+            <th><%= t(".source_header") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% AdmissionThresholdRule::WEEKDAY_ORDER.each do |day| %>
+            <tr class="row-hover" data-weekday="<%= day %>">
+              <td class="font-semibold"><%= t("date.day_names")[day] %></td>
+              <td class="font-mono"><%= @rules.fetch(day, AdmissionThresholdRule.default_threshold) %></td>
+              <td>
+                <% if @rules.key?(day) %>
+                  <span class="badge badge-primary badge-sm"><%= t(".weekday_setting") %></span>
+                <% else %>
+                  <span class="badge badge-ghost badge-sm"><%= t(".default_badge") %></span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

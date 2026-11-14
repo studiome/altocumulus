@@ -45,6 +45,12 @@
   </div>
 
   <div class="app-field">
+    <%= form.label :admission_threshold, t(".admission_threshold_label"), class: "app-field-label" %>
+    <%= form.number_field :admission_threshold, class: "input w-full focus:input-primary", min: 0, step: 1, placeholder: t(".admission_threshold_placeholder") %>
+    <p class="app-helper"><%= t(".admission_threshold_helper") %></p>
+  </div>
+
+  <div class="app-field">
     <%= form.label :note, class: "app-field-label" %>
     <%= form.text_area :note, class: "textarea w-full focus:textarea-primary", rows: 3, placeholder: t(".note_placeholder") %>
   </div>

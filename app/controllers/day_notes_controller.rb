@@ -46,7 +46,7 @@ class DayNotesController < ApplicationController
     end
 
     def holiday_params
-      params.expect(holiday: [ :holiday, :name, :note, :slot_count, :slot_duration_minutes ])
+      params.expect(holiday: [ :holiday, :name, :note, :slot_count, :slot_duration_minutes, :admission_threshold ])
     end
 
     def frame_id

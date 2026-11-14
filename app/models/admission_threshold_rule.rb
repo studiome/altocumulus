@@ -17,6 +17,30 @@ class AdmissionThresholdRule < ApplicationRecord
     pluck(:day_of_week, :threshold).to_h
   end
 
+  # Saves the whole week from the admin form: `entries` maps weekday (0..6) to
+  # the text typed. Blank deletes that weekday's row (it falls back to the
+  # default). All or nothing: when any entry is invalid nothing is written and
+  # the per-weekday error messages are returned ({} on success).
+  def self.replace_week(entries)
+    errors = {}
+    transaction do
+      (0..6).each do |day|
+        text = entries[day].to_s.strip
+        existing = find_by(day_of_week: day)
+        if text.empty?
+          existing&.destroy!
+          next
+        end
+
+        rule = existing || new(day_of_week: day)
+        rule.threshold = text
+        errors[day] = rule.errors.full_messages_for(:threshold) unless rule.save
+      end
+      raise ActiveRecord::Rollback if errors.any?
+    end
+    errors
+  end
+
   def self.default_threshold
     Rails.application.config.x.admission_warning_threshold
   end

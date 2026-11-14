@@ -42,6 +42,13 @@
       <%= form.number_field :slot_duration_minutes, class: "input input-sm w-24", min: 1, step: 1 %>
     </div>
 
+    <div class="app-filter-field">
+      <%= form.label :admission_threshold, t("day_notes.form.admission_threshold_label"), class: "app-filter-label" %>
+      <%= form.number_field :admission_threshold, class: "input input-sm w-24", min: 0, step: 1,
+            placeholder: t("day_notes.form.admission_threshold_placeholder"), aria: { describedby: "day-note-admission-threshold-hint" } %>
+      <span id="day-note-admission-threshold-hint" class="app-helper"><%= t("day_notes.form.admission_threshold_hint") %></span>
+    </div>
+
     <%= form.submit t("day_notes.form.save"), class: "btn btn-primary btn-sm" %>
     <%= link_to t("day_notes.form.cancel"), day_note_path(date, context_params), class: "btn btn-ghost btn-sm" %>
   <% end %>
