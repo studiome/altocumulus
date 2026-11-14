@@ -529,6 +529,14 @@ en:
   #     with its weekday, e.g. a detail-page header) instead of `strftime`.
   #     Add new `date.formats` keys following that naming pattern rather
   #     than hard-coding a new strftime string in a view.
+  edit_conflicts:
+    heading: "Another user updated this record"
+    changed_by: "%{name} changed it at %{time}"
+    someone: "Someone"
+    hint: "Your changes have not been saved. Load the latest content (your input will be discarded), or save anyway to overwrite the other changes."
+    load_latest: "Load the latest"
+    overwrite: "Save anyway"
+    live_notice: "Another user has just updated this record. Your save will ask before overwriting."
   common:
     actions: "Actions"
     view: "View"

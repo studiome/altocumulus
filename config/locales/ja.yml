@@ -632,6 +632,14 @@ ja:
 
   # Stage 3 of the i18n rollout (see en.yml for the design notes on the
   # common: namespace and the lazy-lookup / shared-scope conventions).
+  edit_conflicts:
+    heading: "他のユーザーがこの記録を更新しました"
+    changed_by: "%{name} さんが %{time} に変更しました"
+    someone: "別のユーザー"
+    hint: "入力内容はまだ保存されていません。最新の内容を読み込む（入力内容は破棄されます）か、このまま上書き保存してください。"
+    load_latest: "最新の内容を読み込む"
+    overwrite: "このまま上書き保存"
+    live_notice: "他のユーザーがこの記録をいま更新しました。保存するときは、上書きしてよいか確認します。"
   common:
     actions: "操作"
     view: "詳細"

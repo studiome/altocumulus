@@ -1,4 +1,6 @@
 class PatientsController < ApplicationController
+  include EditConflictGuard
+
   # Header set by the patient picker's turbo-frame so new/create can tell a
   # picker-modal request apart from `new_patient_path` used as a plain link
   # elsewhere (e.g. the "no patients" warning on the surgery/hospitalization
@@ -64,12 +66,12 @@ class PatientsController < ApplicationController
   # PATCH/PUT /patients/1 or /patients/1.json
   def update
     respond_to do |format|
-      if @patient.update(patient_params)
+      if guarded_save(@patient, on_conflict: -> { @patient.assign_attributes(patient_params) }) { @patient.update(patient_params) }
         format.html { redirect_to @patient, notice: t(".success_notice"), status: :see_other }
         format.json { render :show, status: :ok, location: @patient }
       else
         format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @patient.errors, status: :unprocessable_entity }
+        format.json { edit_failure_json(@patient.errors) }
       end
     end
   end

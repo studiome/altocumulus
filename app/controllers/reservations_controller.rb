@@ -7,6 +7,7 @@
 # slot summary of a date, team members for a date, month mini-calendar).
 class ReservationsController < ApplicationController
   include CalendarReturn
+  include EditConflictGuard
 
   ANNOUNCEMENT_LIMIT = 5
 
@@ -38,7 +39,10 @@ class ReservationsController < ApplicationController
   end
 
   def update
-    if @reservation.update(reservation_params)
+    saved = guarded_save(*@reservation.versioned_records, on_conflict: -> { @reservation.assign(reservation_params) }) do
+      @reservation.update(reservation_params)
+    end
+    if saved
       redirect_after_save(t(".success_notice"), status: :see_other)
     else
       prepare_form

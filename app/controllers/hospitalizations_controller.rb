@@ -1,4 +1,6 @@
 class HospitalizationsController < ApplicationController
+  include EditConflictGuard
+
   # A hospitalization can accumulate many audit events over its lifetime; the
   # detail page only needs enough of the recent trail to be useful, with a
   # link out to the full audit log for anything older.
@@ -58,13 +60,16 @@ class HospitalizationsController < ApplicationController
 
   def update
     respond_to do |format|
-      if save_hospitalization { @hospitalization.update(hospitalization_params) }
+      saved = guarded_save(@hospitalization, on_conflict: -> { @hospitalization.assign_attributes(hospitalization_params) }) do
+        save_hospitalization { @hospitalization.update(hospitalization_params) }
+      end
+      if saved
         format.html { redirect_to @hospitalization, notice: t(".success_notice"), status: :see_other }
         format.json { render :show, status: :ok, location: @hospitalization }
       else
         build_hospitalization_diagnoses if @hospitalization.hospitalization_diagnoses.empty?
         format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @hospitalization.errors, status: :unprocessable_entity }
+        format.json { edit_failure_json(@hospitalization.errors) }
       end
     end
   end

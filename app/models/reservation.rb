@@ -121,6 +121,12 @@ class Reservation
     hospitalization.persisted?
   end
 
+  # The records whose EditVersion guards an edit of this reservation (the
+  # surgery only once it exists).
+  def versioned_records
+    [ hospitalization, surgery ].compact.select(&:persisted?)
+  end
+
   # The blank-row-padded lists the form renders.
   def diagnosis_rows_for_form
     diagnosis_rows.presence || [ DiagnosisRow.new(laterality: "none") ]

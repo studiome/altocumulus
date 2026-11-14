@@ -1,0 +1,42 @@
+<%# locals: records (the persisted records whose EditVersion the form guards),
+           edit_path (the page that reloads the latest),
+           watch (optional "Model:id" keys the early notice listens for; default: records)
+
+    Concurrent-edit protection for the edit forms, inside the form:
+      - the hidden version the form was rendered with (see EditConflictGuard);
+      - after a refused save, the warning with "Load the latest" / "Save anyway"
+        (the button re-submits this same form with overwrite=1);
+      - a hidden notice that live-edit-notice reveals when another user updates
+        one of the watched records while the form is open (never touches input). %>
+<% watch = (local_assigns[:watch] || records.compact.map { |record| LiveUpdate.key(record) }).compact %>
+<div data-controller="live-edit-notice"
+     data-live-edit-notice-records-value="<%= watch.join(" ") %>"
+     data-action="live-update@window->live-edit-notice#received">
+  <%= hidden_field_tag :edit_version, edit_version_token(*records), id: nil %>
+
+  <% if @edit_conflict %>
+    <div role="alert" class="alert alert-warning mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+      <div class="w-full">
+        <h3 class="font-bold"><%= t("edit_conflicts.heading") %></h3>
+        <% if @edit_conflict.editors.any? %>
+          <ul class="list-disc ml-6">
+            <% @edit_conflict.editors.each do |editor| %>
+              <li><%= t("edit_conflicts.changed_by", name: editor.name.presence || t("edit_conflicts.someone"), time: l(editor.at, format: :short_timestamp)) %></li>
+            <% end %>
+          </ul>
+        <% end %>
+        <p class="text-sm mt-1"><%= t("edit_conflicts.hint") %></p>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <%= link_to t("edit_conflicts.load_latest"), edit_path, class: "btn btn-sm btn-outline" %>
+          <%= button_tag t("edit_conflicts.overwrite"), type: "submit", name: "overwrite", value: "1", class: "btn btn-sm btn-warning" %>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <div role="status" class="alert alert-info mb-6 hidden" data-live-edit-notice-target="notice">
+      <span><%= t("edit_conflicts.live_notice") %></span>
+      <%= link_to t("edit_conflicts.load_latest"), edit_path, class: "btn btn-sm btn-outline" %>
+    </div>
+  <% end %>
+</div>

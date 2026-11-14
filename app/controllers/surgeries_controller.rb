@@ -1,5 +1,6 @@
 class SurgeriesController < ApplicationController
   include CalendarReturn
+  include EditConflictGuard
 
   DEFAULT_LOOKBACK_DAYS = 7
 
@@ -56,14 +57,17 @@ class SurgeriesController < ApplicationController
 
   def update
     respond_to do |format|
-      if save_surgery { @surgery.update(surgery_params) && save_clinical_comment }
+      saved = guarded_save(@surgery, on_conflict: -> { @surgery.assign_attributes(surgery_params) }) do
+        save_surgery { @surgery.update(surgery_params) && save_clinical_comment }
+      end
+      if saved
         format.html { redirect_after_save(t(".success_notice"), status: :see_other) }
         format.json { render :show, status: :ok, location: @surgery }
       else
         set_form_collections
         build_surgery_procedure_selections if @surgery.surgery_procedure_selections.empty?
         format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @surgery.errors, status: :unprocessable_entity }
+        format.json { edit_failure_json(@surgery.errors) }
       end
     end
   end

@@ -13,6 +13,10 @@
     </div>
   <% end %>
 
+  <% if patient.persisted? %>
+    <%= render "shared/edit_guard", records: [ patient ], edit_path: edit_patient_path(patient) %>
+  <% end %>
+
   <div class="app-field">
     <%= form.label :hospital_id, t("patients.labels.hospital_id"), class: "app-field-label" %>
     <%= form.text_field :hospital_id, class: "input w-full focus:input-primary", placeholder: t(".hospital_id_placeholder") %>
