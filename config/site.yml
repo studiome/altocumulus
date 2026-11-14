@@ -33,6 +33,10 @@ features:
 # the form.
 #   hospitalization_by_purpose:
 #     examination: [scheduled_procedure_date, procedure_name]
+#     chemotherapy: [chemotherapy_protocol_id]
+# chemotherapy_protocol_id (the Protocol field) exists only for the
+# chemotherapy and chemoradiotherapy purposes and is optional unless listed
+# for one of them here; the asterisk follows the chosen purpose.
 required_fields: {}
 
 # patient: patient ID rules.
@@ -45,7 +49,7 @@ patient: {}
 
 # masters: names to make sure exist in the admin-editable master tables, which
 # are managed on the Masters screens (Departments, Surgery Locations, Surgical
-# Devices) and feed the surgery form's choices. Nothing is created at boot:
+# Devices, Chemotherapy Protocols) and feed the forms' choices. Nothing is created at boot:
 # run `bin/rails site:seed_masters` (also part of `db:seed`) after a deploy.
 # It only adds missing names, in the order listed, and never renames, reorders
 # or deletes existing rows.
@@ -55,6 +59,8 @@ patient: {}
 #                      to flag a place whose cases may be performed by another
 #                      department (applied only to newly created rows).
 #   surgical_devices:  surgical support devices (手術支援機器)
+#   chemotherapy_protocols: treatment protocols (化学療法プロトコル) chosen on
+#                      chemotherapy and chemoradiotherapy admissions
 #   teams:             care teams (担当チーム). An entry is a name, or
 #                      {name: ..., color: blue} with one of blue, red, green,
 #                      orange, purple, teal, gray (applied only to newly
@@ -98,6 +104,10 @@ masters: {}
 #   diagnosis_procedure_name   diagnoses / procedure name
 #   purpose                    purpose / scheduled procedure or surgery date
 #   category                   emergency admission / transfer
+#   protocol                   chemotherapy protocol (not in any default; the
+#                              combined diagnosis_procedure_name cell already
+#                              shows the protocol name after the procedure
+#                              name, so a ledger listing both shows it twice)
 # The PDF is monochrome: badges print as plain text. Its column widths come
 # from the columns themselves and shrink proportionally to fit the page.
 ledger_columns:

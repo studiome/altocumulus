@@ -16,6 +16,8 @@ required_fields:
     examination:
       - scheduled_procedure_date
       - procedure_name
+    chemotherapy:
+      - chemotherapy_protocol_id
   surgery:
     - operator_name
     - duration_hours
@@ -33,6 +35,7 @@ masters:
       asks_performing_department: true
     - 病棟処置室
   surgical_devices: [da Vinci, hinotori]
+  chemotherapy_protocols: [Protocol A, Protocol B, Protocol C]
   teams:
     - name: 青チーム
       color: blue
@@ -45,7 +48,7 @@ ledger_columns:
   operations_calendar: [patient, age_sex, diagnosis_procedure, duration_anesthesia, team, category, admission_dates, reservation, referral_adl, status]
   weekly_pdf: [time_slot, patient, age_sex, diagnosis_procedure, duration_anesthesia, team, category, referral_adl]
   examination_calendar: [patient, age_sex, diagnosis_procedure_name, purpose, team, admission_dates, reservation, referral_adl, status]
-  admission_calendar: [patient, age_sex, purpose, diagnosis_procedure_name, team, category, admission_dates, referral_adl, status]
+  admission_calendar: [patient, age_sex, purpose, diagnosis_procedure_name, protocol, team, category, admission_dates, referral_adl, status]
 
 # The weekly surgery schedule PDF (see config/site.yml): starting font size
 # (6-10) and a title replacing the translated default.

@@ -50,6 +50,15 @@ class DevDemoDataTest < ActiveSupport::TestCase
     assert Team.find_by!(name: DevDemoData::TEAMS.first[:name]).term_for(Date.new(2026, 10, 19))
   end
 
+  test "creates fictional protocols and gives the chemotherapy admissions one" do
+    DevDemoData.run(environment: "development", today: Date.new(2026, 10, 19))
+    assert_equal DevDemoData::PROTOCOLS.sort, ChemotherapyProtocol.where(name: DevDemoData::PROTOCOLS).pluck(:name).sort
+    chemo = Hospitalization.where(purpose: "chemotherapy", patient: Patient.where(name: DevDemoData::PATIENT_NAMES))
+    assert chemo.exists?
+    assert chemo.all? { |hospitalization| hospitalization.chemotherapy_protocol.present? }
+    assert Hospitalization.where.not(purpose: "chemotherapy").where.not(chemotherapy_protocol_id: nil).none?
+  end
+
   test "is idempotent" do
     DevDemoData.run(environment: "development", today: Date.new(2026, 10, 19))
     before = counts

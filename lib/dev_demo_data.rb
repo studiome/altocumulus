@@ -41,6 +41,7 @@ class DevDemoData
   DEPARTMENTS = %w[消化器外科 循環器内科 放射線科].freeze
   LOCATIONS = [ { name: "手術室" }, { name: "ハイブリッド室" }, { name: "カテ室", asks_performing_department: true } ].freeze
   DEVICES = [ "手術支援ロボットA", "手術支援ロボットB" ].freeze
+  PROTOCOLS = [ "架空プロトコルA", "架空プロトコルB", "架空プロトコルC" ].freeze
 
   # A diagnosis with the procedure that treats it, and how the case is usually
   # run (anesthesia, hours, where, whether a surgical robot is used). Every demo
@@ -121,7 +122,7 @@ class DevDemoData
   GIVEN_NAMES = %w[太郎 花子 一郎 美咲 健太 愛 大輔 結衣 翔 優子 誠 明美 拓海 由美 隆 恵 剛 久美子 修 直美].freeze
   PATIENT_NAMES = FAMILY_NAMES.each_with_index.map { |family, i| "#{family} #{GIVEN_NAMES[i % GIVEN_NAMES.size]}" }.freeze
 
-  COUNTED = [ User, Department, SurgeryLocation, SurgicalDevice, Team, TeamTerm, TeamTermMember, Patient,
+  COUNTED = [ User, Department, SurgeryLocation, SurgicalDevice, ChemotherapyProtocol, Team, TeamTerm, TeamTermMember, Patient,
               PatientDiagnosis, Hospitalization, Surgery, Holiday, ElectiveSlotRule, Diagnosis, SurgeryProcedure ].freeze
 
   # Returns how many rows of each kind this run created, keyed like
@@ -175,6 +176,7 @@ class DevDemoData
       DEPARTMENTS.each { |name| Department.create!(name: name) } if Department.none?
       LOCATIONS.each { |attrs| SurgeryLocation.create!(attrs) } if SurgeryLocation.none?
       DEVICES.each { |name| SurgicalDevice.create!(name: name) } if SurgicalDevice.none?
+      PROTOCOLS.each { |name| ChemotherapyProtocol.find_or_create_by!(name: name) }
 
       @departments = Department.active.ordered.to_a
       @partner_department = department_named("循環器内科") || @departments.second || @departments.first
@@ -183,6 +185,7 @@ class DevDemoData
       @hybrid_room = @locations.find { |l| l.name.match?(/ハイブリッド|hybrid/i) } || @locations.second || @locations.first
       @main_room = (@locations - [ @cath_lab, @hybrid_room ]).first || @locations.first
       @devices = SurgicalDevice.active.ordered.to_a
+      @protocols = ChemotherapyProtocol.where(name: PROTOCOLS).ordered.to_a
     end
 
     def department_named(name)
@@ -342,7 +345,7 @@ class DevDemoData
 
     # --- refresh ----------------------------------------------------------------
 
-    HOSPITALIZATION_REFRESH_KEYS = %i[purpose referred_from adl emergency_admission procedure_name].freeze
+    HOSPITALIZATION_REFRESH_KEYS = %i[purpose referred_from adl emergency_admission procedure_name chemotherapy_protocol].freeze
     HOSPITALIZATION_DATE_KEYS = %i[scheduled_admission_date scheduled_surgery_date scheduled_procedure_date].freeze
     SURGERY_REFRESH_KEYS = %i[surgery_date anesthesia_method duration_hours scheduling_type slot_category slot_number operation_order
                               surgery_location surgical_device performing_department department backup_intervention].freeze
@@ -450,7 +453,7 @@ class DevDemoData
         { purpose: "examination", scheduled_procedure_date: date, procedure_name: pair.procedure, scheduled_admission_date: date }
       when :chemotherapy
         { purpose: "chemotherapy", scheduled_procedure_date: date, procedure_name: "#{pair.procedure}(第#{index % 4 + 1}コース)",
-          scheduled_admission_date: date }
+          scheduled_admission_date: date, chemotherapy_protocol: @protocols[index % @protocols.size] }
       when :off_slot
         { purpose: "examination", scheduled_procedure_date: date, procedure_name: pair.procedure, scheduled_admission_date: date }
       when :emergency
