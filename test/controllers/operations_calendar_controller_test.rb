@@ -412,4 +412,18 @@ class OperationsCalendarControllerTest < ActionDispatch::IntegrationTest
       ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
       count
     end
+
+  test "the ledger wires up live day refreshes with the viewer's context" do
+    %w[surgery examination admission].each do |view|
+      get operations_calendar_url, params: { start: "2026-03-01", days: "7", view: view, mine: "1" }
+
+      assert_select "table[data-controller~=live-calendar]" do |tables|
+        table = tables.first
+        assert_equal calendar_day_path("DATE"), table["data-live-calendar-day-url-value"]
+        context = JSON.parse(table["data-live-calendar-context-value"])
+        assert_equal({ "start" => "2026-03-01", "days" => 7, "view" => view, "mine" => "1" }, context.slice("start", "days", "view", "mine"))
+        assert_match(/live-update@window->live-calendar#received/, table["data-action"])
+      end
+    end
+  end
 end

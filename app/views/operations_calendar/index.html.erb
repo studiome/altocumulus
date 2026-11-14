@@ -67,7 +67,10 @@
       <%# One ledger table for the whole range: each day is its own <tbody>
           (see _day / _examination_day), so the day cell can span that day's rows. %>
       <% frozen_keys = LedgerColumn.frozen_keys(@calendar.columns) %>
-      <table class="app-ledger oc-ledger" data-controller="ledger-freeze">
+      <table class="app-ledger oc-ledger" data-controller="ledger-freeze live-calendar"
+             data-live-calendar-day-url-value="<%= calendar_day_path("DATE") %>"
+             data-live-calendar-context-value="<%= range_params.merge(view: @view).to_json %>"
+             data-action="live-update@window->live-calendar#received">
         <thead>
           <tr>
             <th><%= @view == "surgery" ? t("surgeries.labels.surgery_date") : t(".date_header") %></th>
