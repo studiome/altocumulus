@@ -32,8 +32,8 @@ class SurgeryReferralLookup
   private
 
     def value_for(surgery, field)
-      linked = surgery.hospitalization
-      return linked.public_send(field) if linked && !linked.deleted?
+      linked = surgery.active_hospitalization
+      return linked.public_send(field) if linked
       return nil if surgery.surgery_date.nil?
 
       @referrals_by_patient.fetch(surgery.patient_id, []).find { |hospitalization|

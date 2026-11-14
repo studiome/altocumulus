@@ -11,7 +11,7 @@
 <% new_surgery_path = new_reservation_path(surgery_date: date, purpose: "surgery") %>
 <% surgery_details_path = ->(surgery) { surgery_path(surgery, from: "calendar", start: calendar.return_start.iso8601, days: calendar.return_days) } %>
 <%# The name opens the reservation form (every field editable); the surgery page stays one click away as "Details". %>
-<% context = calendar.ledger_context(href: ->(surgery) { surgery.hospitalization && !surgery.hospitalization.deleted? ? edit_reservation_path(surgery.hospitalization) : surgery_details_path.call(surgery) }) %>
+<% context = calendar.ledger_context(href: ->(surgery) { surgery.active_hospitalization ? edit_reservation_path(surgery.active_hospitalization) : surgery_details_path.call(surgery) }) %>
 <tbody id="day-<%= date.iso8601 %>" class="oc-day group <%= "oc-day-highlight" if highlight %>"<% if highlight %> data-controller="calendar-highlight"<% end %>>
   <%= render "operations_calendar/day_band", date: date, usage_holiday: usage.holiday, columns: columns, context: note_context %>
   <% if admin? %>
@@ -65,7 +65,7 @@
         <% calendar.columns.each_with_index do |column, index| %>
           <td <%= tag.attributes(ledger_frozen_attributes(column, frozen_keys, extra_classes: [ ("ledger-stripe" if index.zero? && surgery.emergency?) ])) %>>
             <%= ledger_cell(column.cell(surgery, context)) %>
-            <% if index.zero? && surgery.hospitalization && !surgery.hospitalization.deleted? %>
+            <% if index.zero? && surgery.active_hospitalization %>
               <%= link_to t("reservations.links.show_details"), surgery_details_path.call(surgery),
                     class: "app-inline-link text-xs print:hidden block", aria: { label: t("reservations.links.show_details") + " " + surgery.patient.name } %>
             <% end %>

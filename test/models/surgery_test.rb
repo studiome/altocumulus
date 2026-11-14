@@ -687,4 +687,18 @@ class SurgerySiteConfigTest < ActiveSupport::TestCase
 
     assert surgery.reload.update(duration_hours: 2.5), surgery.errors.full_messages.to_sentence
   end
+
+  test "active_hospitalization is the linked hospitalization unless it is deleted or absent" do
+    hosp = hospitalizations(:one)
+    surgery = surgeries(:one)
+    surgery.update_columns(hospitalization_id: nil)
+    assert_nil surgery.reload.active_hospitalization
+
+    surgery.update_columns(hospitalization_id: hosp.id)
+    assert_equal hosp, surgery.reload.active_hospitalization
+
+    hosp.discard!
+    assert_nil surgery.reload.active_hospitalization
+    assert_equal hosp, surgery.hospitalization
+  end
 end

@@ -225,6 +225,12 @@ class Surgery < ApplicationRecord
 
   # Own team, else the hospitalization's (unless the surgery itself was left
   # undecided).
+  # The hospitalization this surgery is part of, unless it was deleted (a
+  # deleted one is hidden from the surgery screens and ledgers).
+  def active_hospitalization
+    hospitalization unless hospitalization&.deleted?
+  end
+
   def effective_team
     team || (team_undecided? ? nil : hospitalization&.team)
   end

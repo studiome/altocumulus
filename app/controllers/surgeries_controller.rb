@@ -157,11 +157,13 @@ class SurgeriesController < ApplicationController
       submitted = params.fetch(:surgery, {}).permit(:hospitalization_clinical_comment)
       return true unless submitted.key?(:hospitalization_clinical_comment)
 
-      hospitalization = @surgery.hospitalization
+      linked = @surgery.hospitalization
       comment = submitted[:hospitalization_clinical_comment]
-      return true if hospitalization.nil?
-      return true if comment.to_s == hospitalization.clinical_comment.to_s
-      return skip_comment_of_deleted_hospitalization if hospitalization.deleted?
+      return true if linked.nil?
+      return true if comment.to_s == linked.clinical_comment.to_s
+
+      hospitalization = @surgery.active_hospitalization
+      return skip_comment_of_deleted_hospitalization if hospitalization.nil?
       return true if hospitalization.update(clinical_comment: comment)
 
       hospitalization.errors.full_messages.each { |message| @surgery.errors.add(:base, message) }

@@ -8,8 +8,7 @@ module LedgerColumns
     class << self
       # The hospitalization a surgery is part of, unless it was discarded.
       def hospitalization_of(surgery)
-        hospitalization = surgery.hospitalization
-        hospitalization unless hospitalization&.deleted?
+        surgery.active_hospitalization
       end
 
       def all
