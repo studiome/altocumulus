@@ -10,15 +10,15 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
 
     assert_selector "[role=tab][aria-selected=true]", text: "Surgery"
     assert_selector ".oc-legend"
-    click_on "Examination admission"
+    click_on "Examinations & procedures"
 
-    assert_selector "[role=tab][aria-selected=true]", text: "Examination admission"
+    assert_selector "[role=tab][aria-selected=true]", text: "Examinations & procedures"
     assert_current_path(/view=examination/)
     assert_current_path(/start=2026-03-01/)
     assert_selector ".oc-day", count: 7
     within("tbody#day-2026-03-05") { assert_text "Jane Smith" }
     assert_no_selector ".oc-legend"
-    assert_text "No examination admissions scheduled", minimum: 1
+    assert_text "No examinations or procedures scheduled", minimum: 1
   end
 
   test "the chemotherapy tab shows a chemotherapy admission with its protocol and the examination tab does not" do
@@ -39,7 +39,7 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
     end
     assert_text "No chemotherapy admissions scheduled", minimum: 1
 
-    click_on "Admissions"
+    click_on "All admissions"
     within("tbody#day-2026-03-05") { assert_text "Jane Smith" }
   end
 
@@ -60,9 +60,9 @@ class OperationsCalendarSystemTest < ApplicationSystemTestCase
     hospitalizations(:one).update_columns(purpose: "surgery", scheduled_admission_date: day, admission_date: nil, discharge_date: nil)
     hospitalizations(:two).update_columns(purpose: "examination", scheduled_procedure_date: day + 3, scheduled_admission_date: day, admission_date: nil, discharge_date: nil)
     visit operations_calendar_path(start: "2026-03-01", days: 7)
-    click_on "Admissions"
+    click_on "All admissions"
 
-    assert_selector "[role=tab][aria-selected=true]", text: "Admissions"
+    assert_selector "[role=tab][aria-selected=true]", text: "All admissions"
     assert_current_path(/view=admission/)
     within("tbody#day-#{day.iso8601}") do
       assert_selector "tr.oc-admission", count: 2

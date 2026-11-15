@@ -101,7 +101,7 @@ class OperationsCalendarI18nTest < ActionDispatch::IntegrationTest
     get_as users(:japanese_admin), operations_calendar_url, WINDOW
 
     assert_select "[role=tablist] a[role=tab]", text: "手術"
-    assert_select "[role=tablist] a[role=tab]", text: "検査入院"
+    assert_select "[role=tablist] a[role=tab]", text: "検査処置"
     assert_select "[role=tablist] a[role=tab]", text: "化学療法"
     assert_select "label", text: /自分が関与する症例のみ/
     assert_select ".oc-legend li", text: /緊急手術/

@@ -9,7 +9,7 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
     get operations_calendar_url, params: RANGE
     assert_select "[role=tablist].print\\:hidden" do
       assert_select "a[role=tab][aria-selected=true]", text: "Surgery", count: 1
-      assert_select "a[role=tab][aria-selected=false]", text: "Examination admission", count: 1
+      assert_select "a[role=tab][aria-selected=false]", text: "Examinations & procedures", count: 1
       assert_select "a[role=tab][href=?]", operations_calendar_path(start: "2026-03-01", days: 7, view: "examination")
     end
     assert_select "[role=tabpanel][aria-labelledby]"
@@ -138,7 +138,7 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
       assert_select "a[href=?]", new_reservation_path(purpose: "examination", scheduled_procedure_date: "2026-05-12"), text: I18n.t("reservations.links.new_reservation")
       assert_select "*", text: /Admissions:/
     end
-    assert_select "tbody#day-2026-05-11 tr.oc-empty", text: /No examination admissions/
+    assert_select "tbody#day-2026-05-11 tr.oc-empty", text: /No examinations or procedures/
     assert_select ".oc-day", 3
   end
 
@@ -192,7 +192,7 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
   test "the chemotherapy tab is third, between examination and admissions, and keeps the range" do
     get operations_calendar_url, params: RANGE.merge(view: "chemotherapy")
     assert_response :success
-    assert_equal [ "Surgery", "Examination admission", "Chemotherapy", "Admissions" ], css_select("a[role=tab]").map { |tab| tab.text.strip }
+    assert_equal [ "Surgery", "Examinations & procedures", "Chemotherapy", "All admissions" ], css_select("a[role=tab]").map { |tab| tab.text.strip }
     assert_select "a[role=tab][aria-selected=true]", text: "Chemotherapy"
     assert_select "a[role=tab][href=?]", operations_calendar_path(start: "2026-03-01", days: 7, view: "chemotherapy")
     assert_select ".oc-legend", false
@@ -259,7 +259,7 @@ class OperationsCalendarTabsTest < ActionDispatch::IntegrationTest
   test "the admission tab is the fourth tab and keeps the range" do
     get operations_calendar_url, params: RANGE
     assert_select "a[role=tab]", 4
-    assert_select "a[role=tab]:nth-of-type(4)", text: "Admissions"
+    assert_select "a[role=tab]:nth-of-type(4)", text: "All admissions"
     assert_select "a[role=tab][href=?]", operations_calendar_path(start: "2026-03-01", days: 7, view: "admission")
   end
 
