@@ -53,7 +53,7 @@ Turbo/Stimulus) — no Node build pipeline and no external database server.
 | Audit log | `/audit_events` | Records and displays create/update/delete of patients, surgeries, hospitalizations, and case databases with the operator, IP address, and before/after values |
 | Master data | `/diagnoses` `/surgery_procedures` `/elective_slot_rules` `/holidays` `/departments` `/surgery_locations` `/surgical_devices` `/chemotherapy_protocols` `/teams` | Diagnosis names, procedures, per-weekday slot rules (fractional slot counts supported), holidays / per-day comments and slot overrides, departments, surgery locations and surgical devices (the latter two with weekly special slot lane counts), chemotherapy protocols, and teams with their terms and members (`/teams` only with `features.teams`) |
 | Case databases | `/case_databases` | Named patient registries with custom fields (text / number / select) defined by a data manager. Any signed-in user can add patients, enter values, and export the registry as CSV; only a data manager can create, edit, or delete a database, its fields, or a patient entry |
-| Live updates | calendar (all four tabs), reservation form, `/patients/:id`, `/hospitalizations/:id`, `/surgeries/:id`, and the `/patients`, `/surgeries`, `/hospitalizations` and `/hospitalizations/deleted` lists | Open screens follow other users' changes without a reload: a calendar day is replaced when its data changes, the reservation form's slot summary / admission count / side calendar reload, and the detail pages and the four lists refresh (see [Live updates](#live-updates)) |
+| Live updates | calendar (all four tabs), reservation form, `/patients/:id`, `/hospitalizations/:id`, `/surgeries/:id`, and the `/patients`, `/surgeries`, `/hospitalizations` and `/hospitalizations/deleted` lists | Open screens follow other users' changes without a reload: a calendar day is replaced when its data changes and the rows another user changed or added are highlighted, the reservation form's slot summary / admission count / side calendar reload, and the detail pages and the four lists refresh (see [Live updates](#live-updates)) |
 | Concurrent edit warning | the edit forms of reservations, hospitalizations, surgeries and patients | A save made on top of another user's newer change is refused with a warning naming who changed the record and when, offering "Load the latest" or "Save anyway"; while the form is open a notice appears as soon as another user updates the record (see [Concurrent edit warning](#concurrent-edit-warning)) |
 | Account settings | `/account` | Change your own name, login id, and password, and switch the display language |
 | User management (admin only) | `/admin/users` | Create, edit, and deactivate users and reset passwords. The last active admin can be neither deactivated nor demoted |
@@ -536,6 +536,10 @@ out or an idle expiry disconnects that user's sockets. Requests the browser make
 updates carry `X-Live-Update: 1` and do not count as activity, so an unattended screen still times out
 and its next automatic refresh lands on the sign-in page. The Content Security Policy allows
 `connect-src` to the app's own origin and its `ws://` / `wss://` equivalent for this socket.
+
+On the sign-in screen, Tab or Enter in the login id field moves to the password field (done by script so it
+also works in Safari on Mac and iPad; Enter submits once the password is filled, and keys are ignored while
+an IME is composing).
 
 The session stores the time of last access; going longer than `config.x.session_idle_timeout`
 (10 minutes by default, configurable via `SESSION_IDLE_TIMEOUT_MINUTES`) without activity expires
