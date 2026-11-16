@@ -59,6 +59,100 @@ class LiveUpdateSystemTest < ApplicationSystemTestCase
     within("tbody#day-#{DAY.iso8601}") { assert_text "Jane Smith", wait: 10 }
   end
 
+  def row_for(record)
+    "tr[data-live-key='#{record.class.name}:#{record.id}']"
+  end
+
+  def press_row(selector)
+    page.execute_script("arguments[0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))", find(selector))
+  end
+
+  def in_viewport?(selector)
+    page.evaluate_script(<<~JS)
+      (() => { const r = document.querySelector(#{selector.to_json}).getBoundingClientRect(); return r.top >= 0 && r.bottom <= window.innerHeight })()
+    JS
+  end
+
+  test "a changed surgery row flashes, is marked until clicked, and its unchanged neighbour is left alone" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    wait_for_live_connection
+    changed = surgeries(:four)
+    unchanged = surgeries(:three)
+    assert_selector row_for(changed)
+    assert_no_selector "tr.live-marked"
+
+    changed.update!(patient: patients(:one))
+
+    assert_selector "#{row_for(changed)}.live-changed.live-marked", wait: 10
+    assert_selector "#{row_for(changed)}.live-marked .live-badge"
+    assert_selector "#{row_for(changed)} td.live-changed-cell[data-ledger-column='patient']"
+    assert_selector row_for(unchanged)
+    assert_no_selector "#{row_for(unchanged)}.live-changed"
+    assert_no_selector "#{row_for(unchanged)}.live-marked"
+    assert_no_selector "#{row_for(unchanged)} td.live-changed-cell"
+
+    # A later refresh of the same day keeps the marker.
+    unchanged.update!(patient: patients(:two))
+    assert_selector "#{row_for(unchanged)}.live-marked", wait: 10
+    assert_selector "#{row_for(changed)}.live-marked .live-badge"
+
+    press_row(row_for(changed))
+    assert_no_selector "#{row_for(changed)}.live-marked"
+    assert_no_selector "#{row_for(changed)} .live-badge"
+    assert_selector "#{row_for(unchanged)}.live-marked"
+  end
+
+  test "a surgery moved away leaves a removal notice and a moved-in row is marked" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7)
+    wait_for_live_connection
+    moved = surgeries(:four)
+
+    moved.update!(surgery_date: Date.new(2026, 3, 5))
+
+    within("tbody#day-2026-03-03") { assert_selector "tr.live-removed-band[role='status'][data-live-ignore]", text: /1/, wait: 10 }
+    assert_selector "tbody#day-2026-03-05 #{row_for(moved)}.live-marked"
+  end
+
+  test "a new examination hospitalization is marked on the chemotherapy tab" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7, view: "chemotherapy")
+    wait_for_live_connection
+    hospitalization = hospitalizations(:two)
+
+    hospitalization.update!(purpose: "chemotherapy", scheduled_procedure_date: DAY, scheduled_admission_date: DAY,
+                            admission_date: nil, discharge_date: nil, outcome: nil, discharge_destination: nil,
+                            chemotherapy_protocol: chemotherapy_protocols(:protocol_a))
+
+    assert_selector "#{row_for(hospitalization)}.live-changed.live-marked .live-badge", wait: 10
+  end
+
+  test "a new admission is marked on the admission tab" do
+    visit operations_calendar_path(start: "2026-03-01", days: 7, view: "admission")
+    wait_for_live_connection
+    hospitalization = hospitalizations(:two)
+
+    hospitalization.update!(purpose: "examination", scheduled_procedure_date: nil, scheduled_admission_date: DAY,
+                            admission_date: nil, discharge_date: nil, outcome: nil, discharge_destination: nil)
+
+    assert_selector "tbody#day-#{DAY.iso8601} #{row_for(hospitalization)}.live-marked", wait: 10
+  end
+
+  test "a change below the fold raises a notice whose button scrolls to it" do
+    visit operations_calendar_path(start: "2026-03-01", days: 60)
+    wait_for_live_connection
+    assert_no_selector "#live-calendar-toast", visible: :visible
+    moved = surgeries(:two)
+
+    moved.update!(surgery_date: Date.new(2026, 4, 25))
+
+    assert_selector "#live-calendar-toast", visible: :visible, wait: 10
+    assert_selector "#live-calendar-toast[role='status'][aria-live='polite']", text: /1/
+    assert_not in_viewport?(row_for(moved))
+
+    within("#live-calendar-toast") { find("button[data-live-toast-go]").click }
+    Timeout.timeout(5) { sleep 0.1 until in_viewport?(row_for(moved)) }
+    assert_no_selector "#live-calendar-toast", visible: :visible
+  end
+
   test "a reservation form's slot summary, admission count and side calendar follow other users' changes" do
     visit new_reservation_path(purpose: "surgery")
     wait_for_live_connection

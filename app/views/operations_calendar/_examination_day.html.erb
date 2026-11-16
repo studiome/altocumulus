@@ -34,10 +34,10 @@
     </tr>
   <% else %>
     <% hospitalizations.each_with_index do |hospitalization, row| %>
-      <tr class="oc-exam row-hover">
+      <tr class="oc-exam row-hover" data-live-key="Hospitalization:<%= hospitalization.id %>">
         <%= day_cell if row.zero? %>
         <% calendar.columns.each_with_index do |column, index| %>
-          <td <%= tag.attributes(ledger_frozen_attributes(column, frozen_keys)) %>>
+          <td <%= tag.attributes(ledger_frozen_attributes(column, frozen_keys)) %> data-ledger-column="<%= column.key %>">
             <%= ledger_cell(column.cell(hospitalization, context)) %>
             <% if index.zero? %>
               <%= link_to t("reservations.links.show_details"), hospitalization_path(hospitalization),

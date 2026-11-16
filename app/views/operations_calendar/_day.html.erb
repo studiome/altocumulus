@@ -60,10 +60,10 @@
   <% else %>
     <% surgeries.each_with_index do |surgery, row| %>
       <% row_classes = [ "oc-surgery", "row-hover", ("ledger-row-urgent ledger-row-emergency" if surgery.emergency?), ("ledger-row-offslot" unless surgery.regular_slot?) ].compact.join(" ") %>
-      <tr class="<%= row_classes %>">
+      <tr class="<%= row_classes %>" data-live-key="Surgery:<%= surgery.id %>">
         <%= day_cell if row.zero? %>
         <% calendar.columns.each_with_index do |column, index| %>
-          <td <%= tag.attributes(ledger_frozen_attributes(column, frozen_keys, extra_classes: [ ("ledger-stripe" if index.zero? && surgery.emergency?) ])) %>>
+          <td <%= tag.attributes(ledger_frozen_attributes(column, frozen_keys, extra_classes: [ ("ledger-stripe" if index.zero? && surgery.emergency?) ])) %> data-ledger-column="<%= column.key %>">
             <%= ledger_cell(column.cell(surgery, context)) %>
             <% if index.zero? && surgery.active_hospitalization %>
               <%= link_to t("reservations.links.show_details"), surgery_details_path.call(surgery),

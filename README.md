@@ -557,7 +557,7 @@ changed records, never names or any other patient data. Each browser then re-fet
 its own session: a calendar day is fetched from `/calendar_days/:date` and swapped in (without
 morphing, so the frozen columns keep their measured offsets), the reservation form reloads its live
 frames for the dates named, and the detail pages and lists refresh the current URL with a Turbo morph
-(filters, sort and page stay as the URL has them). A day with an open note / special slot editor, a
+(filters, sort and page stay as the URL has them). Rows another user changed or added flash and keep an "Updated" badge until clicked (changed cells are tinted stronger, removed rows leave a short notice, and a change outside the viewport raises a notice with a button that scrolls to it; your own saves are not highlighted). A day with an open note / special slot editor, a
 focused form field, or an open dialog is not replaced; the refresh waits and retries, and values typed
 into a list's filter but not submitted are kept. Bursts of signals cause one refresh, and a list
 refreshes at most about every 2 seconds. A tab that was hidden for 30 seconds or more refreshes

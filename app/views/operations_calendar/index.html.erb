@@ -70,6 +70,10 @@
       <table class="app-ledger oc-ledger" data-controller="ledger-freeze live-calendar"
              data-live-calendar-day-url-value="<%= calendar_day_path("DATE") %>"
              data-live-calendar-context-value="<%= range_params.merge(view: @view).to_json %>"
+             data-live-calendar-badge-value="<%= t(".live_badge") %>"
+             data-live-calendar-removed-value="<%= t(".live_removed") %>"
+             data-live-calendar-updated-value="<%= t(".live_updated") %>"
+             data-live-calendar-toast-id-value="live-calendar-toast"
              data-action="live-update@window->live-calendar#received">
         <thead>
           <tr>
@@ -90,5 +94,14 @@
         <% end %>
       </table>
     </div>
+  </div>
+</div>
+
+<%# Shown by live-calendar when another user's change landed outside the viewport. %>
+<div id="live-calendar-toast" class="toast toast-end print:hidden z-50" style="display: none" role="status" aria-live="polite">
+  <div class="alert alert-info">
+    <span data-live-toast-message></span>
+    <button type="button" class="btn btn-sm" data-live-toast-go><%= t(".live_show") %></button>
+    <button type="button" class="btn btn-sm btn-ghost" data-live-toast-close><%= t(".live_close") %></button>
   </div>
 </div>

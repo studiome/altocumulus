@@ -688,6 +688,48 @@ html {
     display: none;
   }
 
+  /* Live refresh highlighting (live_calendar_controller.js): a changed or new
+     row flashes (only the `from` keyframe, so the cell's own background, which
+     must stay opaque for the sticky frozen cells, returns at the end), changed
+     cells flash stronger, and a marked row keeps an accent line plus a badge
+     until it is tapped. Reduced motion: no flash, the marker stays. */
+  @keyframes live-flash {
+    from { background-color: color-mix(in oklab, var(--color-warning) 38%, var(--color-base-100)); }
+  }
+
+  @keyframes live-flash-cell {
+    from { background-color: color-mix(in oklab, var(--color-warning) 65%, var(--color-base-100)); }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .oc-ledger tbody tr.live-changed td:not(.ledger-day) {
+      animation: live-flash 6s ease-out;
+    }
+
+    .oc-ledger tbody tr.live-changed td.live-changed-cell {
+      animation: live-flash-cell 6s ease-out;
+    }
+  }
+
+  .oc-ledger tbody tr.live-marked td.live-marker-cell {
+    box-shadow: inset 4px 0 0 var(--color-warning);
+  }
+
+  .oc-ledger .live-badge {
+    @apply mr-1 align-middle;
+  }
+
+  @media print {
+    .oc-ledger .live-badge,
+    .oc-ledger tr.live-removed-band {
+      display: none;
+    }
+
+    .oc-ledger tbody tr.live-marked td.live-marker-cell {
+      box-shadow: none;
+    }
+  }
+
   /* Full-width band rows (day note, special slot editor, warnings): the cell's
      background spans the whole table, but its content sticks at the page's
      left gutter and is at most one visible viewport wide, so it stays in view
