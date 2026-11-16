@@ -281,6 +281,10 @@ The fixtures (`test/fixtures/`) deliberately encode cases such as "a day where t
 one slot", "a day where one slot overruns", and "a surgery with no slot assigned", so check the
 comments before changing them.
 
+In system tests, do not wait on the success toast after a save (`assert_text "... successfully ..."`): it
+dismisses itself after 3 seconds and can be gone before a loaded CI run looks. Wait on the page the save
+lands on instead (`assert_current_path`, or the saved values on the page).
+
 ## Domain model
 
 ```mermaid
