@@ -55,6 +55,8 @@ bin/ci                  # runs the same checks as CI (see config/ci.rb)
 
 There is no separate JS package manager/build step — JavaScript is served via `importmap-rails`, and CSS via `tailwindcss-rails` (`bin/rails tailwindcss:watch`, wired into `bin/dev`).
 
+System tests: do not wait on a flash toast after an action (`assert_text "successfully ..."`). The toast dismisses itself after 3 s (`flash_toast_controller.js`) and can be gone before a loaded CI run looks; wait on the resulting page state instead (as `sign_in_as` waits on the sign-out form).
+
 ## Architecture
 
 Rails 8.1 app (Propshaft + importmap + Turbo/Stimulus, no Webpack/Node build), SQLite, Solid Queue/Cache/Cable. It's a small clinical records app tracking patients, their diagnoses, surgeries, and hospitalizations.
