@@ -81,7 +81,7 @@ class SurgeriesTest < ApplicationSystemTestCase
 
     assert_difference("Surgery.count", 1) do
       click_on "Create Surgery"
-      assert_text "Surgery was successfully created."
+      assert_current_path(/operations_calendar/)
     end
 
     assert_text "Bilateral Cholecystectomy"

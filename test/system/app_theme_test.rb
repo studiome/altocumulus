@@ -19,7 +19,7 @@ class AppThemeTest < ApplicationSystemTestCase
 
     choose "Green", allow_label_click: true
     click_button "Save Settings"
-    assert_text "Settings were successfully updated."
+    assert_selector "html[data-app-theme=green]", visible: :all
 
     assert_equal "green", page.evaluate_script("document.documentElement.dataset.appTheme")
     green = page.evaluate_script("getComputedStyle(document.querySelector('.app-navbar')).backgroundColor")

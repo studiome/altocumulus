@@ -42,7 +42,7 @@ class ReservationsTest < ApplicationSystemTestCase
 
     assert_difference [ "Hospitalization.count", "Surgery.count" ], 1 do
       click_on "Register Reservation"
-      assert_text "Reservation was successfully registered."
+      assert_current_path(/operations_calendar/)
     end
 
     assert_current_path(/operations_calendar/)
@@ -103,7 +103,7 @@ class ReservationsTest < ApplicationSystemTestCase
     assert_difference "Hospitalization.count", 1 do
       assert_no_difference "Surgery.count" do
         click_on "Register Reservation"
-        assert_text "Reservation was successfully registered."
+        assert_current_path %r{/hospitalizations/\d+\z}
       end
     end
     assert_text "Colonoscopy"
@@ -134,7 +134,7 @@ class ReservationsTest < ApplicationSystemTestCase
 
     assert_difference "Hospitalization.count", 1 do
       click_on "Register Reservation"
-      assert_text "Reservation was successfully registered."
+      assert_current_path %r{/hospitalizations/\d+\z}
     end
     assert_equal "Protocol B", Hospitalization.order(:id).last.chemotherapy_protocol.name
 
@@ -189,7 +189,7 @@ class ReservationsTest < ApplicationSystemTestCase
     set_date "reservation_hospitalization_scheduled_admission_date", @admission
     choose_diagnosis "Pneumonia"
     click_on "Register Reservation"
-    assert_text "Reservation was successfully registered."
+    assert_current_path %r{/hospitalizations/\d+\z}
     assert_equal created, Hospitalization.order(:id).last.chemotherapy_protocol
   end
 
@@ -212,7 +212,7 @@ class ReservationsTest < ApplicationSystemTestCase
     visit edit_reservation_path(hospitalization)
     assert_selector "[data-picker-field-target=display]", text: "Retired Protocol"
     click_on "Save Reservation"
-    assert_text "Reservation was successfully updated."
+    assert_current_path %r{/hospitalizations/\d+\z}
     assert_equal chemotherapy_protocols(:retired_protocol).id, hospitalization.reload.chemotherapy_protocol_id
 
     visit edit_reservation_path(hospitalization)
@@ -220,7 +220,7 @@ class ReservationsTest < ApplicationSystemTestCase
     assert_selector "[data-picker-field-target=display]", text: "No protocol selected"
     assert_equal "", find("#reservation_hospitalization_chemotherapy_protocol_id", visible: :all).value
     click_on "Save Reservation"
-    assert_text "Reservation was successfully updated."
+    assert_current_path %r{/hospitalizations/\d+\z}
     assert_nil hospitalization.reload.chemotherapy_protocol_id
   end
 
@@ -233,7 +233,7 @@ class ReservationsTest < ApplicationSystemTestCase
     set_date "reservation_hospitalization_scheduled_admission_date", @admission
     choose_diagnosis "Pneumonia"
     click_on "Register Reservation"
-    assert_text "Reservation was successfully registered."
+    assert_current_path %r{/hospitalizations/\d+\z}
     assert_nil Hospitalization.order(:id).last.chemotherapy_protocol_id
   end
 
@@ -252,7 +252,7 @@ class ReservationsTest < ApplicationSystemTestCase
 
     assert_difference "Hospitalization.count", 1 do
       click_on "Register Reservation"
-      assert_text "Reservation was successfully registered."
+      assert_current_path %r{/hospitalizations/\d+\z}
     end
     created = Hospitalization.order(:id).last
     assert_equal "chemotherapy", created.purpose
@@ -389,7 +389,7 @@ class ReservationsTest < ApplicationSystemTestCase
     assert_field "Anesthesia Method", with: "Spinal"
     fill_in "Anesthesia Method", with: "General anesthesia"
     click_on "Save Reservation"
-    assert_text "Reservation was successfully updated."
+    assert_current_path(/operations_calendar/)
 
     assert_equal "General anesthesia", reservation.surgery.reload.anesthesia_method
   end

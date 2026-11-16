@@ -37,7 +37,7 @@ class TeamTermsTest < ApplicationSystemTestCase
 
     assert_difference "TeamTermMember.count", 2 do
       click_on "Create Team term"
-      assert_text "Term was successfully created."
+      assert_current_path team_team_terms_path(teams(:red))
     end
     assert_text "Golf(M), Member User(S)"
   end
@@ -55,7 +55,7 @@ class TeamTermsTest < ApplicationSystemTestCase
     end
 
     click_on "Update Team term"
-    assert_text "Term was successfully updated."
+    assert_current_path team_team_terms_path(teams(:blue))
     assert_text "Alpha(M), Bravo(S), Delta, Echo"
   end
 

@@ -49,7 +49,7 @@ class PatientDiagnosesTest < ApplicationSystemTestCase
 
     assert_difference("PatientDiagnosis.count", 1) do
       click_on "Save Diagnosis Entry"
-      assert_text "Diagnosis entry was successfully created."
+      assert_current_path patient_path(@patient)
     end
 
     assert_text @patient.name

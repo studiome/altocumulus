@@ -25,7 +25,7 @@ class HospitalizationsTest < ApplicationSystemTestCase
 
     assert_difference("Hospitalization.count", 1) do
       click_on "Create Hospitalization"
-      assert_text "Hospitalization was successfully created."
+      assert_current_path %r{/hospitalizations/\d+\z}
     end
 
     assert_text "Pneumonia, Hypertension"
