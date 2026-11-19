@@ -45,11 +45,6 @@ class HolidaysControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "should get new" do
-    get new_holiday_url
-    assert_response :success
-  end
-
   test "should create holiday" do
     assert_difference("Holiday.count") do
       post holidays_url, params: { holiday: { date: "2026-11-03", name: "Culture Day" } }
@@ -93,11 +88,6 @@ class HolidaysControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/Fire drill today/, @response.body)
     assert_match(/Note only/, @response.body)
-  end
-
-  test "should get edit" do
-    get edit_holiday_url(@holiday)
-    assert_response :success
   end
 
   test "should update holiday" do

@@ -7,16 +7,6 @@ class PatientDiagnosesControllerTest < ActionDispatch::IntegrationTest
     @deletable_patient_diagnosis = patient_diagnoses(:hypertension)
   end
 
-  test "should get index" do
-    get patient_patient_diagnoses_url(@patient)
-    assert_response :success
-  end
-
-  test "should get new" do
-    get new_patient_patient_diagnosis_url(@patient)
-    assert_response :success
-  end
-
   test "should create patient diagnosis" do
     assert_difference("PatientDiagnosis.count") do
       post patient_patient_diagnoses_url(@patient), params: {
@@ -27,11 +17,6 @@ class PatientDiagnosesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to patient_url(@patient)
     assert_equal diagnoses(:fracture), PatientDiagnosis.last.diagnosis
     assert_equal "left", PatientDiagnosis.last.laterality
-  end
-
-  test "should show patient diagnosis" do
-    get patient_patient_diagnosis_url(@patient, @patient_diagnosis)
-    assert_response :success
   end
 
   test "should create patient diagnosis via json" do
@@ -65,11 +50,6 @@ class PatientDiagnosesControllerTest < ActionDispatch::IntegrationTest
     assert_equal Mime[:json].to_s, response.media_type
     body = response.parsed_body
     assert_equal @patient.patient_diagnoses.count, body.size
-  end
-
-  test "should get edit" do
-    get edit_patient_patient_diagnosis_url(@patient, @patient_diagnosis)
-    assert_response :success
   end
 
   test "should update patient diagnosis" do

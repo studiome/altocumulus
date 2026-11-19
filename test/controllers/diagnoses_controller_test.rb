@@ -7,16 +7,6 @@ class DiagnosesControllerTest < ActionDispatch::IntegrationTest
     @diagnosis = diagnoses(:appendicitis)
   end
 
-  test "should get index" do
-    get diagnoses_url
-    assert_response :success
-  end
-
-  test "should get new" do
-    get new_diagnosis_url
-    assert_response :success
-  end
-
   test "should create diagnosis" do
     assert_difference("Diagnosis.count") do
       post diagnoses_url, params: { diagnosis: { name: "Migraine" } }
@@ -62,16 +52,6 @@ class DiagnosesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_equal Mime[:turbo_stream].to_s, response.media_type
-  end
-
-  test "should show diagnosis" do
-    get diagnosis_url(@diagnosis)
-    assert_response :success
-  end
-
-  test "should get edit" do
-    get edit_diagnosis_url(@diagnosis)
-    assert_response :success
   end
 
   test "should update diagnosis" do

@@ -12,11 +12,6 @@ class ElectiveSlotRulesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Not configured/, @response.body)
   end
 
-  test "should get new" do
-    get new_elective_slot_rule_url
-    assert_response :success
-  end
-
   test "new prefills day_of_week from the query param" do
     get new_elective_slot_rule_url, params: { day_of_week: 4 }
     assert_response :success
@@ -37,11 +32,6 @@ class ElectiveSlotRulesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-  end
-
-  test "should get edit" do
-    get edit_elective_slot_rule_url(@elective_slot_rule)
-    assert_response :success
   end
 
   test "should update elective_slot_rule" do

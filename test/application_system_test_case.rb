@@ -128,4 +128,35 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     end
     assert_no_selector "dialog#patient_picker_modal[open]"
   end
+
+  # Sets an HTML5 date input's value and fires the input + change events so
+  # Stimulus controllers watching the field run.
+  def set_date(field_id, date)
+    page.execute_script(<<~JS)
+      const input = document.querySelector("##{field_id}")
+      input.value = "#{date.iso8601}"
+      input.dispatchEvent(new Event("input", { bubbles: true }))
+      input.dispatchEvent(new Event("change", { bubbles: true }))
+    JS
+  end
+
+  # Waits for Action Cable live-update streams to connect before changing
+  # records in the test body.
+  def wait_for_live_connection
+    assert_selector "turbo-cable-stream-source[connected]", visible: :all, wait: 10
+  end
+
+  def row_for(record)
+    "tr[data-live-key='#{record.class.name}:#{record.id}']"
+  end
+
+  def press_row(selector)
+    page.execute_script("arguments[0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))", find(selector))
+  end
+
+  def in_viewport?(selector)
+    page.evaluate_script(<<~JS)
+      (() => { const r = document.querySelector(#{selector.to_json}).getBoundingClientRect(); return r.top >= 0 && r.bottom <= window.innerHeight })()
+    JS
+  end
 end

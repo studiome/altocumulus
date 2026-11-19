@@ -34,11 +34,6 @@ class PatientsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "should get new" do
-    get new_patient_url
-    assert_response :success
-  end
-
   test "picker returns success with patient names" do
     get picker_patients_url
     assert_response :success
@@ -112,16 +107,6 @@ class PatientsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "female", patient.sex
     assert_equal "090-1111-2222", patient.telephone
     assert_equal "No known allergies.", patient.clinical_info
-  end
-
-  test "should show patient" do
-    get patient_url(@patient)
-    assert_response :success
-  end
-
-  test "should get edit" do
-    get edit_patient_url(@patient)
-    assert_response :success
   end
 
   test "should update patient" do

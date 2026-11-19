@@ -1,10 +1,6 @@
 require "application_system_test_case"
 
 class EditConflictSystemTest < ApplicationSystemTestCase
-  def wait_for_live_connection
-    assert_selector "turbo-cable-stream-source[connected]", visible: :all, wait: 10
-  end
-
   # An examination admission saves without a surgery.
   def examination_hospitalization
     hospitalizations(:one).tap do |hospitalization|

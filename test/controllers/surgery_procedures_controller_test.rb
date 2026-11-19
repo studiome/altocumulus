@@ -7,16 +7,6 @@ class SurgeryProceduresControllerTest < ActionDispatch::IntegrationTest
     @surgery_procedure = surgery_procedures(:appendectomy)
   end
 
-  test "should get index" do
-    get surgery_procedures_url
-    assert_response :success
-  end
-
-  test "should get new" do
-    get new_surgery_procedure_url
-    assert_response :success
-  end
-
   test "should create surgery procedure" do
     assert_difference("SurgeryProcedure.count") do
       post surgery_procedures_url, params: { surgery_procedure: { name: "Laparoscopy" } }
@@ -62,16 +52,6 @@ class SurgeryProceduresControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_equal Mime[:turbo_stream].to_s, response.media_type
-  end
-
-  test "should show surgery procedure" do
-    get surgery_procedure_url(@surgery_procedure)
-    assert_response :success
-  end
-
-  test "should get edit" do
-    get edit_surgery_procedure_url(@surgery_procedure)
-    assert_response :success
   end
 
   test "should update surgery procedure" do

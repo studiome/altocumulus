@@ -6,10 +6,6 @@ require "application_system_test_case"
 class LiveUpdateSystemTest < ApplicationSystemTestCase
   DAY = Date.new(2026, 3, 4) # a Wednesday with no surgeries
 
-  def wait_for_live_connection
-    assert_selector "turbo-cable-stream-source[connected]", visible: :all, wait: 10
-  end
-
   test "a calendar day picks up a surgery changed elsewhere" do
     visit operations_calendar_path(start: "2026-03-01", days: 7)
     wait_for_live_connection
@@ -57,20 +53,6 @@ class LiveUpdateSystemTest < ApplicationSystemTestCase
 
     within("turbo-frame#day-note-#{DAY.iso8601}") { click_on "Cancel" }
     within("tbody#day-#{DAY.iso8601}") { assert_text "Jane Smith", wait: 10 }
-  end
-
-  def row_for(record)
-    "tr[data-live-key='#{record.class.name}:#{record.id}']"
-  end
-
-  def press_row(selector)
-    page.execute_script("arguments[0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))", find(selector))
-  end
-
-  def in_viewport?(selector)
-    page.evaluate_script(<<~JS)
-      (() => { const r = document.querySelector(#{selector.to_json}).getBoundingClientRect(); return r.top >= 0 && r.bottom <= window.innerHeight })()
-    JS
   end
 
   test "a changed surgery row flashes, is marked until clicked, and its unchanged neighbour is left alone" do
@@ -265,14 +247,5 @@ class LiveUpdateSystemTest < ApplicationSystemTestCase
     hospitalization.update!(reason: "Row changed elsewhere")
 
     assert_text "Row changed elsewhere"
-  end
-
-  def set_date(field_id, date)
-    page.execute_script(<<~JS)
-      const input = document.querySelector("##{field_id}")
-      input.value = "#{date.iso8601}"
-      input.dispatchEvent(new Event("input", { bubbles: true }))
-      input.dispatchEvent(new Event("change", { bubbles: true }))
-    JS
   end
 end

@@ -8,15 +8,6 @@ class ReservationsTest < ApplicationSystemTestCase
     @surgery_date = Date.current + 10
   end
 
-  def set_date(field_id, date)
-    page.execute_script(<<~JS)
-      const input = document.querySelector("##{field_id}")
-      input.value = "#{date.iso8601}"
-      input.dispatchEvent(new Event("input", { bubbles: true }))
-      input.dispatchEvent(new Event("change", { bubbles: true }))
-    JS
-  end
-
   test "booking from the calendar's day link takes one screen and lands back on the calendar" do
     visit operations_calendar_path(start: @surgery_date.iso8601, days: 1)
     click_on I18n.l(@surgery_date, format: :default, locale: :en), match: :first
