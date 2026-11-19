@@ -145,18 +145,4 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   def wait_for_live_connection
     assert_selector "turbo-cable-stream-source[connected]", visible: :all, wait: 10
   end
-
-  def row_for(record)
-    "tr[data-live-key='#{record.class.name}:#{record.id}']"
-  end
-
-  def press_row(selector)
-    page.execute_script("arguments[0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))", find(selector))
-  end
-
-  def in_viewport?(selector)
-    page.evaluate_script(<<~JS)
-      (() => { const r = document.querySelector(#{selector.to_json}).getBoundingClientRect(); return r.top >= 0 && r.bottom <= window.innerHeight })()
-    JS
-  end
 end
